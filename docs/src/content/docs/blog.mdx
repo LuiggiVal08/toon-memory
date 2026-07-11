@@ -65,13 +65,13 @@ toon-memory stores this context in a token-efficient format (TOON) that your age
 <div class="before-box fade-in-up">
   <p><strong>Session 1:</strong></p>
   <div class="terminal">
-    <span class="prompt">User:</span> "We use Zod for validation"<br>
+    <span class="prompt">User:</span> "We use Zod for validation"<br />
     <span class="prompt">Agent:</span> "Got it!"
   </div>
   
   <p><strong>Session 2 (new session):</strong></p>
   <div class="terminal">
-    <span class="prompt">User:</span> "What validation library do we use?"<br>
+    <span class="prompt">User:</span> "What validation library do we use?"<br />
     <span class="prompt">Agent:</span> "I don't know, let me check the code..."
   </div>
 </div>
@@ -81,16 +81,16 @@ toon-memory stores this context in a token-efficient format (TOON) that your age
 <div class="after-box fade-in-up">
   <p><strong>Session 1:</strong></p>
   <div class="terminal">
-    <span class="prompt">User:</span> "We use Zod for validation"<br>
-    <span class="prompt">Agent:</span> <span class="command">memory_remember</span>(category="pattern", key="validation", content="Uses Zod")<br>
+    <span class="prompt">User:</span> "We use Zod for validation"<br />
+    <span class="prompt">Agent:</span> <span class="command">memory_remember</span>(category="pattern", key="validation", content="Uses Zod")<br />
     <span class="output">🧠 Saved: pattern/validation</span>
   </div>
   
   <p><strong>Session 2 (new session):</strong></p>
   <div class="terminal">
-    <span class="prompt">User:</span> "What validation library do we use?"<br>
-    <span class="prompt">Agent:</span> <span class="command">memory_recall</span>(query="validation")<br>
-    <span class="output">[pattern] validation<br>We use Zod for validation (saved in session 1)</span>
+    <span class="prompt">User:</span> "What validation library do we use?"<br />
+    <span class="prompt">Agent:</span> <span class="command">memory_recall</span>(query="validation")<br />
+    <span class="output">[pattern] validation<br />We use Zod for validation (saved in session 1)</span>
   </div>
 </div>
 
@@ -122,7 +122,7 @@ toon-memory stores this context in a token-efficient format (TOON) that your age
 ## Get Started
 
 <div class="terminal fade-in-up">
-  <span class="command">npm install -g toon-memory</span><br>
+  <span class="command">npm install -g toon-memory</span><br />
   <span class="command">npx toon-memory</span>
 </div>
 
