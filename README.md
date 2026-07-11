@@ -1,10 +1,27 @@
 # toon-memory
 
-Persistent memory for AI coding agents — remember decisions, patterns, and bugs between sessions.
+> Persistent memory for AI coding agents — remember decisions, patterns, and bugs between sessions.
 
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml/badge.svg)](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml)
+
+---
+
+## Table of Contents
+
+- [What is toon-memory?](#what-is-toon-memory)
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Supported Agents](#supported-agents)
+- [MCP Tools](#mcp-tools)
+- [CLI Commands](#cli-commands)
+- [Configuration](#configuration)
+- [How It Works](#how-it-works)
+- [Why TOON?](#why-toon)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -22,16 +39,16 @@ AI agents forget everything between sessions. toon-memory fixes this by providin
 
 ## Features
 
-- **8 MCP tools** — `memory_remember`, `memory_recall`, `memory_forget`, `memory_stats`, `memory_summary`, `memory_archive`, `memory_encrypt`, `memory_decrypt`
+- **8 MCP tools** — Full memory management via Model Context Protocol
 - **7 agents supported** — OpenCode, VS Code/Copilot, Claude Code, Cursor, Windsurf, Cline, Continue
 - **TOON format** — 40% fewer tokens than JSON, better LLM comprehension
-- **Per-project memory** — each project gets its own memory file
-- **Zero config** — just install and use
-- **Auto gitignore** — automatically adds `.opencode/memory/` to `.gitignore`
-- **Date filtering** — search memory by date range
-- **Auto-archive** — old entries (>30 days) moved to archive automatically
+- **Per-project memory** — Each project gets its own memory file
+- **Zero config** — Just install and use
+- **Auto gitignore** — Automatically adds `.opencode/memory/` to `.gitignore`
+- **Date filtering** — Search memory by date range
+- **Auto-archive** — Old entries (>30 days) moved to archive automatically
 - **Encryption** — AES-256-GCM encryption for sensitive data
-- **Watch mode** — auto-backup every N minutes
+- **Watch mode** — Auto-backup every N minutes
 
 ---
 
@@ -83,7 +100,7 @@ memory_remember   # Save important decisions
 
 ---
 
-## Tools
+## MCP Tools
 
 | Tool | Description |
 |------|-------------|
@@ -96,12 +113,33 @@ memory_remember   # Save important decisions
 | `memory_encrypt` | Enable AES-256-GCM encryption |
 | `memory_decrypt` | Disable encryption |
 
-### Date Filtering
+### Examples
 
-Search memory by date range:
+#### Remember a decision
 
 ```typescript
-// Search with date filter
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts",
+  tags: "validation;types"
+})
+// 🧠 Guardado: decision/use-zod (a1b2c3d4)
+```
+
+#### Search memory
+
+```typescript
+memory_recall({ query: "redis" })
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Added max_connections=20
+//   File: redis.ts | Tags: redis;fix | Date: 2026-07-10
+```
+
+#### Search with date filter
+
+```typescript
 memory_recall({
   query: "redis",
   from_date: "2026-07-01",
@@ -109,52 +147,21 @@ memory_recall({
 })
 ```
 
-### Auto-Archive
-
-Entries older than 30 days are automatically archived to keep memory clean:
+#### Archive old entries
 
 ```typescript
-// Manually trigger archiving
 memory_archive()
 // 📦 Archivadas 5 entradas antiguas
 // 📋 Quedan 42 entradas activas
 ```
 
-### Encryption
-
-Enable AES-256-GCM encryption for sensitive data:
+#### Enable encryption
 
 ```typescript
-// Enable encryption
 memory_encrypt()
 // 🔐 Encriptación habilitada
 // ⚠️ Guarda esta clave (no se puede recuperar):
 // a1b2c3d4...
-
-// Disable encryption
-memory_decrypt({ key: "a1b2c3d4..." })
-// 🔓 Encriptación deshabilitada
-```
-
----
-
-## How It Works
-
-1. **MCP Server** — runs locally, talks to your agent via stdio
-2. **TOON Format** — stores data in Token-Oriented Object Notation (~40% fewer tokens than JSON)
-3. **Per-project memory** — each project gets `.opencode/memory/data.toon`
-4. **Zero config** — just install and use
-
-### Memory File Format
-
-```
-version: 1
-entries[3|]{id|category|key|content|file|tags|date}:
-  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10
-  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10
-  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10
-summaries:
-  src/services/redis.ts: Redis connection pool with retry logic
 ```
 
 ---
@@ -174,7 +181,9 @@ npx toon-memory upgrade      # Update to latest version
 npx toon-memory uninstall    # Remove from all agents
 ```
 
-### Stats
+### Examples
+
+#### Stats
 
 ```bash
 $ npx toon-memory stats
@@ -192,7 +201,7 @@ Last updated: 2026-07-10
 File size: 12.4 KB
 ```
 
-### Export
+#### Export
 
 ```bash
 $ npx toon-memory export
@@ -203,7 +212,7 @@ Exported 45 entries to:
   /path/to/project/toon-memory-export.json
 ```
 
-### Import
+#### Import
 
 ```bash
 $ npx toon-memory import backup.json
@@ -212,6 +221,22 @@ $ npx toon-memory import backup.json
 
 Imported 3 new entries
 Skipped 2 duplicates
+```
+
+#### Watch
+
+```bash
+$ npx toon-memory watch 10
+
+🧠 toon-memory watch
+
+Watching memory file every 10 minutes...
+Press Ctrl+C to stop
+
+📦 Backup #1 created: 2026-07-11T16-00-00-000Z
+📦 Backup #2 created: 2026-07-11T16-10-00-000Z
+^C
+✅ Watch stopped. 2 backups created.
 ```
 
 ---
@@ -267,6 +292,41 @@ Add to `.vscode/mcp.json`:
 
 ---
 
+## How It Works
+
+1. **MCP Server** — Runs locally, talks to your agent via stdio
+2. **TOON Format** — Stores data in Token-Oriented Object Notation (~40% fewer tokens than JSON)
+3. **Per-project memory** — Each project gets `.opencode/memory/data.toon`
+4. **Zero config** — Just install and use
+
+### Memory File Format
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10
+summaries:
+  src/services/redis.ts: Redis connection pool with retry logic
+```
+
+### File Structure
+
+```
+.opencode/
+├── memory/
+│   ├── data.toon        # Main memory file
+│   ├── archive.toon     # Archived entries (>30 days)
+│   ├── config.json      # Encryption settings
+│   └── backups/         # Watch mode backups
+│       ├── backup-2026-07-11T16-00-00-000Z.toon
+│       └── backup-2026-07-11T16-10-00-000Z.toon
+└── opencode.json        # MCP server config
+```
+
+---
+
 ## Why TOON?
 
 TOON (Token-Oriented Object Notation) is designed for LLMs:
@@ -278,8 +338,8 @@ TOON (Token-Oriented Object Notation) is designed for LLMs:
 | **TOON** | **60** | **76.4%** |
 
 - **40% fewer tokens** than JSON
-- **Lossless roundtrip** — no data loss
-- **Better LLM comprehension** — structured for AI consumption
+- **Lossless roundtrip** — No data loss
+- **Better LLM comprehension** — Structured for AI consumption
 
 ---
 
@@ -291,6 +351,30 @@ cd toon-memory
 npm install
 npm run build
 npm test
+```
+
+### Project Structure
+
+```
+toon-memory/
+├── src/
+│   ├── bin/
+│   │   └── toon-memory.ts      # Entry point
+│   ├── cli/
+│   │   ├── setup.ts             # CLI commands
+│   │   └── toon-memory.ts       # CLI runner
+│   ├── mcp/
+│   │   └── server.ts            # MCP server (8 tools)
+│   └── memory.ts                # Custom tool (OpenCode)
+├── tests/
+│   ├── cli.test.ts              # CLI tests
+│   └── memory.test.ts           # Memory tests
+├── .github/workflows/
+│   ├── ci.yml                   # CI (Node.js 20/22)
+│   └── publish.yml              # Auto-publish on release
+├── package.json
+├── tsconfig.json
+└── vitest.config.ts
 ```
 
 ---
