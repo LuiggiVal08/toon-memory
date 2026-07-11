@@ -1,6 +1,6 @@
 {
   "name": "toon-memory",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "Persistent memory system for AI coding agents using TOON format (40% fewer tokens than JSON)",
   "type": "module",
   "bin": {
@@ -12,6 +12,7 @@
     "mcp/",
     "skills/",
     "install.sh",
+    "install.ps1",
     "uninstall.sh"
   ],
   "scripts": {

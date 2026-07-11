@@ -110,7 +110,10 @@ summaries:
 
 ```bash
 npx toon-memory          # Interactive installer
+npx toon-memory init     # Quick setup (no prompts)
 npx toon-memory mcp      # Run MCP server directly
+npx toon-memory status   # Check installation status
+npx toon-memory upgrade  # Update to latest version
 npx toon-memory uninstall # Remove from all agents
 ```
 

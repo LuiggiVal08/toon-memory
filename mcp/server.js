@@ -27664,7 +27664,7 @@ function generateId() {
   return randomBytes(4).toString("hex");
 }
 var server = new McpServer(
-  { name: "toon-memory", version: "1.0.9" },
+  { name: "toon-memory", version: "1.1.0" },
   { capabilities: { tools: { listChanged: true } } }
 );
 server.registerTool(

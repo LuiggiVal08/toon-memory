@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, unlinkSync, rmdirSync } from "fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, unlinkSync } from "fs"
 import { dirname, join } from "path"
 import { fileURLToPath } from "url"
 import { execSync } from "child_process"
@@ -9,7 +9,7 @@ import { createRequire } from "module"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const projectRoot = process.cwd()
 const sourceDir = join(__dirname, "..", "src")
-const HOME = process.env.HOME || "~"
+const HOME = process.env.HOME || process.env.USERPROFILE || "~"
 
 // Auto-install @toon-format/toon if not present
 try {
@@ -172,11 +172,117 @@ function uninstall() {
   console.log("\n✅ toon-memory uninstalled from all agents\n")
 }
 
+// Quick init without interactive prompts
+function init(scope = "local") {
+  console.log("\n🧠 toon-memory init\n")
+  
+  const agents = detectAgents()
+  
+  for (const agent of agents) {
+    console.log(`${agent.name}:`)
+    
+    if (agent.name === "opencode") {
+      installOpenCodeTools()
+    }
+    
+    installMCPConfig(agent, scope)
+    console.log("")
+  }
+  
+  console.log("Done! Restart your agent to use memory tools.\n")
+}
+
+// Show installation status
+function status() {
+  console.log("\n🧠 toon-memory status\n")
+  
+  // Check npm package
+  try {
+    const pkg = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8"))
+    console.log(`Version: ${pkg.version}`)
+  } catch {
+    console.log("Version: unknown")
+  }
+  
+  // Check memory file
+  const memoryFile = join(projectRoot, ".opencode", "memory", "data.toon")
+  if (existsSync(memoryFile)) {
+    const data = readFileSync(memoryFile, "utf-8")
+    const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|"))
+    console.log(`Memory: ${lines.length} entries`)
+  } else {
+    console.log("Memory: not initialized")
+  }
+  
+  // Check agent configs
+  const agents = detectAgents()
+  console.log("\nAgent configs:")
+  
+  for (const agent of agents) {
+    const configs = [agent.global, agent.local].filter(Boolean)
+    let found = false
+    
+    for (const configPath of configs) {
+      if (!existsSync(configPath)) continue
+      
+      try {
+        const config = JSON.parse(readFileSync(configPath, "utf-8"))
+        const mcpKey = agent.mcpKey || "mcpServers"
+        
+        if (config[mcpKey]?.["toon-memory"]) {
+          console.log(`  ✅ ${agent.name} (${configPath})`)
+          found = true
+        }
+      } catch {}
+    }
+    
+    if (!found) {
+      console.log(`  ❌ ${agent.name} (not configured)`)
+    }
+  }
+  
+  console.log("")
+}
+
+// Upgrade to latest version
+function upgrade() {
+  console.log("\n🧠 toon-memory upgrade\n")
+  
+  try {
+    console.log("Checking for updates...")
+    const latest = execSync("npm view toon-memory version", { encoding: "utf-8" }).trim()
+    console.log(`Latest version: ${latest}`)
+    
+    console.log("Upgrading...")
+    execSync("npm install -g toon-memory@" + latest, { stdio: "inherit" })
+    
+    console.log("\n✅ Upgraded to toon-memory@" + latest)
+    console.log("Restart your agent to use the new version.\n")
+  } catch (error) {
+    console.error("Upgrade failed:", error.message)
+  }
+}
+
 // Main
 const args = process.argv.slice(2)
 
 if (args[0] === "uninstall") {
   uninstall()
+  process.exit(0)
+}
+
+if (args[0] === "init") {
+  init(args[1] || "local")
+  process.exit(0)
+}
+
+if (args[0] === "status") {
+  status()
+  process.exit(0)
+}
+
+if (args[0] === "upgrade") {
+  upgrade()
   process.exit(0)
 }
 
