@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, unlinkSync } from "fs"
-import { dirname, join } from "path"
+import { basename, dirname, join } from "path"
 import { fileURLToPath } from "url"
 import { execSync } from "child_process"
 import { createInterface } from "readline"
@@ -271,6 +271,161 @@ function upgrade(): void {
   }
 }
 
+// Show memory statistics
+function stats(): void {
+  console.log("\n🧠 toon-memory stats\n")
+  
+  const memoryFile = join(projectRoot, ".opencode", "memory", "data.toon")
+  
+  if (!existsSync(memoryFile)) {
+    console.log("Memory not initialized. Run 'npx toon-memory init' first.\n")
+    return
+  }
+  
+  const data = readFileSync(memoryFile, "utf-8")
+  const lines = data.split("\n").filter((l: string) => l.startsWith("  ") && l.includes("|"))
+  
+  const categories: Record<string, number> = {}
+  let latestDate = ""
+  
+  for (const line of lines) {
+    const parts = line.trim().split("|")
+    if (parts.length >= 7) {
+      const category = parts[1]
+      const date = parts[6]
+      categories[category] = (categories[category] || 0) + 1
+      if (date > latestDate) latestDate = date
+    }
+  }
+  
+  console.log("📊 Memory Stats")
+  console.log("━".repeat(20))
+  console.log(`Total entries: ${lines.length}`)
+  
+  for (const [cat, count] of Object.entries(categories)) {
+    console.log(`├── ${cat}: ${count}`)
+  }
+  
+  console.log(`Last updated: ${latestDate || "never"}`)
+  
+  const fileSize = Buffer.byteLength(data, "utf-8")
+  console.log(`File size: ${(fileSize / 1024).toFixed(1)} KB`)
+  console.log("")
+}
+
+// Export memory to JSON
+function exportMemory(): void {
+  console.log("\n🧠 toon-memory export\n")
+  
+  const memoryFile = join(projectRoot, ".opencode", "memory", "data.toon")
+  
+  if (!existsSync(memoryFile)) {
+    console.log("Memory not initialized. Run 'npx toon-memory init' first.\n")
+    return
+  }
+  
+  const data = readFileSync(memoryFile, "utf-8")
+  const lines = data.split("\n").filter((l: string) => l.startsWith("  ") && l.includes("|"))
+  
+  const entries = lines.map((line: string) => {
+    const parts = line.trim().split("|")
+    return {
+      id: parts[0],
+      category: parts[1],
+      key: parts[2],
+      content: parts[3],
+      file: parts[4],
+      tags: parts[5] ? parts[5].split(";") : [],
+      date: parts[6]
+    }
+  })
+  
+  const exportData = {
+    project: basename(projectRoot),
+    exported_at: new Date().toISOString(),
+    entries,
+    summaries: {}
+  }
+  
+  const outputPath = join(projectRoot, "toon-memory-export.json")
+  writeFileSync(outputPath, JSON.stringify(exportData, null, 2))
+  
+  console.log(`Exported ${entries.length} entries to:`)
+  console.log(`  ${outputPath}\n`)
+}
+
+// Import memory from JSON
+function importMemory(): void {
+  console.log("\n🧠 toon-memory import\n")
+  
+  const importFile = process.argv[3]
+  
+  if (!importFile) {
+    console.log("Usage: npx toon-memory import <file.json>\n")
+    return
+  }
+  
+  // Use absolute path if provided, otherwise resolve relative to project root
+  const importPath = importFile.startsWith("/") ? importFile : join(projectRoot, importFile)
+  
+  if (!existsSync(importPath)) {
+    console.log(`File not found: ${importPath}\n`)
+    return
+  }
+  
+  let importData: any
+  try {
+    importData = JSON.parse(readFileSync(importPath, "utf-8"))
+  } catch {
+    console.log("Invalid JSON file\n")
+    return
+  }
+  
+  if (!importData.entries || !Array.isArray(importData.entries)) {
+    console.log("Invalid format: missing 'entries' array\n")
+    return
+  }
+  
+  const memoryDir = join(projectRoot, ".opencode", "memory")
+  const memoryFile = join(memoryDir, "data.toon")
+  
+  if (!existsSync(memoryDir)) mkdirSync(memoryDir, { recursive: true })
+  
+  let existingKeys: string[] = []
+  if (existsSync(memoryFile)) {
+    const existing = readFileSync(memoryFile, "utf-8")
+    existingKeys = existing.split("\n")
+      .filter((l: string) => l.startsWith("  ") && l.includes("|"))
+      .map((l: string) => l.trim().split("|")[2])
+  }
+  
+  const newEntries = importData.entries.filter((e: any) => !existingKeys.includes(e.key))
+  
+  if (newEntries.length === 0) {
+    console.log("No new entries to import (all keys already exist)\n")
+    return
+  }
+  
+  const newLines = newEntries.map((e: any) => {
+    const tags = Array.isArray(e.tags) ? e.tags.join(";") : (e.tags || "")
+    return `  ${e.id}|${e.category}|${e.key}|${e.content}|${e.file}|${tags}|${e.date}`
+  }).join("\n")
+  
+  if (existsSync(memoryFile)) {
+    const existing = readFileSync(memoryFile, "utf-8")
+    const updated = existing.replace(
+      /entries\[\d+\|]/,
+      `entries[${newEntries.length}|]`
+    ) + "\n" + newLines
+    writeFileSync(memoryFile, updated)
+  } else {
+    writeFileSync(memoryFile, `version: 1\nentries[${newEntries.length}|]{id|category|key|content|file|tags|date}:\n${newLines}\n`)
+  }
+  
+  console.log(`Imported ${newEntries.length} new entries`)
+  console.log(`Skipped ${importData.entries.length - newEntries.length} duplicates\n`)
+}
+
 // Main
 const args = process.argv.slice(2)
 
@@ -291,6 +446,21 @@ if (args[0] === "status") {
 
 if (args[0] === "upgrade") {
   upgrade()
+  process.exit(0)
+}
+
+if (args[0] === "stats") {
+  stats()
+  process.exit(0)
+}
+
+if (args[0] === "export") {
+  exportMemory()
+  process.exit(0)
+}
+
+if (args[0] === "import") {
+  importMemory()
   process.exit(0)
 }
 
