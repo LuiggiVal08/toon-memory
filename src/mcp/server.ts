@@ -83,9 +83,11 @@ server.registerTool(
     inputSchema: {
       query: z.string().describe("Texto a buscar"),
       category: z.string().optional().default("").describe("Filtrar por categoría (vacío = todos)"),
+      from_date: z.string().optional().default("").describe("Fecha inicio filtro (YYYY-MM-DD)"),
+      to_date: z.string().optional().default("").describe("Fecha fin filtro (YYYY-MM-DD)"),
     },
   },
-  async ({ query, category }) => {
+  async ({ query, category, from_date, to_date }) => {
     const data = readMemory()
     const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|"))
     const queryLower = query.toLowerCase()
@@ -97,6 +99,8 @@ server.registerTool(
         if (parts.length < 7) return null
         const [id, cat, key, content, file, tags, date] = parts
         if (category && cat !== category) return null
+        if (from_date && date < from_date) return null
+        if (to_date && date > to_date) return null
         const searchStr = `${id} ${cat} ${key} ${content} ${file} ${tags}`.toLowerCase()
         if (!searchStr.includes(queryLower)) return null
         return { id, cat, key, content, file, tags, date }

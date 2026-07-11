@@ -112,6 +112,24 @@ function installOpenCodeTools(): void {
   }
 }
 
+// Add .opencode/memory/ to .gitignore if not present
+function ensureGitignore(): void {
+  const gitignorePath = join(projectRoot, ".gitignore")
+  const entry = ".opencode/memory/"
+  
+  if (!existsSync(gitignorePath)) {
+    writeFileSync(gitignorePath, `${entry}\n`)
+    console.log("  Created .gitignore with memory exclusion")
+    return
+  }
+  
+  const content = readFileSync(gitignorePath, "utf-8")
+  if (!content.includes(entry)) {
+    writeFileSync(gitignorePath, `${content.trim()}\n${entry}\n`)
+    console.log("  Added .opencode/memory/ to .gitignore")
+  }
+}
+
 // Install MCP server config for different agents
 function installMCPConfig(agent: Agent, scope: string): void {
   const configPath = scope === "global" ? agent.global : agent.local
@@ -196,6 +214,8 @@ function init(scope: string = "local"): void {
     installMCPConfig(agent, scope)
     console.log("")
   }
+  
+  ensureGitignore()
   
   console.log("Done! Restart your agent to use memory tools.\n")
 }
@@ -486,6 +506,8 @@ rl.question("Install (1) Local or (2) Global? [1/2]: ", (answer: string) => {
     installMCPConfig(agent, scope)
     console.log("")
   }
+  
+  ensureGitignore()
   
   console.log("Done! Restart your agent to use memory tools.")
   console.log("Run 'npx toon-memory uninstall' to remove.\n")
