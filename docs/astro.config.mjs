@@ -14,6 +14,12 @@ export default defineConfig({
 				alt: 'toon-memory logo',
 			},
 			customCss: ['./src/styles/custom.css'],
+			head: [
+				{
+					tag: 'script',
+					attrs: { src: '/toon-memory/scripts/animations.js' },
+				},
+			],
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/LuiggiVal08/toon-memory' },
 				{ icon: 'npm', label: 'npm', href: 'https://www.npmjs.com/package/toon-memory' },

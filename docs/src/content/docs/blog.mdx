@@ -3,14 +3,14 @@ title: "How toon-memory Makes Your AI Agent Smarter"
 description: "See persistent memory in action"
 ---
 
-<div class="post-header">
+<div class="post-header gradient-text-animated">
   <h1>How toon-memory Makes Your AI Agent Smarter</h1>
   <p>See persistent memory in action</p>
 </div>
 
-<div class="result-card fade-in-up">
-  <div class="result-card__number">80%</div>
-  <div>Fewer repeated questions</div>
+<div class="result-card glow fade-in-up">
+  <div class="result-card__number counter" data-target="80">0</div>
+  <div>% fewer repeated questions</div>
 </div>
 
 ## TL;DR
@@ -23,17 +23,19 @@ toon-memory gives your AI agent persistent memory across sessions. No more repea
 
 Every time you start a new coding session, your AI agent forgets:
 
-- Design decisions you've made
-- Patterns used in the project
-- Bugs you've already fixed
-- Project-specific knowledge
+<ul class="staggered-list">
+  <li>Design decisions you've made</li>
+  <li>Patterns used in the project</li>
+  <li>Bugs you've already fixed</li>
+  <li>Project-specific knowledge</li>
+</ul>
 
 <div class="comparison-grid">
-  <div class="before-box fade-in-left">
+  <div class="before-box morph-border fade-in-left">
     <h3>Frustrating</h3>
     <p>You have to explain the same context every session</p>
   </div>
-  <div class="after-box fade-in-right">
+  <div class="before-box morph-border fade-in-right">
     <h3>Wasteful</h3>
     <p>Agent spends time re-learning instead of coding</p>
   </div>
@@ -46,11 +48,11 @@ Every time you start a new coding session, your AI agent forgets:
 toon-memory stores this context in a token-efficient format (TOON) that your agent can recall in future sessions.
 
 <div class="comparison-grid">
-  <div class="after-box fade-in-left">
+  <div class="after-box morph-border fade-in-left">
     <h3>Efficient</h3>
     <p>Agent remembers everything automatically</p>
   </div>
-  <div class="after-box fade-in-right">
+  <div class="after-box morph-border fade-in-right">
     <h3>Fast</h3>
     <p>Instant recall, no re-learning needed</p>
   </div>
@@ -82,14 +84,14 @@ toon-memory stores this context in a token-efficient format (TOON) that your age
   <p><strong>Session 1:</strong></p>
   <div class="terminal">
     <span class="prompt">User:</span> "We use Zod for validation"<br />
-    <span class="prompt">Agent:</span> <span class="command">memory_remember</span>(category="pattern", key="validation", content="Uses Zod")<br />
+    <span class="prompt">Agent:</span> <span class="command typing-effect">memory_remember(category="pattern", key="validation", content="Uses Zod")</span><br />
     <span class="output">🧠 Saved: pattern/validation</span>
   </div>
   
   <p><strong>Session 2 (new session):</strong></p>
   <div class="terminal">
     <span class="prompt">User:</span> "What validation library do we use?"<br />
-    <span class="prompt">Agent:</span> <span class="command">memory_recall</span>(query="validation")<br />
+    <span class="prompt">Agent:</span> <span class="command typing-effect">memory_recall(query="validation")</span><br />
     <span class="output">[pattern] validation<br />We use Zod for validation (saved in session 1)</span>
   </div>
 </div>
@@ -99,21 +101,21 @@ toon-memory stores this context in a token-efficient format (TOON) that your age
 ## Results
 
 <div class="comparison-grid">
-  <div class="result-card fade-in-left">
-    <div class="result-card__number">80%</div>
-    <div>Fewer repeated questions</div>
+  <div class="result-card ripple fade-in-left">
+    <div class="result-card__number counter" data-target="80">0</div>
+    <div>% fewer repeated questions</div>
   </div>
-  <div class="result-card fade-in-right">
-    <div class="result-card__number">10x</div>
-    <div>Faster onboarding</div>
+  <div class="result-card ripple fade-in-right">
+    <div class="result-card__number counter" data-target="10">0</div>
+    <div>x faster onboarding</div>
   </div>
-  <div class="result-card fade-in-left">
-    <div class="result-card__number">100%</div>
-    <div>Consistent patterns</div>
+  <div class="result-card ripple fade-in-left">
+    <div class="result-card__number counter" data-target="100">0</div>
+    <div>% consistent patterns</div>
   </div>
-  <div class="result-card fade-in-right">
+  <div class="result-card ripple fade-in-right">
     <div class="result-card__number">0</div>
-    <div>Lost context</div>
+    <div>lost context</div>
   </div>
 </div>
 
@@ -122,10 +124,10 @@ toon-memory stores this context in a token-efficient format (TOON) that your age
 ## Get Started
 
 <div class="terminal fade-in-up">
-  <span class="command">npm install -g toon-memory</span><br />
-  <span class="command">npx toon-memory</span>
+  <span class="pulsing-dot"></span><span class="command">npm install -g toon-memory</span><br />
+  <span class="pulsing-dot"></span><span class="command">npx toon-memory</span>
 </div>
 
-<div class="cta-button fade-in-up">
+<div class="cta-button glow fade-in-up">
   <span>Read the Documentation</span>
 </div>
