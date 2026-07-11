@@ -1,0 +1,128 @@
+---
+title: Manual Setup
+description: Agent-specific configuration
+---
+
+## OpenCode
+
+### Project-level
+
+Add to `.opencode/opencode.json`:
+
+```json
+{
+  "mcp": {
+    "toon-memory": {
+      "type": "local",
+      "command": ["npx", "-y", "toon-memory", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+### Global
+
+Add to `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "mcp": {
+    "toon-memory": {
+      "type": "local",
+      "command": ["npx", "-y", "toon-memory", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+## VS Code / Copilot
+
+Add to `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Claude Code
+
+Add to `.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Cursor
+
+Add to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Windsurf
+
+Add to `.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Cline
+
+Add to `.cline/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Continue
+
+Add to `.continue/config.json`:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```

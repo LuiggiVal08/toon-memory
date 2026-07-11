@@ -1,0 +1,58 @@
+---
+title: Watch Mode
+description: Auto-backup memory every N minutes
+---
+
+## Overview
+
+Watch mode runs a daemon that automatically backs up your memory file when changes are detected.
+
+## Usage
+
+```bash
+# Default: backup every 5 minutes
+npx toon-memory watch
+
+# Custom interval (in minutes)
+npx toon-memory watch 10
+
+# Press Ctrl+C to stop
+```
+
+## Example Output
+
+```bash
+$ npx toon-memory watch 10
+
+🧠 toon-memory watch
+
+Watching memory file every 10 minutes...
+Press Ctrl+C to stop
+
+📦 Backup #1 created: 2026-07-11T16-00-00-000Z
+📦 Backup #2 created: 2026-07-11T16-10-00-000Z
+^C
+✅ Watch stopped. 2 backups created.
+```
+
+## How It Works
+
+1. Watches `.opencode/memory/data.toon` for changes
+2. When content changes, creates a timestamped backup
+3. Backups are stored in `.opencode/memory/backups/`
+4. Only creates backup when content actually changes
+
+## Backup Files
+
+```
+.opencode/memory/backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-10-00-000Z.toon
+└── backup-2026-07-11T16-20-00-000Z.toon
+```
+
+## Use Cases
+
+- **Long coding sessions** — Auto-backup while you work
+- **Pre-deployment** — Run before important changes
+- **CI/CD** — Backup before automated changes

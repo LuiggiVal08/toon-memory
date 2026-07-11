@@ -1,0 +1,68 @@
+---
+title: Contributing
+description: How to contribute to toon-memory
+---
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+## How to Contribute
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'feat: add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+## Development Setup
+
+```bash
+git clone https://github.com/LuiggiVal08/toon-memory.git
+cd toon-memory
+npm install
+npm run build
+npm test
+```
+
+## Project Structure
+
+```
+toon-memory/
+├── src/
+│   ├── bin/              # Entry point
+│   ├── cli/              # CLI commands
+│   ├── mcp/              # MCP server
+│   └── memory.ts         # Custom tool
+├── tests/                # Unit tests
+├── docs/                 # Documentation (Astro)
+└── package.json
+```
+
+## Scripts
+
+```bash
+npm run build         # Build all
+npm run build:cli     # Build CLI
+npm run build:mcp     # Build MCP server
+npm test              # Run tests
+npm run test:watch    # Run tests in watch mode
+```
+
+## Code Style
+
+- TypeScript with strict mode
+- 2 spaces indentation
+- camelCase for variables/functions
+- PascalCase for classes
+
+## Pull Request Guidelines
+
+- Write clear commit messages
+- Add tests for new features
+- Update documentation if needed
+- Follow existing code style
+
+## Code of Conduct
+
+Please read our [Code of Conduct](/toon-memory/community/code-of-conduct) before contributing.

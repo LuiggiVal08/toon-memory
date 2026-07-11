@@ -1,0 +1,62 @@
+---
+title: Introduction
+description: Persistent memory for AI coding agents
+template: splash
+hero:
+  tagline: Remember decisions, patterns, and bugs between sessions
+  image:
+    file: ../../assets/logo.svg
+  actions:
+    - text: Get Started
+      link: /toon-memory/getting-started/quickstart
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/LuiggiVal08/toon-memory
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What is toon-memory?
+
+AI agents forget everything between sessions. toon-memory fixes this by providing persistent memory that survives restarts.
+
+<CardGrid stagger>
+	<Card title="8 MCP Tools" icon="puzzle">
+		Full memory management via Model Context Protocol
+	</Card>
+	<Card title="7 Agents" icon="robot">
+		OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue
+	</Card>
+	<Card title="TOON Format" icon="document">
+		40% fewer tokens than JSON, better LLM comprehension
+	</Card>
+	<Card title="Zero Config" icon="setting">
+		Just install and use
+	</Card>
+</CardGrid>
+
+## Use Cases
+
+- **Remember design decisions** — "Why did we choose X over Y?"
+- **Track patterns** — "This project uses Zod for validation"
+- **Store bug resolutions** — "Redis pool exhaustion fix"
+- **Save project knowledge** — "Broker uses RESP protocol"
+
+## Quick Example
+
+```typescript
+// Save a decision
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts"
+})
+
+// Search memory
+memory_recall({ query: "redis" })
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Added max_connections=20
+```

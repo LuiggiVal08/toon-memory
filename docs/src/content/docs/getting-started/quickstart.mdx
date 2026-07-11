@@ -1,0 +1,41 @@
+---
+title: Quick Start
+description: Get started with toon-memory in 3 steps
+---
+
+## 1. Install
+
+```bash
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex
+
+# Or with npm (any platform)
+npm i -g toon-memory
+```
+
+## 2. Configure your agent(s)
+
+```bash
+# Interactive installer — detects agents and configures MCP
+npx toon-memory
+```
+
+## 3. Use it
+
+```bash
+# In your next session, run:
+memory_stats      # See what's in memory
+memory_recall     # Search memory before reading files
+memory_remember   # Save important decisions
+```
+
+## That's it!
+
+Your agent now has persistent memory across sessions. Learn more about:
+
+- [MCP Tools](/toon-memory/features/tools) — The 8 memory tools
+- [CLI Commands](/toon-memory/features/cli) — Manage memory from terminal
+- [Configuration](/toon-memory/configuration/agents) — Agent-specific setup

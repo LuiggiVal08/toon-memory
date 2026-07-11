@@ -1,0 +1,54 @@
+---
+title: Auto-Archive
+description: Automatically archive old entries
+---
+
+## Overview
+
+toon-memory automatically archives entries older than 30 days to keep your memory clean.
+
+## Manual Archive
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+## How It Works
+
+1. Entries older than 30 days are moved to `archive.toon`
+2. Active memory stays under 100 entries
+3. Archived entries are preserved for history
+4. Can be triggered manually or automatically
+
+## File Structure
+
+```
+.opencode/memory/
+├── data.toon        # Active memory (< 30 days)
+└── archive.toon     # Archived entries (> 30 days)
+```
+
+## Archive Format
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  a1b2c3d4|decision|old-decision|This was decided...|src/old.ts|decision|2026-06-01
+  e5f6g7h8|pattern|old-pattern|This pattern was used...|src/pattern.ts|pattern|2026-06-15
+```
+
+## Configuration
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Max entries | 100 | Maximum active entries |
+| Archive days | 30 | Days before archiving |
+| Archive file | `archive.toon` | Where archived entries go |
+
+## Use Cases
+
+- **Keep memory clean** — Prevent unlimited growth
+- **Historical reference** — Old decisions still accessible
+- **Performance** — Faster searches with fewer entries

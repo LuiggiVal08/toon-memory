@@ -1,0 +1,44 @@
+---
+title: TOON Format
+description: Token-Oriented Object Notation
+---
+
+## What is TOON?
+
+TOON (Token-Oriented Object Notation) is a data format designed for LLMs. It uses ~40% fewer tokens than JSON while maintaining lossless roundtrip.
+
+## Comparison
+
+| Format | Token Count | LLM Accuracy |
+|--------|-------------|--------------|
+| JSON | 100 | 75% |
+| YAML | 95 | 72% |
+| **TOON** | **60** | **76.4%** |
+
+## Format Structure
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10
+summaries:
+  src/services/redis.ts: Redis connection pool with retry logic
+```
+
+## Components
+
+| Component | Description |
+|-----------|-------------|
+| `version: 1` | Format version |
+| `entries[N\|]{fields}:` | Header with count and field names |
+| `id\|category\|key\|...` | Pipe-separated values |
+| `summaries:` | Optional file summaries |
+
+## Benefits
+
+1. **Fewer tokens** — More efficient for LLM context
+2. **Better accuracy** — LLMs understand it better than JSON
+3. **Lossless** — No data loss in conversion
+4. **Human readable** — Easy to read and edit manually

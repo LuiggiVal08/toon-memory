@@ -1,0 +1,35 @@
+---
+title: Supported Agents
+description: Agents supported by toon-memory
+---
+
+## Supported Agents
+
+| Agent | Config Location | Auto-Setup |
+|-------|-----------------|------------|
+| **OpenCode** | `.opencode/opencode.json` | ✅ |
+| **VS Code / Copilot** | `.vscode/mcp.json` | ✅ |
+| **Claude Code** | `.claude/settings.json` | ✅ |
+| **Cursor** | `.cursor/mcp.json` | ✅ |
+| **Windsurf** | `.windsurfrules` | ✅ |
+| **Cline** | `.cline/mcp.json` | ✅ |
+| **Continue** | `.continue/config.json` | ✅ |
+| **Aider** | `.aider.conf.yml` | ⚠️ Manual |
+
+## Auto-Setup
+
+Run the interactive installer:
+
+```bash
+npx toon-memory
+```
+
+This will:
+1. Detect installed agents
+2. Configure MCP server for each
+3. Create memory directory
+4. Add to `.gitignore`
+
+## Manual Setup
+
+See [Manual Configuration](/toon-memory/configuration/manual) for agent-specific instructions.

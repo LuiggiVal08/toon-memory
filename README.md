@@ -5,6 +5,7 @@
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml/badge.svg)](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/badge/docs-online-blue)](https://luiggival08.github.io/toon-memory/)
 
 ---
 
@@ -28,6 +29,8 @@
 ## What is toon-memory?
 
 AI agents forget everything between sessions. toon-memory fixes this by providing persistent memory that survives restarts.
+
+📖 **[Read the documentation](https://luiggival08.github.io/toon-memory/)**
 
 **Use cases:**
 - Remember design decisions ("Why did we choose X over Y?")

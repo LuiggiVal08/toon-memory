@@ -1,0 +1,81 @@
+---
+title: MCP Tools
+description: The 8 memory tools for your AI agent
+---
+
+## Overview
+
+toon-memory provides 8 MCP tools for managing persistent memory:
+
+| Tool | Description |
+|------|-------------|
+| `memory_remember` | Save a decision, pattern, bug, or knowledge |
+| `memory_recall` | Search memory (use BEFORE reading files) |
+| `memory_forget` | Remove an entry by key or id |
+| `memory_stats` | View memory state |
+| `memory_summary` | Save/retrieve file summaries |
+| `memory_archive` | Archive old entries (>30 days) |
+| `memory_encrypt` | Enable AES-256-GCM encryption |
+| `memory_decrypt` | Disable encryption |
+
+## Examples
+
+### Remember a decision
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts",
+  tags: "validation;types"
+})
+// 🧠 Guardado: decision/use-zod (a1b2c3d4)
+```
+
+### Search memory
+
+```typescript
+memory_recall({ query: "redis" })
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Added max_connections=20
+//   File: redis.ts | Tags: redis;fix | Date: 2026-07-10
+```
+
+### Search with date filter
+
+```typescript
+memory_recall({
+  query: "redis",
+  from_date: "2026-07-01",
+  to_date: "2026-07-31"
+})
+```
+
+### Archive old entries
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+### Enable encryption
+
+```typescript
+memory_encrypt()
+// 🔐 Encriptación habilitada
+// ⚠️ Guarda esta clave (no se puede recuperar):
+// a1b2c3d4...
+```
+
+## Categories
+
+Entries are organized by category:
+
+| Category | Use Case |
+|----------|----------|
+| `decision` | Design decisions ("Why X over Y?") |
+| `pattern` | Project patterns ("Uses Zod for validation") |
+| `bug` | Bug fixes ("Redis pool exhaustion") |
+| `knowledge` | General knowledge ("Broker uses RESP") |

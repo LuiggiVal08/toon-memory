@@ -1,0 +1,50 @@
+---
+title: Encryption
+description: AES-256-GCM encryption for sensitive data
+---
+
+## Overview
+
+toon-memory supports AES-256-GCM encryption for protecting sensitive memory data.
+
+## Enable Encryption
+
+```typescript
+memory_encrypt()
+// 🔐 Encriptación habilitada
+// ⚠️ Guarda esta clave (no se puede recuperar):
+// a1b2c3d4e5f6...
+```
+
+**Important:** Save the encryption key! It cannot be recovered if lost.
+
+## Disable Encryption
+
+```typescript
+memory_decrypt({ key: "a1b2c3d4e5f6..." })
+// 🔓 Encriptación deshabilitada
+```
+
+## How It Works
+
+1. When enabled, a random 256-bit key is generated
+2. Memory file is encrypted with AES-256-GCM
+3. Key is stored in `.opencode/memory/config.json`
+4. Decryption happens automatically when reading
+
+## Security Notes
+
+- Encryption is **per-project** (each project has its own key)
+- The key is stored locally in `config.json`
+- **Never commit `config.json` to git**
+- Backups are also encrypted when encryption is enabled
+
+## File Structure
+
+```
+.opencode/memory/
+├── data.toon        # Encrypted when enabled
+├── config.json      # Contains encryption key
+└── backups/
+    └── backup-*.toon  # Also encrypted
+```

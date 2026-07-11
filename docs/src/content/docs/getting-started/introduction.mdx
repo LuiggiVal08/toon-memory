@@ -1,0 +1,40 @@
+---
+title: Introduction
+description: What is toon-memory?
+---
+
+## The Problem
+
+AI coding agents forget everything between sessions. Every time you start a new session, the agent starts from scratch:
+
+- "Why did we choose X over Y?"
+- "What was that bug fix again?"
+- "What patterns does this project use?"
+
+## The Solution
+
+toon-memory provides persistent memory that survives restarts. It stores your decisions, patterns, bugs, and knowledge in a token-efficient format.
+
+## How It Works
+
+1. **MCP Server** — Runs locally, talks to your agent via stdio
+2. **TOON Format** — Stores data in Token-Oriented Object Notation (~40% fewer tokens than JSON)
+3. **Per-project memory** — Each project gets `.opencode/memory/data.toon`
+4. **Zero config** — Just install and use
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| 8 MCP Tools | Full memory management via Model Context Protocol |
+| 7 Agents | OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue |
+| TOON Format | 40% fewer tokens than JSON |
+| Auto-Archive | Old entries moved to archive automatically |
+| Encryption | AES-256-GCM for sensitive data |
+| Watch Mode | Auto-backup every N minutes |
+
+## Next Steps
+
+- [Quick Start](/toon-memory/getting-started/quickstart) — Get up and running in 3 steps
+- [MCP Tools](/toon-memory/features/tools) — Learn about the 8 memory tools
+- [Configuration](/toon-memory/configuration/agents) — Agent-specific setup
