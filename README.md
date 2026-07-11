@@ -31,10 +31,10 @@ AI agents forget everything between sessions. toon-memory fixes this by providin
 
 ```bash
 # macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/luiggival/toon-memory/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
 
 # Windows (PowerShell)
-irm https://raw.githubusercontent.com/luiggival/toon-memory/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex
 
 # Or with npm (any platform)
 npm i -g toon-memory
@@ -198,7 +198,7 @@ TOON (Token-Oriented Object Notation) is designed for LLMs:
 ## Development
 
 ```bash
-git clone https://github.com/luiggival/toon-memory.git
+git clone https://github.com/LuiggiVal08/toon-memory.git
 cd toon-memory
 npm install
 npm run build
