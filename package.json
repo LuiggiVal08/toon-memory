@@ -1,0 +1,55 @@
+{
+  "name": "toon-memory",
+  "version": "1.0.9",
+  "description": "Persistent memory system for AI coding agents using TOON format (40% fewer tokens than JSON)",
+  "type": "module",
+  "bin": {
+    "toon-memory": "./bin/toon-memory.js"
+  },
+  "files": [
+    "src/",
+    "bin/",
+    "mcp/",
+    "skills/",
+    "install.sh",
+    "uninstall.sh"
+  ],
+  "scripts": {
+    "build": "esbuild src/mcp/server.ts --bundle --platform=node --format=esm --outfile=mcp/server.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0-beta.3",
+    "@toon-format/toon": "^2.3.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  },
+  "keywords": [
+    "opencode",
+    "vscode",
+    "copilot",
+    "claude",
+    "cursor",
+    "windsurf",
+    "cline",
+    "continue",
+    "ai-agent",
+    "memory",
+    "toon",
+    "mcp",
+    "llm",
+    "token-efficiency"
+  ],
+  "author": "luiggival",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luiggival/toon-memory.git"
+  },
+  "homepage": "https://github.com/luiggival/toon-memory#readme",
+  "bugs": {
+    "url": "https://github.com/luiggival/toon-memory/issues"
+  }
+}
