@@ -13,6 +13,7 @@ export default defineConfig({
 				src: './src/assets/logo.svg',
 				alt: 'toon-memory logo',
 			},
+			customCss: ['./src/styles/custom.css'],
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/LuiggiVal08/toon-memory' },
 				{ icon: 'npm', label: 'npm', href: 'https://www.npmjs.com/package/toon-memory' },
