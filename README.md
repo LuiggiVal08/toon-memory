@@ -2,14 +2,9 @@
 
 Persistent memory for AI coding agents — remember decisions, patterns, and bugs between sessions.
 
-🎉 **1.0 Released!**
-
-Supercharge **OpenCode, VS Code Copilot, Claude Code, Cursor, Windsurf, Cline, Continue** and more with Persistent Memory
-
-Saves context in **TOON format** (40% fewer tokens than JSON) · 5 MCP tools · Works everywhere
-
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml/badge.svg)](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml)
 
 ---
 
@@ -25,9 +20,19 @@ AI agents forget everything between sessions. toon-memory fixes this by providin
 
 ---
 
-## Get Started
+## Features
 
-### 1. Install (one command)
+- **5 MCP tools** — `memory_remember`, `memory_recall`, `memory_forget`, `memory_stats`, `memory_summary`
+- **7 agents supported** — OpenCode, VS Code/Copilot, Claude Code, Cursor, Windsurf, Cline, Continue
+- **TOON format** — 40% fewer tokens than JSON, better LLM comprehension
+- **Per-project memory** — each project gets its own memory file
+- **Zero config** — just install and use
+
+---
+
+## Quick Start
+
+### 1. Install
 
 ```bash
 # macOS / Linux
@@ -60,16 +65,16 @@ memory_remember   # Save important decisions
 
 ## Supported Agents
 
-| Agent | Config Location | Status |
-|-------|-----------------|--------|
-| **OpenCode** | `.opencode/opencode.json` | ✅ Full support |
-| **VS Code / Copilot** | `.vscode/mcp.json` | ✅ Full support |
-| **Claude Code** | `.claude/settings.json` | ✅ Full support |
-| **Cursor** | `.cursor/mcp.json` | ✅ Full support |
-| **Windsurf** | `.windsurfrules` | ✅ Full support |
-| **Cline** | `.cline/mcp.json` | ✅ Full support |
-| **Continue** | `.continue/config.json` | ✅ Full support |
-| **Aider** | `.aider.conf.yml` | ⚠️ Manual config |
+| Agent | Config Location | Auto-Setup |
+|-------|-----------------|------------|
+| **OpenCode** | `.opencode/opencode.json` | ✅ |
+| **VS Code / Copilot** | `.vscode/mcp.json` | ✅ |
+| **Claude Code** | `.claude/settings.json` | ✅ |
+| **Cursor** | `.cursor/mcp.json` | ✅ |
+| **Windsurf** | `.windsurfrules` | ✅ |
+| **Cline** | `.cline/mcp.json` | ✅ |
+| **Continue** | `.continue/config.json` | ✅ |
+| **Aider** | `.aider.conf.yml` | ⚠️ Manual |
 
 ---
 
@@ -115,18 +120,6 @@ npx toon-memory mcp      # Run MCP server directly
 npx toon-memory status   # Check installation status
 npx toon-memory upgrade  # Update to latest version
 npx toon-memory uninstall # Remove from all agents
-```
-
----
-
-## Uninstall
-
-```bash
-# Remove from all agents and uninstall CLI
-npx toon-memory uninstall
-
-# Or with the global install
-toon-memory uninstall
 ```
 
 ---
@@ -205,7 +198,20 @@ git clone https://github.com/LuiggiVal08/toon-memory.git
 cd toon-memory
 npm install
 npm run build
+npm test
 ```
+
+---
+
+## Contributing
+
+Contributions are welcome! Please read our [Code of Conduct](CODE_OF_CONDUCT.md) first.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
