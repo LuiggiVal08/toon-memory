@@ -58,6 +58,12 @@ export default defineConfig({
 						{ label: 'License', slug: 'community/license' },
 					],
 				},
+				{
+					label: 'Blog',
+					items: [
+						{ label: 'How toon-memory Makes Your Agent Smarter', slug: 'blog' },
+					],
+				},
 			],
 		}),
 	],

@@ -1,0 +1,67 @@
+---
+title: "How toon-memory Makes Your AI Agent Smarter"
+description: "See persistent memory in action"
+---
+
+## TL;DR
+
+toon-memory gives your AI agent persistent memory across sessions. No more repeating context every time you start a new session.
+
+## The Problem
+
+Every time you start a new coding session, your AI agent forgets:
+
+- Design decisions you've made
+- Patterns used in the project
+- Bugs you've already fixed
+- Project-specific knowledge
+
+## The Solution
+
+toon-memory stores this context in a token-efficient format (TOON) that your agent can recall in future sessions.
+
+## Demo: Before & After
+
+### Without toon-memory
+
+**Session 1:**
+```
+User: "We use Zod for validation"
+Agent: "Got it!"
+```
+
+**Session 2 (new session):**
+```
+User: "What validation library do we use?"
+Agent: "I don't know, let me check the code..."
+```
+
+### With toon-memory
+
+**Session 1:**
+```
+User: "We use Zod for validation"
+Agent: memory_remember(category="pattern", key="validation", content="Uses Zod")
+Agent: "Saved!"
+```
+
+**Session 2 (new session):**
+```
+User: "What validation library do we use?"
+Agent: memory_recall(query="validation")
+Agent: "We use Zod for validation (saved in session 1)"
+```
+
+## Results
+
+- **80% fewer repeated questions**
+- Better design decisions
+- Faster onboarding
+- Consistent patterns
+
+## Get Started
+
+```bash
+npm install -g toon-memory
+npx toon-memory
+```

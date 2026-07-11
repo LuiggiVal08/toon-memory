@@ -12,6 +12,7 @@
 ## Table of Contents
 
 - [What is toon-memory?](#what-is-toon-memory)
+- [Blog Post](#blog-post)
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Supported Agents](#supported-agents)
@@ -37,6 +38,12 @@ AI agents forget everything between sessions. toon-memory fixes this by providin
 - Track patterns ("This project uses Zod for validation")
 - Store bug resolutions ("Redis pool exhaustion fix")
 - Save project knowledge ("Broker uses RESP protocol")
+
+---
+
+## Blog Post
+
+Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io/toon-memory/blog) to see a real-world demo of persistent memory in action.
 
 ---
 
