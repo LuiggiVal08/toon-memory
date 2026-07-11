@@ -446,6 +446,59 @@ function importMemory(): void {
   console.log(`Skipped ${importData.entries.length - newEntries.length} duplicates\n`)
 }
 
+// Watch mode - backup memory every N minutes
+function watch(): void {
+  console.log("\n🧠 toon-memory watch\n")
+  
+  const memoryFile = join(projectRoot, ".opencode", "memory", "data.toon")
+  const backupDir = join(projectRoot, ".opencode", "memory", "backups")
+  
+  if (!existsSync(memoryFile)) {
+    console.log("Memory not initialized. Run 'npx toon-memory init' first.\n")
+    return
+  }
+  
+  if (!existsSync(backupDir)) mkdirSync(backupDir, { recursive: true })
+  
+  const intervalMinutes = parseInt(args[1]) || 5
+  console.log(`Watching memory file every ${intervalMinutes} minutes...`)
+  console.log(`Press Ctrl+C to stop\n`)
+  
+  let lastContent = readFileSync(memoryFile, "utf-8")
+  let backupCount = 0
+  
+  const backup = () => {
+    const currentContent = readFileSync(memoryFile, "utf-8")
+    
+    if (currentContent !== lastContent) {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
+      const backupFile = join(backupDir, `backup-${timestamp}.toon`)
+      writeFileSync(backupFile, currentContent)
+      backupCount++
+      console.log(`📦 Backup #${backupCount} created: ${timestamp}`)
+      lastContent = currentContent
+    }
+  }
+  
+  // Initial backup
+  backup()
+  
+  // Set interval
+  const interval = setInterval(backup, intervalMinutes * 60 * 1000)
+  
+  // Handle Ctrl+C
+  process.on("SIGINT", () => {
+    clearInterval(interval)
+    console.log(`\n✅ Watch stopped. ${backupCount} backups created.\n`)
+    process.exit(0)
+  })
+  
+  process.on("SIGTERM", () => {
+    clearInterval(interval)
+    process.exit(0)
+  })
+}
+
 // Main
 const args = process.argv.slice(2)
 
@@ -481,6 +534,11 @@ if (args[0] === "export") {
 
 if (args[0] === "import") {
   importMemory()
+  process.exit(0)
+}
+
+if (args[0] === "watch") {
+  watch()
   process.exit(0)
 }
 

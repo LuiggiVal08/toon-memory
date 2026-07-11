@@ -22,7 +22,7 @@ AI agents forget everything between sessions. toon-memory fixes this by providin
 
 ## Features
 
-- **6 MCP tools** — `memory_remember`, `memory_recall`, `memory_forget`, `memory_stats`, `memory_summary`, `memory_archive`
+- **8 MCP tools** — `memory_remember`, `memory_recall`, `memory_forget`, `memory_stats`, `memory_summary`, `memory_archive`, `memory_encrypt`, `memory_decrypt`
 - **7 agents supported** — OpenCode, VS Code/Copilot, Claude Code, Cursor, Windsurf, Cline, Continue
 - **TOON format** — 40% fewer tokens than JSON, better LLM comprehension
 - **Per-project memory** — each project gets its own memory file
@@ -30,6 +30,8 @@ AI agents forget everything between sessions. toon-memory fixes this by providin
 - **Auto gitignore** — automatically adds `.opencode/memory/` to `.gitignore`
 - **Date filtering** — search memory by date range
 - **Auto-archive** — old entries (>30 days) moved to archive automatically
+- **Encryption** — AES-256-GCM encryption for sensitive data
+- **Watch mode** — auto-backup every N minutes
 
 ---
 
@@ -91,6 +93,8 @@ memory_remember   # Save important decisions
 | `memory_stats` | View memory state |
 | `memory_summary` | Save/retrieve file summaries |
 | `memory_archive` | Archive old entries (>30 days) |
+| `memory_encrypt` | Enable AES-256-GCM encryption |
+| `memory_decrypt` | Disable encryption |
 
 ### Date Filtering
 
@@ -114,6 +118,22 @@ Entries older than 30 days are automatically archived to keep memory clean:
 memory_archive()
 // 📦 Archivadas 5 entradas antiguas
 // 📋 Quedan 42 entradas activas
+```
+
+### Encryption
+
+Enable AES-256-GCM encryption for sensitive data:
+
+```typescript
+// Enable encryption
+memory_encrypt()
+// 🔐 Encriptación habilitada
+// ⚠️ Guarda esta clave (no se puede recuperar):
+// a1b2c3d4...
+
+// Disable encryption
+memory_decrypt({ key: "a1b2c3d4..." })
+// 🔓 Encriptación deshabilitada
 ```
 
 ---
@@ -149,6 +169,7 @@ npx toon-memory status       # Check installation status
 npx toon-memory stats        # View memory statistics
 npx toon-memory export       # Export memory to JSON
 npx toon-memory import <file> # Import memory from JSON
+npx toon-memory watch [mins] # Auto-backup every N minutes (default: 5)
 npx toon-memory upgrade      # Update to latest version
 npx toon-memory uninstall    # Remove from all agents
 ```

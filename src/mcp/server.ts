@@ -4,30 +4,107 @@ import { z } from "zod"
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs"
 import { dirname, join } from "path"
 import { fileURLToPath } from "url"
-import { randomBytes } from "crypto"
+import { randomBytes, createCipheriv, createDecipheriv } from "crypto"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const MEMORY_DIR = join(process.cwd(), ".opencode", "memory")
 const MEMORY_FILE = join(MEMORY_DIR, "data.toon")
 const ARCHIVE_FILE = join(MEMORY_DIR, "archive.toon")
+const CONFIG_FILE = join(MEMORY_DIR, "config.json")
 const MAX_ENTRIES = 100
 const ARCHIVE_DAYS = 30
+const ALGORITHM = "aes-256-gcm"
+
+interface MemoryConfig {
+  encrypted: boolean
+  key?: string
+}
+
+function loadConfig(): MemoryConfig {
+  if (!existsSync(CONFIG_FILE)) {
+    return { encrypted: false }
+  }
+  try {
+    return JSON.parse(readFileSync(CONFIG_FILE, "utf-8"))
+  } catch {
+    return { encrypted: false }
+  }
+}
+
+function saveConfig(config: MemoryConfig): void {
+  ensureMemoryDir()
+  writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2))
+}
+
+function ensureMemoryDir() {
+  if (!existsSync(MEMORY_DIR)) mkdirSync(MEMORY_DIR, { recursive: true })
+}
 
 function ensureMemoryFile() {
-  if (!existsSync(MEMORY_DIR)) mkdirSync(MEMORY_DIR, { recursive: true })
+  ensureMemoryDir()
   if (!existsSync(MEMORY_FILE)) {
     writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date}:\n")
   }
 }
 
-function readMemory() {
-  ensureMemoryFile()
-  return readFileSync(MEMORY_FILE, "utf-8")
+function encrypt(text: string, key: string): string {
+  const keyBuffer = Buffer.from(key, "hex")
+  const iv = randomBytes(16)
+  const cipher = createCipheriv(ALGORITHM, keyBuffer, iv)
+  
+  let encrypted = cipher.update(text, "utf8", "hex")
+  encrypted += cipher.final("hex")
+  
+  const authTag = cipher.getAuthTag()
+  
+  return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted}`
 }
 
-function writeMemory(content: string) {
+function decrypt(encryptedData: string, key: string): string {
+  const keyBuffer = Buffer.from(key, "hex")
+  const [ivHex, authTagHex, encrypted] = encryptedData.split(":")
+  
+  const iv = Buffer.from(ivHex, "hex")
+  const authTag = Buffer.from(authTagHex, "hex")
+  const decipher = createDecipheriv(ALGORITHM, keyBuffer, iv)
+  decipher.setAuthTag(authTag)
+  
+  let decrypted = decipher.update(encrypted, "hex", "utf8")
+  decrypted += decipher.final("utf8")
+  
+  return decrypted
+}
+
+function generateKey(): string {
+  return randomBytes(32).toString("hex")
+}
+
+function readMemory(): string {
   ensureMemoryFile()
-  writeFileSync(MEMORY_FILE, content)
+  const config = loadConfig()
+  const data = readFileSync(MEMORY_FILE, "utf-8")
+  
+  if (config.encrypted && config.key) {
+    try {
+      return decrypt(data, config.key)
+    } catch {
+      return data
+    }
+  }
+  
+  return data
+}
+
+function writeMemory(content: string): void {
+  ensureMemoryFile()
+  const config = loadConfig()
+  
+  if (config.encrypted && config.key) {
+    const encrypted = encrypt(content, config.key)
+    writeFileSync(MEMORY_FILE, encrypted)
+  } else {
+    writeFileSync(MEMORY_FILE, content)
+  }
 }
 
 function generateId(): string {
@@ -338,6 +415,69 @@ server.registerTool(
         type: "text" as const, 
         text: `📦 Archivadas ${result.archived} entradas antiguas\n📋 Quedan ${result.kept} entradas activas` 
       }],
+    }
+  }
+)
+
+server.registerTool(
+  "memory_encrypt",
+  {
+    title: "Enable Encryption",
+    description: "Habilita encriptación AES-256-GCM para la memoria. La clave se genera automáticamente.",
+    inputSchema: {},
+  },
+  async () => {
+    const config = loadConfig()
+    
+    if (config.encrypted) {
+      return { content: [{ type: "text" as const, text: "La encriptación ya está habilitada" }] }
+    }
+    
+    const key = generateKey()
+    const data = readFileSync(MEMORY_FILE, "utf-8")
+    
+    const encrypted = encrypt(data, key)
+    writeFileSync(MEMORY_FILE, encrypted)
+    
+    saveConfig({ encrypted: true, key })
+    
+    return {
+      content: [{ 
+        type: "text" as const, 
+        text: `🔐 Encriptación habilitada\n⚠️ Guarda esta clave (no se puede recuperar):\n${key}` 
+      }],
+    }
+  }
+)
+
+server.registerTool(
+  "memory_decrypt",
+  {
+    title: "Disable Encryption",
+    description: "Deshabilita la encriptación y decodifica la memoria.",
+    inputSchema: {
+      key: z.string().describe("Clave de encriptación"),
+    },
+  },
+  async ({ key }) => {
+    const config = loadConfig()
+    
+    if (!config.encrypted) {
+      return { content: [{ type: "text" as const, text: "La encriptación no está habilitada" }] }
+    }
+    
+    try {
+      const data = readFileSync(MEMORY_FILE, "utf-8")
+      const decrypted = decrypt(data, key)
+      
+      writeFileSync(MEMORY_FILE, decrypted)
+      saveConfig({ encrypted: false })
+      
+      return {
+        content: [{ type: "text" as const, text: "🔓 Encriptación deshabilitada" }],
+      }
+    } catch {
+      return { content: [{ type: "text" as const, text: "❌ Clave incorrecta o datos corruptos" }] }
     }
   }
 )
