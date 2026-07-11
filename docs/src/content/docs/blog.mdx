@@ -3,19 +3,83 @@ title: "How toon-memory Makes Your AI Agent Smarter"
 description: "See persistent memory in action"
 ---
 
-<div class="post-header gradient-text-animated">
-  <h1>How toon-memory Makes Your AI Agent Smarter</h1>
-  <p>See persistent memory in action</p>
+<div class="hero-section">
+  <div class="hero-badges">
+    <span class="badge badge--brand">Docs</span>
+    <span class="badge badge--success">GitHub</span>
+    <span class="badge badge--warning">npm</span>
+  </div>
+  
+  <h1 class="hero-title gradient-text-animated">toon-memory</h1>
+  
+  <p class="hero-tagline">Persistent memory for AI coding agents — remember decisions, patterns, and bugs between sessions.</p>
+  
+  <div class="hero-install">
+    <code class="install-code">npm install -g toon-memory</code>
+  </div>
+  
+  <div class="hero-actions">
+    <a href="/toon-memory/getting-started/quickstart" class="cta-button">
+      Get started
+    </a>
+    <a href="/toon-memory/features/tools" class="cta-button cta-button--secondary">
+      View documentation
+    </a>
+  </div>
 </div>
 
-<div class="result-card glow fade-in-up">
-  <div class="result-card__number counter" data-target="80">0</div>
-  <div>% fewer repeated questions</div>
+<div class="visual-section">
+  <div class="file-tree">
+    <div class="file-tree__header">
+      <span class="file-tree__dot file-tree__dot--red"></span>
+      <span class="file-tree__dot file-tree__dot--yellow"></span>
+      <span class="file-tree__dot file-tree__dot--green"></span>
+      <span class="file-tree__title">.opencode/memory/data.toon</span>
+    </div>
+    <div class="file-tree__content">
+      <div class="file-item file-item--active">
+        <span class="file-icon">🧠</span>
+        <span class="file-name">decision/use-zod</span>
+        <span class="file-preview">Use Zod for validation</span>
+      </div>
+      <div class="file-item">
+        <span class="file-icon">🐛</span>
+        <span class="file-name">bug/redis-pool-fix</span>
+        <span class="file-preview">Added max_connections=20</span>
+      </div>
+      <div class="file-item">
+        <span class="file-icon">📋</span>
+        <span class="file-name">pattern/pydantic-configs</span>
+        <span class="file-preview">Project uses Pydantic v2</span>
+      </div>
+      <div class="file-item">
+        <span class="file-icon">📚</span>
+        <span class="file-name">knowledge/broker-protocol</span>
+        <span class="file-preview">Broker uses RESP protocol</span>
+      </div>
+    </div>
+  </div>
 </div>
 
-## TL;DR
-
-toon-memory gives your AI agent persistent memory across sessions. No more repeating context every time you start a new session.
+<div class="features-grid">
+  <div class="feature-card ripple">
+    <div class="feature-icon">🧠</div>
+    <h3>Memory Management</h3>
+    <p>8 MCP tools for full memory control — remember, recall, forget, and more.</p>
+  </div>
+  
+  <div class="feature-card ripple">
+    <div class="feature-icon">🤖</div>
+    <h3>7 Agents Supported</h3>
+    <p>OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue — all compatible.</p>
+  </div>
+  
+  <div class="feature-card ripple">
+    <div class="feature-icon">⚡</div>
+    <h3>TOON Format</h3>
+    <p>40% fewer tokens than JSON, better LLM comprehension, lossless roundtrip.</p>
+  </div>
+</div>
 
 ---
 
@@ -84,15 +148,15 @@ toon-memory stores this context in a token-efficient format (TOON) that your age
   <p><strong>Session 1:</strong></p>
   <div class="terminal">
     <span class="prompt">User:</span> "We use Zod for validation"<br />
-    <span class="prompt">Agent:</span> <span class="command typing-effect">memory_remember(category="pattern", key="validation", content="Uses Zod")</span><br />
+    <span class="prompt">Agent:</span> <span class="command">memory_remember</span>(category="pattern", key="validation")<br />
     <span class="output">🧠 Saved: pattern/validation</span>
   </div>
   
   <p><strong>Session 2 (new session):</strong></p>
   <div class="terminal">
     <span class="prompt">User:</span> "What validation library do we use?"<br />
-    <span class="prompt">Agent:</span> <span class="command typing-effect">memory_recall(query="validation")</span><br />
-    <span class="output">[pattern] validation<br />We use Zod for validation (saved in session 1)</span>
+    <span class="prompt">Agent:</span> <span class="command">memory_recall</span>(query="validation")<br />
+    <span class="output">[pattern] validation — We use Zod for validation</span>
   </div>
 </div>
 
@@ -100,22 +164,22 @@ toon-memory stores this context in a token-efficient format (TOON) that your age
 
 ## Results
 
-<div class="comparison-grid">
-  <div class="result-card ripple fade-in-left">
-    <div class="result-card__number counter" data-target="80">0</div>
-    <div>% fewer repeated questions</div>
+<div class="stats-grid">
+  <div class="stat-card glow fade-in-left">
+    <div class="stat-card__number counter" data-target="80">0</div>
+    <div class="stat-card__label">% fewer repeated questions</div>
   </div>
-  <div class="result-card ripple fade-in-right">
-    <div class="result-card__number counter" data-target="10">0</div>
-    <div>x faster onboarding</div>
+  <div class="stat-card glow fade-in-right">
+    <div class="stat-card__number counter" data-target="10">0</div>
+    <div class="stat-card__label">x faster onboarding</div>
   </div>
-  <div class="result-card ripple fade-in-left">
-    <div class="result-card__number counter" data-target="100">0</div>
-    <div>% consistent patterns</div>
+  <div class="stat-card glow fade-in-left">
+    <div class="stat-card__number counter" data-target="100">0</div>
+    <div class="stat-card__label">% consistent patterns</div>
   </div>
-  <div class="result-card ripple fade-in-right">
-    <div class="result-card__number">0</div>
-    <div>lost context</div>
+  <div class="stat-card glow fade-in-right">
+    <div class="stat-card__number">0</div>
+    <div class="stat-card__label">lost context</div>
   </div>
 </div>
 
