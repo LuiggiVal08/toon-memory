@@ -17,7 +17,8 @@
     "uninstall.sh"
   ],
   "scripts": {
-    "build": "npm run build:mcp && npm run build:cli",
+    "build": "npm run build:bin && npm run build:mcp && npm run build:cli",
+    "build:bin": "esbuild src/bin/toon-memory.ts --platform=node --format=esm --outfile=bin/toon-memory.js",
     "build:mcp": "esbuild src/mcp/server.ts --bundle --platform=node --format=esm --outfile=mcp/server.js",
     "build:cli": "esbuild src/cli/setup.ts --platform=node --format=esm --outfile=dist/cli/setup.js && esbuild src/cli/toon-memory.ts --platform=node --format=esm --outfile=dist/cli/toon-memory.js",
     "test": "vitest run",
