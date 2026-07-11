@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, unlinkSync } from "fs"
 import { dirname, join } from "path"
 import { fileURLToPath } from "url"
@@ -11,6 +10,13 @@ const projectRoot = process.cwd()
 const sourceDir = join(__dirname, "..", "src")
 const HOME = process.env.HOME || process.env.USERPROFILE || "~"
 
+interface Agent {
+  name: string
+  global?: string
+  local?: string
+  mcpKey: string
+}
+
 // Auto-install @toon-format/toon if not present
 try {
   createRequire(import.meta.url).resolve("@toon-format/toon")
@@ -20,8 +26,8 @@ try {
 }
 
 // Detect all supported agents
-function detectAgents() {
-  const agents = []
+function detectAgents(): Agent[] {
+  const agents: Agent[] = []
   
   // OpenCode
   const opencodeGlobal = join(HOME, ".config", "opencode", "opencode.json")
@@ -87,7 +93,7 @@ function detectAgents() {
 }
 
 // Install custom tools for OpenCode
-function installOpenCodeTools() {
+function installOpenCodeTools(): void {
   const toolsDir = join(projectRoot, ".opencode", "tools")
   const memoryDir = join(projectRoot, ".opencode", "memory")
   const memoryFile = join(memoryDir, "data.toon")
@@ -105,7 +111,7 @@ function installOpenCodeTools() {
 }
 
 // Install MCP server config for different agents
-function installMCPConfig(agent, scope) {
+function installMCPConfig(agent: Agent, scope: string): void {
   const configPath = scope === "global" ? agent.global : agent.local
   
   if (!configPath) {
@@ -116,7 +122,7 @@ function installMCPConfig(agent, scope) {
   const configDir = dirname(configPath)
   if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
   
-  let config = {}
+  let config: Record<string, any> = {}
   if (existsSync(configPath)) {
     try {
       config = JSON.parse(readFileSync(configPath, "utf-8"))
@@ -138,13 +144,13 @@ function installMCPConfig(agent, scope) {
 }
 
 // Uninstall from all agents
-function uninstall() {
+function uninstall(): void {
   console.log("\n🧠 toon-memory uninstaller\n")
   
   const agents = detectAgents()
   
   for (const agent of agents) {
-    const configs = [agent.global, agent.local].filter(Boolean)
+    const configs = [agent.global, agent.local].filter(Boolean) as string[]
     
     for (const configPath of configs) {
       if (!existsSync(configPath)) continue
@@ -173,7 +179,7 @@ function uninstall() {
 }
 
 // Quick init without interactive prompts
-function init(scope = "local") {
+function init(scope: string = "local"): void {
   console.log("\n🧠 toon-memory init\n")
   
   const agents = detectAgents()
@@ -193,7 +199,7 @@ function init(scope = "local") {
 }
 
 // Show installation status
-function status() {
+function status(): void {
   console.log("\n🧠 toon-memory status\n")
   
   // Check npm package
@@ -208,7 +214,7 @@ function status() {
   const memoryFile = join(projectRoot, ".opencode", "memory", "data.toon")
   if (existsSync(memoryFile)) {
     const data = readFileSync(memoryFile, "utf-8")
-    const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|"))
+    const lines = data.split("\n").filter((l: string) => l.startsWith("  ") && l.includes("|"))
     console.log(`Memory: ${lines.length} entries`)
   } else {
     console.log("Memory: not initialized")
@@ -219,7 +225,7 @@ function status() {
   console.log("\nAgent configs:")
   
   for (const agent of agents) {
-    const configs = [agent.global, agent.local].filter(Boolean)
+    const configs = [agent.global, agent.local].filter(Boolean) as string[]
     let found = false
     
     for (const configPath of configs) {
@@ -245,7 +251,7 @@ function status() {
 }
 
 // Upgrade to latest version
-function upgrade() {
+function upgrade(): void {
   console.log("\n🧠 toon-memory upgrade\n")
   
   try {
@@ -256,10 +262,10 @@ function upgrade() {
     console.log("Upgrading...")
     execSync("npm install -g toon-memory@" + latest, { stdio: "inherit" })
     
-    console.log("\n✅ Upgraded to toon-memory@" + latest)
+    console.log(`\n✅ Upgraded to toon-memory@${latest}`)
     console.log("Restart your agent to use the new version.\n")
   } catch (error) {
-    console.error("Upgrade failed:", error.message)
+    console.error("Upgrade failed:", (error as Error).message)
   }
 }
 
@@ -290,11 +296,11 @@ const agents = detectAgents()
 console.log("\n🧠 toon-memory installer\n")
 
 console.log("Supported agents:")
-agents.forEach((a, i) => console.log(`  ${i + 1}. ${a.name}`))
+agents.forEach((a: Agent, i: number) => console.log(`  ${i + 1}. ${a.name}`))
 console.log("")
 
 const rl = createInterface({ input: process.stdin, output: process.stdout })
-rl.question("Install (1) Local or (2) Global? [1/2]: ", (answer) => {
+rl.question("Install (1) Local or (2) Global? [1/2]: ", (answer: string) => {
   const scope = answer === "2" ? "global" : "local"
   console.log(`\nInstalling ${scope}ly...\n`)
   
