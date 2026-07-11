@@ -114,12 +114,55 @@ summaries:
 ## CLI Commands
 
 ```bash
-npx toon-memory          # Interactive installer
-npx toon-memory init     # Quick setup (no prompts)
-npx toon-memory mcp      # Run MCP server directly
-npx toon-memory status   # Check installation status
-npx toon-memory upgrade  # Update to latest version
-npx toon-memory uninstall # Remove from all agents
+npx toon-memory              # Interactive installer
+npx toon-memory init         # Quick setup (no prompts)
+npx toon-memory mcp          # Run MCP server directly
+npx toon-memory status       # Check installation status
+npx toon-memory stats        # View memory statistics
+npx toon-memory export       # Export memory to JSON
+npx toon-memory import <file> # Import memory from JSON
+npx toon-memory upgrade      # Update to latest version
+npx toon-memory uninstall    # Remove from all agents
+```
+
+### Stats
+
+```bash
+$ npx toon-memory stats
+
+🧠 toon-memory stats
+
+📊 Memory Stats
+━━━━━━━━━━━━━━━━━━
+Total entries: 45
+├── decision: 12
+├── pattern: 18
+├── bug: 8
+└── knowledge: 7
+Last updated: 2026-07-10
+File size: 12.4 KB
+```
+
+### Export
+
+```bash
+$ npx toon-memory export
+
+🧠 toon-memory export
+
+Exported 45 entries to:
+  /path/to/project/toon-memory-export.json
+```
+
+### Import
+
+```bash
+$ npx toon-memory import backup.json
+
+🧠 toon-memory import
+
+Imported 3 new entries
+Skipped 2 duplicates
 ```
 
 ---
