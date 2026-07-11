@@ -22,13 +22,14 @@ AI agents forget everything between sessions. toon-memory fixes this by providin
 
 ## Features
 
-- **5 MCP tools** — `memory_remember`, `memory_recall`, `memory_forget`, `memory_stats`, `memory_summary`
+- **6 MCP tools** — `memory_remember`, `memory_recall`, `memory_forget`, `memory_stats`, `memory_summary`, `memory_archive`
 - **7 agents supported** — OpenCode, VS Code/Copilot, Claude Code, Cursor, Windsurf, Cline, Continue
 - **TOON format** — 40% fewer tokens than JSON, better LLM comprehension
 - **Per-project memory** — each project gets its own memory file
 - **Zero config** — just install and use
 - **Auto gitignore** — automatically adds `.opencode/memory/` to `.gitignore`
 - **Date filtering** — search memory by date range
+- **Auto-archive** — old entries (>30 days) moved to archive automatically
 
 ---
 
@@ -89,6 +90,7 @@ memory_remember   # Save important decisions
 | `memory_forget` | Remove an entry by key or id |
 | `memory_stats` | View memory state |
 | `memory_summary` | Save/retrieve file summaries |
+| `memory_archive` | Archive old entries (>30 days) |
 
 ### Date Filtering
 
@@ -101,6 +103,17 @@ memory_recall({
   from_date: "2026-07-01",
   to_date: "2026-07-31"
 })
+```
+
+### Auto-Archive
+
+Entries older than 30 days are automatically archived to keep memory clean:
+
+```typescript
+// Manually trigger archiving
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
 ```
 
 ---

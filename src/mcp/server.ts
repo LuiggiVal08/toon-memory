@@ -9,6 +9,9 @@ import { randomBytes } from "crypto"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const MEMORY_DIR = join(process.cwd(), ".opencode", "memory")
 const MEMORY_FILE = join(MEMORY_DIR, "data.toon")
+const ARCHIVE_FILE = join(MEMORY_DIR, "archive.toon")
+const MAX_ENTRIES = 100
+const ARCHIVE_DAYS = 30
 
 function ensureMemoryFile() {
   if (!existsSync(MEMORY_DIR)) mkdirSync(MEMORY_DIR, { recursive: true })
@@ -29,6 +32,71 @@ function writeMemory(content: string) {
 
 function generateId(): string {
   return randomBytes(4).toString("hex")
+}
+
+function archiveOldEntries(): { archived: number; kept: number } {
+  const data = readMemory()
+  const lines = data.split("\n")
+  const headerIdx = lines.findIndex((l) => l.startsWith("entries["))
+  
+  if (headerIdx === -1) return { archived: 0, kept: 0 }
+  
+  const today = new Date()
+  const cutoff = new Date(today)
+  cutoff.setDate(cutoff.getDate() - ARCHIVE_DAYS)
+  const cutoffStr = cutoff.toISOString().split("T")[0]
+  
+  const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0)
+  const toArchive: string[] = []
+  const toKeep: string[] = []
+  
+  for (const line of entryLines) {
+    const parts = line.trim().split("|")
+    if (parts.length >= 7) {
+      const date = parts[6]
+      if (date < cutoffStr) {
+        toArchive.push(line.trim())
+      } else {
+        toKeep.push(line.trim())
+      }
+    } else {
+      toKeep.push(line.trim())
+    }
+  }
+  
+  if (toArchive.length === 0) return { archived: 0, kept: toKeep.length }
+  
+  // Write archived entries
+  let archiveContent = ""
+  if (existsSync(ARCHIVE_FILE)) {
+    archiveContent = readFileSync(ARCHIVE_FILE, "utf-8")
+  } else {
+    archiveContent = `version: 1\narchived:\n`
+  }
+  
+  const archiveLines = archiveContent.split("\n")
+  let archiveHeaderIdx = archiveLines.findIndex((l) => l.startsWith("archived["))
+  if (archiveHeaderIdx === -1) {
+    archiveLines.push(`archived[0|]{id|category|key|content|file|tags|date}:`)
+    archiveHeaderIdx = archiveLines.length - 1
+  }
+  
+  const archiveMatch = archiveLines[archiveHeaderIdx].match(/archived\[(\d+)\|/)
+  const archiveCount = archiveMatch ? parseInt(archiveMatch[1]) : 0
+  
+  for (const entry of toArchive) {
+    archiveLines.splice(archiveHeaderIdx + 1, 0, `  ${entry}`)
+  }
+  archiveLines[archiveHeaderIdx] = archiveLines[archiveHeaderIdx].replace(/archived\[\d+\|/, `[${archiveCount + toArchive.length}|`)
+  
+  writeFileSync(ARCHIVE_FILE, archiveLines.join("\n"))
+  
+  // Update main file
+  lines[headerIdx] = lines[headerIdx].replace(/entries\[\d+\|/, `[${toKeep.length}|`)
+  lines.splice(headerIdx + 1, entryLines.length, ...toKeep.map((l) => `  ${l}`))
+  writeMemory(lines.join("\n"))
+  
+  return { archived: toArchive.length, kept: toKeep.length }
 }
 
 const server = new McpServer(
@@ -247,6 +315,29 @@ server.registerTool(
     writeMemory(lines.join("\n"))
     return {
       content: [{ type: "text" as const, text: `📝 Resumen guardado para ${file}` }],
+    }
+  }
+)
+
+server.registerTool(
+  "memory_archive",
+  {
+    title: "Archive Old Entries",
+    description: "Mover entradas antiguas (>30 días) a archive.toon para mantener la memoria limpia.",
+    inputSchema: {},
+  },
+  async () => {
+    const result = archiveOldEntries()
+    
+    if (result.archived === 0) {
+      return { content: [{ type: "text" as const, text: "No hay entradas antiguas para archivar" }] }
+    }
+    
+    return {
+      content: [{ 
+        type: "text" as const, 
+        text: `📦 Archivadas ${result.archived} entradas antiguas\n📋 Quedan ${result.kept} entradas activas` 
+      }],
     }
   }
 )
