@@ -1,6 +1,6 @@
 {
   "name": "toon-memory",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Persistent memory system for AI coding agents using TOON format (40% fewer tokens than JSON)",
   "type": "module",
   "bin": {
@@ -20,7 +20,9 @@
     "build": "npm run build:mcp && npm run build:cli",
     "build:mcp": "esbuild src/mcp/server.ts --bundle --platform=node --format=esm --outfile=mcp/server.js",
     "build:cli": "esbuild src/cli/setup.ts --platform=node --format=esm --outfile=dist/cli/setup.js && esbuild src/cli/toon-memory.ts --platform=node --format=esm --outfile=dist/cli/toon-memory.js",
-    "prepublishOnly": "npm run build"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.0.0-beta.3",
@@ -28,7 +30,10 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "esbuild": "^0.25.0"
+    "@types/node": "^26.1.1",
+    "esbuild": "^0.25.0",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   },
   "keywords": [
     "opencode",

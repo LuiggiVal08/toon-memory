@@ -7,7 +7,9 @@ import { createRequire } from "module"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const projectRoot = process.cwd()
-const sourceDir = join(__dirname, "..", "src")
+// When compiled to dist/cli/, src is at ../../src
+// When running directly from src/cli/, src is at ../src
+const sourceDir = join(__dirname, "..", "..", "src")
 const HOME = process.env.HOME || process.env.USERPROFILE || "~"
 
 interface Agent {
