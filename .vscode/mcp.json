@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "toon-memory",
+        "mcp"
+      ]
+    }
+  }
+}
