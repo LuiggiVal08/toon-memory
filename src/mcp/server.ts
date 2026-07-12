@@ -306,7 +306,7 @@ server.registerTool(
   },
   async ({ category, key, content, file, tags }) => {
     const data = readMemory()
-    const id = generateId()
+    const newId = generateId()
     const date = new Date().toISOString().split("T")[0]
     const lines = data.split("\n")
 
@@ -318,6 +318,7 @@ server.registerTool(
 
     // Find existing entry with same key (upsert)
     let existingIdx = -1
+    let existingId = newId
     for (let i = headerIdx + 1; i < lines.length; i++) {
       const line = lines[i]
       if (!line.startsWith("  ") || !line.includes("|")) continue
@@ -325,11 +326,13 @@ server.registerTool(
       const parts = line.trim().split("|")
       if (parts[2] === key) {
         existingIdx = i
+        existingId = parts[0] // Preserve original ID
         break
       }
     }
 
-    const newEntry = `${id}|${category}|${key}|${content}|${file || ""}|${tags || ""}|${date}`
+    const entryId = existingIdx !== -1 ? existingId : newId
+    const newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${tags || ""}|${date}`
     let action = "Guardado"
 
     if (existingIdx !== -1) {
@@ -346,7 +349,7 @@ server.registerTool(
 
     writeMemory(lines.join("\n"))
     return {
-      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${id})\n${content}` }],
+      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${entryId})\n${content}` }],
     }
   }
 )
@@ -377,7 +380,10 @@ server.registerTool(
   async ({ query, category, from_date, to_date }) => {
     const data = readMemory()
     const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("summaries:"))
-    const queryLower = query.toLowerCase()
+
+    // Normalize for fuzzy matching: hyphens/underscores → spaces, collapse whitespace
+    const normalize = (s: string) => s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim()
+    const queryTokens = normalize(query).split(" ").filter(Boolean)
 
     const results = lines
       .map((line) => {
@@ -388,8 +394,9 @@ server.registerTool(
         if (category && cat !== category) return null
         if (from_date && date < from_date) return null
         if (to_date && date > to_date) return null
-        const searchStr = `${id} ${cat} ${key} ${content} ${file} ${tags}`.toLowerCase()
-        if (!searchStr.includes(queryLower)) return null
+        const searchStr = normalize(`${id} ${cat} ${key} ${content} ${file} ${tags}`)
+        // All query tokens must match (AND logic)
+        if (!queryTokens.every((token) => searchStr.includes(token))) return null
         return { id, cat, key, content, file, tags, date }
       })
       .filter(Boolean)
