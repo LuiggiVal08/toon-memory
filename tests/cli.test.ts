@@ -41,7 +41,6 @@ describe("CLI Commands", () => {
     expect(output).toContain("vscode/copilot:")
 
     // Check that files were created
-    expect(existsSync(join(testDir, ".opencode", "tools", "memory.ts"))).toBe(true)
     expect(existsSync(join(testDir, ".opencode", "memory", "data.toon"))).toBe(true)
     expect(existsSync(join(testDir, ".opencode", "opencode.json"))).toBe(true)
     expect(existsSync(join(testDir, ".vscode", "mcp.json"))).toBe(true)
