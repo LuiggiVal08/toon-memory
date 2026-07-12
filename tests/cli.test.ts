@@ -46,10 +46,12 @@ describe("CLI Commands", () => {
     expect(existsSync(join(testDir, ".opencode", "opencode.json"))).toBe(true)
     expect(existsSync(join(testDir, ".vscode", "mcp.json"))).toBe(true)
 
-    // Check opencode.json content
+    // Check opencode.json content (OpenCode format)
     const opencodeConfig = JSON.parse(readFileSync(join(testDir, ".opencode", "opencode.json"), "utf-8"))
     expect(opencodeConfig.mcp?.["toon-memory"]).toBeDefined()
-    expect(opencodeConfig.mcp["toon-memory"].command).toBe("npx")
+    expect(opencodeConfig.mcp["toon-memory"].enabled).toBe(true)
+    expect(opencodeConfig.mcp["toon-memory"].type).toBe("local")
+    expect(opencodeConfig.mcp["toon-memory"].command).toEqual(["npx", "-y", "toon-memory", "mcp"])
 
     // Check vscode/mcp.json content
     const vscodeConfig = JSON.parse(readFileSync(join(testDir, ".vscode", "mcp.json"), "utf-8"))
