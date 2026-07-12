@@ -316,16 +316,37 @@ server.registerTool(
       headerIdx = lines.length - 1
     }
 
-    const match = lines[headerIdx].match(/\[(\d+)\|/)
-    const count = match ? parseInt(match[1]) : 0
-    const newEntry = `${id}|${category}|${key}|${content}|${file || ""}|${tags || ""}|${date}`
+    // Find existing entry with same key (upsert)
+    let existingIdx = -1
+    for (let i = headerIdx + 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line.startsWith("  ") || !line.includes("|")) continue
+      if (line.startsWith("  summaries:")) break
+      const parts = line.trim().split("|")
+      if (parts[2] === key) {
+        existingIdx = i
+        break
+      }
+    }
 
-    lines.splice(headerIdx + 1, 0, `  ${newEntry}`)
-    lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count + 1}|`)
+    const newEntry = `${id}|${category}|${key}|${content}|${file || ""}|${tags || ""}|${date}`
+    let action = "Guardado"
+
+    if (existingIdx !== -1) {
+      // Update existing entry
+      lines[existingIdx] = `  ${newEntry}`
+      action = "Actualizado"
+    } else {
+      // Create new entry
+      const match = lines[headerIdx].match(/\[(\d+)\|/)
+      const count = match ? parseInt(match[1]) : 0
+      lines.splice(headerIdx + 1, 0, `  ${newEntry}`)
+      lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count + 1}|`)
+    }
 
     writeMemory(lines.join("\n"))
     return {
-      content: [{ type: "text" as const, text: `🧠 Guardado: ${category}/${key} (${id})\n${content}` }],
+      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${id})\n${content}` }],
     }
   }
 )
