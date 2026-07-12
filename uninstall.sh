@@ -4,59 +4,41 @@ set -e
 # toon-memory uninstaller
 # Usage: npx toon-memory uninstall
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "🧠 toon-memory uninstaller"
 echo ""
 
-# Remove from OpenCode
-OPENCODE_GLOBAL="${HOME}/.config/opencode/opencode.json"
-OPENCODE_LOCAL=".opencode/opencode.json"
-
+# Helper: remove toon-memory from a config file
 remove_from_config() {
     local file="$1"
-    local name="$2"
-    
     if [ -f "${file}" ]; then
-        if grep -q "toon-memory" "${file}" 2>/dev/null; then
-            echo "Removing from ${name} (${file})..."
-            # Use node to remove the MCP entry
-            node -e "
-                const fs = require('fs');
-                const config = JSON.parse(fs.readFileSync('${file}', 'utf-8'));
-                if (config.mcp && config.mcp['toon-memory']) {
-                    delete config.mcp['toon-memory'];
-                    fs.writeFileSync('${file}', JSON.stringify(config, null, 2));
-                    console.log('  ✅ Removed');
-                } else if (config.mcpServers && config.mcpServers['toon-memory']) {
-                    delete config.mcpServers['toon-memory'];
-                    fs.writeFileSync('${file}', JSON.stringify(config, null, 2));
-                    console.log('  ✅ Removed');
-                } else {
-                    console.log('  ⚠️  Not found');
-                }
-            " 2>/dev/null || echo "  ⚠️  Could not parse config"
-        fi
+        node "${SCRIPT_DIR}/scripts/remove-mcp.js" "${file}"
     fi
 }
 
 # OpenCode
-remove_from_config "${OPENCODE_GLOBAL}" "OpenCode (global)"
-remove_from_config "${OPENCODE_LOCAL}" "OpenCode (local)"
+remove_from_config "${HOME}/.config/opencode/opencode.json"
+remove_from_config ".opencode/opencode.json"
 
 # VS Code
-remove_from_config ".vscode/mcp.json" "VS Code"
+remove_from_config ".vscode/mcp.json"
 
 # Claude
-remove_from_config "${HOME}/.claude/settings.json" "Claude (global)"
-remove_from_config ".claude/settings.json" "Claude (local)"
+remove_from_config "${HOME}/.claude/settings.json"
+remove_from_config ".claude/settings.json"
 
 # Cursor
-remove_from_config ".cursor/mcp.json" "Cursor"
+remove_from_config ".cursor/mcp.json"
+
+# Windsurf
+remove_from_config "${HOME}/.codeium/windsurf/mcp_config.json"
 
 # Cline
-remove_from_config ".cline/mcp.json" "Cline"
+remove_from_config ".cline/mcp.json"
 
 # Continue
-remove_from_config ".continue/config.json" "Continue"
+remove_from_config ".continue/config.json"
 
 # Remove custom tools if they exist
 if [ -d ".opencode/tools" ]; then

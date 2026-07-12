@@ -1,9 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, unlinkSync, readdirSync, statSync } from "fs"
 import { basename, dirname, join } from "path"
 import { fileURLToPath } from "url"
-import { execSync } from "child_process"
 import { createInterface } from "readline"
-import { createRequire } from "module"
 import { gzipSync, gunzipSync } from "zlib"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -23,14 +21,6 @@ interface Agent {
   local?: string
   /** JSON key where MCP servers are stored */
   mcpKey: string
-}
-
-// Auto-install @toon-format/toon if not present
-try {
-  createRequire(import.meta.url).resolve("@toon-format/toon")
-} catch {
-  console.log("Installing @toon-format/toon...")
-  execSync("npm install @toon-format/toon", { cwd: projectRoot, stdio: "inherit" })
 }
 
 /**
@@ -375,17 +365,17 @@ function upgrade(): void {
   console.log("\n🧠 toon-memory upgrade\n")
   
   try {
-    console.log("Checking for updates...")
-    const latest = execSync("npm view toon-memory version", { encoding: "utf-8" }).trim()
-    console.log(`Latest version: ${latest}`)
+    const pkg = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8"))
+    const currentVersion = pkg.version
     
-    console.log("Upgrading...")
-    execSync("npm install -g toon-memory@" + latest, { stdio: "inherit" })
-    
-    console.log(`\n✅ Upgraded to toon-memory@${latest}`)
-    console.log("Restart your agent to use the new version.\n")
-  } catch (error) {
-    console.error("Upgrade failed:", (error as Error).message)
+    console.log(`Current version: ${currentVersion}`)
+    console.log("\nTo upgrade, run:")
+    console.log("  npm install -g toon-memory@latest")
+    console.log("\nThen restart your agent.\n")
+  } catch {
+    console.log("To upgrade, run:")
+    console.log("  npm install -g toon-memory@latest")
+    console.log("\nThen restart your agent.\n")
   }
 }
 
