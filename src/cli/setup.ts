@@ -208,9 +208,18 @@ function installMCPConfig(agent: Agent, scope: string): void {
   const mcpKey = agent.mcpKey || "mcpServers"
   if (!config[mcpKey]) config[mcpKey] = {}
   
-  config[mcpKey]["toon-memory"] = {
-    command: "npx",
-    args: ["-y", "toon-memory", "mcp"]
+  // OpenCode uses a different format than other agents
+  if (agent.name === "opencode") {
+    config[mcpKey]["toon-memory"] = {
+      enabled: true,
+      type: "local",
+      command: ["npx", "-y", "toon-memory", "mcp"]
+    }
+  } else {
+    config[mcpKey]["toon-memory"] = {
+      command: "npx",
+      args: ["-y", "toon-memory", "mcp"]
+    }
   }
   
   writeFileSync(configPath, JSON.stringify(config, null, 2))
