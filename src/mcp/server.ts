@@ -20,6 +20,9 @@ const ARCHIVE_FILE = join(MEMORY_DIR, "archive.toon")
 /** Configuration file for encryption settings */
 const CONFIG_FILE = join(MEMORY_DIR, "config.json")
 
+/** Env file storing the encryption key (gitignored via .opencode/) */
+const ENV_FILE = join(MEMORY_DIR, ".env")
+
 /** Maximum active entries before auto-archive */
 const MAX_ENTRIES = 100
 
@@ -33,8 +36,6 @@ const ALGORITHM = "aes-256-gcm"
 interface MemoryConfig {
   /** Whether encryption is enabled */
   encrypted: boolean
-  /** Encryption key (hex-encoded, 64 chars for AES-256) */
-  key?: string
 }
 
 /**
@@ -69,6 +70,32 @@ function loadConfig(): MemoryConfig {
 function saveConfig(config: MemoryConfig): void {
   ensureMemoryDir()
   writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2))
+}
+
+/**
+ * Read the encryption key from .env file.
+ * 
+ * @returns The key string, or undefined if not set
+ */
+function readEnvKey(): string | undefined {
+  try {
+    if (!existsSync(ENV_FILE)) return undefined
+    const content = readFileSync(ENV_FILE, "utf-8").trim()
+    const match = content.match(/^TOON_MEMORY_KEY=(.+)$/m)
+    return match ? match[1] : undefined
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Write the encryption key to .env file.
+ * 
+ * @param key - Hex-encoded encryption key
+ */
+function writeEnvKey(key: string): void {
+  ensureMemoryDir()
+  writeFileSync(ENV_FILE, `TOON_MEMORY_KEY=${key}\n`)
 }
 
 /**
@@ -148,6 +175,7 @@ function generateKey(): string {
 
 /**
  * Read memory file, decrypting if encryption is enabled.
+ * Key is read from TOON_MEMORY_KEY env var.
  * 
  * @returns Memory content as string (TOON format)
  */
@@ -156,9 +184,11 @@ function readMemory(): string {
   const config = loadConfig()
   const data = readFileSync(MEMORY_FILE, "utf-8")
   
-  if (config.encrypted && config.key) {
+  if (config.encrypted) {
+    const key = readEnvKey()
+    if (!key) return data
     try {
-      return decrypt(data, config.key)
+      return decrypt(data, key)
     } catch {
       return data
     }
@@ -169,6 +199,7 @@ function readMemory(): string {
 
 /**
  * Write content to memory file, encrypting if encryption is enabled.
+ * Key is read from TOON_MEMORY_KEY env var.
  * 
  * @param content - Memory content to write (TOON format)
  */
@@ -176,12 +207,16 @@ function writeMemory(content: string): void {
   ensureMemoryFile()
   const config = loadConfig()
   
-  if (config.encrypted && config.key) {
-    const encrypted = encrypt(content, config.key)
-    writeFileSync(MEMORY_FILE, encrypted)
-  } else {
-    writeFileSync(MEMORY_FILE, content)
+  if (config.encrypted) {
+    const key = readEnvKey()
+    if (key) {
+      const encrypted = encrypt(content, key)
+      writeFileSync(MEMORY_FILE, encrypted)
+      return
+    }
   }
+  
+  writeFileSync(MEMORY_FILE, content)
 }
 
 /**
@@ -648,7 +683,8 @@ server.registerTool(
     const encrypted = encrypt(data, key)
     writeFileSync(MEMORY_FILE, encrypted)
     
-    saveConfig({ encrypted: true, key })
+    saveConfig({ encrypted: true })
+    writeEnvKey(key)
     
     return {
       content: [{ 
@@ -685,9 +721,14 @@ server.registerTool(
       return { content: [{ type: "text" as const, text: "La encriptación no está habilitada" }] }
     }
     
+    const resolvedKey = key || readEnvKey() || ""
+    if (!resolvedKey) {
+      return { content: [{ type: "text" as const, text: "❌ No hay clave. Pásala como argumento o la del archivo .env" }] }
+    }
+    
     try {
       const data = readFileSync(MEMORY_FILE, "utf-8")
-      const decrypted = decrypt(data, key)
+      const decrypted = decrypt(data, resolvedKey)
       
       writeFileSync(MEMORY_FILE, decrypted)
       saveConfig({ encrypted: false })
