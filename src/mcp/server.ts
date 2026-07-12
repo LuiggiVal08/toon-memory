@@ -656,19 +656,19 @@ server.registerTool(
       return { content: [{ type: "text" as const, text: "La encriptación ya está habilitada" }] }
     }
     
-    const key = generateKey()
-    const data = readFileSync(MEMORY_FILE, "utf-8")
+    const key = getKey()
+    if (!key) {
+      return { content: [{ type: "text" as const, text: "❌ Define TOON_MEMORY_KEY en el entorno antes de encriptar" }] }
+    }
     
+    const data = readFileSync(MEMORY_FILE, "utf-8")
     const encrypted = encrypt(data, key)
     writeFileSync(MEMORY_FILE, encrypted)
     
     saveConfig({ encrypted: true })
     
     return {
-      content: [{ 
-        type: "text" as const, 
-        text: `🔐 Encriptación habilitada\n⚠️ Guarda esta clave en TOON_MEMORY_KEY (no se puede recuperar):\n${key}` 
-      }],
+      content: [{ type: "text" as const, text: "🔐 Encriptación habilitada" }],
     }
   }
 )
