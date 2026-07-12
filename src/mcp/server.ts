@@ -310,18 +310,18 @@ server.registerTool(
     const date = new Date().toISOString().split("T")[0]
     const lines = data.split("\n")
 
-    let headerIdx = lines.findIndex((l) => l.startsWith("entries["))
+    let headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
     if (headerIdx === -1) {
-      lines.push(`entries[0|]{id|category|key|content|file|tags|date}:`)
+      lines.push(`[0|]`)
       headerIdx = lines.length - 1
     }
 
-    const match = lines[headerIdx].match(/entries\[(\d+)\|/)
+    const match = lines[headerIdx].match(/\[(\d+)\|/)
     const count = match ? parseInt(match[1]) : 0
     const newEntry = `${id}|${category}|${key}|${content}|${file || ""}|${tags || ""}|${date}`
 
     lines.splice(headerIdx + 1, 0, `  ${newEntry}`)
-    lines[headerIdx] = lines[headerIdx].replace(/entries\[\d+\|/, `[${count + 1}|`)
+    lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count + 1}|`)
 
     writeMemory(lines.join("\n"))
     return {
@@ -355,7 +355,7 @@ server.registerTool(
   },
   async ({ query, category, from_date, to_date }) => {
     const data = readMemory()
-    const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|"))
+    const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("summaries:"))
     const queryLower = query.toLowerCase()
 
     const results = lines
@@ -406,22 +406,22 @@ server.registerTool(
   async ({ key }) => {
     const data = readMemory()
     const lines = data.split("\n")
-    const headerIdx = lines.findIndex((l) => l.startsWith("entries["))
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
 
     if (headerIdx === -1) {
       return { content: [{ type: "text" as const, text: "No hay entradas en memoria" }] }
     }
 
-    const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0)
+    const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("summaries:"))
     const filtered = entryLines.filter((l) => {
       const parts = l.trim().split("|")
       return parts[0] !== key && parts[2] !== key
     })
 
     const removed = entryLines.length - filtered.length
-    const match = lines[headerIdx].match(/entries\[(\d+)\|/)
+    const match = lines[headerIdx].match(/\[(\d+)\|/)
     const count = match ? parseInt(match[1]) : 0
-    lines[headerIdx] = lines[headerIdx].replace(/entries\[\d+\|/, `[${count - removed}|`)
+    lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count - removed}|`)
     lines.splice(headerIdx + 1, entryLines.length, ...filtered.map((l) => `  ${l.trim()}`))
 
     writeMemory(lines.join("\n"))
@@ -449,7 +449,7 @@ server.registerTool(
   },
   async () => {
     const data = readMemory()
-    const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|"))
+    const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
     const entries = lines.map((l) => {
       const parts = l.trim().split("|")
       return { category: parts[1] || "unknown" }
@@ -460,7 +460,7 @@ server.registerTool(
       byCategory[e.category] = (byCategory[e.category] || 0) + 1
     }
 
-    const summaryLines = data.split("\n").filter((l) => l.includes(":") && !l.startsWith("  ") && !l.startsWith("version") && !l.startsWith("entries"))
+    const summaryLines = data.split("\n").filter((l) => l.includes(":") && !l.startsWith("  ") && !l.startsWith("version") && !l.startsWith("entries") && !/^\[\d+\|]/.test(l))
     const stats = [
       `Entradas totales: ${entries.length}`,
       `Resúmenes de archivos: ${summaryLines.length}`,
