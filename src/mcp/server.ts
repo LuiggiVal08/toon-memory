@@ -186,11 +186,11 @@ function readMemory(): string {
   
   if (config.encrypted) {
     const key = readEnvKey()
-    if (!key) return data
+    if (!key) return ""
     try {
       return decrypt(data, key)
     } catch {
-      return data
+      return ""
     }
   }
   
@@ -209,11 +209,10 @@ function writeMemory(content: string): void {
   
   if (config.encrypted) {
     const key = readEnvKey()
-    if (key) {
-      const encrypted = encrypt(content, key)
-      writeFileSync(MEMORY_FILE, encrypted)
-      return
-    }
+    if (!key) return
+    const encrypted = encrypt(content, key)
+    writeFileSync(MEMORY_FILE, encrypted)
+    return
   }
   
   writeFileSync(MEMORY_FILE, content)
@@ -687,10 +686,7 @@ server.registerTool(
     writeEnvKey(key)
     
     return {
-      content: [{ 
-        type: "text" as const, 
-        text: `🔐 Encriptación habilitada\n⚠️ Guarda esta clave (no se puede recuperar):\n${key}` 
-      }],
+      content: [{ type: "text" as const, text: "🔐 Encriptación habilitada" }],
     }
   }
 )
