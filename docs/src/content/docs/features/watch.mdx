@@ -1,36 +1,61 @@
 ---
 title: Watch Mode
-description: Auto-backup memory every N minutes
+description: Auto-backup memory with compression and logging
 ---
 
 ## Overview
 
-Watch mode runs a daemon that automatically backs up your memory file when changes are detected.
+Watch mode runs a daemon that automatically backs up your memory file when changes are detected. Supports compression, logging, and automatic pruning of old backups.
 
 ## Usage
 
 ```bash
-# Default: backup every 5 minutes
+# Default: backup every 5 minutes, keep 10 backups
 npx toon-memory watch
 
 # Custom interval (in minutes)
 npx toon-memory watch 10
 
+# Enable gzip compression
+npx toon-memory watch -c
+
+# Enable file logging
+npx toon-memory watch -l
+
+# Keep max 20 backups
+npx toon-memory watch -m 20
+
+# All options combined
+npx toon-memory watch 15 -c -l -m 20
+
 # Press Ctrl+C to stop
 ```
+
+## Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `[interval]` | Backup interval in minutes | 5 |
+| `-c, --compress` | Enable gzip compression | off |
+| `-l, --log [path]` | Enable file logging | off |
+| `-m, --max-backups <n>` | Max backups to keep (0=unlimited) | 10 |
 
 ## Example Output
 
 ```bash
-$ npx toon-memory watch 10
+$ npx toon-memory watch 15 -c -l -m 20
 
 🧠 toon-memory watch
 
-Watching memory file every 10 minutes...
+Watching memory file every 15 minutes...
+Max backups: 20
+Compression: enabled
+Logging: enabled (.opencode/memory/watch.log)
 Press Ctrl+C to stop
 
 📦 Backup #1 created: 2026-07-11T16-00-00-000Z
-📦 Backup #2 created: 2026-07-11T16-10-00-000Z
+📦 Backup #2 created: 2026-07-11T16-15-00-000Z
+🗑️  Pruned 1 old backup(s)
 ^C
 ✅ Watch stopped. 2 backups created.
 ```
@@ -41,14 +66,17 @@ Press Ctrl+C to stop
 2. When content changes, creates a timestamped backup
 3. Backups are stored in `.opencode/memory/backups/`
 4. Only creates backup when content actually changes
+5. If max-backups is exceeded, oldest backups are pruned
+6. Optional gzip compression reduces backup size by ~60-80%
+7. Optional logging writes events to a file
 
 ## Backup Files
 
 ```
 .opencode/memory/backups/
 ├── backup-2026-07-11T16-00-00-000Z.toon
-├── backup-2026-07-11T16-10-00-000Z.toon
-└── backup-2026-07-11T16-20-00-000Z.toon
+├── backup-2026-07-11T16-15-00-00-000Z.toon.gz    # compressed
+└── backup-2026-07-11T16-30-00-000Z.toon
 ```
 
 ## Use Cases
@@ -56,3 +84,5 @@ Press Ctrl+C to stop
 - **Long coding sessions** — Auto-backup while you work
 - **Pre-deployment** — Run before important changes
 - **CI/CD** — Backup before automated changes
+- **Low disk space** — Use `-c` for compression
+- **Debugging** — Use `-l` to log backup events

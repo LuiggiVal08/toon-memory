@@ -186,7 +186,7 @@ npx toon-memory status       # Check installation status
 npx toon-memory stats        # View memory statistics
 npx toon-memory export       # Export memory to JSON
 npx toon-memory import <file> # Import memory from JSON
-npx toon-memory watch [mins] # Auto-backup every N minutes (default: 5)
+npx toon-memory watch [options] # Auto-backup with options
 npx toon-memory upgrade      # Update to latest version
 npx toon-memory uninstall    # Remove from all agents
 ```
@@ -236,18 +236,30 @@ Skipped 2 duplicates
 #### Watch
 
 ```bash
-$ npx toon-memory watch 10
+$ npx toon-memory watch 15 -c -m 20
 
 🧠 toon-memory watch
 
-Watching memory file every 10 minutes...
+Watching memory file every 15 minutes...
+Max backups: 20
+Compression: enabled
+Logging: disabled
 Press Ctrl+C to stop
 
 📦 Backup #1 created: 2026-07-11T16-00-00-000Z
-📦 Backup #2 created: 2026-07-11T16-10-00-000Z
+📦 Backup #2 created: 2026-07-11T16-15-00-000Z
 ^C
 ✅ Watch stopped. 2 backups created.
 ```
+
+**Watch Options:**
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `[interval]` | Backup interval in minutes | 5 |
+| `-c, --compress` | Enable gzip compression | off |
+| `-l, --log [path]` | Enable file logging | off |
+| `-m, --max-backups <n>` | Max backups to keep (0=unlimited) | 10 |
 
 ---
 

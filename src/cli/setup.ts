@@ -1,9 +1,10 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, unlinkSync } from "fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, unlinkSync, readdirSync, statSync } from "fs"
 import { basename, dirname, join } from "path"
 import { fileURLToPath } from "url"
 import { execSync } from "child_process"
 import { createInterface } from "readline"
 import { createRequire } from "module"
+import { gzipSync, gunzipSync } from "zlib"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const projectRoot = process.cwd()
@@ -12,10 +13,15 @@ const projectRoot = process.cwd()
 const sourceDir = join(__dirname, "..", "..", "src")
 const HOME = process.env.HOME || process.env.USERPROFILE || "~"
 
+/** Supported AI coding agent configuration */
 interface Agent {
+  /** Agent identifier (e.g., "opencode", "vscode/copilot") */
   name: string
+  /** Global config file path (e.g., ~/.config/opencode/opencode.json) */
   global?: string
+  /** Local (project-level) config file path (e.g., .opencode/opencode.json) */
   local?: string
+  /** JSON key where MCP servers are stored */
   mcpKey: string
 }
 
@@ -27,7 +33,22 @@ try {
   execSync("npm install @toon-format/toon", { cwd: projectRoot, stdio: "inherit" })
 }
 
-// Detect all supported agents
+/**
+ * Detect all supported AI coding agents on the system.
+ * 
+ * Scans for configuration files in both global (~/.config/) and local
+ * (.opencode/, .vscode/, etc.) locations.
+ * 
+ * @returns Array of detected agent configurations
+ * 
+ * @example
+ * ```typescript
+ * const agents = detectAgents()
+ * for (const agent of agents) {
+ *   console.log(`${agent.name}: ${agent.local || "not found"}`)
+ * }
+ * ```
+ */
 function detectAgents(): Agent[] {
   const agents: Agent[] = []
   
@@ -94,7 +115,17 @@ function detectAgents(): Agent[] {
   return agents
 }
 
-// Install custom tools for OpenCode
+/**
+ * Install custom tools and memory directory for OpenCode.
+ * 
+ * Creates `.opencode/tools/` and `.opencode/memory/` directories,
+ * copies `memory.ts` tool, and creates initial `data.toon` if needed.
+ * 
+ * @example
+ * ```bash
+ * npx toon-memory init  # Calls installOpenCodeTools()
+ * ```
+ */
 function installOpenCodeTools(): void {
   const toolsDir = join(projectRoot, ".opencode", "tools")
   const memoryDir = join(projectRoot, ".opencode", "memory")
@@ -112,7 +143,17 @@ function installOpenCodeTools(): void {
   }
 }
 
-// Add .opencode/memory/ to .gitignore if not present
+/**
+ * Add `.opencode/memory/` to `.gitignore` if not already present.
+ * 
+ * Creates `.gitignore` if it doesn't exist, or appends the memory
+ * exclusion pattern to the existing file.
+ * 
+ * @example
+ * ```typescript
+ * ensureGitignore()  // Adds .opencode/memory/ to .gitignore
+ * ```
+ */
 function ensureGitignore(): void {
   const gitignorePath = join(projectRoot, ".gitignore")
   const entry = ".opencode/memory/"
@@ -130,7 +171,20 @@ function ensureGitignore(): void {
   }
 }
 
-// Install MCP server config for different agents
+/**
+ * Install MCP server configuration for an agent.
+ * 
+ * Adds the `toon-memory` MCP server entry to the agent's config file.
+ * 
+ * @param agent - Agent configuration with config path and MCP key
+ * @param scope - "global" or "local" installation scope
+ * 
+ * @example
+ * ```typescript
+ * const agent = { name: "opencode", local: ".opencode/opencode.json", mcpKey: "mcp" }
+ * installMCPConfig(agent, "local")
+ * ```
+ */
 function installMCPConfig(agent: Agent, scope: string): void {
   const configPath = scope === "global" ? agent.global : agent.local
   
@@ -163,7 +217,16 @@ function installMCPConfig(agent: Agent, scope: string): void {
   console.log(`  MCP server added to ${configPath}`)
 }
 
-// Uninstall from all agents
+/**
+ * Uninstall toon-memory from all detected agents.
+ * 
+ * Removes MCP server configurations and custom tools from all agents.
+ * 
+ * @example
+ * ```bash
+ * npx toon-memory uninstall
+ * ```
+ */
 function uninstall(): void {
   console.log("\n🧠 toon-memory uninstaller\n")
   
@@ -198,7 +261,20 @@ function uninstall(): void {
   console.log("\n✅ toon-memory uninstalled from all agents\n")
 }
 
-// Quick init without interactive prompts
+/**
+ * Initialize toon-memory for all detected agents (non-interactive).
+ * 
+ * Installs MCP server configs, creates memory directory, and
+ * updates `.gitignore`.
+ * 
+ * @param scope - "local" (default) or "global" installation scope
+ * 
+ * @example
+ * ```bash
+ * npx toon-memory init          # Local install
+ * npx toon-memory init global   # Global install
+ * ```
+ */
 function init(scope: string = "local"): void {
   console.log("\n🧠 toon-memory init\n")
   
@@ -220,7 +296,16 @@ function init(scope: string = "local"): void {
   console.log("Done! Restart your agent to use memory tools.\n")
 }
 
-// Show installation status
+/**
+ * Show toon-memory installation status.
+ * 
+ * Displays version, memory entry count, and agent configuration status.
+ * 
+ * @example
+ * ```bash
+ * npx toon-memory status
+ * ```
+ */
 function status(): void {
   console.log("\n🧠 toon-memory status\n")
   
@@ -272,7 +357,16 @@ function status(): void {
   console.log("")
 }
 
-// Upgrade to latest version
+/**
+ * Upgrade toon-memory to the latest version.
+ * 
+ * Checks npm registry for updates and installs if available.
+ * 
+ * @example
+ * ```bash
+ * npx toon-memory upgrade
+ * ```
+ */
 function upgrade(): void {
   console.log("\n🧠 toon-memory upgrade\n")
   
@@ -291,7 +385,16 @@ function upgrade(): void {
   }
 }
 
-// Show memory statistics
+/**
+ * Display memory statistics.
+ * 
+ * Shows entry counts by category, last update date, and file size.
+ * 
+ * @example
+ * ```bash
+ * npx toon-memory stats
+ * ```
+ */
 function stats(): void {
   console.log("\n🧠 toon-memory stats\n")
   
@@ -333,7 +436,17 @@ function stats(): void {
   console.log("")
 }
 
-// Export memory to JSON
+/**
+ * Export memory to JSON format.
+ * 
+ * Creates a `toon-memory-export.json` file with all entries
+ * for backup or transfer to another project.
+ * 
+ * @example
+ * ```bash
+ * npx toon-memory export
+ * ```
+ */
 function exportMemory(): void {
   console.log("\n🧠 toon-memory export\n")
   
@@ -374,7 +487,18 @@ function exportMemory(): void {
   console.log(`  ${outputPath}\n`)
 }
 
-// Import memory from JSON
+/**
+ * Import memory from JSON file.
+ * 
+ * Imports entries from a JSON export, skipping duplicates based on key.
+ * 
+ * @param file - Path to JSON file (relative or absolute)
+ * 
+ * @example
+ * ```bash
+ * npx toon-memory import toon-memory-export.json
+ * ```
+ */
 function importMemory(): void {
   console.log("\n🧠 toon-memory import\n")
   
@@ -446,7 +570,104 @@ function importMemory(): void {
   console.log(`Skipped ${importData.entries.length - newEntries.length} duplicates\n`)
 }
 
-// Watch mode - backup memory every N minutes
+/** Watch mode options */
+interface WatchOptions {
+  /** Backup interval in minutes (default: 5) */
+  interval: number
+  /** Maximum number of backups to keep (0 = unlimited) */
+  maxBackups: number
+  /** Enable gzip compression for backups */
+  compress: boolean
+  /** Enable file logging */
+  logFile: boolean
+  /** Log file path */
+  logPath: string
+}
+
+/** Parse watch CLI arguments into WatchOptions */
+function parseWatchOptions(args: string[]): WatchOptions {
+  const opts: WatchOptions = {
+    interval: 5,
+    maxBackups: 10,
+    compress: false,
+    logFile: false,
+    logPath: ""
+  }
+  
+  for (let i = 1; i < args.length; i++) {
+    const arg = args[i]
+    if (arg === "--compress" || arg === "-c") {
+      opts.compress = true
+    } else if (arg === "--log" || arg === "-l") {
+      opts.logFile = true
+      opts.logPath = args[++i] || join(projectRoot, ".opencode", "memory", "watch.log")
+    } else if (arg === "--max-backups" || arg === "-m") {
+      opts.maxBackups = parseInt(args[++i]) || 10
+    } else if (!arg.startsWith("-")) {
+      opts.interval = parseInt(arg) || 5
+    }
+  }
+  
+  return opts
+}
+
+/** Write a line to the watch log file */
+function writeWatchLog(logPath: string, message: string): void {
+  if (!logPath) return
+  const timestamp = new Date().toISOString()
+  const logLine = `[${timestamp}] ${message}\n`
+  writeFileSync(logPath, logLine, { flag: "a" })
+}
+
+/** Get list of backup files sorted by creation time (oldest first) */
+function getBackupFiles(backupDir: string): string[] {
+  if (!existsSync(backupDir)) return []
+  
+  return readdirSync(backupDir)
+    .filter(f => f.startsWith("backup-") && (f.endsWith(".toon") || f.endsWith(".gz")))
+    .map(f => join(backupDir, f))
+    .sort((a, b) => statSync(a).mtimeMs - statSync(b).mtimeMs)
+}
+
+/** Remove oldest backups if we exceed maxBackups */
+function pruneBackups(backupDir: string, maxBackups: number): number {
+  if (maxBackups <= 0) return 0
+  
+  const files = getBackupFiles(backupDir)
+  const excess = files.length - maxBackups
+  
+  if (excess <= 0) return 0
+  
+  for (let i = 0; i < excess; i++) {
+    unlinkSync(files[i])
+  }
+  
+  return excess
+}
+
+/** Compress content with gzip */
+function compressData(data: string): Buffer {
+  return gzipSync(Buffer.from(data, "utf-8"))
+}
+
+/** Decompress gzip data to string */
+function decompressData(data: Buffer): string {
+  return gunzipSync(data).toString("utf-8")
+}
+
+/**
+ * Watch mode - backup memory every N minutes
+ * 
+ * @example
+ * ```bash
+ * npx toon-memory watch          # Default: 5 min interval, 10 max backups
+ * npx toon-memory watch 10       # 10 minute interval
+ * npx toon-memory watch -c       # Enable compression
+ * npx toon-memory watch -l       # Enable file logging
+ * npx toon-memory watch -m 20    # Keep max 20 backups
+ * npx toon-memory watch 15 -c -l -m 5  # All options
+ * ```
+ */
 function watch(): void {
   console.log("\n🧠 toon-memory watch\n")
   
@@ -460,36 +681,83 @@ function watch(): void {
   
   if (!existsSync(backupDir)) mkdirSync(backupDir, { recursive: true })
   
-  const intervalMinutes = parseInt(args[1]) || 5
-  console.log(`Watching memory file every ${intervalMinutes} minutes...`)
+  const opts = parseWatchOptions(args)
+  
+  if (opts.logFile) {
+    const logDir = dirname(opts.logPath)
+    if (!existsSync(logDir)) mkdirSync(logDir, { recursive: true })
+  }
+  
+  console.log(`Watching memory file every ${opts.interval} minutes...`)
+  console.log(`Max backups: ${opts.maxBackups === 0 ? "unlimited" : opts.maxBackups}`)
+  console.log(`Compression: ${opts.compress ? "enabled" : "disabled"}`)
+  console.log(`Logging: ${opts.logFile ? `enabled (${opts.logPath})` : "disabled"}`)
   console.log(`Press Ctrl+C to stop\n`)
   
   let lastContent = readFileSync(memoryFile, "utf-8")
+  let lastHash = hashContent(lastContent)
   let backupCount = 0
   
+  if (opts.logFile) writeWatchLog(opts.logPath, "Watch started")
+  
   const backup = () => {
-    const currentContent = readFileSync(memoryFile, "utf-8")
-    
-    if (currentContent !== lastContent) {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
-      const backupFile = join(backupDir, `backup-${timestamp}.toon`)
-      writeFileSync(backupFile, currentContent)
-      backupCount++
-      console.log(`📦 Backup #${backupCount} created: ${timestamp}`)
-      lastContent = currentContent
+    try {
+      const currentContent = readFileSync(memoryFile, "utf-8")
+      const currentHash = hashContent(currentContent)
+      
+      if (currentHash !== lastHash) {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
+        const ext = opts.compress ? ".toon.gz" : ".toon"
+        const backupFile = join(backupDir, `backup-${timestamp}${ext}`)
+        
+        if (opts.compress) {
+          writeFileSync(backupFile, compressData(currentContent))
+        } else {
+          writeFileSync(backupFile, currentContent)
+        }
+        
+        backupCount++
+        console.log(`📦 Backup #${backupCount} created: ${timestamp}`)
+        if (opts.logFile) writeWatchLog(opts.logPath, `Backup #${backupCount}: ${timestamp}`)
+        
+        lastContent = currentContent
+        lastHash = currentHash
+        
+        const pruned = pruneBackups(backupDir, opts.maxBackups)
+        if (pruned > 0) {
+          console.log(`🗑️  Pruned ${pruned} old backup(s)`)
+          if (opts.logFile) writeWatchLog(opts.logPath, `Pruned ${pruned} old backup(s)`)
+        }
+      }
+    } catch (err) {
+      const msg = `Error creating backup: ${(err as Error).message}`
+      console.error(`❌ ${msg}`)
+      if (opts.logFile) writeWatchLog(opts.logPath, msg)
     }
+  }
+  
+  /** Simple hash for change detection (not cryptographic) */
+  function hashContent(content: string): string {
+    let hash = 0
+    for (let i = 0; i < content.length; i++) {
+      const char = content.charCodeAt(i)
+      hash = ((hash << 5) - hash) + char
+      hash = hash & hash
+    }
+    return hash.toString(36)
   }
   
   // Initial backup
   backup()
   
   // Set interval
-  const interval = setInterval(backup, intervalMinutes * 60 * 1000)
+  const interval = setInterval(backup, opts.interval * 60 * 1000)
   
   // Handle Ctrl+C
   process.on("SIGINT", () => {
     clearInterval(interval)
     console.log(`\n✅ Watch stopped. ${backupCount} backups created.\n`)
+    if (opts.logFile) writeWatchLog(opts.logPath, `Watch stopped. ${backupCount} backups created.`)
     process.exit(0)
   })
   

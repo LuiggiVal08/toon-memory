@@ -7,19 +7,49 @@ import { fileURLToPath } from "url"
 import { randomBytes, createCipheriv, createDecipheriv } from "crypto"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+
+/** Base directory for memory storage */
 const MEMORY_DIR = join(process.cwd(), ".opencode", "memory")
+
+/** Main memory data file */
 const MEMORY_FILE = join(MEMORY_DIR, "data.toon")
+
+/** Archive file for old entries */
 const ARCHIVE_FILE = join(MEMORY_DIR, "archive.toon")
+
+/** Configuration file for encryption settings */
 const CONFIG_FILE = join(MEMORY_DIR, "config.json")
+
+/** Maximum active entries before auto-archive */
 const MAX_ENTRIES = 100
+
+/** Days before entries are archived */
 const ARCHIVE_DAYS = 30
+
+/** Encryption algorithm for AES-256-GCM */
 const ALGORITHM = "aes-256-gcm"
 
+/** Memory configuration with encryption settings */
 interface MemoryConfig {
+  /** Whether encryption is enabled */
   encrypted: boolean
+  /** Encryption key (hex-encoded, 64 chars for AES-256) */
   key?: string
 }
 
+/**
+ * Load memory configuration from config.json.
+ * 
+ * @returns MemoryConfig object with encryption settings
+ * 
+ * @example
+ * ```typescript
+ * const config = loadConfig()
+ * if (config.encrypted) {
+ *   console.log("Encryption enabled")
+ * }
+ * ```
+ */
 function loadConfig(): MemoryConfig {
   if (!existsSync(CONFIG_FILE)) {
     return { encrypted: false }
@@ -31,22 +61,46 @@ function loadConfig(): MemoryConfig {
   }
 }
 
+/**
+ * Save memory configuration to config.json.
+ * 
+ * @param config - MemoryConfig to save
+ */
 function saveConfig(config: MemoryConfig): void {
   ensureMemoryDir()
   writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2))
 }
 
-function ensureMemoryDir() {
+/**
+ * Ensure memory directory exists, creating it if necessary.
+ */
+function ensureMemoryDir(): void {
   if (!existsSync(MEMORY_DIR)) mkdirSync(MEMORY_DIR, { recursive: true })
 }
 
-function ensureMemoryFile() {
+/**
+ * Ensure memory file exists with default structure.
+ */
+function ensureMemoryFile(): void {
   ensureMemoryDir()
   if (!existsSync(MEMORY_FILE)) {
     writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date}:\n")
   }
 }
 
+/**
+ * Encrypt text using AES-256-GCM.
+ * 
+ * @param text - Plain text to encrypt
+ * @param key - Hex-encoded encryption key (64 chars)
+ * @returns Encrypted string in format "iv:authTag:ciphertext"
+ * 
+ * @example
+ * ```typescript
+ * const encrypted = encrypt("my secret", key)
+ * // "a1b2c3d4...:e5f6g7h8...:i9j0k1l2..."
+ * ```
+ */
 function encrypt(text: string, key: string): string {
   const keyBuffer = Buffer.from(key, "hex")
   const iv = randomBytes(16)
@@ -60,6 +114,14 @@ function encrypt(text: string, key: string): string {
   return `${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted}`
 }
 
+/**
+ * Decrypt AES-256-GCM encrypted data.
+ * 
+ * @param encryptedData - Encrypted string in format "iv:authTag:ciphertext"
+ * @param key - Hex-encoded encryption key (64 chars)
+ * @returns Decrypted plain text
+ * @throws If key is invalid or data is corrupted
+ */
 function decrypt(encryptedData: string, key: string): string {
   const keyBuffer = Buffer.from(key, "hex")
   const [ivHex, authTagHex, encrypted] = encryptedData.split(":")
@@ -75,10 +137,20 @@ function decrypt(encryptedData: string, key: string): string {
   return decrypted
 }
 
+/**
+ * Generate a random 256-bit encryption key.
+ * 
+ * @returns Hex-encoded key (64 chars)
+ */
 function generateKey(): string {
   return randomBytes(32).toString("hex")
 }
 
+/**
+ * Read memory file, decrypting if encryption is enabled.
+ * 
+ * @returns Memory content as string (TOON format)
+ */
 function readMemory(): string {
   ensureMemoryFile()
   const config = loadConfig()
@@ -95,6 +167,11 @@ function readMemory(): string {
   return data
 }
 
+/**
+ * Write content to memory file, encrypting if encryption is enabled.
+ * 
+ * @param content - Memory content to write (TOON format)
+ */
 function writeMemory(content: string): void {
   ensureMemoryFile()
   const config = loadConfig()
@@ -107,10 +184,29 @@ function writeMemory(content: string): void {
   }
 }
 
+/**
+ * Generate a random 8-character hex ID for memory entries.
+ * 
+ * @returns Hex string (8 chars)
+ */
 function generateId(): string {
   return randomBytes(4).toString("hex")
 }
 
+/**
+ * Archive entries older than ARCHIVE_DAYS to archive.toon.
+ * 
+ * Moves old entries from data.toon to archive.toon to keep
+ * the active memory file manageable.
+ * 
+ * @returns Object with counts of archived and kept entries
+ * 
+ * @example
+ * ```typescript
+ * const result = archiveOldEntries()
+ * console.log(`Archived: ${result.archived}, Kept: ${result.kept}`)
+ * ```
+ */
 function archiveOldEntries(): { archived: number; kept: number } {
   const data = readMemory()
   const lines = data.split("\n")
@@ -181,6 +277,20 @@ const server = new McpServer(
   { capabilities: { tools: { listChanged: true } } }
 )
 
+/**
+ * Register the memory_remember tool.
+ * Saves a fact to persistent memory (decisions, patterns, bugs, knowledge).
+ * 
+ * @example
+ * ```typescript
+ * // From MCP tool call:
+ * await callTool("memory_remember", {
+ *   category: "decision",
+ *   key: "use-ts-for-mcp",
+ *   content: "Using TypeScript for MCP server implementation"
+ * })
+ * ```
+ */
 server.registerTool(
   "memory_remember",
   {
@@ -220,6 +330,17 @@ server.registerTool(
   }
 )
 
+/**
+ * Register the memory_recall tool.
+ * Search persistent memory for relevant entries by text, category, or date range.
+ * 
+ * @example
+ * ```typescript
+ * // From MCP tool call:
+ * await callTool("memory_recall", { query: "risk engine" })
+ * await callTool("memory_recall", { query: "redis", category: "bug" })
+ * ```
+ */
 server.registerTool(
   "memory_recall",
   {
@@ -264,6 +385,15 @@ server.registerTool(
   }
 )
 
+/**
+ * Register the memory_forget tool.
+ * Delete a memory entry by key or ID.
+ * 
+ * @example
+ * ```typescript
+ * await callTool("memory_forget", { key: "old-decision" })
+ * ```
+ */
 server.registerTool(
   "memory_forget",
   {
@@ -301,6 +431,15 @@ server.registerTool(
   }
 )
 
+/**
+ * Register the memory_stats tool.
+ * Display memory statistics including entry counts and categories.
+ * 
+ * @example
+ * ```typescript
+ * await callTool("memory_stats", {})
+ * ```
+ */
 server.registerTool(
   "memory_stats",
   {
@@ -340,6 +479,26 @@ server.registerTool(
   }
 )
 
+/**
+ * Register the memory_summary tool.
+ * Get or set file summaries to save tokens when reading large files.
+ * 
+ * @example
+ * ```typescript
+ * // Set a summary
+ * await callTool("memory_summary", {
+ *   action: "set",
+ *   file: "src/complex.ts",
+ *   summary: "Complex module handling X, Y, Z"
+ * })
+ * 
+ * // Get a summary
+ * await callTool("memory_summary", {
+ *   action: "get",
+ *   file: "src/complex.ts"
+ * })
+ * ```
+ */
 server.registerTool(
   "memory_summary",
   {
@@ -396,6 +555,16 @@ server.registerTool(
   }
 )
 
+/**
+ * Register the memory_archive tool.
+ * Archive old entries (>30 days) to archive.toon to keep memory clean.
+ * 
+ * @example
+ * ```typescript
+ * await callTool("memory_archive", {})
+ * // "📦 Archivadas 5 entradas antiguas"
+ * ```
+ */
 server.registerTool(
   "memory_archive",
   {
@@ -419,6 +588,18 @@ server.registerTool(
   }
 )
 
+/**
+ * Register the memory_encrypt tool.
+ * Enable AES-256-GCM encryption for the memory file.
+ * 
+ * ⚠️ Warning: Save the encryption key! It cannot be recovered.
+ * 
+ * @example
+ * ```typescript
+ * await callTool("memory_encrypt", {})
+ * // "🔐 Encriptación habilitada\n⚠️ Guarda esta clave: ..."
+ * ```
+ */
 server.registerTool(
   "memory_encrypt",
   {
@@ -450,6 +631,16 @@ server.registerTool(
   }
 )
 
+/**
+ * Register the memory_decrypt tool.
+ * Disable encryption and decrypt the memory file.
+ * 
+ * @example
+ * ```typescript
+ * await callTool("memory_decrypt", { key: "your-encryption-key" })
+ * // "🔓 Encriptación deshabilitada"
+ * ```
+ */
 server.registerTool(
   "memory_decrypt",
   {
