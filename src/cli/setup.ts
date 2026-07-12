@@ -116,10 +116,10 @@ function detectAgents(): Agent[] {
 }
 
 /**
- * Install custom tools and memory directory for OpenCode.
+ * Install memory directory for OpenCode.
  * 
- * Creates `.opencode/tools/` and `.opencode/memory/` directories,
- * copies `memory.ts` tool, and creates initial `data.toon` if needed.
+ * Creates `.opencode/memory/` directory and initial `data.toon` if needed.
+ * The MCP server handles all memory operations - no plugin needed.
  * 
  * @example
  * ```bash
@@ -127,18 +127,13 @@ function detectAgents(): Agent[] {
  * ```
  */
 function installOpenCodeTools(): void {
-  const toolsDir = join(projectRoot, ".opencode", "tools")
   const memoryDir = join(projectRoot, ".opencode", "memory")
   const memoryFile = join(memoryDir, "data.toon")
 
-  if (!existsSync(toolsDir)) mkdirSync(toolsDir, { recursive: true })
   if (!existsSync(memoryDir)) mkdirSync(memoryDir, { recursive: true })
 
-  cpSync(join(sourceDir, "memory.ts"), join(toolsDir, "memory.ts"))
-  console.log("  Copied memory.ts to .opencode/tools/")
-
   if (!existsSync(memoryFile)) {
-    writeFileSync(memoryFile, "version: 1\nentries[0|]{id|category|key|content|file|tags|date}:\n")
+    writeFileSync(memoryFile, "version: 1\n[0|]\n")
     console.log("  Created .opencode/memory/data.toon")
   }
 }
