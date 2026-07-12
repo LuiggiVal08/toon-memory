@@ -20,9 +20,6 @@ const ARCHIVE_FILE = join(MEMORY_DIR, "archive.toon")
 /** Configuration file for encryption settings */
 const CONFIG_FILE = join(MEMORY_DIR, "config.json")
 
-/** Env file storing the encryption key (gitignored via .opencode/) */
-const ENV_FILE = join(MEMORY_DIR, ".env")
-
 /** Maximum active entries before auto-archive */
 const MAX_ENTRIES = 100
 
@@ -73,29 +70,12 @@ function saveConfig(config: MemoryConfig): void {
 }
 
 /**
- * Read the encryption key from .env file.
+ * Get the encryption key from environment variable.
  * 
  * @returns The key string, or undefined if not set
  */
-function readEnvKey(): string | undefined {
-  try {
-    if (!existsSync(ENV_FILE)) return undefined
-    const content = readFileSync(ENV_FILE, "utf-8").trim()
-    const match = content.match(/^TOON_MEMORY_KEY=(.+)$/m)
-    return match ? match[1] : undefined
-  } catch {
-    return undefined
-  }
-}
-
-/**
- * Write the encryption key to .env file.
- * 
- * @param key - Hex-encoded encryption key
- */
-function writeEnvKey(key: string): void {
-  ensureMemoryDir()
-  writeFileSync(ENV_FILE, `TOON_MEMORY_KEY=${key}\n`)
+function getKey(): string | undefined {
+  return process.env.TOON_MEMORY_KEY
 }
 
 /**
@@ -185,7 +165,7 @@ function readMemory(): string {
   const data = readFileSync(MEMORY_FILE, "utf-8")
   
   if (config.encrypted) {
-    const key = readEnvKey()
+    const key = getKey()
     if (!key) return ""
     try {
       return decrypt(data, key)
@@ -208,7 +188,7 @@ function writeMemory(content: string): void {
   const config = loadConfig()
   
   if (config.encrypted) {
-    const key = readEnvKey()
+    const key = getKey()
     if (!key) return
     const encrypted = encrypt(content, key)
     writeFileSync(MEMORY_FILE, encrypted)
@@ -683,10 +663,12 @@ server.registerTool(
     writeFileSync(MEMORY_FILE, encrypted)
     
     saveConfig({ encrypted: true })
-    writeEnvKey(key)
     
     return {
-      content: [{ type: "text" as const, text: "🔐 Encriptación habilitada" }],
+      content: [{ 
+        type: "text" as const, 
+        text: `🔐 Encriptación habilitada\n⚠️ Guarda esta clave en TOON_MEMORY_KEY (no se puede recuperar):\n${key}` 
+      }],
     }
   }
 )
@@ -717,7 +699,7 @@ server.registerTool(
       return { content: [{ type: "text" as const, text: "La encriptación no está habilitada" }] }
     }
     
-    const resolvedKey = key || readEnvKey() || ""
+    const resolvedKey = key || getKey() || ""
     if (!resolvedKey) {
       return { content: [{ type: "text" as const, text: "❌ No hay clave. Pásala como argumento o la del archivo .env" }] }
     }
