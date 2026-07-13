@@ -1,13 +1,25 @@
 ---
 import logoSrc from '../assets/logo.svg';
 
-const exampleCode = `// Save a decision
+const exampleCode = `// Save a decision (with auto-tag inference)
 memory_remember({
   category: "decision",
   key: "use-zod",
   content: "Use Zod for validation",
   file: "src/types.ts"
 })
+// 🏷️ Tags inferidos: types
+
+// Save with TTL (expires in 7 days)
+memory_remember({
+  category: "knowledge",
+  key: "sprint-deadline",
+  content: "Sprint ends July 18",
+  ttl: "7d"
+})
+
+// See what changed since last session
+memory_diff({ since: "24h" })
 
 // Search memory
 memory_recall({ query: "redis" })
@@ -102,12 +114,13 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
       <div class="feature-cards">
         <div class="card">
           <div class="card-icon">🧩</div>
-          <h3>8 MCP Tools</h3>
-          <p>Full memory management via Model Context Protocol — remember, recall, forget, stats, summary, archive, encrypt, decrypt.</p>
+          <h3>11 MCP Tools + 3 Resources</h3>
+          <p>Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, encrypt, decrypt. Plus resources for direct context reading.</p>
           <div class="card-tags">
             <span class="tag">remember</span>
             <span class="tag">recall</span>
-            <span class="tag">forget</span>
+            <span class="tag">diff</span>
+            <span class="tag">suggest</span>
           </div>
         </div>
         <div class="card">
@@ -123,10 +136,20 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
         <div class="card">
           <div class="card-icon">📄</div>
           <h3>TOON Format</h3>
-          <p>40% fewer tokens than JSON. Custom binary-like encoding designed for LLM comprehension and token efficiency.</p>
+          <p>40% fewer tokens than JSON. Custom encoding designed for LLM comprehension and token efficiency.</p>
           <div class="card-stats">
             <span class="stat">40% less tokens</span>
             <span class="stat">3x faster parse</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🧠</div>
+          <h3>Smart Memory</h3>
+          <p>Auto-tag inference, related entry suggestions, memory diff, and configurable TTL for temporary context.</p>
+          <div class="card-stats">
+            <span class="stat">Auto-tags</span>
+            <span class="stat">TTL</span>
+            <span class="stat">Diff</span>
           </div>
         </div>
         <div class="card">
@@ -142,11 +165,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 
       <div class="stats-row">
         <div class="stat-card">
-          <span class="stat-number">8</span>
+          <span class="stat-number">11</span>
           <span class="stat-label">MCP Tools</span>
         </div>
         <div class="stat-card">
-          <span class="stat-number">7</span>
+          <span class="stat-number">15</span>
           <span class="stat-label">Agents</span>
         </div>
         <div class="stat-card">
@@ -178,13 +201,13 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
           </div>
           <div class="tip-card">
             <div class="tip-number">3</div>
-            <h3>Tag everything</h3>
-            <p>Add tags like <code class="inline-code">risk;spec</code> so you can filter later. Tags are searchable and make cross-referencing easy.</p>
+            <h3>Tags auto-infer</h3>
+            <p>Leave tags empty and the system infers them from content — redis, auth, api, db, and 16+ more categories. Or add them manually for precise control.</p>
           </div>
           <div class="tip-card">
             <div class="tip-number">4</div>
-            <h3>Review archives monthly</h3>
-            <p>Old entries auto-archive after 30 days. Review them periodically to keep your active memory lean and relevant.</p>
+            <h3>Use TTL for temp context</h3>
+            <p>Deadlines, sprints, time-sensitive notes — set a <code class="inline-code">ttl: "7d"</code> and they auto-expire. No manual cleanup needed.</p>
           </div>
         </div>
 
