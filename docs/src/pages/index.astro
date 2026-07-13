@@ -10,6 +10,9 @@ import CodeExamples from '../components/CodeExamples.astro';
 import FAQ from '../components/FAQ.astro';
 import CTA from '../components/CTA.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import Problem from '../components/Problem.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import TokenSavings from '../components/TokenSavings.astro';
 
 const description =
   'Persistent memory for AI coding agents. Remember decisions, patterns, and bugs between sessions.';
@@ -53,11 +56,14 @@ const description =
         </a>
       </div>
 
+      <Problem />
       <FeatureGrid />
       <StatsRow />
+      <HowItWorks />
       <Tips />
       <Comparison />
       <CodeExamples />
+      <TokenSavings />
       <FAQ />
       <CTA />
     </main>
@@ -659,7 +665,123 @@ const description =
         flex-wrap: wrap;
       }
 
+      /* Problem */
+      .problem-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+      .problem-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: border-color 0.2s, transform 0.2s;
+      }
+      .problem-card:hover {
+        border-color: var(--brand);
+        transform: translateY(-2px);
+      }
+      .problem-icon { font-size: 1.75rem; margin-bottom: 0.75rem; }
+      .problem-card h3 { font-size: 1.05rem; margin-bottom: 0.4rem; }
+      .problem-card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
+      .problem-resolution {
+        margin-top: 1.5rem;
+        padding: 1rem 1.25rem;
+        border-left: 3px solid var(--brand);
+        background: rgba(99,102,241,0.08);
+        border-radius: 0 8px 8px 0;
+        color: var(--text);
+        font-size: 0.95rem;
+      }
+
+      /* How it works */
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+      .step {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        position: relative;
+      }
+      .step-num {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--gradient);
+        color: #fff;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+      }
+      .step h3 { font-size: 1.1rem; margin-bottom: 0.4rem; }
+      .step p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; margin-bottom: 0.75rem; }
+
+      /* Token savings */
+      .savings-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+      .savings-bar { display: flex; align-items: center; gap: 1rem; }
+      .savings-label { width: 56px; font-weight: 600; font-size: 0.9rem; }
+      .bar-track {
+        flex: 1;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 9999px;
+        overflow: hidden;
+        height: 28px;
+      }
+      .bar {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #fff;
+        border-radius: 9999px;
+      }
+      .bar-json { background: linear-gradient(135deg, #475569, #64748b); }
+      .bar-toon { background: var(--gradient); }
+      .savings-stats {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+      }
+      .savings-stat { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+      .savings-num {
+        font-size: 2rem;
+        font-weight: 800;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .savings-cap { font-size: 0.8rem; color: var(--text-muted); }
+      .savings-note {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        text-align: center;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
       @media (max-width: 768px) {
+        .problem-grid { grid-template-columns: 1fr; }
+        .steps { grid-template-columns: 1fr; }
         .hero-split { flex-direction: column; gap: 2rem; text-align: center; }
         .hero-actions { justify-content: center; }
         .hero-logo-img { width: 200px; height: 200px; }

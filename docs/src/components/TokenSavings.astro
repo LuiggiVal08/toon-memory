@@ -1,0 +1,47 @@
+---
+const bars = [
+  { label: 'JSON', pct: 100, cls: 'bar-json' },
+  { label: 'TOON', pct: 60, cls: 'bar-toon' },
+];
+
+const stats = [
+  { num: '40%', cap: 'fewer tokens than JSON' },
+  { num: '3x', cap: 'faster to parse' },
+  { num: '0', cap: 'config needed' },
+];
+---
+
+<section class="content-section savings-section">
+  <div class="section-header">
+    <h2>40% fewer tokens, by design</h2>
+    <p>The TOON format is built for LLMs, not for humans</p>
+  </div>
+
+  <div class="savings-bars">
+    {
+      bars.map((b) => (
+        <div class="savings-bar">
+          <span class="savings-label">{b.label}</span>
+          <div class="bar-track">
+            <div class={`bar ${b.cls}`} style={`width:${b.pct}%`}><span>{b.pct}%</span></div>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="savings-stats">
+    {
+      stats.map((s) => (
+        <div class="savings-stat">
+          <span class="savings-num">{s.num}</span>
+          <span class="savings-cap">{s.cap}</span>
+        </div>
+      ))
+    }
+  </div>
+
+  <p class="savings-note">
+    TOON encodes memory entries in a compact, token-efficient structure designed for LLM comprehension — so your agent spends tokens on reasoning, not on parsing verbose JSON.
+  </p>
+</section>

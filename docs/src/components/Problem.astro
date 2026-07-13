@@ -1,0 +1,42 @@
+---
+const problems = [
+  {
+    icon: '🌀',
+    title: 'Context resets daily',
+    body: 'Every new session, your agent forgets the decisions, patterns, and bugs it learned yesterday. You re-explain the same context over and over.',
+  },
+  {
+    icon: '🔍',
+    title: 'Hunting through history',
+    body: 'Without memory, agents grep git history and re-read files to reconstruct why something was built a certain way — burning tokens and time.',
+  },
+  {
+    icon: '📋',
+    title: 'Copy-paste notes',
+    body: 'Developers paste context between chats by hand. It is fragile, gets stale, and never reaches the next autonomous run.',
+  },
+];
+---
+
+<section class="content-section problem-section">
+  <div class="section-header">
+    <h2>Why do agents lose context between sessions?</h2>
+    <p>AI coding agents start every session with amnesia</p>
+  </div>
+
+  <div class="problem-grid">
+    {
+      problems.map((p) => (
+        <div class="problem-card">
+          <div class="problem-icon">{p.icon}</div>
+          <h3>{p.title}</h3>
+          <p>{p.body}</p>
+        </div>
+      ))
+    }
+  </div>
+
+  <p class="problem-resolution">
+    toon-memory gives your agent a persistent, queryable memory — so context survives every session, automatically.
+  </p>
+</section>
