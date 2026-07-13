@@ -7,15 +7,20 @@ interface Props {
 }
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
+const isEs = lang === 'es';
+const docsHref = isEs ? '/toon-memory/es/getting-started/quickstart' : '/toon-memory/getting-started/quickstart';
+const homeHref = isEs ? '/toon-memory/' : '/toon-memory/es';
+const switchLabel = isEs ? 'English' : 'Español';
 ---
 
 <header class="site-header">
-  <a href="/toon-memory/" class="site-logo">
+  <a href={isEs ? '/toon-memory/es' : '/toon-memory/'} class="site-logo">
     <img src={logoSrc.src} alt="toon-memory" class="logo-icon" />
     <span class="logo-text">toon-memory</span>
   </a>
   <nav class="site-nav">
-    <a href={lang === 'es' ? '/toon-memory/es/getting-started/quickstart' : '/toon-memory/getting-started/quickstart'}>{c.nav.docs}</a>
+    <a href={docsHref}>{c.nav.docs}</a>
+    <a href={homeHref} class="lang-switch">{switchLabel}</a>
     <a href="https://www.npmjs.com/package/toon-memory" target="_blank" rel="noopener noreferrer">{c.nav.npm}</a>
     <a href="https://github.com/LuiggiVal08/toon-memory" target="_blank" rel="noopener noreferrer">{c.nav.github}</a>
   </nav>
