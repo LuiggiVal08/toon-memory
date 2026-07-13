@@ -18,6 +18,7 @@
 - [Supported Agents](#supported-agents)
 - [MCP Tools](#mcp-tools)
 - [Coordinación multi-sesión](#coordinación-multi-sesión)
+- [Memory Graph (recall basado en grafo)](#memory-graph-recall-basado-en-grafo)
 - [Tips & Best Practices](#tips--best-practices)
 - [CLI Commands](#cli-commands)
 - [Configuration](#configuration)
@@ -77,6 +78,7 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 - **Tag inference** — Auto-detect tags from content when tags are empty
 - **Memory diff** — See what changed since your last session
 - **Related entries** — Auto-suggest related memories when saving
+- **Memory graph** — Connect entries with `links`/`[[key]]` refs; `memory_recall` can expand a relationship-aware subgraph for more precise, lower-token recall (no embeddings, no LLM)
 
 ---
 
@@ -151,8 +153,8 @@ memory_remember   # Save important decisions
 
 | Tool | Description |
 |------|-------------|
-| `memory_remember` | Save a decision, pattern, bug, or knowledge (with optional TTL and auto-tag inference) |
-| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL entries) |
+| `memory_remember` | Save a decision, pattern, bug, or knowledge (optional TTL, auto-tag inference, and `links` to build the memory graph) |
+| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision |
 | `memory_forget` | Remove an entry by key or id |
 | `memory_stats` | View memory state (including TTL stats) |
 | `memory_summary` | Save/retrieve file summaries |
@@ -351,6 +353,58 @@ memory_sessions({ conflictsOnly: false })
 3. If you share a file with another session, sync up before editing so you don't overwrite each other's changes.
 
 > **Tip:** This is purely local and lock-free — safe to run as often as you like. Combine it with `memory_recall({ query: "project context" })` at session start for both cross-session *memory* and cross-session *presence*.
+
+---
+
+## Memory Graph (recall basado en grafo)
+
+When your memory grows, a flat keyword search can return either too much (every match) or the wrong context (no relationships). toon-memory can treat memory as a **lightweight knowledge graph** so recall returns the *right* entries with fewer tokens.
+
+It's fully **deterministic and offline** — no embeddings, no vector DB, no LLM, no server. Edges come from two sources:
+
+- **Explicit `links`** — keys you declare when saving an entry.
+- **Implicit `[[key]]` refs** — any `[[some-key]]` mention inside the content.
+
+### How it works
+
+1. `memory_remember` stores `links` on the entry (space- or `;`-separated keys).
+2. `memory_recall({ mode: "graph" })` finds keyword matches (seeds), then expands the **ego-subgraph** up to `hops` (1 or 2) along the edges.
+3. Relevance propagates from the seeds to their neighbors, so a related decision or spec surfaces even if it doesn't contain the query word.
+4. The result set is capped (`limit`, default 6) → **smaller, more precise context** for the agent.
+
+### Remember with links
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "risk-engine-priority",
+  content: "The engine prioritizes risk over speed (see [[risk-spec]]).",
+  file: "spec.md:10",
+  tags: "risk;spec",
+  links: "engine-arch"          // explicit edge to another entry
+})
+// 🧠 Guardado: decision/risk-engine-priority (a1b2c3d4)
+```
+
+### Recall with graph mode
+
+```typescript
+memory_recall({ query: "riesgo", mode: "graph", hops: 2 })
+// [decision] risk-engine-priority (a1b2c3d4)
+//   The engine prioritizes risk over speed (see [[risk-spec]]).
+//   File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01
+//   links: engine-arch
+//
+// [knowledge] risk-spec (a2b3c4d5)
+//   Risk specification for the engine.
+//   links: risk-engine-priority;engine-arch
+//
+// [pattern] engine-arch (e6f7g8h9)
+//   Engine architecture.
+//   links: risk-spec
+```
+
+> **Tip:** Use `mode: "graph"` when a decision ripples across several entries (architecture, specs, related bugs). For isolated facts, the default `flat` mode is enough. The graph is built on read, so there's no extra index file to maintain.
 
 ---
 
@@ -624,10 +678,10 @@ Add to `~/.config/zed/settings.json`:
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date|ttl}:
-  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10|
-  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10|
-  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0|
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0|
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20 (see [[use-zod]])|redis.ts|redis;fix|2026-07-10|7d|0|use-zod
 summaries:
   src/services/redis.ts: Redis connection pool with retry logic
 ```
@@ -760,11 +814,17 @@ toon-memory/
 │   │   ├── setup.ts             # CLI commands
 │   │   └── toon-memory.ts       # CLI runner
 │   ├── mcp/
-│   │   └── server.ts            # MCP server (11 tools + 3 resources)
+│   │   └── server.ts            # MCP server (13 tools + 3 resources)
+│   ├── lib/
+│   │   ├── lock.ts              # Advisory file lock + atomic write
+│   │   ├── sessions.ts          # Multi-session coordination
+│   │   └── graph.ts             # Memory graph (parse, build, graph recall)
 │   └── memory.ts                # Custom tool (OpenCode)
 ├── tests/
 │   ├── cli.test.ts              # CLI tests
-│   └── memory.test.ts           # Memory tests
+│   ├── memory.test.ts           # Memory tests
+│   ├── sessions.test.ts         # Multi-session tests
+│   └── graph.test.ts            # Memory graph tests
 ├── .github/workflows/
 │   ├── ci.yml                   # CI (Node.js 20/22)
 │   └── publish.yml              # Auto-publish on release

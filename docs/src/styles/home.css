@@ -340,6 +340,13 @@ a:hover { text-decoration: underline; }
   border-color: var(--brand);
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
+.card.featured {
+  grid-column: 1 / -1;
+  border-color: rgba(139, 92, 246, 0.5);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(99, 102, 241, 0.04));
+}
+.card.featured::before { opacity: 1; }
+.card.featured .card-icon { font-size: 2rem; }
 .card-icon { font-size: 1.75rem; margin-bottom: 0.75rem; }
 .card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
 .card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
@@ -524,6 +531,27 @@ pre code {
   line-height: 1.6;
   color: var(--text);
 }
+.code-block { position: relative; overflow-y: hidden; }
+.code-block::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 30%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(139, 92, 246, 0.12),
+    transparent
+  );
+  animation: codeScan 4.5s linear infinite;
+  pointer-events: none;
+}
+@keyframes codeScan {
+  0% { transform: translateY(-120%); }
+  100% { transform: translateY(430%); }
+}
 
 /* Footer */
 .site-footer {
@@ -685,6 +713,7 @@ pre code {
 }
 .bar {
   height: 100%;
+  width: var(--pct, 100%);
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -693,9 +722,18 @@ pre code {
   font-weight: 600;
   color: #fff;
   border-radius: 9999px;
+  transition: width 1.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.js .bar { width: 0; }
 .bar-json { background: linear-gradient(135deg, #475569, #64748b); }
 .bar-toon { background: var(--gradient); }
+.bar-toon.is-animated {
+  animation: toonGlow 2.6s ease-in-out 1.2s infinite;
+}
+@keyframes toonGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+  50% { box-shadow: 0 0 14px 0 rgba(139, 92, 246, 0.45); }
+}
 .savings-stats {
   display: flex;
   gap: 1.5rem;
@@ -762,6 +800,15 @@ pre code {
   border-color: var(--brand);
   transform: translateY(-2px);
 }
+.tool-card.pre-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.tool-card.revealed {
+  opacity: 1;
+  transform: none;
+}
 .tool-name {
   display: inline-block;
   font-family: var(--font-mono);
@@ -813,4 +860,10 @@ pre code {
 @media (max-width: 600px) {
   .hero-actions { flex-direction: column; align-items: stretch; }
   .btn-install { width: 100%; justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bar { transition: none; }
+  .bar-toon.is-animated { animation: none; }
+  .tool-card.pre-reveal { opacity: 1; transform: none; transition: none; }
+  .code-block::after { animation: none; display: none; }
 }

@@ -31,7 +31,7 @@ const rows = [
         <div class="savings-bar">
           <span class="savings-label">{r.format}</span>
           <div class="bar-track">
-            <div class={`bar ${r.cls}`} style={`width:${(r.tokens / jsonTokens) * 100}%`}>
+            <div class={`bar ${r.cls}`} style={`--pct:${(r.tokens / jsonTokens) * 100}%`} data-pct={(r.tokens / jsonTokens) * 100}>
               <span>{r.tokens}</span>
             </div>
           </div>
@@ -42,18 +42,24 @@ const rows = [
 
   <div class="savings-stats">
     <div class="savings-stat">
-      <span class="savings-num">{reductionPct}%</span>
+      <span class="savings-num" data-count={`${reductionPct}%`}>{reductionPct}%</span>
       <span class="savings-cap">{c.benchmarks.fewerTokens}</span>
     </div>
     <div class="savings-stat">
-      <span class="savings-num">{singleReductionPct}%</span>
+      <span class="savings-num" data-count={`${singleReductionPct}%`}>{singleReductionPct}%</span>
       <span class="savings-cap">{c.benchmarks.onSingle}</span>
     </div>
     <div class="savings-stat">
-      <span class="savings-num">{entries}</span>
+      <span class="savings-num" data-count={String(entries)}>{entries}</span>
       <span class="savings-cap">{c.benchmarks.entriesMeasured}</span>
     </div>
   </div>
 
   <p class="savings-note" set:html={c.benchmarks.note}></p>
 </section>
+
+<script>
+  import { animateCountsAndBars } from '../scripts/home-anim';
+  const root = document.querySelector<HTMLElement>('.benchmarks-section');
+  if (root) animateCountsAndBars(root);
+</script>

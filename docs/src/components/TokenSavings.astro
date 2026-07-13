@@ -23,7 +23,7 @@ const c = getContent(lang);
         <div class="savings-bar">
           <span class="savings-label">{b.label}</span>
           <div class="bar-track">
-            <div class={`bar ${b.cls}`} style={`width:${b.pct}%`}><span>{b.pct}%</span></div>
+            <div class={`bar ${b.cls}`} style={`--pct:${b.pct}%`} data-pct={b.pct}><span>{b.pct}%</span></div>
           </div>
         </div>
       ))
@@ -34,7 +34,7 @@ const c = getContent(lang);
     {
       c.tokenSavings.stats.map((s) => (
         <div class="savings-stat">
-          <span class="savings-num">{s.num}</span>
+          <span class="savings-num" data-count={s.num}>{s.num}</span>
           <span class="savings-cap">{s.cap}</span>
         </div>
       ))
@@ -43,3 +43,9 @@ const c = getContent(lang);
 
   <p class="savings-note">{c.tokenSavings.note}</p>
 </section>
+
+<script>
+  import { animateCountsAndBars } from '../scripts/home-anim';
+  const root = document.querySelector<HTMLElement>('.savings-section');
+  if (root) animateCountsAndBars(root);
+</script>

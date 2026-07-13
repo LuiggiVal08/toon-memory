@@ -10,8 +10,8 @@ const c = getContent(lang);
 
 <div class="feature-cards">
   {
-    c.features.cards.map((f) => (
-      <div class="card">
+    c.features.cards.map((f, i) => (
+      <div class={`card${i === 0 ? ' featured' : ''}`}>
         <div class="card-icon">{f.icon}</div>
         <h3>{f.title}</h3>
         <p>{f.body}</p>

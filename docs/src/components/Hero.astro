@@ -54,4 +54,16 @@ const docsHref = lang === 'es' ? '/toon-memory/es/getting-started/quickstart' : 
       setTimeout(() => this.classList.remove('copied'), 1500);
     });
   });
+
+  const cmd = document.querySelector('.install-cmd');
+  if (cmd && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const full = cmd.textContent;
+    cmd.textContent = '';
+    let i = 0;
+    const type = () => {
+      cmd.textContent = full.slice(0, i);
+      if (i++ <= full.length) setTimeout(type, 55);
+    };
+    setTimeout(type, 700);
+  }
 </script>

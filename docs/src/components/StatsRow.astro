@@ -12,9 +12,15 @@ const c = getContent(lang);
   {
     c.stats.items.map((s) => (
       <div class="stat-card">
-        <span class="stat-number">{s.number}</span>
+        <span class="stat-number" data-count={s.number}>{s.number}</span>
         <span class="stat-label">{s.label}</span>
       </div>
     ))
   }
 </div>
+
+<script>
+  import { animateCountsAndBars } from '../scripts/home-anim';
+  const root = document.querySelector<HTMLElement>('.stats-row');
+  if (root) animateCountsAndBars(root);
+</script>

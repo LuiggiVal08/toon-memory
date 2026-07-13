@@ -7,6 +7,7 @@ import { fileURLToPath } from "url"
 import { randomBytes, createCipheriv, createDecipheriv } from "crypto"
 import { withLockSync, atomicWrite, readUnderLock } from "../lib/lock"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } from "../lib/sessions"
+import { graphRecall } from "../lib/graph"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -105,7 +106,7 @@ function ensureMemoryDir(): void {
 function ensureMemoryFile(): void {
   ensureMemoryDir()
   if (!existsSync(MEMORY_FILE)) {
-    writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date|ttl|accessed}:\n")
+    writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date|ttl|accessed|links}:\n")
   }
 }
 
@@ -671,9 +672,10 @@ server.registerTool(
       file: z.string().optional().default("").describe("Archivo o línea relacionada (ej: spec.md:145)"),
       tags: z.string().optional().default("").describe("Tags separados por punto y coma (ej: risk;spec)"),
       ttl: z.string().optional().default("").describe("Time to live (ej: 7d, 2026-07-17). Vacío = sin expiración"),
+      links: z.string().optional().default("").describe("Entradas relacionadas por key, separadas por espacio o ';' (ej: risk-spec engine-arch). Construye aristas del grafo de memoria."),
     },
   },
-  async ({ category, key, content, file, tags, ttl }) => {
+  async ({ category, key, content, file, tags, ttl, links }) => {
     const data = readMemory()
     const newId = generateId()
     const date = new Date().toISOString().split("T")[0]
@@ -703,7 +705,12 @@ server.registerTool(
     const entryId = existingIdx !== -1 ? existingId : newId
     const resolvedTtl = parseTTL(ttl)
     const resolvedTags = tags ? tags : inferTags(content, key)
-    const newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|0`
+    // Preserve existing links on upsert unless new ones are provided.
+    const existingParts = existingIdx !== -1 ? lines[existingIdx].trim().split("|") : []
+    const resolvedLinks = links
+      ? links.split(/[\s;]+/).filter(Boolean).join(" ")
+      : existingParts[9] || ""
+    const newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|0|${resolvedLinks}`
     let action = "Guardado"
     const tagsInferred = !tags && resolvedTags ? true : false
 
@@ -769,9 +776,11 @@ server.registerTool(
       category: z.string().optional().default("").describe("Filtrar por categoría (vacío = todos)"),
       from_date: z.string().optional().default("").describe("Fecha inicio filtro (YYYY-MM-DD)"),
       to_date: z.string().optional().default("").describe("Fecha fin filtro (YYYY-MM-DD)"),
+      mode: z.enum(["flat", "graph"]).optional().default("flat").describe("'flat' = búsqueda por palabra clave (default). 'graph' = recall basado en grafo: expande el subgrafo de entradas relacionadas desde las coincidencias (más preciso, menos tokens)."),
+      hops: z.number().optional().default(1).describe("Profundidad del grafo en modo 'graph' (1 o 2). Default 1."),
     },
   },
-  async ({ query, category, from_date, to_date }) => {
+  async ({ query, category, from_date, to_date, mode, hops }) => {
     const data = readMemory()
     const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
 
@@ -799,6 +808,23 @@ server.registerTool(
 
     if (results.length === 0) {
       return { content: [{ type: "text" as const, text: `No se encontraron resultados para "${query}"` }] }
+    }
+
+    // Graph mode: expand the ego-subgraph from keyword matches and return the
+    // focused, relationship-aware result set (fewer tokens, higher precision).
+    if (mode === "graph") {
+      const subgraph = graphRecall(data, query, { category, from_date, to_date, hops })
+      if (subgraph.length === 0) {
+        return { content: [{ type: "text" as const, text: `No se encontraron resultados para "${query}"` }] }
+      }
+      bumpAccessed(subgraph.map((e) => e.id))
+      const formatted = subgraph
+        .map((r) => {
+          const links = r.links.length ? `\n  links: ${r.links.join(", ")}` : ""
+          return `[${r.category}] ${r.key} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}`
+        })
+        .join("\n\n")
+      return { content: [{ type: "text" as const, text: formatted }] }
     }
 
     // Rank by importance (recency + access frequency), then bump access counts.

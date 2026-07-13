@@ -35,3 +35,9 @@ const resources = ['memory-entries', 'memory-stats', 'memory-summaries'];
     }
   </div>
 </section>
+
+<script>
+  import { revealCards } from '../scripts/home-anim';
+  const root = document.querySelector<HTMLElement>('.tools-section');
+  if (root) revealCards(root, '.tool-card');
+</script>
