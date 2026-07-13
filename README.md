@@ -59,12 +59,12 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 
 ## Features
 
-- **11 MCP tools** — Full memory management via Model Context Protocol
+- **10 MCP tools** — Full memory management via Model Context Protocol
 - **MCP Resources** — Read memory as context without tool invocations
 - **15 agents supported** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Interactive installer** — Select which agents to configure from a menu
 - **SessionStart hooks** — Auto-reminders for Claude Code, Codex CLI, Gemini CLI, Antigravity
-- **TOON format** — 40% fewer tokens than JSON, better LLM comprehension
+- **TOON format** — 22% fewer tokens than JSON (measured), better LLM comprehension
 - **Per-project memory** — Each project gets its own memory file
 - **Zero config** — Just install and use
 - **Auto gitignore** — Automatically adds `.toon-memory/memory/` to `.gitignore`
@@ -560,7 +560,7 @@ Add to `~/.config/zed/settings.json`:
 ## How It Works
 
 1. **MCP Server** — Runs locally, talks to your agent via stdio
-2. **TOON Format** — Stores data in Token-Oriented Object Notation (~40% fewer tokens than JSON)
+2. **TOON Format** — Stores data in Token-Oriented Object Notation (~22.5% fewer tokens than JSON, measured over 16 entries with gpt-tokenizer)
 3. **Per-project memory** — Each project gets `.toon-memory/memory/data.toon`
 4. **Zero config** — Just install and use
 
@@ -600,13 +600,14 @@ summaries:
 
 TOON (Token-Oriented Object Notation) is designed for LLMs:
 
-| Format | Token Count | LLM Accuracy |
-|--------|-------------|--------------|
-| JSON | 100 | 75% |
-| YAML | 95 | 72% |
-| **TOON** | **60** | **76.4%** |
+| Format | Tokens (16 entries) |
+|--------|---------------------|
+| JSON | 1097 |
+| **TOON** | **850** |
 
-- **40% fewer tokens** than JSON
+Measured with `gpt-tokenizer` (cl100k_base) over 16 representative memory entries — see `scripts/benchmark-toon.mjs` (`npm run bench`).
+
+- **22.5% fewer tokens** than JSON at file level (up to 30.5% on a single entry)
 - **Lossless roundtrip** — No data loss
 - **Better LLM comprehension** — Structured for AI consumption
 

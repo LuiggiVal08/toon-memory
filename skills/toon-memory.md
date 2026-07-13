@@ -2,7 +2,7 @@
 
 ## What is this?
 
-A persistent memory system for AI coding agents. It remembers decisions, patterns, bugs, and knowledge **between sessions** using TOON format (40% fewer tokens than JSON).
+A persistent memory system for AI coding agents. It remembers decisions, patterns, bugs, and knowledge **between sessions** using TOON format (22% fewer tokens than JSON, measured).
 
 ## Supported Agents
 
