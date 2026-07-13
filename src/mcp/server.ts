@@ -298,6 +298,39 @@ function parseRelativeDate(since: string): string {
   return today
 }
 
+const normalize = (s: string) => s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim()
+
+/**
+ * Find entries related to the given text by fuzzy matching.
+ * Returns top N results ranked by match quality.
+ */
+function findRelatedEntries(text: string, excludeKey: string = "", limit: number = 3): Array<{ id: string; cat: string; key: string; content: string; file: string; tags: string; date: string; score: number }> {
+  const data = readMemory()
+  const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
+  const queryTokens = normalize(text).split(" ").filter(Boolean)
+
+  const scored = lines
+    .map((line) => {
+      const trimmed = line.trim()
+      const parts = trimmed.split("|")
+      if (parts.length < 7) return null
+      const [id, cat, key, content, file, tags, date] = parts
+      if (key === excludeKey) return null
+      const searchStr = normalize(`${id} ${cat} ${key} ${content} ${file} ${tags}`)
+      let score = 0
+      for (const token of queryTokens) {
+        if (searchStr.includes(token)) score++
+      }
+      if (score === 0) return null
+      return { id, cat, key, content, file, tags, date, score }
+    })
+    .filter(Boolean)
+    .sort((a, b) => b!.score - a!.score)
+    .slice(0, limit)
+
+  return scored as Array<{ id: string; cat: string; key: string; content: string; file: string; tags: string; date: string; score: number }>
+}
+
 /**
  * Archive entries older than ARCHIVE_DAYS to archive.toon.
  * 
@@ -474,8 +507,16 @@ server.registerTool(
 
     const ttlMsg = resolvedTtl ? `\n⏰ TTL: ${resolvedTtl}` : ""
     const inferredMsg = tagsInferred ? `\n🏷️ Tags inferidos: ${resolvedTags}` : ""
+
+    const related = findRelatedEntries(`${key} ${content} ${resolvedTags}`, key, 3)
+    let relatedMsg = ""
+    if (related.length > 0) {
+      const items = related.map((r) => `  [${r.cat}] ${r.key} — ${r.content.slice(0, 80)}`).join("\n")
+      relatedMsg = `\n\n🔗 Entradas relacionadas:\n${items}`
+    }
+
     return {
-      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${entryId})\n${content}${ttlMsg}${inferredMsg}${archiveMsg}` }],
+      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${entryId})\n${content}${ttlMsg}${inferredMsg}${archiveMsg}${relatedMsg}` }],
     }
   }
 )
@@ -701,6 +742,35 @@ server.registerTool(
     }
 
     return { content: [{ type: "text" as const, text: sections.join("\n") }] }
+  }
+)
+
+/**
+ * Register the memory_suggest tool.
+ * Suggest related entries for a given text context.
+ */
+server.registerTool(
+  "memory_suggest",
+  {
+    title: "Suggest Related Memories",
+    description: "Sugiere entradas de memoria relacionadas con un contexto dado. Útil para obtener contexto antes de una tarea.",
+    inputSchema: {
+      context: z.string().describe("Texto o contexto para buscar sugerencias"),
+      limit: z.number().optional().default(5).describe("Máximo de sugerencias"),
+    },
+  },
+  async ({ context, limit }) => {
+    const related = findRelatedEntries(context, "", limit)
+
+    if (related.length === 0) {
+      return { content: [{ type: "text" as const, text: `No se encontraron entradas relacionadas con "${context}"` }] }
+    }
+
+    const formatted = related
+      .map((r) => `[${r.cat}] ${r.key} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags} | Date: ${r.date}`)
+      .join("\n\n")
+
+    return { content: [{ type: "text" as const, text: `🔍 Sugerencias para "${context}":\n\n${formatted}` }] }
   }
 )
 

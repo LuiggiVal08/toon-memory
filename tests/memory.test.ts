@@ -344,4 +344,46 @@ describe("Memory Operations", () => {
     expect(results.map((r) => r!.key)).toContain("from-yesterday")
     expect(results.map((r) => r!.key)).not.toContain("very-old")
   })
+
+  it("should find related entries by fuzzy matching", () => {
+    const entries = [
+      "  rel000001|decision|redis-cache-config|Redis cache layer for session storage|src/cache.ts|redis;cache|2026-07-10|",
+      "  rel000002|bug|redis-timeout|Redis connection timeout in production|src/redis.ts|redis;bug|2026-07-10|",
+      "  rel000003|pattern|auth-jwt|JWT authentication with refresh tokens|src/auth.ts|auth;jwt|2026-07-10|",
+      "  rel000004|knowledge|postgres-migration|Database migration for user table|src/db.ts|db;postgres|2026-07-10|",
+    ]
+
+    const data = readFileSync(memoryFile, "utf-8")
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries["))
+    lines.splice(headerIdx + 1, 0, ...entries)
+    lines[headerIdx] = "entries[4|]{id|category|key|content|file|tags|date|ttl}:"
+    writeFileSync(memoryFile, lines.join("\n"))
+
+    const normalize = (s: string) => s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim()
+    const query = "redis cache"
+    const queryTokens = normalize(query).split(" ").filter(Boolean)
+
+    const updatedData = readFileSync(memoryFile, "utf-8")
+    const entryLines = updatedData.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
+
+    const scored = entryLines
+      .map((line) => {
+        const parts = line.trim().split("|")
+        if (parts.length < 7) return null
+        const searchStr = normalize(`${parts[0]} ${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]} ${parts[5]}`)
+        let score = 0
+        for (const token of queryTokens) {
+          if (searchStr.includes(token)) score++
+        }
+        if (score === 0) return null
+        return { key: parts[2], score }
+      })
+      .filter(Boolean)
+      .sort((a, b) => b!.score - a!.score)
+
+    expect(scored.length).toBeGreaterThanOrEqual(2)
+    expect(scored[0]!.key).toBe("redis-cache-config")
+    expect(scored[1]!.key).toBe("redis-timeout")
+  })
 })
