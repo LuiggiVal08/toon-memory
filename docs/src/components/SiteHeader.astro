@@ -10,6 +10,7 @@ const c = getContent(lang);
 const isEs = lang === 'es';
 const docsHref = isEs ? '/toon-memory/es/getting-started/quickstart' : '/toon-memory/getting-started/quickstart';
 const homeHref = isEs ? '/toon-memory/' : '/toon-memory/es';
+const switchTarget = isEs ? 'en' : 'es';
 const switchLabel = isEs ? 'English' : 'Español';
 ---
 
@@ -20,7 +21,11 @@ const switchLabel = isEs ? 'English' : 'Español';
   </a>
   <nav class="site-nav">
     <a href={docsHref}>{c.nav.docs}</a>
-    <a href={homeHref} class="lang-switch">{switchLabel}</a>
+    <a
+      href={homeHref}
+      class="lang-switch"
+      onclick={`localStorage.setItem('toon-lang', '${switchTarget}')`}
+    >{switchLabel}</a>
     <a href="https://www.npmjs.com/package/toon-memory" target="_blank" rel="noopener noreferrer">{c.nav.npm}</a>
     <a href="https://github.com/LuiggiVal08/toon-memory" target="_blank" rel="noopener noreferrer">{c.nav.github}</a>
   </nav>
