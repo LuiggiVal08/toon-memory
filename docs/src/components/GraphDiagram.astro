@@ -1,0 +1,102 @@
+---
+// Memory graph diagram for the hero. Shows how memory entries (decisions,
+// patterns, bugs) link to files — an MCP client queries and retrieves
+// persistent context across sessions. Thin lines, hollow nodes, mono labels.
+// Hovering a node fills it in. No glow, no gradients, no motion.
+---
+
+<svg
+	class="tm-graph"
+	viewBox="0 0 780 600"
+	role="img"
+	aria-label="A memory knowledge graph: the MCP agent queries memory, which links decisions, patterns, and bugs to source files."
+>
+	<g class="edges">
+		<line x1="430" y1="64" x2="200" y2="220" />
+		<line x1="430" y1="64" x2="430" y2="250" />
+		<line x1="430" y1="64" x2="650" y2="210" />
+		<line x1="200" y1="220" x2="100" y2="400" />
+		<line x1="200" y1="220" x2="340" y2="400" />
+		<line x1="430" y1="250" x2="430" y2="400" />
+		<line x1="430" y1="250" x2="580" y2="400" />
+		<line x1="650" y1="210" x2="680" y2="400" />
+	</g>
+
+	<g class="nodes">
+		<g class="node">
+			<circle cx="430" cy="64" r="10" />
+			<text x="450" y="69">MCP Agent</text>
+		</g>
+		<g class="node node--memory">
+			<circle cx="200" cy="220" r="10" />
+			<text x="182" y="225" text-anchor="end">memory</text>
+		</g>
+		<g class="node node--decision">
+			<circle cx="100" cy="400" r="9" />
+			<text x="100" y="430" text-anchor="middle">use-zod</text>
+		</g>
+		<g class="node node--pattern">
+			<circle cx="340" cy="400" r="9" />
+			<text x="340" y="430" text-anchor="middle">redis-pool</text>
+		</g>
+		<g class="node node--bug">
+			<circle cx="430" cy="400" r="9" />
+			<text x="430" y="430" text-anchor="middle">cors-fix</text>
+		</g>
+		<g class="node node--decision">
+			<circle cx="580" cy="400" r="9" />
+			<text x="598" y="405" text-anchor="start">auth-flow</text>
+		</g>
+		<g class="node node--pattern">
+			<circle cx="680" cy="400" r="9" />
+			<text x="698" y="405" text-anchor="start">error-boundary</text>
+		</g>
+	</g>
+</svg>
+
+<style>
+	.tm-graph {
+		width: 100%;
+		height: auto;
+		max-width: 560px;
+		min-width: 0;
+		display: block;
+	}
+	.tm-graph .edges line {
+		stroke: var(--tm-ink);
+		stroke-width: 1.25;
+	}
+	.tm-graph .node circle {
+		fill: var(--tm-paper);
+		stroke: var(--tm-ink);
+		stroke-width: 1.5;
+		transition: fill 0.12s ease;
+	}
+	.tm-graph .node text {
+		font-family: var(--sl-font-mono);
+		font-size: 14px;
+		fill: var(--tm-ink);
+		dominant-baseline: middle;
+	}
+	.tm-graph .node--decision circle {
+		stroke: var(--tm-decision);
+	}
+	.tm-graph .node--pattern circle {
+		stroke: var(--tm-pattern);
+	}
+	.tm-graph .node--bug circle {
+		stroke: var(--tm-bug);
+	}
+	.tm-graph .node--memory circle {
+		stroke: var(--tm-memory);
+		stroke-width: 2;
+	}
+	.tm-graph .node:hover circle {
+		fill: var(--tm-ink);
+	}
+	.tm-graph .node--decision:hover text,
+	.tm-graph .node--pattern:hover text,
+	.tm-graph .node--bug:hover text {
+		fill: var(--tm-paper);
+	}
+</style>

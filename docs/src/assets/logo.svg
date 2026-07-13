@@ -1,10 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
   <defs>
     <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#a855f7"/>
     </linearGradient>
+    <style>
+      .node-outer { fill: url(#grad); stroke: #1e1b4b; stroke-width: 2.5; }
+      .node-center { fill: url(#grad); stroke: #1e1b4b; stroke-width: 3; }
+      .node-core { fill: #fff; }
+      .edge { stroke: url(#grad); stroke-width: 3.5; stroke-linecap: round; fill: none; }
+      .spoke { stroke: url(#grad); stroke-width: 2.5; stroke-linecap: round; fill: none; opacity: 0.35; }
+      .frame { fill: none; stroke: url(#grad); stroke-width: 1.5; opacity: 0.12; }
+      .logo-group {
+        transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transform-origin: 100px 100px;
+      }
+      svg:hover .logo-group { transform: scale(1.05); }
+    </style>
   </defs>
-  <rect width="128" height="128" rx="24" fill="url(#grad)"/>
-  <text x="64" y="85" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="white" text-anchor="middle">🧠</text>
+  <g class="logo-group">
+    <polygon class="frame" points="100,10 183,55 183,145 100,190 17,145 17,55"/>
+
+    <line class="spoke" x1="100" y1="100" x2="100" y2="30"/>
+    <line class="spoke" x1="100" y1="100" x2="160.6" y2="65"/>
+    <line class="spoke" x1="100" y1="100" x2="160.6" y2="135"/>
+    <line class="spoke" x1="100" y1="100" x2="100" y2="170"/>
+    <line class="spoke" x1="100" y1="100" x2="39.4" y2="135"/>
+    <line class="spoke" x1="100" y1="100" x2="39.4" y2="65"/>
+
+    <line class="edge" x1="100" y1="30" x2="160.6" y2="65"/>
+    <line class="edge" x1="160.6" y1="65" x2="160.6" y2="135"/>
+    <line class="edge" x1="160.6" y1="135" x2="100" y2="170"/>
+    <line class="edge" x1="100" y1="170" x2="39.4" y2="135"/>
+    <line class="edge" x1="39.4" y1="135" x2="39.4" y2="65"/>
+    <line class="edge" x1="39.4" y1="65" x2="100" y2="30"/>
+
+    <circle class="node-outer" cx="100" cy="30" r="11"/>
+    <circle class="node-outer" cx="160.6" cy="65" r="11"/>
+    <circle class="node-outer" cx="160.6" cy="135" r="11"/>
+    <circle class="node-outer" cx="100" cy="170" r="11"/>
+    <circle class="node-outer" cx="39.4" cy="135" r="11"/>
+    <circle class="node-outer" cx="39.4" cy="65" r="11"/>
+
+    <circle class="node-center" cx="100" cy="100" r="17"/>
+    <circle class="node-core" cx="100" cy="100" r="5.5"/>
+  </g>
 </svg>

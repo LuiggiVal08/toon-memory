@@ -25,14 +25,13 @@ export default defineConfig({
 				{ icon: 'npm', label: 'npm', href: 'https://www.npmjs.com/package/toon-memory' },
 			],
 			sidebar: [
-				{
-					label: 'Getting Started',
-					items: [
-						{ label: 'Introduction', slug: 'getting-started/introduction' },
-						{ label: 'Quick Start', slug: 'getting-started/quickstart' },
-						{ label: 'Installation', slug: 'getting-started/installation' },
-					],
-				},
+		{
+				label: 'Getting Started',
+				items: [
+					{ label: 'Quick Start', slug: 'getting-started/quickstart' },
+					{ label: 'Installation', slug: 'getting-started/installation' },
+				],
+			},
 				{
 					label: 'Features',
 					items: [

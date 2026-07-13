@@ -1,0 +1,790 @@
+---
+import logoSrc from '../assets/logo.svg';
+
+const exampleCode = `// Save a decision
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts"
+})
+
+// Search memory
+memory_recall({ query: "redis" })
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Added max_connections=20`;
+
+const installCode = `# npm
+npm install -g toon-memory
+
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>toon-memory — Persistent memory for AI coding agents</title>
+    <meta name="description" content="Persistent memory for AI coding agents. Remember decisions, patterns, and bugs between sessions." />
+    <link rel="icon" type="image/svg+xml" href={logoSrc.src} />
+  </head>
+  <body>
+    <header class="site-header">
+      <a href="/toon-memory/" class="site-logo">
+        <img src={logoSrc.src} alt="toon-memory" class="logo-icon" />
+        <span class="logo-text">toon-memory</span>
+      </a>
+      <nav class="site-nav">
+        <a href="/toon-memory/getting-started/quickstart">Docs</a>
+        <a href="https://www.npmjs.com/package/toon-memory" target="_blank" rel="noopener noreferrer">npm</a>
+        <a href="https://github.com/LuiggiVal08/toon-memory" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="particles">
+          <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+          <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+          <div class="particle"></div><div class="particle"></div>
+        </div>
+        <div class="hero-split">
+          <div class="hero-visual">
+            <div class="hero-logo">
+              <img src={logoSrc.src} alt="toon-memory" class="hero-logo-img" />
+            </div>
+          </div>
+          <div class="hero-text">
+            <h1 class="hero-title">toon-memory</h1>
+            <p class="hero-tagline">Persistent memory for AI coding agents</p>
+            <p class="hero-subtitle">Remember decisions, patterns, and bugs between sessions</p>
+            <div class="hero-actions">
+              <a href="/toon-memory/getting-started/quickstart" class="btn btn-primary">
+                <svg class="icon" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.75.75 0 0 1 1.06-1.06l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0z"/></svg>
+                Get Started
+              </a>
+              <a href="https://github.com/LuiggiVal08/toon-memory" target="_blank" rel="noopener noreferrer" class="btn-github">
+                <svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+                View on GitHub
+                <svg class="external-icon" viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M18 10.82a.75.75 0 0 1-1.5 0V6.56l-7.22 7.22a.75.75 0 0 1-1.06-1.06L15.44 5.5h-4.26a.75.75 0 0 1 0-1.5H18a.75.75 0 0 1 .75.75v6.07z"/><path fill="currentColor" d="M5.5 6.25A2.25 2.25 0 0 1 7.75 4h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h11.5a.75.75 0 0 0 .75-.75v-4.5a.75.75 0 0 1 1.5 0v4.5a2.25 2.25 0 0 1-2.25 2.25H7.75A2.25 2.25 0 0 1 5.5 17.75V6.25z"/></svg>
+              </a>
+            </div>
+            <button id="installBtn" class="btn btn-install">
+              <span class="install-prompt">$</span>
+              <span class="install-cmd">npm install -g toon-memory</span>
+              <span class="install-copy">Copy</span>
+              <span class="install-done">Copied!</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div class="badges-row">
+        <a href="https://www.npmjs.com/package/toon-memory">
+          <img src="https://img.shields.io/npm/v/toon-memory.svg" alt="npm version" />
+        </a>
+        <a href="https://github.com/LuiggiVal08/toon-memory/blob/main/LICENSE">
+          <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" />
+        </a>
+        <a href="https://github.com/LuiggiVal08/toon-memory/actions">
+          <img src="https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml/badge.svg" alt="CI" />
+        </a>
+        <a href="https://github.com/LuiggiVal08/toon-memory/stargazers">
+          <img src="https://img.shields.io/github/stars/LuiggiVal08/toon-memory?style=social" alt="GitHub stars" />
+        </a>
+      </div>
+
+      <div class="feature-cards">
+        <div class="card">
+          <div class="card-icon">🧩</div>
+          <h3>8 MCP Tools</h3>
+          <p>Full memory management via Model Context Protocol — remember, recall, forget, stats, summary, archive, encrypt, decrypt.</p>
+          <div class="card-tags">
+            <span class="tag">remember</span>
+            <span class="tag">recall</span>
+            <span class="tag">forget</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">⭐</div>
+          <h3>Multi-Agent</h3>
+          <p>Works with all major AI coding agents. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue — zero configuration.</p>
+          <div class="card-tags">
+            <span class="tag">OpenCode</span>
+            <span class="tag">Claude</span>
+            <span class="tag">Cursor</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">📄</div>
+          <h3>TOON Format</h3>
+          <p>40% fewer tokens than JSON. Custom binary-like encoding designed for LLM comprehension and token efficiency.</p>
+          <div class="card-stats">
+            <span class="stat">40% less tokens</span>
+            <span class="stat">3x faster parse</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon">🔒</div>
+          <h3>Encryption</h3>
+          <p>AES-256-GCM for sensitive data. Auto-archive old entries. Watch mode for automatic backup every N minutes.</p>
+          <div class="card-stats">
+            <span class="stat">AES-256-GCM</span>
+            <span class="stat">Auto-backup</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="stat-number">8</span>
+          <span class="stat-label">MCP Tools</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">7</span>
+          <span class="stat-label">Agents</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">40%</span>
+          <span class="stat-label">Fewer Tokens</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">0</span>
+          <span class="stat-label">Config Needed</span>
+        </div>
+      </div>
+
+      <section class="content-section">
+        <div class="section-header">
+          <h2>Memory Tips</h2>
+          <p>Get the most out of toon-memory with these patterns</p>
+        </div>
+
+        <div class="tip-grid">
+          <div class="tip-card">
+            <div class="tip-number">1</div>
+            <h3>Save decisions immediately</h3>
+            <p>When you make a choice, save it right away. Add context on <em>why</em> you chose option A over B — future you will thank yourself.</p>
+          </div>
+          <div class="tip-card">
+            <div class="tip-number">2</div>
+            <h3>Use consistent keys</h3>
+            <p>Prefix keys by domain: <code class="inline-code">db:redis-config</code>, <code class="inline-code">auth:jwt</code>. Makes recall faster and avoids collisions.</p>
+          </div>
+          <div class="tip-card">
+            <div class="tip-number">3</div>
+            <h3>Tag everything</h3>
+            <p>Add tags like <code class="inline-code">risk;spec</code> so you can filter later. Tags are searchable and make cross-referencing easy.</p>
+          </div>
+          <div class="tip-card">
+            <div class="tip-number">4</div>
+            <h3>Review archives monthly</h3>
+            <p>Old entries auto-archive after 30 days. Review them periodically to keep your active memory lean and relevant.</p>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <h2>Before vs After</h2>
+          <p>See how toon-memory changes your workflow</p>
+        </div>
+
+        <div class="comparison">
+          <div class="compare-box before">
+            <h3>Before</h3>
+            <ul>
+              <li>Repeat explanations every session</li>
+              <li>Forget why a decision was made</li>
+              <li>Hunt through git history for context</li>
+              <li>Copy-paste notes between chats</li>
+            </ul>
+          </div>
+          <div class="compare-box after">
+            <h3>After</h3>
+            <ul>
+              <li>Agent remembers everything</li>
+              <li>Decisions are one query away</li>
+              <li>Patterns persist across projects</li>
+              <li>Zero context loss between sessions</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <h2>Quick Example</h2>
+        </div>
+        <pre><code set:html={exampleCode}></code></pre>
+
+        <div class="section-header">
+          <h2>Quick Install</h2>
+        </div>
+        <pre><code set:html={installCode}></code></pre>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>MIT License — <a href="https://github.com/LuiggiVal08/toon-memory">toon-memory</a></p>
+    </footer>
+
+    <style>
+      :root {
+        --brand: #6366f1;
+        --brand-light: #818cf8;
+        --brand-dark: #4f46e5;
+        --brand-glow: rgba(99, 102, 241, 0.5);
+        --gradient: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+        --bg: #0f0f13;
+        --bg-card: #1a1a24;
+        --border: #2a2a3a;
+        --text: #e2e2e8;
+        --text-muted: #8888a0;
+        --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      a { color: var(--brand-light); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      /* Header */
+      .site-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 2rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .site-logo {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: var(--text);
+      }
+      .logo-icon { width: 28px; height: 28px; }
+      .site-nav { display: flex; gap: 1.5rem; }
+      .site-nav a { color: var(--text-muted); font-size: 0.95rem; }
+      .site-nav a:hover { color: var(--text); text-decoration: none; }
+
+      /* Hero */
+      .hero {
+        position: relative;
+        padding: 4rem 2rem;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(ellipse at center, rgba(99,102,241,0.2) 0%, transparent 70%);
+        animation: heroGlow 6s ease-in-out infinite;
+        pointer-events: none;
+      }
+
+      .hero::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background:
+          radial-gradient(circle at 20% 80%, rgba(99,102,241,0.3) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(139,92,246,0.3) 0%, transparent 50%),
+          radial-gradient(circle at 40% 40%, rgba(168,85,247,0.2) 0%, transparent 50%);
+        animation: heroGradient 8s ease-in-out infinite;
+        pointer-events: none;
+      }
+
+      .hero-split {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4rem;
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+
+      .hero-visual {
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: center;
+        order: 1;
+      }
+
+      .hero-text {
+        flex: 1;
+        max-width: 480px;
+      }
+
+      .hero-logo {
+        display: inline-block;
+        animation: float 3s ease-in-out infinite;
+      }
+      .hero-logo::after {
+        content: '';
+        display: block;
+        margin: 0 auto;
+        margin-top: -8px;
+        width: 80%;
+        height: 6px;
+        background: var(--gradient);
+        border-radius: 3px;
+        animation: pulse 2s ease-in-out infinite;
+      }
+      .hero-logo-img {
+        width: 310px;
+        height: 310px;
+        filter: drop-shadow(0 20px 40px var(--brand-glow));
+      }
+
+      .hero-text {
+        flex: 1;
+        max-width: 480px;
+      }
+
+      .hero-title {
+        font-size: 3rem;
+        font-weight: 800;
+        background: var(--gradient);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: heroTitleIn 1s cubic-bezier(0.16,1,0.3,1), gradientShift 3s linear infinite;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+      }
+
+      @keyframes heroTitleIn {
+        from { opacity: 0; transform: translateY(40px) scale(0.95); filter: blur(10px); }
+        to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+      }
+      @keyframes gradientShift {
+        0% { background-position: 0% center; }
+        100% { background-position: 200% center; }
+      }
+
+      .hero-tagline {
+        animation: heroTaglineIn 1s cubic-bezier(0.16,1,0.3,1) 0.2s both;
+        font-size: 1.2rem;
+        color: var(--text);
+        margin-bottom: 0.25rem;
+      }
+
+      @keyframes heroTaglineIn {
+        from { opacity: 0; transform: translateY(30px); filter: blur(5px); }
+        to { opacity: 1; transform: translateY(0); filter: blur(0); }
+      }
+
+      .hero-subtitle {
+        font-size: 1rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+
+      .btn-install {
+        margin-top: 0.75rem;
+      }
+
+      /* Particles */
+      .particles {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 0;
+      }
+      .particle {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: var(--brand);
+        border-radius: 50%;
+        opacity: 0;
+        animation: particleFloat 12s linear infinite;
+        box-shadow: 0 0 20px var(--brand-glow);
+      }
+      .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+      .particle:nth-child(2) { left: 20%; animation-delay: 1.5s; }
+      .particle:nth-child(3) { left: 30%; animation-delay: 3s; }
+      .particle:nth-child(4) { left: 40%; animation-delay: 4.5s; }
+      .particle:nth-child(5) { left: 50%; animation-delay: 6s; }
+      .particle:nth-child(6) { left: 60%; animation-delay: 7.5s; }
+      .particle:nth-child(7) { left: 70%; animation-delay: 9s; }
+      .particle:nth-child(8) { left: 80%; animation-delay: 10.5s; }
+      .particle:nth-child(9) { left: 15%; animation-delay: 2s; }
+      .particle:nth-child(10) { left: 85%; animation-delay: 5s; }
+
+      @keyframes particleFloat {
+        0% { transform: translateY(100vh) scale(0) rotate(0deg); opacity: 0; }
+        10% { opacity: 0.8; }
+        90% { opacity: 0.8; }
+        100% { transform: translateY(-100vh) scale(1.5) rotate(720deg); opacity: 0; }
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 9999px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+        text-decoration: none;
+      }
+      .btn .icon { flex-shrink: 0; }
+      .btn-primary {
+        background: var(--gradient);
+        color: #fff;
+        border-color: transparent;
+      }
+      .btn-primary:hover {
+        box-shadow: 0 0 20px var(--brand-glow);
+        transform: translateY(-2px);
+        text-decoration: none;
+      }
+
+      .btn-github {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.75rem 0;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: var(--text);
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+      .btn-github:hover {
+        color: var(--brand-light);
+        text-decoration: none;
+      }
+      .btn-github .external-icon {
+        transition: opacity 0.2s;
+      }
+      .btn-github:hover .external-icon {
+        opacity: 0.8;
+      }
+      .btn-install {
+        background: var(--bg-card);
+        color: var(--text);
+        border-color: var(--border);
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+      }
+      .btn-install:hover {
+        border-color: var(--brand);
+        box-shadow: 0 0 20px var(--brand-glow);
+        transform: translateY(-2px);
+      }
+      .install-prompt { opacity: 0.5; margin-right: 0.25rem; }
+      .install-copy, .install-done { font-family: inherit; }
+      .install-done { display: none; color: #22c55e; }
+      .btn-install.copied .install-copy { display: none; }
+      .btn-install.copied .install-done { display: inline; }
+      .install-cmd { margin-right: 0.5rem; }
+
+      /* Badges */
+      .badges-row {
+        display: flex;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 0 2rem 2rem;
+        flex-wrap: wrap;
+      }
+      .badges-row img { height: 20px; }
+
+      /* Feature cards */
+      .feature-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        padding: 0 2rem 3rem;
+        max-width: 720px;
+        margin: 0 auto;
+      }
+      .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: left;
+        transition: transform 0.2s, border-color 0.2s;
+        position: relative;
+        overflow: hidden;
+      }
+      .card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--gradient);
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      .card:hover::before { opacity: 1; }
+      .card:hover {
+        transform: translateY(-4px);
+        border-color: var(--brand);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      }
+      .card-icon { font-size: 1.75rem; margin-bottom: 0.75rem; }
+      .card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+      .card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
+
+      .card-tags, .card-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 0.75rem;
+      }
+      .tag {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        background: rgba(99,102,241,0.12);
+        color: var(--brand-light);
+        font-family: var(--font-mono);
+        font-weight: 500;
+        letter-spacing: 0.01em;
+      }
+      .stat {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        background: rgba(34,197,94,0.1);
+        color: #22c55e;
+        font-family: var(--font-mono);
+        font-weight: 500;
+      }
+
+      /* Stats */
+      .stats-row {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        padding: 0 2rem 3rem;
+        flex-wrap: wrap;
+      }
+      .stat-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: var(--gradient);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradientShift 3s linear infinite;
+        line-height: 1;
+      }
+      .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      /* Content */
+      .content-section {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 0 2rem 4rem;
+      }
+      .section-header {
+        margin: 3rem 0 1.5rem;
+      }
+      .section-header h2 {
+        font-size: 1.75rem;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+      }
+      .section-header p {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+      }
+
+      /* Tip cards */
+      .tip-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      .tip-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.25rem;
+        position: relative;
+        transition: border-color 0.2s, transform 0.2s;
+      }
+      .tip-card:hover {
+        border-color: var(--brand);
+        transform: translateY(-2px);
+      }
+      .tip-number {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: rgba(99,102,241,0.25);
+        line-height: 1;
+        margin-bottom: 0.5rem;
+      }
+      .tip-card h3 {
+        font-size: 1rem;
+        margin-bottom: 0.4rem;
+      }
+      .tip-card p {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        line-height: 1.6;
+      }
+      .inline-code {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        padding: 0.1em 0.3em;
+        background: rgba(99,102,241,0.1);
+        border-radius: 3px;
+        color: var(--brand-light);
+      }
+
+      /* Comparison */
+      .comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      .compare-box {
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid var(--border);
+        transition: transform 0.2s;
+      }
+      .compare-box:hover { transform: translateY(-2px); }
+      .compare-box.before {
+        background: rgba(239,68,68,0.06);
+        border-color: rgba(239,68,68,0.25);
+      }
+      .compare-box.after {
+        background: rgba(34,197,94,0.06);
+        border-color: rgba(34,197,94,0.25);
+      }
+      .compare-box h3 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+      .compare-box.before h3 { color: #ef4444; }
+      .compare-box.after h3 { color: #22c55e; }
+      .compare-box ul { list-style: none; padding: 0; }
+      .compare-box li {
+        padding: 0.35rem 0;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        position: relative;
+        padding-left: 1.25rem;
+      }
+      .compare-box li::before {
+        content: '✗';
+        position: absolute;
+        left: 0;
+        color: #ef4444;
+        opacity: 0.7;
+      }
+      .compare-box.after li::before {
+        content: '✓';
+        color: #22c55e;
+      }
+
+      pre {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.25rem;
+        overflow-x: auto;
+        margin: 1rem 0;
+      }
+      pre code {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        line-height: 1.6;
+        color: var(--text);
+      }
+
+      /* Footer */
+      .site-footer {
+        border-top: 1px solid var(--border);
+        padding: 2rem;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-top: auto;
+      }
+      .site-footer a { color: var(--text-muted); }
+
+      @media (max-width: 768px) {
+        .hero-split { flex-direction: column; gap: 2rem; text-align: center; }
+        .hero-actions { justify-content: center; }
+        .hero-logo-img { width: 200px; height: 200px; }
+        .hero-title { font-size: 2.5rem; }
+        .hero { padding: 3rem 1rem 2rem; }
+        .site-header { padding: 0.75rem 1rem; }
+        .feature-cards { grid-template-columns: 1fr; }
+        .tip-grid { grid-template-columns: 1fr; }
+        .comparison { grid-template-columns: 1fr; }
+        .stats-row { gap: 1.5rem; }
+        .stat-number { font-size: 2rem; }
+      }
+      @media (max-width: 600px) {
+        .hero-actions { flex-direction: column; align-items: stretch; }
+        .btn-install { width: 100%; justify-content: center; }
+      }
+    </style>
+
+    <script>
+      document.getElementById('installBtn')?.addEventListener('click', function() {
+        navigator.clipboard.writeText('npm install -g toon-memory').then(() => {
+          this.classList.add('copied');
+          setTimeout(() => this.classList.remove('copied'), 1500);
+        });
+      });
+    </script>
+  </body>
+</html>
