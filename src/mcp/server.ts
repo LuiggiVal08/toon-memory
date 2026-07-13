@@ -276,6 +276,29 @@ function inferTags(content: string, key: string): string {
 }
 
 /**
+ * Parse a relative date string into an absolute YYYY-MM-DD date.
+ * Supports: "24h", "7d", "30d", or an exact date "2026-07-10".
+ */
+function parseRelativeDate(since: string): string {
+  const trimmed = since.trim()
+  const hourMatch = trimmed.match(/^(\d+)h$/)
+  if (hourMatch) {
+    const d = new Date()
+    d.setHours(d.getHours() - parseInt(hourMatch[1]))
+    return d.toISOString().split("T")[0]
+  }
+  const dayMatch = trimmed.match(/^(\d+)d$/)
+  if (dayMatch) {
+    const d = new Date()
+    d.setDate(d.getDate() - parseInt(dayMatch[1]))
+    return d.toISOString().split("T")[0]
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed
+  const today = new Date().toISOString().split("T")[0]
+  return today
+}
+
+/**
  * Archive entries older than ARCHIVE_DAYS to archive.toon.
  * 
  * Moves old entries from data.toon to archive.toon to keep
@@ -614,6 +637,70 @@ server.registerTool(
     ]
 
     return { content: [{ type: "text" as const, text: stats.join("\n") }] }
+  }
+)
+
+/**
+ * Register the memory_diff tool.
+ * Show what changed in memory since a given date.
+ */
+server.registerTool(
+  "memory_diff",
+  {
+    title: "Memory Diff",
+    description: "Muestra qué cambió en la memoria desde una fecha. Útil para saber qué se aprendió desde la última sesión.",
+    inputSchema: {
+      since: z.string().describe("Desde cuándo mostrar cambios (ej: 24h, 7d, 2026-07-10)"),
+      type: z.enum(["all", "created", "updated"]).optional().default("all").describe("Filtrar por tipo de cambio"),
+    },
+  },
+  async ({ since, type }) => {
+    const sinceDate = parseRelativeDate(since)
+    const today = new Date().toISOString().split("T")[0]
+    const data = readMemory()
+    const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
+
+    const results = lines
+      .map((line) => {
+        const trimmed = line.trim()
+        const parts = trimmed.split("|")
+        if (parts.length < 7) return null
+        const [id, cat, key, content, file, tags, date] = parts
+        if (date < sinceDate) return null
+        // For "updated" we check if date is recent but key existed before
+        // For simplicity: same date as today = created today, otherwise "updated" if date >= sinceDate
+        const changeType = date === today ? "created" : "updated"
+        if (type !== "all" && changeType !== type) return null
+        return { id, cat, key, content, file, tags, date, changeType }
+      })
+      .filter(Boolean)
+
+    if (results.length === 0) {
+      return { content: [{ type: "text" as const, text: `No hay cambios desde ${sinceDate}` }] }
+    }
+
+    const created = results.filter((r) => r!.changeType === "created")
+    const updated = results.filter((r) => r!.changeType === "updated")
+
+    const sections: string[] = [`📋 Cambios desde ${sinceDate}:`, ""]
+
+    if (created.length > 0 && (type === "all" || type === "created")) {
+      sections.push(`➕ Nuevas (${created.length}):`)
+      for (const r of created) {
+        sections.push(`  [${r!.cat}] ${r!.key} (${r!.id})\n    ${r!.content}`)
+      }
+      sections.push("")
+    }
+
+    if (updated.length > 0 && (type === "all" || type === "updated")) {
+      sections.push(`✏️  Actualizadas (${updated.length}):`)
+      for (const r of updated) {
+        sections.push(`  [${r!.cat}] ${r!.key} (${r!.id}) — ${r!.date}`)
+      }
+      sections.push("")
+    }
+
+    return { content: [{ type: "text" as const, text: sections.join("\n") }] }
   }
 )
 
