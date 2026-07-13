@@ -1,0 +1,55 @@
+---
+const jsonTokens = 1097;
+const toonTokens = 850;
+const reductionPct = 22.5;
+const singleReductionPct = 30.5;
+const entries = 16;
+
+const rows = [
+  { format: 'JSON', tokens: jsonTokens, cls: 'bar-json' },
+  { format: 'TOON', tokens: toonTokens, cls: 'bar-toon' },
+];
+---
+
+<section class="content-section benchmarks-section">
+  <div class="section-header">
+    <h2>Benchmarks</h2>
+    <p>Token efficiency of the TOON format — measured, not assumed</p>
+  </div>
+
+  <div class="savings-bars">
+    {
+      rows.map((r) => (
+        <div class="savings-bar">
+          <span class="savings-label">{r.format}</span>
+          <div class="bar-track">
+            <div class={`bar ${r.cls}`} style={`width:${(r.tokens / jsonTokens) * 100}%`}>
+              <span>{r.tokens}</span>
+            </div>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="savings-stats">
+    <div class="savings-stat">
+      <span class="savings-num">{reductionPct}%</span>
+      <span class="savings-cap">fewer tokens than JSON</span>
+    </div>
+    <div class="savings-stat">
+      <span class="savings-num">{singleReductionPct}%</span>
+      <span class="savings-cap">on a single entry</span>
+    </div>
+    <div class="savings-stat">
+      <span class="savings-num">{entries}</span>
+      <span class="savings-cap">entries measured</span>
+    </div>
+  </div>
+
+  <p class="savings-note">
+    Measured with <code>gpt-tokenizer</code> (cl100k_base) over {entries} representative memory
+    entries, comparing the real on-disk TOON format against compact JSON. Reproducible:
+    <code>npm run bench</code>.
+  </p>
+</section>
