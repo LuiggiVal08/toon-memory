@@ -10,6 +10,8 @@ import CodeExamples from '../components/CodeExamples.astro';
 import FAQ from '../components/FAQ.astro';
 import CTA from '../components/CTA.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import Agents from '../components/Agents.astro';
+import Tools from '../components/Tools.astro';
 import Problem from '../components/Problem.astro';
 import HowItWorks from '../components/HowItWorks.astro';
 import TokenSavings from '../components/TokenSavings.astro';
@@ -58,12 +60,14 @@ const description =
 
       <Problem />
       <FeatureGrid />
+      <Agents />
       <StatsRow />
       <HowItWorks />
       <Tips />
       <Comparison />
       <CodeExamples />
       <TokenSavings />
+      <Tools />
       <FAQ />
       <CTA />
     </main>
@@ -779,9 +783,82 @@ const description =
         margin: 0 auto;
       }
 
+      /* Agents */
+      .agents-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.75rem;
+      }
+      .agent-chip {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        transition: border-color 0.2s, transform 0.2s;
+      }
+      .agent-chip:hover {
+        border-color: var(--brand);
+        transform: translateY(-2px);
+      }
+      .agent-icon { font-size: 1.2rem; }
+      .agent-name { font-size: 0.85rem; font-weight: 500; }
+
+      /* Tools */
+      .tools-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+      .tool-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.25rem;
+        transition: border-color 0.2s, transform 0.2s;
+      }
+      .tool-card:hover {
+        border-color: var(--brand);
+        transform: translateY(-2px);
+      }
+      .tool-name {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--brand-light);
+        background: rgba(99,102,241,0.1);
+        padding: 0.2em 0.5em;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+      }
+      .tool-title { font-size: 1rem; margin-bottom: 0.35rem; }
+      .tool-desc { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
+      .resources-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 1.25rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border);
+      }
+      .resources-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 600; }
+      .resource-pill {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: #22c55e;
+        background: rgba(34,197,94,0.1);
+        padding: 0.2em 0.5em;
+        border-radius: 4px;
+      }
+
       @media (max-width: 768px) {
         .problem-grid { grid-template-columns: 1fr; }
         .steps { grid-template-columns: 1fr; }
+        .agents-grid { grid-template-columns: repeat(2, 1fr); }
+        .tools-grid { grid-template-columns: 1fr; }
         .hero-split { flex-direction: column; gap: 2rem; text-align: center; }
         .hero-actions { justify-content: center; }
         .hero-logo-img { width: 200px; height: 200px; }

@@ -1,0 +1,37 @@
+---
+const agents = [
+  { name: 'OpenCode', icon: '🤖' },
+  { name: 'VS Code / Copilot', icon: '🆚' },
+  { name: 'Claude', icon: '✳️' },
+  { name: 'Cursor', icon: '🖱️' },
+  { name: 'Windsurf', icon: '🏄' },
+  { name: 'Cline', icon: '🧩' },
+  { name: 'Continue', icon: '⏯️' },
+  { name: 'Codex', icon: '⚡' },
+  { name: 'Gemini', icon: '✨' },
+  { name: 'Zed', icon: '⚡' },
+  { name: 'Antigravity', icon: '🌌' },
+  { name: 'Aider', icon: '🤝' },
+  { name: 'KiloCode', icon: '⚖️' },
+  { name: 'OpenClaw', icon: '🐾' },
+  { name: 'Kiro', icon: '🪶' },
+];
+---
+
+<section class="content-section agents-section">
+  <div class="section-header">
+    <h2>Works with 15+ AI coding agents</h2>
+    <p>Zero configuration — toon-memory auto-detects and configures each one</p>
+  </div>
+
+  <div class="agents-grid">
+    {
+      agents.map((a) => (
+        <div class="agent-chip">
+          <span class="agent-icon">{a.icon}</span>
+          <span class="agent-name">{a.name}</span>
+        </div>
+      ))
+    }
+  </div>
+</section>

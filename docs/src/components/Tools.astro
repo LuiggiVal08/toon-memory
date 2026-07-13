@@ -1,0 +1,42 @@
+---
+const tools = [
+  { name: 'memory_remember', title: 'Save to Memory', desc: 'Store decisions, patterns, bugs, or knowledge — persisted across sessions.' },
+  { name: 'memory_recall', title: 'Search Memory', desc: 'Query the knowledge graph before reading files.' },
+  { name: 'memory_forget', title: 'Delete from Memory', desc: 'Remove an entry by key or id.' },
+  { name: 'memory_stats', title: 'Memory Stats', desc: 'Show statistics about the project memory.' },
+  { name: 'memory_diff', title: 'Memory Diff', desc: 'See what changed since your last session.' },
+  { name: 'memory_suggest', title: 'Suggest Related', desc: 'Surface related entries for a given context.' },
+  { name: 'memory_summary', title: 'File Summary', desc: 'Save or retrieve a file summary to save tokens.' },
+  { name: 'memory_archive', title: 'Archive Old', desc: 'Move entries older than 30 days to keep memory clean.' },
+  { name: 'memory_encrypt', title: 'Enable Encryption', desc: 'AES-256-GCM encryption with an auto-generated key.' },
+  { name: 'memory_decrypt', title: 'Disable Encryption', desc: 'Decrypt and disable encryption.' },
+];
+
+const resources = ['memory-entries', 'memory-stats', 'memory-summaries'];
+---
+
+<section class="content-section tools-section">
+  <div class="section-header">
+    <h2>10 MCP tools, 3 resources</h2>
+    <p>Everything your agent needs to remember, recall, and reason</p>
+  </div>
+
+  <div class="tools-grid">
+    {
+      tools.map((t) => (
+        <div class="tool-card">
+          <code class="tool-name">{t.name}</code>
+          <h3 class="tool-title">{t.title}</h3>
+          <p class="tool-desc">{t.desc}</p>
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="resources-row">
+    <span class="resources-label">Resources:</span>
+    {
+      resources.map((r) => <code class="resource-pill">{r}</code>)
+    }
+  </div>
+</section>
