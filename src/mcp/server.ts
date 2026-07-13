@@ -414,7 +414,7 @@ function archiveOldEntries(): { archived: number; kept: number } {
 }
 
 const server = new McpServer(
-  { name: "toon-memory", version: "1.1.0" },
+  { name: "toon-memory", version: "2.0.0" },
   { capabilities: { tools: { listChanged: true }, resources: { listChanged: true } } }
 )
 
