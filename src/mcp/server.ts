@@ -236,6 +236,45 @@ function isExpired(ttl: string): boolean {
   return ttlDate <= today
 }
 
+/** Built-in vocabulary for automatic tag inference */
+const TAG_VOCABULARY: Record<string, string[]> = {
+  "redis": ["redis", "cache", "caching", "memcached"],
+  "auth": ["auth", "authentication", "authorization", "login", "token", "jwt", "session", "oauth"],
+  "api": ["api", "endpoint", "rest", "graphql", "route", "router", "controller"],
+  "db": ["database", "db", "sql", "postgres", "mysql", "mongo", "query", "migration", "schema"],
+  "security": ["security", "encrypt", "decrypt", "vulnerability", "xss", "csrf", "cors", "sanitiz"],
+  "test": ["test", "testing", "vitest", "jest", "spec", "mock", "assert", "coverage"],
+  "deploy": ["deploy", "docker", "ci/cd", "github actions", "pipeline", "kubernetes", "k8s"],
+  "config": ["config", "configuration", "settings", "env", "environment", "dotenv"],
+  "performance": ["performance", "optimize", "benchmark", "latency", "throughput", "cache"],
+  "refactor": ["refactor", "cleanup", "restructure", "reorganize", "rework"],
+  "error": ["error", "exception", "throw", "catch", "handling", "retry", "fallback"],
+  "logging": ["log", "logging", "logger", "debug", "trace", "monitor", "observability"],
+  "types": ["typescript", "types", "type", "interface", "generic", "enum", "zod", "schema"],
+  "async": ["async", "await", "promise", "concurrent", "parallel", "worker", "queue"],
+  "state": ["state", "store", "redux", "context", "reducer", "action", "observable"],
+  "ui": ["ui", "component", "render", "dom", "css", "style", "layout", "responsive"],
+  "storage": ["storage", "file", "filesystem", "s3", "blob", "upload", "download"],
+  "email": ["email", "mail", "smtp", "sendgrid", "newsletter", "notification"],
+  "payment": ["payment", "stripe", "billing", "invoice", "checkout", "subscription"],
+  "webhook": ["webhook", "callback", "event", "listener", "hook"],
+}
+
+/**
+ * Infer tags from content and key by matching against vocabulary.
+ * Returns semicolon-separated tags.
+ */
+function inferTags(content: string, key: string): string {
+  const text = `${key} ${content}`.toLowerCase()
+  const matched: string[] = []
+  for (const [tag, keywords] of Object.entries(TAG_VOCABULARY)) {
+    if (keywords.some((kw) => text.includes(kw))) {
+      matched.push(tag)
+    }
+  }
+  return matched.join(";")
+}
+
 /**
  * Archive entries older than ARCHIVE_DAYS to archive.toon.
  * 
@@ -380,8 +419,10 @@ server.registerTool(
 
     const entryId = existingIdx !== -1 ? existingId : newId
     const resolvedTtl = parseTTL(ttl)
-    const newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${tags || ""}|${date}|${resolvedTtl}`
+    const resolvedTags = tags ? tags : inferTags(content, key)
+    const newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}`
     let action = "Guardado"
+    const tagsInferred = !tags && resolvedTags ? true : false
 
     if (existingIdx !== -1) {
       // Update existing entry
@@ -409,8 +450,9 @@ server.registerTool(
     }
 
     const ttlMsg = resolvedTtl ? `\n⏰ TTL: ${resolvedTtl}` : ""
+    const inferredMsg = tagsInferred ? `\n🏷️ Tags inferidos: ${resolvedTags}` : ""
     return {
-      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${entryId})\n${content}${ttlMsg}${archiveMsg}` }],
+      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${entryId})\n${content}${ttlMsg}${inferredMsg}${archiveMsg}` }],
     }
   }
 )
