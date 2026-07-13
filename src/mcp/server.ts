@@ -578,7 +578,7 @@ function consolidateEntries(): { removed: number; kept: number; duplicates: stri
 }
 
 const server = new McpServer(
-  { name: "toon-memory", version: "2.0.0" },
+  { name: "toon-memory", version: "2.1.0" },
   { capabilities: { tools: { listChanged: true }, resources: { listChanged: true } } }
 )
 
