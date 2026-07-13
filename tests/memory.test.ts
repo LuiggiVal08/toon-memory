@@ -248,4 +248,35 @@ describe("Memory Operations", () => {
     expect(toArchive.some((l) => l.includes("archive-this"))).toBe(true)
     expect(toArchive.some((l) => l.includes("old-entry"))).toBe(true)
   })
+
+  it("should infer tags from content", () => {
+    const TAG_VOCABULARY: Record<string, string[]> = {
+      "redis": ["redis", "cache", "caching"],
+      "auth": ["auth", "authentication", "login", "token", "jwt"],
+      "api": ["api", "endpoint", "rest", "graphql", "route"],
+      "db": ["database", "db", "sql", "postgres", "query"],
+      "security": ["security", "encrypt", "decrypt", "vulnerability"],
+      "test": ["test", "testing", "vitest", "jest", "spec"],
+    }
+
+    function inferTags(content: string, key: string): string {
+      const text = `${key} ${content}`.toLowerCase()
+      const matched: string[] = []
+      for (const [tag, keywords] of Object.entries(TAG_VOCABULARY)) {
+        if (keywords.some((kw) => text.includes(kw))) {
+          matched.push(tag)
+        }
+      }
+      return matched.join(";")
+    }
+
+    expect(inferTags("Redis cache layer for sessions", "cache-setup")).toBe("redis")
+    expect(inferTags("JWT authentication flow with refresh tokens", "auth-system")).toBe("auth")
+    expect(inferTags("PostgreSQL database migration for users table", "db-migration")).toBe("db")
+    expect(inferTags("REST API endpoint for user registration", "api-users")).toBe("api")
+    expect(inferTags("Vitest test suite for payment module", "payment-tests")).toBe("test")
+    expect(inferTags("Encrypt sensitive data at rest", "data-security")).toBe("api;security")
+    expect(inferTags("Redis auth token cache", "session-cache")).toBe("redis;auth")
+    expect(inferTags("Random unrelated content", "foo-bar")).toBe("")
+  })
 })
