@@ -415,7 +415,70 @@ function archiveOldEntries(): { archived: number; kept: number } {
 
 const server = new McpServer(
   { name: "toon-memory", version: "1.1.0" },
-  { capabilities: { tools: { listChanged: true } } }
+  { capabilities: { tools: { listChanged: true }, resources: { listChanged: true } } }
+)
+
+/**
+ * Register memory entries as an MCP resource.
+ * Agents can read this as context in the system prompt.
+ */
+server.registerResource(
+  "memory-entries",
+  "toon://memory/entries",
+  { title: "Memory Entries", mimeType: "text/plain" },
+  async (uri) => {
+    const data = readMemory()
+    return { contents: [{ uri: uri.href, text: data }] }
+  }
+)
+
+/**
+ * Register memory stats as an MCP resource.
+ */
+server.registerResource(
+  "memory-stats",
+  "toon://memory/stats",
+  { title: "Memory Stats", mimeType: "text/plain" },
+  async (uri) => {
+    const data = readMemory()
+    const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
+    const entries = lines.map((l) => {
+      const parts = l.trim().split("|")
+      return { category: parts[1] || "unknown", ttl: parts[7] || "" }
+    })
+    const byCategory: Record<string, number> = {}
+    for (const e of entries) {
+      byCategory[e.category] = (byCategory[e.category] || 0) + 1
+    }
+    const withTtl = entries.filter((e) => e.ttl).length
+    const expired = entries.filter((e) => e.ttl && isExpired(e.ttl)).length
+    const text = [
+      `Entradas totales: ${entries.length}`,
+      `TTL: ${withTtl} con expiración, ${expired} expiradas`,
+      "Por categoría:",
+      ...Object.entries(byCategory).map(([k, v]) => `  ${k}: ${v}`),
+    ].join("\n")
+    return { contents: [{ uri: uri.href, text }] }
+  }
+)
+
+/**
+ * Register memory summaries as an MCP resource.
+ */
+server.registerResource(
+  "memory-summaries",
+  "toon://memory/summaries",
+  { title: "Memory Summaries", mimeType: "text/plain" },
+  async (uri) => {
+    const data = readMemory()
+    const lines = data.split("\n")
+    const summaryIdx = lines.findIndex((l) => l.trim().startsWith("summaries:"))
+    if (summaryIdx === -1) {
+      return { contents: [{ uri: uri.href, text: "No hay resúmenes guardados" }] }
+    }
+    const summaryText = lines.slice(summaryIdx + 1).filter((l) => l.includes(":")).join("\n")
+    return { contents: [{ uri: uri.href, text: summaryText || "No hay resúmenes guardados" }] }
+  }
 )
 
 /**

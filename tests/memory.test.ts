@@ -386,4 +386,55 @@ describe("Memory Operations", () => {
     expect(scored[0]!.key).toBe("redis-cache-config")
     expect(scored[1]!.key).toBe("redis-timeout")
   })
+
+  it("should format memory entries for resource output", () => {
+    const entries = [
+      "  res000001|decision|use-typescript|Use TypeScript for all new code|src/|types|2026-07-10|",
+      "  res000002|bug|null-pointer|Null pointer in user service|src/user.ts|bug;fix|2026-07-10|7d",
+    ]
+
+    const data = readFileSync(memoryFile, "utf-8")
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries["))
+    lines.splice(headerIdx + 1, 0, ...entries)
+    lines[headerIdx] = "entries[2|]{id|category|key|content|file|tags|date|ttl}:"
+    writeFileSync(memoryFile, lines.join("\n"))
+
+    const resourceData = readFileSync(memoryFile, "utf-8")
+    expect(resourceData).toContain("use-typescript")
+    expect(resourceData).toContain("null-pointer")
+    expect(resourceData).toContain("|7d")
+  })
+
+  it("should format stats for resource output", () => {
+    const entries = [
+      "  res000003|decision|test-decision|Test content|file.ts|tag|2026-07-10|",
+      "  res000004|bug|test-bug|Bug content|file.ts|tag|2026-07-10|30d",
+    ]
+
+    const data = readFileSync(memoryFile, "utf-8")
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries["))
+    lines.splice(headerIdx + 1, 0, ...entries)
+    lines[headerIdx] = "entries[2|]{id|category|key|content|file|tags|date|ttl}:"
+    writeFileSync(memoryFile, lines.join("\n"))
+
+    const updatedData = readFileSync(memoryFile, "utf-8")
+    const entryLines = updatedData.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
+    const entries2 = entryLines.map((l) => {
+      const parts = l.trim().split("|")
+      return { category: parts[1] || "unknown", ttl: parts[7] || "" }
+    })
+
+    const byCategory: Record<string, number> = {}
+    for (const e of entries2) {
+      byCategory[e.category] = (byCategory[e.category] || 0) + 1
+    }
+    const withTtl = entries2.filter((e) => e.ttl).length
+
+    expect(entries2).toHaveLength(2)
+    expect(withTtl).toBe(1)
+    expect(byCategory["decision"]).toBe(1)
+    expect(byCategory["bug"]).toBe(1)
+  })
 })
