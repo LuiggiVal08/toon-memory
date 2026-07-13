@@ -1,0 +1,62 @@
+---
+const faqs = [
+  {
+    q: 'What is toon-memory?',
+    a: 'A persistent memory layer for AI coding agents. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions.',
+  },
+  {
+    q: 'Which agents are supported?',
+    a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue and more — 15+ agents with zero configuration via the MCP server.',
+  },
+  {
+    q: 'How is my data stored?',
+    a: 'Entries are written to a local TOON file (a token-efficient format ~40% smaller than JSON). You own the file and can commit it, diff it, or back it up like any other source file.',
+  },
+  {
+    q: 'Is my memory encrypted?',
+    a: 'Yes. Enable encryption with the memory_encrypt tool to secure sensitive entries with AES-256-GCM. The key is generated automatically and kept local.',
+  },
+  {
+    q: 'Does it work offline?',
+    a: 'Completely. toon-memory runs locally with no external services or accounts required. Watch mode even creates automatic backups on a schedule.',
+  },
+  {
+    q: 'Can multiple agents share the same memory?',
+    a: 'Yes. Because memory lives in a plain file in your project, every agent configured for that project reads and writes the same context.',
+  },
+  {
+    q: 'How do I back up my memory?',
+    a: 'Use watch mode for scheduled automatic backups, or simply commit the TOON file to git. Old entries are auto-archived after 30 days to keep things clean.',
+  },
+  {
+    q: 'Is it free and open source?',
+    a: 'Yes. toon-memory is MIT licensed and free to use. The source is available on GitHub and the package is published on npm.',
+  },
+  {
+    q: 'How is this different from my agent’s built-in memory?',
+    a: 'Built-in memory is often ephemeral or vendor-specific. toon-memory gives you a portable, diffable, encrypted memory file you fully control across agents and projects.',
+  },
+  {
+    q: 'Can I expire temporary context?',
+    a: 'Yes. Set a TTL (e.g. ttl: "7d") on any entry and it auto-expires — perfect for sprints, deadlines, and time-sensitive notes.',
+  },
+];
+---
+
+<section class="content-section faq-section">
+  <div class="section-header">
+    <h2>Frequently Asked Questions</h2>
+    <p>Everything you need to know about giving your agent a memory</p>
+  </div>
+
+  <div class="faq-list">
+    {
+      faqs.map((f) => (
+        <details class="faq-item">
+          <summary>{f.q}</summary>
+          <p set:html={f.a}></p>
+        </details>
+      ))
+    }
+  </div>
+</section>

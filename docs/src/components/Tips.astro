@@ -1,0 +1,43 @@
+---
+const tips = [
+  {
+    n: 1,
+    title: 'Save decisions immediately',
+    body: 'When you make a choice, save it right away. Add context on <em>why</em> you chose option A over B — future you will thank yourself.',
+  },
+  {
+    n: 2,
+    title: 'Use consistent keys',
+    body: 'Prefix keys by domain: <code class="inline-code">db:redis-config</code>, <code class="inline-code">auth:jwt</code>. Makes recall faster and avoids collisions.',
+  },
+  {
+    n: 3,
+    title: 'Tags auto-infer',
+    body: 'Leave tags empty and the system infers them from content — redis, auth, api, db, and 16+ more categories. Or add them manually for precise control.',
+  },
+  {
+    n: 4,
+    title: 'Use TTL for temp context',
+    body: 'Deadlines, sprints, time-sensitive notes — set a <code class="inline-code">ttl: "7d"</code> and they auto-expire. No manual cleanup needed.',
+  },
+];
+---
+
+<section class="content-section">
+  <div class="section-header">
+    <h2>Memory Tips</h2>
+    <p>Get the most out of toon-memory with these patterns</p>
+  </div>
+
+  <div class="tip-grid">
+    {
+      tips.map((t) => (
+        <div class="tip-card">
+          <div class="tip-number">{t.n}</div>
+          <h3 set:html={t.title}></h3>
+          <p set:html={t.body}></p>
+        </div>
+      ))
+    }
+  </div>
+</section>

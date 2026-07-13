@@ -1,0 +1,36 @@
+---
+const before = [
+  'Repeat explanations every session',
+  'Forget why a decision was made',
+  'Hunt through git history for context',
+  'Copy-paste notes between chats',
+];
+const after = [
+  'Agent remembers everything',
+  'Decisions are one query away',
+  'Patterns persist across projects',
+  'Zero context loss between sessions',
+];
+---
+
+<section class="content-section">
+  <div class="section-header">
+    <h2>Before vs After</h2>
+    <p>See how toon-memory changes your workflow</p>
+  </div>
+
+  <div class="comparison">
+    <div class="compare-box before">
+      <h3>Before</h3>
+      <ul>
+        {before.map((item) => <li>{item}</li>)}
+      </ul>
+    </div>
+    <div class="compare-box after">
+      <h3>After</h3>
+      <ul>
+        {after.map((item) => <li>{item}</li>)}
+      </ul>
+    </div>
+  </div>
+</section>

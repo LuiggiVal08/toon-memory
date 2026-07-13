@@ -1,0 +1,19 @@
+---
+const stats = [
+  { number: '11', label: 'MCP Tools' },
+  { number: '15', label: 'Agents' },
+  { number: '40%', label: 'Fewer Tokens' },
+  { number: '0', label: 'Config Needed' },
+];
+---
+
+<div class="stats-row">
+  {
+    stats.map((s) => (
+      <div class="stat-card">
+        <span class="stat-number">{s.number}</span>
+        <span class="stat-label">{s.label}</span>
+      </div>
+    ))
+  }
+</div>

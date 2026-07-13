@@ -1,39 +1,18 @@
 ---
 import logoSrc from '../assets/logo.svg';
+import SiteHeader from '../components/SiteHeader.astro';
+import Hero from '../components/Hero.astro';
+import FeatureGrid from '../components/FeatureGrid.astro';
+import StatsRow from '../components/StatsRow.astro';
+import Tips from '../components/Tips.astro';
+import Comparison from '../components/Comparison.astro';
+import CodeExamples from '../components/CodeExamples.astro';
+import FAQ from '../components/FAQ.astro';
+import CTA from '../components/CTA.astro';
+import SiteFooter from '../components/SiteFooter.astro';
 
-const exampleCode = `// Save a decision (with auto-tag inference)
-memory_remember({
-  category: "decision",
-  key: "use-zod",
-  content: "Use Zod for validation",
-  file: "src/types.ts"
-})
-// 🏷️ Tags inferidos: types
-
-// Save with TTL (expires in 7 days)
-memory_remember({
-  category: "knowledge",
-  key: "sprint-deadline",
-  content: "Sprint ends July 18",
-  ttl: "7d"
-})
-
-// See what changed since last session
-memory_diff({ since: "24h" })
-
-// Search memory
-memory_recall({ query: "redis" })
-// [bug] redis-pool-fix (i9j0k1l2)
-//   Added max_connections=20`;
-
-const installCode = `# npm
-npm install -g toon-memory
-
-# macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
-
-# Windows (PowerShell)
-irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex`;
+const description =
+  'Persistent memory for AI coding agents. Remember decisions, patterns, and bugs between sessions.';
 ---
 
 <!doctype html>
@@ -42,59 +21,22 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>toon-memory — Persistent memory for AI coding agents</title>
-    <meta name="description" content="Persistent memory for AI coding agents. Remember decisions, patterns, and bugs between sessions." />
+    <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href={logoSrc.src} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="toon-memory — Persistent memory for AI coding agents" />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content="https://luiggival08.github.io/toon-memory/" />
+    <meta property="og:image" content="https://luiggival08.github.io/toon-memory/favicon.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="toon-memory" />
+    <meta name="twitter:description" content={description} />
   </head>
   <body>
-    <header class="site-header">
-      <a href="/toon-memory/" class="site-logo">
-        <img src={logoSrc.src} alt="toon-memory" class="logo-icon" />
-        <span class="logo-text">toon-memory</span>
-      </a>
-      <nav class="site-nav">
-        <a href="/toon-memory/getting-started/quickstart">Docs</a>
-        <a href="https://www.npmjs.com/package/toon-memory" target="_blank" rel="noopener noreferrer">npm</a>
-        <a href="https://github.com/LuiggiVal08/toon-memory" target="_blank" rel="noopener noreferrer">GitHub</a>
-      </nav>
-    </header>
+    <SiteHeader />
 
     <main>
-      <section class="hero">
-        <div class="particles">
-          <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
-          <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
-          <div class="particle"></div><div class="particle"></div>
-        </div>
-        <div class="hero-split">
-          <div class="hero-visual">
-            <div class="hero-logo">
-              <img src={logoSrc.src} alt="toon-memory" class="hero-logo-img" />
-            </div>
-          </div>
-          <div class="hero-text">
-            <h1 class="hero-title">toon-memory</h1>
-            <p class="hero-tagline">Persistent memory for AI coding agents</p>
-            <p class="hero-subtitle">Remember decisions, patterns, and bugs between sessions</p>
-            <div class="hero-actions">
-              <a href="/toon-memory/getting-started/quickstart" class="btn btn-primary">
-                <svg class="icon" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.75.75 0 0 1 1.06-1.06l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0z"/></svg>
-                Get Started
-              </a>
-              <a href="https://github.com/LuiggiVal08/toon-memory" target="_blank" rel="noopener noreferrer" class="btn-github">
-                <svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-                View on GitHub
-                <svg class="external-icon" viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M18 10.82a.75.75 0 0 1-1.5 0V6.56l-7.22 7.22a.75.75 0 0 1-1.06-1.06L15.44 5.5h-4.26a.75.75 0 0 1 0-1.5H18a.75.75 0 0 1 .75.75v6.07z"/><path fill="currentColor" d="M5.5 6.25A2.25 2.25 0 0 1 7.75 4h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h11.5a.75.75 0 0 0 .75-.75v-4.5a.75.75 0 0 1 1.5 0v4.5a2.25 2.25 0 0 1-2.25 2.25H7.75A2.25 2.25 0 0 1 5.5 17.75V6.25z"/></svg>
-              </a>
-            </div>
-            <button id="installBtn" class="btn btn-install">
-              <span class="install-prompt">$</span>
-              <span class="install-cmd">npm install -g toon-memory</span>
-              <span class="install-copy">Copy</span>
-              <span class="install-done">Copied!</span>
-            </button>
-          </div>
-        </div>
-      </section>
+      <Hero />
 
       <div class="badges-row">
         <a href="https://www.npmjs.com/package/toon-memory">
@@ -111,149 +53,18 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
         </a>
       </div>
 
-      <div class="feature-cards">
-        <div class="card">
-          <div class="card-icon">🧩</div>
-          <h3>11 MCP Tools + 3 Resources</h3>
-          <p>Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, encrypt, decrypt. Plus resources for direct context reading.</p>
-          <div class="card-tags">
-            <span class="tag">remember</span>
-            <span class="tag">recall</span>
-            <span class="tag">diff</span>
-            <span class="tag">suggest</span>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-icon">⭐</div>
-          <h3>Multi-Agent</h3>
-          <p>Works with all major AI coding agents. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue — zero configuration.</p>
-          <div class="card-tags">
-            <span class="tag">OpenCode</span>
-            <span class="tag">Claude</span>
-            <span class="tag">Cursor</span>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-icon">📄</div>
-          <h3>TOON Format</h3>
-          <p>40% fewer tokens than JSON. Custom encoding designed for LLM comprehension and token efficiency.</p>
-          <div class="card-stats">
-            <span class="stat">40% less tokens</span>
-            <span class="stat">3x faster parse</span>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-icon">🧠</div>
-          <h3>Smart Memory</h3>
-          <p>Auto-tag inference, related entry suggestions, memory diff, and configurable TTL for temporary context.</p>
-          <div class="card-stats">
-            <span class="stat">Auto-tags</span>
-            <span class="stat">TTL</span>
-            <span class="stat">Diff</span>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-icon">🔒</div>
-          <h3>Encryption</h3>
-          <p>AES-256-GCM for sensitive data. Auto-archive old entries. Watch mode for automatic backup every N minutes.</p>
-          <div class="card-stats">
-            <span class="stat">AES-256-GCM</span>
-            <span class="stat">Auto-backup</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="stats-row">
-        <div class="stat-card">
-          <span class="stat-number">11</span>
-          <span class="stat-label">MCP Tools</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-number">15</span>
-          <span class="stat-label">Agents</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-number">40%</span>
-          <span class="stat-label">Fewer Tokens</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-number">0</span>
-          <span class="stat-label">Config Needed</span>
-        </div>
-      </div>
-
-      <section class="content-section">
-        <div class="section-header">
-          <h2>Memory Tips</h2>
-          <p>Get the most out of toon-memory with these patterns</p>
-        </div>
-
-        <div class="tip-grid">
-          <div class="tip-card">
-            <div class="tip-number">1</div>
-            <h3>Save decisions immediately</h3>
-            <p>When you make a choice, save it right away. Add context on <em>why</em> you chose option A over B — future you will thank yourself.</p>
-          </div>
-          <div class="tip-card">
-            <div class="tip-number">2</div>
-            <h3>Use consistent keys</h3>
-            <p>Prefix keys by domain: <code class="inline-code">db:redis-config</code>, <code class="inline-code">auth:jwt</code>. Makes recall faster and avoids collisions.</p>
-          </div>
-          <div class="tip-card">
-            <div class="tip-number">3</div>
-            <h3>Tags auto-infer</h3>
-            <p>Leave tags empty and the system infers them from content — redis, auth, api, db, and 16+ more categories. Or add them manually for precise control.</p>
-          </div>
-          <div class="tip-card">
-            <div class="tip-number">4</div>
-            <h3>Use TTL for temp context</h3>
-            <p>Deadlines, sprints, time-sensitive notes — set a <code class="inline-code">ttl: "7d"</code> and they auto-expire. No manual cleanup needed.</p>
-          </div>
-        </div>
-
-        <div class="section-header">
-          <h2>Before vs After</h2>
-          <p>See how toon-memory changes your workflow</p>
-        </div>
-
-        <div class="comparison">
-          <div class="compare-box before">
-            <h3>Before</h3>
-            <ul>
-              <li>Repeat explanations every session</li>
-              <li>Forget why a decision was made</li>
-              <li>Hunt through git history for context</li>
-              <li>Copy-paste notes between chats</li>
-            </ul>
-          </div>
-          <div class="compare-box after">
-            <h3>After</h3>
-            <ul>
-              <li>Agent remembers everything</li>
-              <li>Decisions are one query away</li>
-              <li>Patterns persist across projects</li>
-              <li>Zero context loss between sessions</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="section-header">
-          <h2>Quick Example</h2>
-        </div>
-        <pre><code set:html={exampleCode}></code></pre>
-
-        <div class="section-header">
-          <h2>Quick Install</h2>
-        </div>
-        <pre><code set:html={installCode}></code></pre>
-      </section>
+      <FeatureGrid />
+      <StatsRow />
+      <Tips />
+      <Comparison />
+      <CodeExamples />
+      <FAQ />
+      <CTA />
     </main>
 
-    <footer class="site-footer">
-      <p>MIT License — <a href="https://github.com/LuiggiVal08/toon-memory">toon-memory</a></p>
-    </footer>
+    <SiteFooter />
 
-    <style>
+    <style is:global>
       :root {
         --brand: #6366f1;
         --brand-light: #818cf8;
@@ -782,6 +593,72 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
       }
       .site-footer a { color: var(--text-muted); }
 
+      /* FAQ */
+      .faq-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .faq-item {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .faq-item summary {
+        cursor: pointer;
+        padding: 1rem 1.25rem;
+        font-weight: 600;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .faq-item summary::-webkit-details-marker { display: none; }
+      .faq-item summary::after {
+        content: '+';
+        color: var(--brand-light);
+        font-size: 1.25rem;
+      }
+      .faq-item[open] summary::after { content: '−'; }
+      .faq-item p {
+        padding: 0 1.25rem 1.25rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
+      /* CTA */
+      .cta-section {
+        padding-bottom: 5rem;
+        padding-top: 1rem;
+      }
+      .cta-box {
+        background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.15));
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 2.5rem 1.5rem;
+        text-align: center;
+      }
+      .cta-box h2 {
+        font-size: 1.75rem;
+        background: var(--gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+      }
+      .cta-box p {
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+      }
+      .cta-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
       @media (max-width: 768px) {
         .hero-split { flex-direction: column; gap: 2rem; text-align: center; }
         .hero-actions { justify-content: center; }
@@ -800,14 +677,5 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
         .btn-install { width: 100%; justify-content: center; }
       }
     </style>
-
-    <script>
-      document.getElementById('installBtn')?.addEventListener('click', function() {
-        navigator.clipboard.writeText('npm install -g toon-memory').then(() => {
-          this.classList.add('copied');
-          setTimeout(() => this.classList.remove('copied'), 1500);
-        });
-      });
-    </script>
   </body>
 </html>

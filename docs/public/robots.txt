@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://luiggival08.github.io/toon-memory/sitemap-index.xml

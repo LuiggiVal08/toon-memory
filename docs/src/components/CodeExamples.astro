@@ -1,0 +1,47 @@
+---
+const exampleCode = `// Save a decision (with auto-tag inference)
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts"
+})
+// 🏷️ Tags inferidos: types
+
+// Save with TTL (expires in 7 days)
+memory_remember({
+  category: "knowledge",
+  key: "sprint-deadline",
+  content: "Sprint ends July 18",
+  ttl: "7d"
+})
+
+// See what changed since last session
+memory_diff({ since: "24h" })
+
+// Search memory
+memory_recall({ query: "redis" })
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Added max_connections=20`;
+
+const installCode = `# npm
+npm install -g toon-memory
+
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex`;
+---
+
+<section class="content-section">
+  <div class="section-header">
+    <h2>Quick Example</h2>
+  </div>
+  <pre><code set:html={exampleCode}></code></pre>
+
+  <div class="section-header">
+    <h2>Quick Install</h2>
+  </div>
+  <pre><code set:html={installCode}></code></pre>
+</section>

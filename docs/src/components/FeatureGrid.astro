@@ -1,0 +1,56 @@
+---
+const features = [
+  {
+    icon: '🧩',
+    title: '11 MCP Tools + 3 Resources',
+    body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, encrypt, decrypt. Plus resources for direct context reading.',
+    tags: ['remember', 'recall', 'diff', 'suggest'],
+  },
+  {
+    icon: '⭐',
+    title: 'Multi-Agent',
+    body: 'Works with all major AI coding agents. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue — zero configuration.',
+    tags: ['OpenCode', 'Claude', 'Cursor'],
+  },
+  {
+    icon: '📄',
+    title: 'TOON Format',
+    body: '40% fewer tokens than JSON. Custom encoding designed for LLM comprehension and token efficiency.',
+    stats: ['40% less tokens', '3x faster parse'],
+  },
+  {
+    icon: '🧠',
+    title: 'Smart Memory',
+    body: 'Auto-tag inference, related entry suggestions, memory diff, and configurable TTL for temporary context.',
+    stats: ['Auto-tags', 'TTL', 'Diff'],
+  },
+  {
+    icon: '🔒',
+    title: 'Encryption',
+    body: 'AES-256-GCM for sensitive data. Auto-archive old entries. Watch mode for automatic backup every N minutes.',
+    stats: ['AES-256-GCM', 'Auto-backup'],
+  },
+];
+---
+
+<div class="feature-cards">
+  {
+    features.map((f) => (
+      <div class="card">
+        <div class="card-icon">{f.icon}</div>
+        <h3>{f.title}</h3>
+        <p>{f.body}</p>
+        {f.tags && (
+          <div class="card-tags">
+            {f.tags.map((t) => <span class="tag">{t}</span>)}
+          </div>
+        )}
+        {f.stats && (
+          <div class="card-stats">
+            {f.stats.map((s) => <span class="stat">{s}</span>)}
+          </div>
+        )}
+      </div>
+    ))
+  }
+</div>
