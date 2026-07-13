@@ -6,16 +6,23 @@ A persistent memory system for AI coding agents. It remembers decisions, pattern
 
 ## Supported Agents
 
-| Agent | Config File | Format |
-|-------|-------------|--------|
-| OpenCode | `.opencode/opencode.json` | MCP server |
-| VS Code / Copilot | `.vscode/mcp.json` | MCP server |
-| Claude | `.claude/settings.json` | MCP server |
-| Cursor | `.cursor/mcp.json` | MCP server |
-| Windsurf | `.windsurfrules` | MCP server |
-| Cline | `.cline/mcp.json` | MCP server |
-| Continue | `.continue/config.json` | MCP server |
-| Aider | `.aider.conf.yml` | Manual config |
+| Agent | Config File | Format | Hooks |
+|-------|-------------|--------|-------|
+| OpenCode | `.opencode/opencode.json` | MCP server | — |
+| VS Code / Copilot | `.vscode/mcp.json` | MCP server | — |
+| Claude Code | `.claude/settings.json` | MCP server | SessionStart |
+| Cursor | `.cursor/mcp.json` | MCP server | — |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` | MCP server | — |
+| Cline | `.cline/mcp.json` | MCP server | — |
+| Continue | `.continue/config.json` | MCP server | — |
+| Codex CLI | `.codex/config.toml` | TOML | SessionStart |
+| Gemini CLI | `.gemini/settings.json` | MCP server | SessionStart |
+| Zed | `~/.config/zed/settings.json` | JSONC | — |
+| Antigravity | `.gemini/config/mcp_config.json` | MCP server | SessionStart |
+| Aider | — | Instructions only | — |
+| KiloCode | `~/.kilocode/mcp_settings.json` | MCP server | — |
+| OpenClaw | `.openclaw.json` | MCP server | — |
+| Kiro | `.kiro/settings/mcp.json` | MCP server | — |
 
 ## Tools
 
@@ -26,6 +33,9 @@ A persistent memory system for AI coding agents. It remembers decisions, pattern
 | `memory_forget` | Remove an entry by key or id |
 | `memory_stats` | View memory state |
 | `memory_summary` | Save/retrieve file summaries |
+| `memory_archive` | Archive old entries |
+| `memory_encrypt` | Enable encryption |
+| `memory_decrypt` | Disable encryption |
 
 ## Installation
 
@@ -37,8 +47,9 @@ npx toon-memory
 
 This will:
 1. Detect installed agents
-2. Ask if you want local or global installation
-3. Configure the MCP server automatically
+2. Let you select which agents to configure
+3. Ask for local or global installation
+4. Configure MCP server, instructions, and hooks automatically
 
 ### Manual installation
 
@@ -71,7 +82,7 @@ Add to your agent's MCP config:
 ### When exploring the project
 
 1. First: `memory_recall(query="what you need to know")`
-2. If no result: use CodeGraph or grep
+2. If no result: use grep or search tools
 3. Only if both fail: read files directly
 
 ### At the END of every session
@@ -91,7 +102,7 @@ Add to your agent's MCP config:
 
 ## File format
 
-Data is stored in `.opencode/memory/data.toon` using TOON (Token-Oriented Object Notation):
+Data is stored in `.toon-memory/memory/data.toon` using TOON (Token-Oriented Object Notation):
 
 ```
 version: 1

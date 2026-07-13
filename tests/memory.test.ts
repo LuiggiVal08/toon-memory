@@ -6,7 +6,7 @@ import { tmpdir } from "os"
 // Test the memory operations directly (without MCP server)
 describe("Memory Operations", () => {
   const testDir = join(tmpdir(), "toon-memory-test-" + Date.now())
-  const memoryDir = join(testDir, ".opencode", "memory")
+  const memoryDir = join(testDir, ".toon-memory", "memory")
   const memoryFile = join(memoryDir, "data.toon")
 
   beforeEach(() => {

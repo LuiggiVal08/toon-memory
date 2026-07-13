@@ -24,7 +24,7 @@ remove_from_config ".opencode/opencode.json"
 # VS Code
 remove_from_config ".vscode/mcp.json"
 
-# Claude
+# Claude Code
 remove_from_config "${HOME}/.claude/settings.json"
 remove_from_config ".claude/settings.json"
 
@@ -40,7 +40,28 @@ remove_from_config ".cline/mcp.json"
 # Continue
 remove_from_config ".continue/config.json"
 
-# Remove custom tools if they exist
+# Codex CLI
+remove_from_config ".codex/config.toml"
+
+# Gemini CLI
+remove_from_config ".gemini/settings.json"
+
+# Zed
+remove_from_config "${HOME}/.config/zed/settings.json"
+
+# Antigravity
+remove_from_config ".gemini/config/mcp_config.json"
+
+# KiloCode
+remove_from_config "${HOME}/.kilocode/mcp_settings.json"
+
+# OpenClaw
+remove_from_config ".openclaw.json"
+
+# Kiro
+remove_from_config ".kiro/settings/mcp.json"
+
+# Remove custom tools (legacy)
 if [ -d ".opencode/tools" ]; then
     if [ -f ".opencode/tools/memory.ts" ]; then
         echo "Removing custom tools..."
@@ -49,13 +70,20 @@ if [ -d ".opencode/tools" ]; then
     fi
 fi
 
+# Remove hook scripts
+if [ -d ".toon-memory/hooks" ]; then
+    echo "Removing hooks..."
+    rm -rf ".toon-memory/hooks"
+    echo "  ✅ Removed .toon-memory/hooks/"
+fi
+
 # Remove memory file (ask user)
-if [ -f ".opencode/memory/data.toon" ]; then
+if [ -f ".toon-memory/memory/data.toon" ]; then
     echo ""
-    read -p "Remove memory file (.opencode/memory/data.toon)? [y/N] " -n 1 -r
+    read -p "Remove memory file (.toon-memory/memory/)? [y/N] " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        rm -rf ".opencode/memory"
+        rm -rf ".toon-memory/memory"
         echo "  ✅ Removed memory directory"
     fi
 fi

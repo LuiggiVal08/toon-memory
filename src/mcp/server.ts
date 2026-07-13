@@ -9,7 +9,7 @@ import { randomBytes, createCipheriv, createDecipheriv } from "crypto"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 /** Base directory for memory storage */
-const MEMORY_DIR = join(process.cwd(), ".opencode", "memory")
+const MEMORY_DIR = join(process.cwd(), ".toon-memory", "memory")
 
 /** Main memory data file */
 const MEMORY_FILE = join(MEMORY_DIR, "data.toon")
@@ -362,8 +362,20 @@ server.registerTool(
     }
 
     writeMemory(lines.join("\n"))
+
+    // Auto-archive if we exceed MAX_ENTRIES
+    const headerMatch = lines[headerIdx].match(/\[(\d+)\|/)
+    const entryCount = headerMatch ? parseInt(headerMatch[1]) : 0
+    let archiveMsg = ""
+    if (entryCount > MAX_ENTRIES) {
+      const result = archiveOldEntries()
+      if (result.archived > 0) {
+        archiveMsg = `\n📦 Auto-archived ${result.archived} old entries (${result.kept} kept)`
+      }
+    }
+
     return {
-      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${entryId})\n${content}` }],
+      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${entryId})\n${content}${archiveMsg}` }],
     }
   }
 )

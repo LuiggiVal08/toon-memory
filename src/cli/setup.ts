@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, unlinkSync, readdirSync, statSync } from "fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, unlinkSync, readdirSync, statSync, chmodSync, rmSync } from "fs"
 import { basename, dirname, join } from "path"
 import { fileURLToPath } from "url"
 import { createInterface } from "readline"
@@ -6,181 +6,277 @@ import { gzipSync, gunzipSync } from "zlib"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const projectRoot = process.cwd()
-// When compiled to dist/cli/, src is at ../../src
-// When running directly from src/cli/, src is at ../src
 const sourceDir = join(__dirname, "..", "..", "src")
 const HOME = process.env.HOME || process.env.USERPROFILE || "~"
 
+/** Shared memory directory (agent-agnostic) */
+const MEMORY_DIR = join(projectRoot, ".toon-memory", "memory")
+
+/** Config format: "json" | "toml" | "jsonc" | "none" (instructions only) */
+type AgentFormat = "json" | "toml" | "jsonc" | "none"
+
 /** Supported AI coding agent configuration */
 interface Agent {
-  /** Agent identifier (e.g., "opencode", "vscode/copilot") */
   name: string
-  /** Global config file path (e.g., ~/.config/opencode/opencode.json) */
   global?: string
-  /** Local (project-level) config file path (e.g., .opencode/opencode.json) */
   local?: string
-  /** JSON key where MCP servers are stored */
   mcpKey: string
+  format: AgentFormat
+  needsHooks: boolean
+  needsInstructions: boolean
+  instructionFile?: string
 }
+
+/** Hook script content for SessionStart reminder */
+const HOOK_CONTENT = `#!/bin/bash
+echo "toon-memory: Use memory_recall BEFORE reading files for project context."
+exit 0
+`
+
+/** Base instruction content for agents */
+const INSTRUCTION_CONTENT = `# toon-memory
+
+Persistent memory for this project. Use it to avoid re-investigating things.
+
+## At the START of every session
+1. Run memory_stats to see what's in memory.
+2. If the user asks something that might be in memory, run memory_recall BEFORE reading files.
+
+## When making decisions
+- Before implementing a non-trivial change: memory_remember(category='decision')
+- When you resolve a complex bug: memory_remember(category='bug')
+- When you observe a code pattern: memory_remember(category='pattern')
+
+## At the END of every session
+- Save important decisions, bugs resolved, and patterns observed.
+`
 
 /**
  * Detect all supported AI coding agents on the system.
- * 
+ *
  * Scans for configuration files in both global (~/.config/) and local
  * (.opencode/, .vscode/, etc.) locations.
- * 
+ *
  * @returns Array of detected agent configurations
- * 
- * @example
- * ```typescript
- * const agents = detectAgents()
- * for (const agent of agents) {
- *   console.log(`${agent.name}: ${agent.local || "not found"}`)
- * }
- * ```
  */
 function detectAgents(): Agent[] {
   const agents: Agent[] = []
-  
+
   // OpenCode
-  const opencodeGlobal = join(HOME, ".config", "opencode", "opencode.json")
-  const opencodeLocal = join(projectRoot, ".opencode", "opencode.json")
-  agents.push({ 
-    name: "opencode", 
-    global: opencodeGlobal, 
-    local: opencodeLocal,
-    mcpKey: "mcp"
+  agents.push({
+    name: "opencode",
+    global: join(HOME, ".config", "opencode", "opencode.json"),
+    local: join(projectRoot, ".opencode", "opencode.json"),
+    mcpKey: "mcp",
+    format: "json",
+    needsHooks: false,
+    needsInstructions: true,
+    instructionFile: join(projectRoot, "AGENTS.md")
   })
-  
+
   // VS Code / GitHub Copilot
-  const vscodeLocal = join(projectRoot, ".vscode", "mcp.json")
-  agents.push({ 
-    name: "vscode/copilot", 
-    local: vscodeLocal,
-    mcpKey: "servers"
+  agents.push({
+    name: "vscode/copilot",
+    local: join(projectRoot, ".vscode", "mcp.json"),
+    mcpKey: "servers",
+    format: "json",
+    needsHooks: false,
+    needsInstructions: false
   })
-  
+
   // Claude Code
-  const claudeGlobal = join(HOME, ".claude", "settings.json")
-  const claudeLocal = join(projectRoot, ".claude", "settings.json")
-  agents.push({ 
-    name: "claude", 
-    global: claudeGlobal, 
-    local: claudeLocal,
-    mcpKey: "mcpServers"
+  agents.push({
+    name: "claude",
+    global: join(HOME, ".claude", "settings.json"),
+    local: join(projectRoot, ".claude", "settings.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: true,
+    needsInstructions: true,
+    instructionFile: join(projectRoot, ".claude", "AGENTS.md")
   })
-  
+
   // Cursor
-  const cursorLocal = join(projectRoot, ".cursor", "mcp.json")
-  agents.push({ 
-    name: "cursor", 
-    local: cursorLocal,
-    mcpKey: "mcpServers"
+  agents.push({
+    name: "cursor",
+    local: join(projectRoot, ".cursor", "mcp.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: false,
+    needsInstructions: false
   })
-  
+
   // Windsurf
-  const windsurfGlobal = join(HOME, ".codeium", "windsurf", "mcp_config.json")
-  agents.push({ 
-    name: "windsurf", 
-    global: windsurfGlobal,
-    mcpKey: "mcpServers"
+  agents.push({
+    name: "windsurf",
+    global: join(HOME, ".codeium", "windsurf", "mcp_config.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: false,
+    needsInstructions: false
   })
-  
+
   // Cline
-  const clineLocal = join(projectRoot, ".cline", "mcp.json")
-  agents.push({ 
-    name: "cline", 
-    local: clineLocal,
-    mcpKey: "mcpServers"
+  agents.push({
+    name: "cline",
+    local: join(projectRoot, ".cline", "mcp.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: false,
+    needsInstructions: false
   })
-  
+
   // Continue
-  const continueLocal = join(projectRoot, ".continue", "config.json")
-  agents.push({ 
-    name: "continue", 
-    local: continueLocal,
-    mcpKey: "mcpServers"
+  agents.push({
+    name: "continue",
+    local: join(projectRoot, ".continue", "config.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: false,
+    needsInstructions: false
   })
-  
+
+  // Codex CLI
+  agents.push({
+    name: "codex",
+    local: join(projectRoot, ".codex", "config.toml"),
+    mcpKey: "mcpServers",
+    format: "toml",
+    needsHooks: true,
+    needsInstructions: true,
+    instructionFile: join(projectRoot, ".codex", "AGENTS.md")
+  })
+
+  // Gemini CLI
+  agents.push({
+    name: "gemini",
+    local: join(projectRoot, ".gemini", "settings.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: true,
+    needsInstructions: true,
+    instructionFile: join(projectRoot, ".gemini", "GEMINI.md")
+  })
+
+  // Zed
+  agents.push({
+    name: "zed",
+    global: join(HOME, ".config", "zed", "settings.json"),
+    mcpKey: "mcp_servers",
+    format: "jsonc",
+    needsHooks: false,
+    needsInstructions: false
+  })
+
+  // Antigravity
+  agents.push({
+    name: "antigravity",
+    local: join(projectRoot, ".gemini", "config", "mcp_config.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: true,
+    needsInstructions: true,
+    instructionFile: join(projectRoot, "antigravity-cli", "AGENTS.md")
+  })
+
+  // Aider (instructions only, no MCP)
+  agents.push({
+    name: "aider",
+    mcpKey: "",
+    format: "none",
+    needsHooks: false,
+    needsInstructions: true,
+    instructionFile: join(projectRoot, "CONVENTIONS.md")
+  })
+
+  // KiloCode
+  agents.push({
+    name: "kilocode",
+    global: join(HOME, ".kilocode", "mcp_settings.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: false,
+    needsInstructions: true,
+    instructionFile: join(HOME, ".kilocode", "rules", "toon-memory.md")
+  })
+
+  // OpenClaw
+  agents.push({
+    name: "openclaw",
+    local: join(projectRoot, ".openclaw.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: false,
+    needsInstructions: false
+  })
+
+  // Kiro
+  agents.push({
+    name: "kiro",
+    local: join(projectRoot, ".kiro", "settings", "mcp.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: false,
+    needsInstructions: false
+  })
+
   return agents
 }
 
 /**
- * Install memory directory for OpenCode.
- * 
- * Creates `.opencode/memory/` directory and initial `data.toon` if needed.
- * The MCP server handles all memory operations - no plugin needed.
- * 
- * @example
- * ```bash
- * npx toon-memory init  # Calls installOpenCodeTools()
- * ```
+ * Install memory directory and initial data file.
+ *
+ * Creates `.toon-memory/memory/` directory and initial `data.toon` if needed.
+ * The MCP server handles all memory operations.
  */
-function installOpenCodeTools(): void {
-  const memoryDir = join(projectRoot, ".opencode", "memory")
-  const memoryFile = join(memoryDir, "data.toon")
+function installMemoryDir(): void {
+  const memoryFile = join(MEMORY_DIR, "data.toon")
 
-  if (!existsSync(memoryDir)) mkdirSync(memoryDir, { recursive: true })
+  if (!existsSync(MEMORY_DIR)) mkdirSync(MEMORY_DIR, { recursive: true })
 
   if (!existsSync(memoryFile)) {
     writeFileSync(memoryFile, "version: 1\n[0|]\n")
-    console.log("  Created .opencode/memory/data.toon")
+    console.log("  Created .toon-memory/memory/data.toon")
   }
 }
 
 /**
- * Add `.opencode/memory/` to `.gitignore` if not already present.
- * 
- * Creates `.gitignore` if it doesn't exist, or appends the memory
- * exclusion pattern to the existing file.
- * 
- * @example
- * ```typescript
- * ensureGitignore()  // Adds .opencode/memory/ to .gitignore
- * ```
+ * Add `.toon-memory/memory/` to `.gitignore` if not already present.
  */
 function ensureGitignore(): void {
   const gitignorePath = join(projectRoot, ".gitignore")
-  const entry = ".opencode/memory/"
-  
+  const entry = ".toon-memory/memory/"
+
   if (!existsSync(gitignorePath)) {
     writeFileSync(gitignorePath, `${entry}\n`)
     console.log("  Created .gitignore with memory exclusion")
     return
   }
-  
+
   const content = readFileSync(gitignorePath, "utf-8")
   if (!content.includes(entry)) {
     writeFileSync(gitignorePath, `${content.trim()}\n${entry}\n`)
-    console.log("  Added .opencode/memory/ to .gitignore")
+    console.log("  Added .toon-memory/memory/ to .gitignore")
   }
 }
 
 /**
- * Install MCP server configuration for an agent.
- * 
+ * Install MCP server configuration for a JSON-format agent.
+ *
  * Adds the `toon-memory` MCP server entry to the agent's config file.
- * 
- * @param agent - Agent configuration with config path and MCP key
- * @param scope - "global" or "local" installation scope
- * 
- * @example
- * ```typescript
- * const agent = { name: "opencode", local: ".opencode/opencode.json", mcpKey: "mcp" }
- * installMCPConfig(agent, "local")
- * ```
+ * OpenCode uses a different format than other agents.
  */
-function installMCPConfig(agent: Agent, scope: string): void {
+function installJSONConfig(agent: Agent, scope: string): void {
   const configPath = scope === "global" ? agent.global : agent.local
-  
+
   if (!configPath) {
     console.log(`  No ${scope} config path for ${agent.name}`)
     return
   }
-  
+
   const configDir = dirname(configPath)
   if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
-  
+
   let config: Record<string, any> = {}
   if (existsSync(configPath)) {
     try {
@@ -189,11 +285,10 @@ function installMCPConfig(agent: Agent, scope: string): void {
       config = {}
     }
   }
-  
+
   const mcpKey = agent.mcpKey || "mcpServers"
   if (!config[mcpKey]) config[mcpKey] = {}
-  
-  // OpenCode uses a different format than other agents
+
   if (agent.name === "opencode") {
     config[mcpKey]["toon-memory"] = {
       enabled: true,
@@ -206,103 +301,322 @@ function installMCPConfig(agent: Agent, scope: string): void {
       args: ["-y", "toon-memory", "mcp"]
     }
   }
-  
+
   writeFileSync(configPath, JSON.stringify(config, null, 2))
   console.log(`  MCP server added to ${configPath}`)
 }
 
 /**
- * Uninstall toon-memory from all detected agents.
- * 
- * Removes MCP server configurations and custom tools from all agents.
- * 
- * @example
- * ```bash
- * npx toon-memory uninstall
- * ```
+ * Install MCP server configuration for Codex CLI (TOML format).
+ *
+ * Writes a clean config.toml with the MCP server entry.
+ * If the file exists, it is overwritten.
  */
-function uninstall(): void {
-  console.log("\n🧠 toon-memory uninstaller\n")
-  
-  const agents = detectAgents()
-  
-  for (const agent of agents) {
-    const configs = [agent.global, agent.local].filter(Boolean) as string[]
-    
-    for (const configPath of configs) {
-      if (!existsSync(configPath)) continue
-      
-      try {
-        const config = JSON.parse(readFileSync(configPath, "utf-8"))
-        const mcpKey = agent.mcpKey || "mcpServers"
-        
-        if (config[mcpKey]?.["toon-memory"]) {
-          delete config[mcpKey]["toon-memory"]
-          writeFileSync(configPath, JSON.stringify(config, null, 2))
-          console.log(`  ✅ Removed from ${agent.name} (${configPath})`)
-        }
-      } catch {}
+function installTOMLConfig(agent: Agent): void {
+  const configPath = agent.local
+  if (!configPath) return
+
+  const configDir = dirname(configPath)
+  if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
+
+  const toml = `[mcpServers.toon-memory]
+command = "npx"
+args = ["-y", "toon-memory", "mcp"]
+`
+
+  writeFileSync(configPath, toml)
+  console.log(`  MCP server added to ${configPath}`)
+}
+
+/**
+ * Install MCP server configuration for Zed (JSONC format).
+ *
+ * Writes valid JSON to Zed's settings.json. If the file exists
+ * with comments, the user must merge manually.
+ */
+function installZedConfig(agent: Agent): void {
+  const configPath = agent.global
+  if (!configPath) return
+
+  const configDir = dirname(configPath)
+  if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
+
+  let config: Record<string, any> = {}
+  if (existsSync(configPath)) {
+    try {
+      // Strip JSONC comments before parsing
+      const raw = readFileSync(configPath, "utf-8")
+      const stripped = raw.replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "")
+      config = JSON.parse(stripped)
+    } catch {
+      config = {}
     }
   }
-  
-  // Remove custom tools
-  const toolsFile = join(projectRoot, ".opencode", "tools", "memory.ts")
-  if (existsSync(toolsFile)) {
-    unlinkSync(toolsFile)
-    console.log("  ✅ Removed .opencode/tools/memory.ts")
+
+  if (!config.mcp_servers) config.mcp_servers = {}
+
+  config.mcp_servers["toon-memory"] = {
+    command: "npx",
+    args: ["-y", "toon-memory", "mcp"]
   }
-  
-  console.log("\n✅ toon-memory uninstalled from all agents\n")
+
+  writeFileSync(configPath, JSON.stringify(config, null, 2))
+  console.log(`  MCP server added to ${configPath}`)
+}
+
+/**
+ * Install MCP config for an agent based on its format.
+ */
+function installMCPConfig(agent: Agent, scope: string): void {
+  if (agent.format === "none") {
+    console.log(`  ${agent.name}: instructions only (no MCP)`)
+    return
+  }
+
+  if (agent.format === "toml") {
+    installTOMLConfig(agent)
+  } else if (agent.format === "jsonc") {
+    installZedConfig(agent)
+  } else {
+    installJSONConfig(agent, scope)
+  }
+}
+
+/**
+ * Install instruction files for an agent.
+ *
+ * Creates AGENTS.md, GEMINI.md, CONVENTIONS.md, etc. with
+ * reminders to use toon-memory tools.
+ */
+function installInstructions(agent: Agent): void {
+  if (!agent.needsInstructions || !agent.instructionFile) return
+
+  const filePath = agent.instructionFile
+  const fileDir = dirname(filePath)
+
+  if (!existsSync(fileDir)) mkdirSync(fileDir, { recursive: true })
+
+  if (existsSync(filePath)) {
+    const existing = readFileSync(filePath, "utf-8")
+    if (existing.includes("toon-memory") || existing.includes("memory_recall")) {
+      console.log(`  Instructions already present in ${filePath}`)
+      return
+    }
+    // Append to existing file
+    writeFileSync(filePath, `${existing.trim()}\n\n${INSTRUCTION_CONTENT}`)
+    console.log(`  Appended toon-memory instructions to ${filePath}`)
+  } else {
+    writeFileSync(filePath, INSTRUCTION_CONTENT)
+    console.log(`  Created ${filePath}`)
+  }
+}
+
+/**
+ * Install SessionStart hook for agents that support it.
+ *
+ * Creates a shell script that reminds the agent to use memory tools,
+ * then registers it in the agent's config.
+ */
+function installHooks(agent: Agent): void {
+  if (!agent.needsHooks) return
+
+  const hookDir = join(projectRoot, ".toon-memory", "hooks")
+  if (!existsSync(hookDir)) mkdirSync(hookDir, { recursive: true })
+
+  const hookPath = join(hookDir, `session-start-${agent.name}.sh`)
+  writeFileSync(hookPath, HOOK_CONTENT)
+  chmodSync(hookPath, 0o755)
+  console.log(`  Hook script created at ${hookPath}`)
+
+  // Register hook in agent config
+  if (agent.format === "toml" && agent.local) {
+    registerHookTOML(agent, hookPath)
+  } else if (agent.format === "json" || agent.format === "jsonc") {
+    registerHookJSON(agent, hookPath)
+  }
+}
+
+/** Register SessionStart hook in TOML config (Codex CLI) */
+function registerHookTOML(agent: Agent, hookPath: string): void {
+  const configPath = agent.local
+  if (!configPath || !existsSync(configPath)) return
+
+  let content = readFileSync(configPath, "utf-8")
+  if (content.includes("session_start")) {
+    console.log(`  Hook already registered in ${configPath}`)
+    return
+  }
+
+  content += `\n[hooks.session_start]\ncommand = "${hookPath}"\n`
+  writeFileSync(configPath, content)
+  console.log(`  Hook registered in ${configPath}`)
+}
+
+/** Register SessionStart hook in JSON config */
+function registerHookJSON(agent: Agent, hookPath: string): void {
+  const configPath = agent.format === "jsonc" ? agent.global : (agent.local || agent.global)
+  if (!configPath) return
+
+  const configDir = dirname(configPath)
+  if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
+
+  let config: Record<string, any> = {}
+  if (existsSync(configPath)) {
+    try {
+      if (agent.format === "jsonc") {
+        const raw = readFileSync(configPath, "utf-8")
+        const stripped = raw.replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "")
+        config = JSON.parse(stripped)
+      } else {
+        config = JSON.parse(readFileSync(configPath, "utf-8"))
+      }
+    } catch {
+      config = {}
+    }
+  }
+
+  // Claude Code format
+  if (agent.name === "claude") {
+    if (!config.hooks) config.hooks = {}
+    if (!config.hooks.SessionStart) config.hooks.SessionStart = []
+    if (!config.hooks.SessionStart.some((h: any) => h.command === hookPath)) {
+      config.hooks.SessionStart.push({ command: hookPath })
+      writeFileSync(configPath, JSON.stringify(config, null, 2))
+      console.log(`  Hook registered in ${configPath}`)
+    }
+    return
+  }
+
+  // Gemini CLI / Antigravity format
+  if (!config.session_start_hooks) config.session_start_hooks = []
+  if (!config.session_start_hooks.includes(hookPath)) {
+    config.session_start_hooks.push(hookPath)
+    writeFileSync(configPath, JSON.stringify(config, null, 2))
+    console.log(`  Hook registered in ${configPath}`)
+  }
+}
+
+/**
+ * Install everything for a single agent.
+ */
+function installForAgent(agent: Agent, scope: string): void {
+  console.log(`${agent.name}:`)
+  installMCPConfig(agent, scope)
+  installInstructions(agent)
+  installHooks(agent)
 }
 
 /**
  * Initialize toon-memory for all detected agents (non-interactive).
- * 
+ *
  * Installs MCP server configs, creates memory directory, and
  * updates `.gitignore`.
- * 
- * @param scope - "local" (default) or "global" installation scope
- * 
- * @example
- * ```bash
- * npx toon-memory init          # Local install
- * npx toon-memory init global   # Global install
- * ```
  */
 function init(scope: string = "local"): void {
   console.log("\n🧠 toon-memory init\n")
-  
+
+  installMemoryDir()
+
   const agents = detectAgents()
-  
   for (const agent of agents) {
-    console.log(`${agent.name}:`)
-    
-    if (agent.name === "opencode") {
-      installOpenCodeTools()
-    }
-    
-    installMCPConfig(agent, scope)
+    installForAgent(agent, scope)
     console.log("")
   }
-  
+
   ensureGitignore()
-  
+
   console.log("Done! Restart your agent to use memory tools.\n")
 }
 
 /**
+ * Uninstall toon-memory from all detected agents.
+ *
+ * Removes MCP server configurations, instruction files, and hooks.
+ */
+function uninstall(): void {
+  console.log("\n🧠 toon-memory uninstaller\n")
+
+  const agents = detectAgents()
+
+  for (const agent of agents) {
+    // Remove MCP config from JSON files
+    if (agent.format === "json" || agent.format === "jsonc") {
+      const configs = [agent.global, agent.local].filter(Boolean) as string[]
+
+      for (const configPath of configs) {
+        if (!existsSync(configPath)) continue
+
+        try {
+          let config: Record<string, any>
+          if (agent.format === "jsonc") {
+            const raw = readFileSync(configPath, "utf-8")
+            const stripped = raw.replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "")
+            config = JSON.parse(stripped)
+          } else {
+            config = JSON.parse(readFileSync(configPath, "utf-8"))
+          }
+
+          const mcpKey = agent.mcpKey || "mcpServers"
+
+          if (config[mcpKey]?.["toon-memory"]) {
+            delete config[mcpKey]["toon-memory"]
+            writeFileSync(configPath, JSON.stringify(config, null, 2))
+            console.log(`  Removed MCP from ${agent.name} (${configPath})`)
+          }
+        } catch {}
+      }
+    }
+
+    // Remove TOML config
+    if (agent.format === "toml" && agent.local && existsSync(agent.local)) {
+      try {
+        let content = readFileSync(agent.local, "utf-8")
+        content = content.replace(/\[mcpServers\.toon-memory\][\s\S]*?(?=\n\[|$)/, "").trim() + "\n"
+        writeFileSync(agent.local, content)
+        console.log(`  Removed MCP from ${agent.name} (${agent.local})`)
+      } catch {}
+    }
+  }
+
+  // Remove instruction files
+  for (const agent of agents) {
+    if (agent.instructionFile && existsSync(agent.instructionFile)) {
+      try {
+        const content = readFileSync(agent.instructionFile, "utf-8")
+        // Only remove if it's purely toon-memory instructions
+        if (content.includes(INSTRUCTION_CONTENT.trim()) && content.length < INSTRUCTION_CONTENT.length + 100) {
+          unlinkSync(agent.instructionFile)
+          console.log(`  Removed ${agent.instructionFile}`)
+        }
+      } catch {}
+    }
+  }
+
+  // Remove hook scripts
+  const hookDir = join(projectRoot, ".toon-memory", "hooks")
+  if (existsSync(hookDir)) {
+    rmSync(hookDir, { recursive: true, force: true })
+    console.log("  Removed .toon-memory/hooks/")
+  }
+
+  // Remove legacy .opencode/tools/ if exists
+  const toolsFile = join(projectRoot, ".opencode", "tools", "memory.ts")
+  if (existsSync(toolsFile)) {
+    unlinkSync(toolsFile)
+    console.log("  Removed .opencode/tools/memory.ts")
+  }
+
+  console.log("\n✅ toon-memory uninstalled from all agents\n")
+}
+
+/**
  * Show toon-memory installation status.
- * 
+ *
  * Displays version, memory entry count, and agent configuration status.
- * 
- * @example
- * ```bash
- * npx toon-memory status
- * ```
  */
 function status(): void {
   console.log("\n🧠 toon-memory status\n")
-  
+
   // Check npm package
   try {
     const pkg = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8"))
@@ -310,9 +624,9 @@ function status(): void {
   } catch {
     console.log("Version: unknown")
   }
-  
+
   // Check memory file
-  const memoryFile = join(projectRoot, ".opencode", "memory", "data.toon")
+  const memoryFile = join(MEMORY_DIR, "data.toon")
   if (existsSync(memoryFile)) {
     const data = readFileSync(memoryFile, "utf-8")
     const lines = data.split("\n").filter((l: string) => l.startsWith("  ") && l.includes("|"))
@@ -320,54 +634,74 @@ function status(): void {
   } else {
     console.log("Memory: not initialized")
   }
-  
+
   // Check agent configs
   const agents = detectAgents()
   console.log("\nAgent configs:")
-  
+
   for (const agent of agents) {
-    const configs = [agent.global, agent.local].filter(Boolean) as string[]
-    let found = false
-    
-    for (const configPath of configs) {
-      if (!existsSync(configPath)) continue
-      
-      try {
-        const config = JSON.parse(readFileSync(configPath, "utf-8"))
-        const mcpKey = agent.mcpKey || "mcpServers"
-        
-        if (config[mcpKey]?.["toon-memory"]) {
-          console.log(`  ✅ ${agent.name} (${configPath})`)
-          found = true
-        }
-      } catch {}
+    let configured = false
+
+    // Check MCP config
+    if (agent.format === "json" || agent.format === "jsonc") {
+      const configs = [agent.global, agent.local].filter(Boolean) as string[]
+
+      for (const configPath of configs) {
+        if (!existsSync(configPath)) continue
+
+        try {
+          let config: Record<string, any>
+          if (agent.format === "jsonc") {
+            const raw = readFileSync(configPath, "utf-8")
+            const stripped = raw.replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "")
+            config = JSON.parse(stripped)
+          } else {
+            config = JSON.parse(readFileSync(configPath, "utf-8"))
+          }
+
+          if (config[agent.mcpKey]?.["toon-memory"]) {
+            configured = true
+          }
+        } catch {}
+      }
     }
-    
-    if (!found) {
-      console.log(`  ❌ ${agent.name} (not configured)`)
+
+    // Check TOML
+    if (agent.format === "toml" && agent.local && existsSync(agent.local)) {
+      const content = readFileSync(agent.local, "utf-8")
+      if (content.includes("toon-memory")) configured = true
+    }
+
+    // Check instructions
+    const hasInstructions = agent.instructionFile ? existsSync(agent.instructionFile) : false
+
+    // Check hooks
+    const hookPath = join(projectRoot, ".toon-memory", "hooks", `session-start-${agent.name}.sh`)
+    const hasHooks = existsSync(hookPath)
+
+    if (agent.format === "none") {
+      console.log(`  ${hasInstructions ? "✅" : "❌"} ${agent.name} (instructions only)`)
+    } else {
+      const mcpStatus = configured ? "✅" : "❌"
+      const instrStatus = agent.needsInstructions ? (hasInstructions ? " 📝" : "") : ""
+      const hookStatus = agent.needsHooks ? (hasHooks ? " 🪝" : "") : ""
+      console.log(`  ${mcpStatus} ${agent.name}${instrStatus}${hookStatus}`)
     }
   }
-  
+
   console.log("")
 }
 
 /**
  * Upgrade toon-memory to the latest version.
- * 
- * Checks npm registry for updates and installs if available.
- * 
- * @example
- * ```bash
- * npx toon-memory upgrade
- * ```
  */
 function upgrade(): void {
   console.log("\n🧠 toon-memory upgrade\n")
-  
+
   try {
     const pkg = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8"))
     const currentVersion = pkg.version
-    
+
     console.log(`Current version: ${currentVersion}`)
     console.log("\nTo upgrade, run:")
     console.log("  npm install -g toon-memory@latest")
@@ -381,30 +715,23 @@ function upgrade(): void {
 
 /**
  * Display memory statistics.
- * 
- * Shows entry counts by category, last update date, and file size.
- * 
- * @example
- * ```bash
- * npx toon-memory stats
- * ```
  */
 function stats(): void {
   console.log("\n🧠 toon-memory stats\n")
-  
-  const memoryFile = join(projectRoot, ".opencode", "memory", "data.toon")
-  
+
+  const memoryFile = join(MEMORY_DIR, "data.toon")
+
   if (!existsSync(memoryFile)) {
     console.log("Memory not initialized. Run 'npx toon-memory init' first.\n")
     return
   }
-  
+
   const data = readFileSync(memoryFile, "utf-8")
   const lines = data.split("\n").filter((l: string) => l.startsWith("  ") && l.includes("|"))
-  
+
   const categories: Record<string, number> = {}
   let latestDate = ""
-  
+
   for (const line of lines) {
     const parts = line.trim().split("|")
     if (parts.length >= 7) {
@@ -414,17 +741,17 @@ function stats(): void {
       if (date > latestDate) latestDate = date
     }
   }
-  
+
   console.log("📊 Memory Stats")
   console.log("━".repeat(20))
   console.log(`Total entries: ${lines.length}`)
-  
+
   for (const [cat, count] of Object.entries(categories)) {
     console.log(`├── ${cat}: ${count}`)
   }
-  
+
   console.log(`Last updated: ${latestDate || "never"}`)
-  
+
   const fileSize = Buffer.byteLength(data, "utf-8")
   console.log(`File size: ${(fileSize / 1024).toFixed(1)} KB`)
   console.log("")
@@ -432,28 +759,20 @@ function stats(): void {
 
 /**
  * Export memory to JSON format.
- * 
- * Creates a `toon-memory-export.json` file with all entries
- * for backup or transfer to another project.
- * 
- * @example
- * ```bash
- * npx toon-memory export
- * ```
  */
 function exportMemory(): void {
   console.log("\n🧠 toon-memory export\n")
-  
-  const memoryFile = join(projectRoot, ".opencode", "memory", "data.toon")
-  
+
+  const memoryFile = join(MEMORY_DIR, "data.toon")
+
   if (!existsSync(memoryFile)) {
     console.log("Memory not initialized. Run 'npx toon-memory init' first.\n")
     return
   }
-  
+
   const data = readFileSync(memoryFile, "utf-8")
   const lines = data.split("\n").filter((l: string) => l.startsWith("  ") && l.includes("|"))
-  
+
   const entries = lines.map((line: string) => {
     const parts = line.trim().split("|")
     return {
@@ -466,51 +785,41 @@ function exportMemory(): void {
       date: parts[6]
     }
   })
-  
+
   const exportData = {
     project: basename(projectRoot),
     exported_at: new Date().toISOString(),
     entries,
     summaries: {}
   }
-  
+
   const outputPath = join(projectRoot, "toon-memory-export.json")
   writeFileSync(outputPath, JSON.stringify(exportData, null, 2))
-  
+
   console.log(`Exported ${entries.length} entries to:`)
   console.log(`  ${outputPath}\n`)
 }
 
 /**
  * Import memory from JSON file.
- * 
- * Imports entries from a JSON export, skipping duplicates based on key.
- * 
- * @param file - Path to JSON file (relative or absolute)
- * 
- * @example
- * ```bash
- * npx toon-memory import toon-memory-export.json
- * ```
  */
 function importMemory(): void {
   console.log("\n🧠 toon-memory import\n")
-  
+
   const importFile = process.argv[3]
-  
+
   if (!importFile) {
     console.log("Usage: npx toon-memory import <file.json>\n")
     return
   }
-  
-  // Use absolute path if provided, otherwise resolve relative to project root
+
   const importPath = importFile.startsWith("/") ? importFile : join(projectRoot, importFile)
-  
+
   if (!existsSync(importPath)) {
     console.log(`File not found: ${importPath}\n`)
     return
   }
-  
+
   let importData: any
   try {
     importData = JSON.parse(readFileSync(importPath, "utf-8"))
@@ -518,17 +827,16 @@ function importMemory(): void {
     console.log("Invalid JSON file\n")
     return
   }
-  
+
   if (!importData.entries || !Array.isArray(importData.entries)) {
     console.log("Invalid format: missing 'entries' array\n")
     return
   }
-  
-  const memoryDir = join(projectRoot, ".opencode", "memory")
-  const memoryFile = join(memoryDir, "data.toon")
-  
-  if (!existsSync(memoryDir)) mkdirSync(memoryDir, { recursive: true })
-  
+
+  const memoryFile = join(MEMORY_DIR, "data.toon")
+
+  if (!existsSync(MEMORY_DIR)) mkdirSync(MEMORY_DIR, { recursive: true })
+
   let existingKeys: string[] = []
   if (existsSync(memoryFile)) {
     const existing = readFileSync(memoryFile, "utf-8")
@@ -536,45 +844,42 @@ function importMemory(): void {
       .filter((l: string) => l.startsWith("  ") && l.includes("|"))
       .map((l: string) => l.trim().split("|")[2])
   }
-  
+
   const newEntries = importData.entries.filter((e: any) => !existingKeys.includes(e.key))
-  
+
   if (newEntries.length === 0) {
     console.log("No new entries to import (all keys already exist)\n")
     return
   }
-  
+
   const newLines = newEntries.map((e: any) => {
     const tags = Array.isArray(e.tags) ? e.tags.join(";") : (e.tags || "")
     return `  ${e.id}|${e.category}|${e.key}|${e.content}|${e.file}|${tags}|${e.date}`
   }).join("\n")
-  
+
   if (existsSync(memoryFile)) {
     const existing = readFileSync(memoryFile, "utf-8")
+    const existingCount = existing.split("\n")
+      .filter((l: string) => l.startsWith("  ") && l.includes("|")).length
     const updated = existing.replace(
       /entries\[\d+\|]/,
-      `entries[${newEntries.length}|]`
+      `entries[${existingCount + newEntries.length}|]`
     ) + "\n" + newLines
     writeFileSync(memoryFile, updated)
   } else {
     writeFileSync(memoryFile, `version: 1\nentries[${newEntries.length}|]{id|category|key|content|file|tags|date}:\n${newLines}\n`)
   }
-  
+
   console.log(`Imported ${newEntries.length} new entries`)
   console.log(`Skipped ${importData.entries.length - newEntries.length} duplicates\n`)
 }
 
 /** Watch mode options */
 interface WatchOptions {
-  /** Backup interval in minutes (default: 5) */
   interval: number
-  /** Maximum number of backups to keep (0 = unlimited) */
   maxBackups: number
-  /** Enable gzip compression for backups */
   compress: boolean
-  /** Enable file logging */
   logFile: boolean
-  /** Log file path */
   logPath: string
 }
 
@@ -587,21 +892,21 @@ function parseWatchOptions(args: string[]): WatchOptions {
     logFile: false,
     logPath: ""
   }
-  
+
   for (let i = 1; i < args.length; i++) {
     const arg = args[i]
     if (arg === "--compress" || arg === "-c") {
       opts.compress = true
     } else if (arg === "--log" || arg === "-l") {
       opts.logFile = true
-      opts.logPath = args[++i] || join(projectRoot, ".opencode", "memory", "watch.log")
+      opts.logPath = args[++i] || join(MEMORY_DIR, "watch.log")
     } else if (arg === "--max-backups" || arg === "-m") {
       opts.maxBackups = parseInt(args[++i]) || 10
     } else if (!arg.startsWith("-")) {
       opts.interval = parseInt(arg) || 5
     }
   }
-  
+
   return opts
 }
 
@@ -616,7 +921,7 @@ function writeWatchLog(logPath: string, message: string): void {
 /** Get list of backup files sorted by creation time (oldest first) */
 function getBackupFiles(backupDir: string): string[] {
   if (!existsSync(backupDir)) return []
-  
+
   return readdirSync(backupDir)
     .filter(f => f.startsWith("backup-") && (f.endsWith(".toon") || f.endsWith(".gz")))
     .map(f => join(backupDir, f))
@@ -626,16 +931,16 @@ function getBackupFiles(backupDir: string): string[] {
 /** Remove oldest backups if we exceed maxBackups */
 function pruneBackups(backupDir: string, maxBackups: number): number {
   if (maxBackups <= 0) return 0
-  
+
   const files = getBackupFiles(backupDir)
   const excess = files.length - maxBackups
-  
+
   if (excess <= 0) return 0
-  
+
   for (let i = 0; i < excess; i++) {
     unlinkSync(files[i])
   }
-  
+
   return excess
 }
 
@@ -651,72 +956,62 @@ function decompressData(data: Buffer): string {
 
 /**
  * Watch mode - backup memory every N minutes
- * 
- * @example
- * ```bash
- * npx toon-memory watch          # Default: 5 min interval, 10 max backups
- * npx toon-memory watch 10       # 10 minute interval
- * npx toon-memory watch -c       # Enable compression
- * npx toon-memory watch -l       # Enable file logging
- * npx toon-memory watch -m 20    # Keep max 20 backups
- * npx toon-memory watch 15 -c -l -m 5  # All options
- * ```
  */
 function watch(): void {
   console.log("\n🧠 toon-memory watch\n")
-  
-  const memoryFile = join(projectRoot, ".opencode", "memory", "data.toon")
-  const backupDir = join(projectRoot, ".opencode", "memory", "backups")
-  
+
+  const memoryFile = join(MEMORY_DIR, "data.toon")
+  const backupDir = join(MEMORY_DIR, "backups")
+
   if (!existsSync(memoryFile)) {
     console.log("Memory not initialized. Run 'npx toon-memory init' first.\n")
     return
   }
-  
+
   if (!existsSync(backupDir)) mkdirSync(backupDir, { recursive: true })
-  
+
   const opts = parseWatchOptions(args)
-  
+
   if (opts.logFile) {
     const logDir = dirname(opts.logPath)
     if (!existsSync(logDir)) mkdirSync(logDir, { recursive: true })
   }
-  
+
   console.log(`Watching memory file every ${opts.interval} minutes...`)
   console.log(`Max backups: ${opts.maxBackups === 0 ? "unlimited" : opts.maxBackups}`)
   console.log(`Compression: ${opts.compress ? "enabled" : "disabled"}`)
   console.log(`Logging: ${opts.logFile ? `enabled (${opts.logPath})` : "disabled"}`)
   console.log(`Press Ctrl+C to stop\n`)
-  
+
   let lastContent = readFileSync(memoryFile, "utf-8")
   let lastHash = hashContent(lastContent)
   let backupCount = 0
-  
+
   if (opts.logFile) writeWatchLog(opts.logPath, "Watch started")
-  
+
   const backup = () => {
     try {
       const currentContent = readFileSync(memoryFile, "utf-8")
       const currentHash = hashContent(currentContent)
-      
+
       if (currentHash !== lastHash) {
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
         const ext = opts.compress ? ".toon.gz" : ".toon"
         const backupFile = join(backupDir, `backup-${timestamp}${ext}`)
-        
+
         if (opts.compress) {
           writeFileSync(backupFile, compressData(currentContent))
         } else {
           writeFileSync(backupFile, currentContent)
         }
-        
+
         backupCount++
         console.log(`📦 Backup #${backupCount} created: ${timestamp}`)
         if (opts.logFile) writeWatchLog(opts.logPath, `Backup #${backupCount}: ${timestamp}`)
-        
+
         lastContent = currentContent
         lastHash = currentHash
-        
+
         const pruned = pruneBackups(backupDir, opts.maxBackups)
         if (pruned > 0) {
           console.log(`🗑️  Pruned ${pruned} old backup(s)`)
@@ -729,7 +1024,7 @@ function watch(): void {
       if (opts.logFile) writeWatchLog(opts.logPath, msg)
     }
   }
-  
+
   /** Simple hash for change detection (not cryptographic) */
   function hashContent(content: string): string {
     let hash = 0
@@ -740,21 +1035,17 @@ function watch(): void {
     }
     return hash.toString(36)
   }
-  
-  // Initial backup
+
   backup()
-  
-  // Set interval
   const interval = setInterval(backup, opts.interval * 60 * 1000)
-  
-  // Handle Ctrl+C
+
   process.on("SIGINT", () => {
     clearInterval(interval)
     console.log(`\n✅ Watch stopped. ${backupCount} backups created.\n`)
     if (opts.logFile) writeWatchLog(opts.logPath, `Watch stopped. ${backupCount} backups created.`)
     process.exit(0)
   })
-  
+
   process.on("SIGTERM", () => {
     clearInterval(interval)
     process.exit(0)
@@ -804,32 +1095,56 @@ if (args[0] === "watch") {
   process.exit(0)
 }
 
+// Interactive installer
 const agents = detectAgents()
 console.log("\n🧠 toon-memory installer\n")
 
-console.log("Supported agents:")
-agents.forEach((a: Agent, i: number) => console.log(`  ${i + 1}. ${a.name}`))
+console.log("Available agents:")
+agents.forEach((a: Agent, i: number) => {
+  const hasConfig = a.format !== "none" && ((a.local && existsSync(a.local)) || (a.global && existsSync(a.global)))
+  const indicator = hasConfig ? "✓" : "·"
+  console.log(`  ${indicator} ${i + 1}. ${a.name}`)
+})
 console.log("")
 
 const rl = createInterface({ input: process.stdin, output: process.stdout })
-rl.question("Install (1) Local or (2) Global? [1/2]: ", (answer: string) => {
-  const scope = answer === "2" ? "global" : "local"
-  console.log(`\nInstalling ${scope}ly...\n`)
-  
-  for (const agent of agents) {
-    console.log(`${agent.name}:`)
-    
-    if (agent.name === "opencode") {
-      installOpenCodeTools()
-    }
-    
-    installMCPConfig(agent, scope)
-    console.log("")
+
+rl.question("Select agents (numbers separated by commas, 'all', or Enter for all): ", (answer: string) => {
+  let selected: Agent[]
+
+  const trimmed = answer.trim().toLowerCase()
+  if (trimmed === "all" || trimmed === "") {
+    selected = agents
+  } else if (trimmed === "none") {
+    selected = []
+  } else {
+    const indices = trimmed.split(",").map(s => parseInt(s.trim(), 10) - 1).filter(i => i >= 0 && i < agents.length)
+    selected = indices.map(i => agents[i])
   }
-  
-  ensureGitignore()
-  
-  console.log("Done! Restart your agent to use memory tools.")
-  console.log("Run 'npx toon-memory uninstall' to remove.\n")
-  rl.close()
+
+  if (selected.length === 0) {
+    console.log("\nNo agents selected. Nothing installed.\n")
+    rl.close()
+    return
+  }
+
+  console.log(`\nSelected: ${selected.map(a => a.name).join(", ")}\n`)
+
+  rl.question("Installation scope — (1) Local or (2) Global? [1/2]: ", (scopeAnswer: string) => {
+    const scope = scopeAnswer === "2" ? "global" : "local"
+    console.log(`\nInstalling ${scope}ly...\n`)
+
+    installMemoryDir()
+
+    for (const agent of selected) {
+      installForAgent(agent, scope)
+      console.log("")
+    }
+
+    ensureGitignore()
+
+    console.log("Done! Restart your agent to use memory tools.")
+    console.log("Run 'npx toon-memory uninstall' to remove.\n")
+    rl.close()
+  })
 })
