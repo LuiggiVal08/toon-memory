@@ -59,7 +59,8 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 
 ## Features
 
-- **8 MCP tools** — Full memory management via Model Context Protocol
+- **11 MCP tools** — Full memory management via Model Context Protocol
+- **MCP Resources** — Read memory as context without tool invocations
 - **15 agents supported** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Interactive installer** — Select which agents to configure from a menu
 - **SessionStart hooks** — Auto-reminders for Claude Code, Codex CLI, Gemini CLI, Antigravity
@@ -68,9 +69,13 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 - **Zero config** — Just install and use
 - **Auto gitignore** — Automatically adds `.toon-memory/memory/` to `.gitignore`
 - **Date filtering** — Search memory by date range
-- **Auto-archive** — Old entries (>30 days) or 100+ entries moved to archive automatically
+- **Auto-archive** — Old entries (>30 days), expired TTL entries, or 100+ entries moved to archive automatically
 - **Encryption** — AES-256-GCM encryption for sensitive data
 - **Watch mode** — Auto-backup every N minutes
+- **Memory TTL** — Configurable per-entry expiration (7d, 30d, or exact dates)
+- **Tag inference** — Auto-detect tags from content when tags are empty
+- **Memory diff** — See what changed since your last session
+- **Related entries** — Auto-suggest related memories when saving
 
 ---
 
@@ -145,14 +150,26 @@ memory_remember   # Save important decisions
 
 | Tool | Description |
 |------|-------------|
-| `memory_remember` | Save a decision, pattern, bug, or knowledge |
-| `memory_recall` | Search memory (use BEFORE reading files) |
+| `memory_remember` | Save a decision, pattern, bug, or knowledge (with optional TTL and auto-tag inference) |
+| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL entries) |
 | `memory_forget` | Remove an entry by key or id |
-| `memory_stats` | View memory state |
+| `memory_stats` | View memory state (including TTL stats) |
 | `memory_summary` | Save/retrieve file summaries |
-| `memory_archive` | Archive old entries (>30 days) |
+| `memory_archive` | Archive old entries (>30 days) and expired TTL entries |
+| `memory_diff` | Show changes since a date (24h, 7d, or exact date) |
+| `memory_suggest` | Find related entries for a given context |
 | `memory_encrypt` | Enable AES-256-GCM encryption |
 | `memory_decrypt` | Disable encryption |
+
+### MCP Resources
+
+Memory is also exposed as MCP resources for direct context reading:
+
+| Resource | URI | Description |
+|----------|-----|-------------|
+| Memory Entries | `toon://memory/entries` | Full memory dump |
+| Memory Stats | `toon://memory/stats` | Category counts and TTL info |
+| Memory Summaries | `toon://memory/summaries` | File summaries
 
 ### Examples
 
@@ -167,9 +184,41 @@ memory_remember({
   tags: "validation;types"
 })
 // 🧠 Guardado: decision/use-zod (a1b2c3d4)
+// 🔗 Entradas relacionadas:
+//   [pattern] zod-schemas — Shared Zod schemas for API validation
 ```
 
 > **Tip:** Use descriptive keys like `use-zod` instead of vague ones like `validation`. Your agent searches by key and content, so specificity helps.
+
+#### Remember with TTL
+
+```typescript
+memory_remember({
+  category: "knowledge",
+  key: "sprint-deadline",
+  content: "Sprint ends July 18, feature freeze is July 16",
+  ttl: "7d"
+})
+// 🧠 Guardado: knowledge/sprint-deadline (x1y2z3w4)
+// ⏰ TTL: 2026-07-19
+```
+
+> **Tip:** Use TTL for temporary context like deadlines, sprint info, or time-sensitive notes. Entries with expired TTL are automatically filtered from search results.
+
+#### Auto-inferred tags
+
+```typescript
+memory_remember({
+  category: "bug",
+  key: "redis-connection-timeout",
+  content: "Redis connection timeout in production, increased pool size"
+  // tags left empty — auto-inferred from content
+})
+// 🧠 Guardado: bug/redis-connection-timeout (a1b2c3d4)
+// 🏷️ Tags inferidos: redis
+```
+
+> **Tip:** Leave `tags` empty and the system will infer them from your content using a vocabulary of 20+ categories (redis, auth, api, db, security, etc.).
 
 #### Search memory
 
@@ -202,7 +251,39 @@ memory_archive()
 // 📋 Quedan 42 entradas activas
 ```
 
-> **Tip:** Run this periodically to keep memory lean. Archived entries are still searchable via `memory_recall` with date filters.
+> **Tip:** Run this periodically to keep memory lean. Archived entries are still searchable via `memory_recall` with date filters. Entries with expired TTL are also archived automatically.
+
+#### Show changes since last session
+
+```typescript
+memory_diff({ since: "24h" })
+// 📋 Cambios desde 2026-07-11:
+//
+// ➕ Nuevas (2):
+//   [decision] use-zod (a1b2c3d4)
+//     Use Zod for validation
+//   [bug] redis-timeout (e5f6g7h8)
+//     Redis connection timeout fix
+```
+
+> **Tip:** Use `memory_diff` at the start of a session to see what your agent learned since you last worked on the project.
+
+#### Find related entries
+
+```typescript
+memory_suggest({ context: "redis cache configuration" })
+// 🔍 Sugerencias para "redis cache configuration":
+//
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+//
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Added max_connections=20
+//   File: redis.ts | Tags: redis;fix | Date: 2026-07-10
+```
+
+> **Tip:** Use `memory_suggest` when you need context about a topic but aren't sure what to search for.
 
 #### Enable encryption
 
@@ -487,10 +568,10 @@ Add to `~/.config/zed/settings.json`:
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date}:
-  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10
-  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10
-  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10|
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10|
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d
 summaries:
   src/services/redis.ts: Redis connection pool with retry logic
 ```
@@ -622,7 +703,7 @@ toon-memory/
 │   │   ├── setup.ts             # CLI commands
 │   │   └── toon-memory.ts       # CLI runner
 │   ├── mcp/
-│   │   └── server.ts            # MCP server (8 tools)
+│   │   └── server.ts            # MCP server (11 tools + 3 resources)
 │   └── memory.ts                # Custom tool (OpenCode)
 ├── tests/
 │   ├── cli.test.ts              # CLI tests

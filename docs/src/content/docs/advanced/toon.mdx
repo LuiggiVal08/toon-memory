@@ -19,10 +19,10 @@ TOON (Token-Oriented Object Notation) is a data format designed for LLMs. It use
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date}:
-  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10
-  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10
-  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10|
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10|
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d
 summaries:
   src/services/redis.ts: Redis connection pool with retry logic
 ```
@@ -34,7 +34,21 @@ summaries:
 | `version: 1` | Format version |
 | `entries[N\|]{fields}:` | Header with count and field names |
 | `id\|category\|key\|...` | Pipe-separated values |
+| `ttl` | Optional time-to-live (empty = no expiration) |
 | `summaries:` | Optional file summaries |
+
+## Entry Fields
+
+| Field | Required | Description | Example |
+|-------|----------|-------------|---------|
+| `id` | Yes | 8-char hex ID | `a1b2c3d4` |
+| `category` | Yes | `decision`, `pattern`, `bug`, `knowledge` | `decision` |
+| `key` | Yes | Kebab-case title | `use-zod` |
+| `content` | Yes | Detailed description | `Use Zod for validation` |
+| `file` | No | Related file path | `src/types.ts` |
+| `tags` | No | Semicolon-separated tags | `validation;types` |
+| `date` | Yes | YYYY-MM-DD | `2026-07-10` |
+| `ttl` | No | Expiration: `7d`, `30d`, or `2026-12-31` | `7d` |
 
 ## Benefits
 

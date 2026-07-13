@@ -6,17 +6,19 @@ description: How toon-memory organizes files
 ## Project Structure
 
 ```
-.opencode/
+.toon-memory/
 ├── memory/
 │   ├── data.toon        # Main memory file
-│   ├── archive.toon     # Archived entries (>30 days)
+│   ├── archive.toon     # Archived entries (>30 days or expired TTL)
 │   ├── config.json      # Encryption settings
 │   └── backups/         # Watch mode backups
 │       ├── backup-2026-07-11T16-00-00-000Z.toon
 │       └── backup-2026-07-11T16-10-00-000Z.toon
-├── opencode.json        # MCP server config
-└── tools/
-    └── memory.ts        # Custom tool (OpenCode only)
+└── hooks/
+    ├── session-start-claude.sh
+    ├── session-start-codex.sh
+    ├── session-start-gemini.sh
+    └── session-start-antigravity.sh
 ```
 
 ## File Descriptions
@@ -27,15 +29,15 @@ The main memory file containing all active entries:
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date}:
-  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10
-  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10
-  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10|
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10|
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d
 ```
 
 ### archive.toon
 
-Contains entries older than 30 days:
+Contains entries older than 30 days or with expired TTL:
 
 ```
 version: 1
@@ -49,8 +51,7 @@ Encryption configuration (only exists when encryption is enabled):
 
 ```json
 {
-  "encrypted": true,
-  "key": "a1b2c3d4e5f6..."
+  "encrypted": true
 }
 ```
 
@@ -67,4 +68,4 @@ backups/
 
 ## Git Ignore
 
-toon-memory automatically adds `.opencode/memory/` to `.gitignore` to prevent committing sensitive data.
+toon-memory automatically adds `.toon-memory/memory/` to `.gitignore` to prevent committing sensitive data.

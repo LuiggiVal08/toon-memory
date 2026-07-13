@@ -1,11 +1,11 @@
 ---
 title: Auto-Archive
-description: Automatically archive old entries
+description: Automatically archive old and expired entries
 ---
 
 ## Overview
 
-toon-memory automatically archives entries older than 30 days to keep your memory clean.
+toon-memory automatically archives entries older than 30 days or with expired TTL to keep your memory clean.
 
 ## Manual Archive
 
@@ -18,16 +18,33 @@ memory_archive()
 ## How It Works
 
 1. Entries older than 30 days are moved to `archive.toon`
-2. Active memory stays under 100 entries
-3. Archived entries are preserved for history
-4. Can be triggered manually or automatically
+2. Entries with expired TTL are also archived
+3. Active memory stays under 100 entries
+4. Archived entries are preserved for history
+5. Can be triggered manually or automatically
+
+## TTL-based Archiving
+
+Entries with a `ttl` field are archived when the TTL expires, regardless of the 30-day rule:
+
+```
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|permanent|This stays forever|file.ts||2026-07-10|
+  e5f6g7h8|knowledge|sprint-info|Sprint ends Friday|file.ts||2026-07-10|7d
+  i9j0k1l2|bug|temp-fix|Temporary workaround|file.ts||2026-07-10|2026-07-15
+```
+
+In this example:
+- `permanent` — no TTL, never expires by TTL
+- `sprint-info` — expires 7 days after creation
+- `temp-fix` — expires on a specific date
 
 ## File Structure
 
 ```
-.opencode/memory/
-├── data.toon        # Active memory (< 30 days)
-└── archive.toon     # Archived entries (> 30 days)
+.toon-memory/memory/
+├── data.toon        # Active memory (< 30 days, no expired TTL)
+└── archive.toon     # Archived entries (> 30 days or expired TTL)
 ```
 
 ## Archive Format
@@ -52,3 +69,4 @@ archived[5|]{id|category|key|content|file|tags|date}:
 - **Keep memory clean** — Prevent unlimited growth
 - **Historical reference** — Old decisions still accessible
 - **Performance** — Faster searches with fewer entries
+- **Temporary context** — TTL handles deadlines, sprints, time-sensitive notes
