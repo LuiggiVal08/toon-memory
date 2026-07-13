@@ -279,4 +279,69 @@ describe("Memory Operations", () => {
     expect(inferTags("Redis auth token cache", "session-cache")).toBe("redis;auth")
     expect(inferTags("Random unrelated content", "foo-bar")).toBe("")
   })
+
+  it("should parse relative dates correctly", () => {
+    function parseRelativeDate(since: string): string {
+      const trimmed = since.trim()
+      const hourMatch = trimmed.match(/^(\d+)h$/)
+      if (hourMatch) {
+        const d = new Date()
+        d.setHours(d.getHours() - parseInt(hourMatch[1]))
+        return d.toISOString().split("T")[0]
+      }
+      const dayMatch = trimmed.match(/^(\d+)d$/)
+      if (dayMatch) {
+        const d = new Date()
+        d.setDate(d.getDate() - parseInt(dayMatch[1]))
+        return d.toISOString().split("T")[0]
+      }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed
+      return new Date().toISOString().split("T")[0]
+    }
+
+    const today = new Date().toISOString().split("T")[0]
+    expect(parseRelativeDate("2026-07-10")).toBe("2026-07-10")
+    expect(parseRelativeDate("1d")).toBe(new Date(Date.now() - 86400000).toISOString().split("T")[0])
+    expect(parseRelativeDate("7d")).toBe(new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0])
+    expect(parseRelativeDate("24h")).toBe(new Date(Date.now() - 24 * 3600000).toISOString().split("T")[0])
+    expect(parseRelativeDate("invalid")).toBe(today)
+  })
+
+  it("should filter entries by date range for diff", () => {
+    const today = new Date().toISOString().split("T")[0]
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0]
+    const oldDate = "2025-01-01"
+
+    const entries = [
+      `  diff00001|decision|new-today|Created today|file.ts|tag|${today}|`,
+      `  diff00002|pattern|from-yesterday|From yesterday|file.ts|tag|${yesterday}|`,
+      `  diff00003|bug|very-old|Very old entry|file.ts|tag|${oldDate}|`,
+    ]
+
+    const data = readFileSync(memoryFile, "utf-8")
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries["))
+    lines.splice(headerIdx + 1, 0, ...entries)
+    lines[headerIdx] = "entries[3|]{id|category|key|content|file|tags|date|ttl}:"
+    writeFileSync(memoryFile, lines.join("\n"))
+
+    const updatedData = readFileSync(memoryFile, "utf-8")
+    const entryLines = updatedData.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
+
+    const sinceDate = yesterday
+    const results = entryLines
+      .map((line) => {
+        const parts = line.trim().split("|")
+        if (parts.length < 7) return null
+        const date = parts[6]
+        if (date < sinceDate) return null
+        return { key: parts[2], date }
+      })
+      .filter(Boolean)
+
+    expect(results).toHaveLength(2)
+    expect(results.map((r) => r!.key)).toContain("new-today")
+    expect(results.map((r) => r!.key)).toContain("from-yesterday")
+    expect(results.map((r) => r!.key)).not.toContain("very-old")
+  })
 })
