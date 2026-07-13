@@ -1,41 +1,16 @@
 ---
-const features = [
-  {
-    icon: '🧩',
-    title: '10 MCP Tools + 3 Resources',
-    body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, encrypt, decrypt. Plus resources for direct context reading.',
-    tags: ['remember', 'recall', 'diff', 'suggest'],
-  },
-  {
-    icon: '⭐',
-    title: 'Multi-Agent',
-    body: 'Works with all major AI coding agents. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue — zero configuration.',
-    tags: ['OpenCode', 'Claude', 'Cursor'],
-  },
-  {
-    icon: '📄',
-    title: 'TOON Format',
-    body: '22% fewer tokens than JSON (measured). Custom encoding designed for LLM comprehension and token efficiency.',
-    stats: ['22% less tokens', '1.4x faster parse'],
-  },
-  {
-    icon: '🧠',
-    title: 'Smart Memory',
-    body: 'Auto-tag inference, related entry suggestions, memory diff, and configurable TTL for temporary context.',
-    stats: ['Auto-tags', 'TTL', 'Diff'],
-  },
-  {
-    icon: '🔒',
-    title: 'Encryption',
-    body: 'AES-256-GCM for sensitive data. Auto-archive old entries. Watch mode for automatic backup every N minutes.',
-    stats: ['AES-256-GCM', 'Auto-backup'],
-  },
-];
+import { getContent } from '../i18n';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
 ---
 
 <div class="feature-cards">
   {
-    features.map((f) => (
+    c.features.cards.map((f) => (
       <div class="card">
         <div class="card-icon">{f.icon}</div>
         <h3>{f.title}</h3>

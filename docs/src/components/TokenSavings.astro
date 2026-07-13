@@ -1,25 +1,25 @@
 ---
-const bars = [
-  { label: 'JSON', pct: 100, cls: 'bar-json' },
-  { label: 'TOON', pct: 78, cls: 'bar-toon' },
-];
+import { getContent } from '../i18n';
 
-const stats = [
-  { num: '22%', cap: 'fewer tokens than JSON' },
-  { num: '1.4x', cap: 'faster to parse' },
-  { num: '0', cap: 'config needed' },
-];
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
 ---
 
 <section class="content-section savings-section">
   <div class="section-header">
-    <h2>22% fewer tokens, by design</h2>
-    <p>The TOON format is built for LLMs, not for humans</p>
+    <h2>{c.tokenSavings.title}</h2>
+    <p>{c.tokenSavings.subtitle}</p>
   </div>
 
   <div class="savings-bars">
     {
-      bars.map((b) => (
+      [
+        { label: 'JSON', pct: 100, cls: 'bar-json' },
+        { label: 'TOON', pct: 78, cls: 'bar-toon' },
+      ].map((b) => (
         <div class="savings-bar">
           <span class="savings-label">{b.label}</span>
           <div class="bar-track">
@@ -32,7 +32,7 @@ const stats = [
 
   <div class="savings-stats">
     {
-      stats.map((s) => (
+      c.tokenSavings.stats.map((s) => (
         <div class="savings-stat">
           <span class="savings-num">{s.num}</span>
           <span class="savings-cap">{s.cap}</span>
@@ -41,7 +41,5 @@ const stats = [
     }
   </div>
 
-  <p class="savings-note">
-    TOON encodes memory entries in a compact, token-efficient structure designed for LLM comprehension — so your agent spends tokens on reasoning, not on parsing verbose JSON.
-  </p>
+  <p class="savings-note">{c.tokenSavings.note}</p>
 </section>

@@ -1,47 +1,21 @@
 ---
-const exampleCode = `// Save a decision (with auto-tag inference)
-memory_remember({
-  category: "decision",
-  key: "use-zod",
-  content: "Use Zod for validation",
-  file: "src/types.ts"
-})
-// 🏷️ Tags inferidos: types
+import { getContent } from '../i18n';
 
-// Save with TTL (expires in 7 days)
-memory_remember({
-  category: "knowledge",
-  key: "sprint-deadline",
-  content: "Sprint ends July 18",
-  ttl: "7d"
-})
-
-// See what changed since last session
-memory_diff({ since: "24h" })
-
-// Search memory
-memory_recall({ query: "redis" })
-// [bug] redis-pool-fix (i9j0k1l2)
-//   Added max_connections=20`;
-
-const installCode = `# npm
-npm install -g toon-memory
-
-# macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
-
-# Windows (PowerShell)
-irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex`;
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
 ---
 
 <section class="content-section">
   <div class="section-header">
-    <h2>Quick Example</h2>
+    <h2>{c.codeExamples.quickExample}</h2>
   </div>
-  <pre><code set:html={exampleCode}></code></pre>
+  <pre><code set:html={c.codeExamples.exampleCode}></code></pre>
 
   <div class="section-header">
-    <h2>Quick Install</h2>
+    <h2>{c.codeExamples.quickInstall}</h2>
   </div>
-  <pre><code set:html={installCode}></code></pre>
+  <pre><code set:html={c.codeExamples.installCode}></code></pre>
 </section>

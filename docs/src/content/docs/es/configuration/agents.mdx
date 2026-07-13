@@ -1,0 +1,35 @@
+---
+title: Agentes compatibles
+description: Agentes soportados por toon-memory
+---
+
+## Agentes compatibles
+
+| Agente | Ubicación de config | Auto-config |
+|-------|-----------------|------------|
+| **OpenCode** | `.opencode/opencode.json` | ✅ |
+| **VS Code / Copilot** | `.vscode/mcp.json` | ✅ |
+| **Claude Code** | `.claude/settings.json` | ✅ |
+| **Cursor** | `.cursor/mcp.json` | ✅ |
+| **Windsurf** | `.windsurfrules` | ✅ |
+| **Cline** | `.cline/mcp.json` | ✅ |
+| **Continue** | `.continue/config.json` | ✅ |
+| **Aider** | `.aider.conf.yml` | ⚠️ Manual |
+
+## Auto-configuración
+
+Ejecuta el instalador interactivo:
+
+```bash
+npx toon-memory
+```
+
+Esto:
+1. Detecta los agentes instalados
+2. Configura el servidor MCP para cada uno
+3. Crea el directorio de memoria
+4. Lo agrega a `.gitignore`
+
+## Configuración manual
+
+Ver [Configuración manual](/toon-memory/es/configuration/manual) para instrucciones específicas por agente.

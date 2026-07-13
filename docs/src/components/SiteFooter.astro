@@ -1,7 +1,14 @@
 ---
 import logoSrc from '../assets/logo.svg';
+import { getContent } from '../i18n';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
 ---
 
 <footer class="site-footer">
-  <p>MIT License — <a href="https://github.com/LuiggiVal08/toon-memory">toon-memory</a></p>
+  <p>{c.footer.text}<a href="https://github.com/LuiggiVal08/toon-memory">toon-memory</a></p>
 </footer>

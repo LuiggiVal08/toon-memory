@@ -1,0 +1,72 @@
+---
+title: Auto-archivado
+description: Archiva automáticamente entradas antiguas y expiradas
+---
+
+## Resumen
+
+toon-memory archiva automáticamente las entradas con más de 30 días o con TTL expirado para mantener tu memoria limpia.
+
+## Archivado manual
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+## Cómo funciona
+
+1. Las entradas con más de 30 días se mueven a `archive.toon`
+2. Las entradas con TTL expirado también se archivan
+3. La memoria activa se mantiene por debajo de 100 entradas
+4. Las entradas archivadas se conservan para historial
+5. Se puede disparar manual o automáticamente
+
+## Archivado basado en TTL
+
+Las entradas con un campo `ttl` se archivan cuando el TTL expira, sin importar la regla de 30 días:
+
+```
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|permanent|Esto permanece para siempre|file.ts||2026-07-10|
+  e5f6g7h8|knowledge|sprint-info|El sprint termina viernes|file.ts||2026-07-10|7d
+  i9j0k1l2|bug|temp-fix|Solución temporal|file.ts||2026-07-10|2026-07-15
+```
+
+En este ejemplo:
+- `permanent` — sin TTL, nunca expira por TTL
+- `sprint-info` — expira 7 días después de la creación
+- `temp-fix` — expira en una fecha específica
+
+## Estructura de archivos
+
+```
+.toon-memory/memory/
+├── data.toon        # Memoria activa (< 30 días, sin TTL expirado)
+└── archive.toon     # Entradas archivadas (> 30 días o TTL expirado)
+```
+
+## Formato de archivo
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  a1b2c3d4|decision|old-decision|Se decidió esto...|src/old.ts|decision|2026-06-01
+  e5f6g7h8|pattern|old-pattern|Se usaba este patrón...|src/pattern.ts|pattern|2026-06-15
+```
+
+## Configuración
+
+| Ajuste | Por defecto | Descripción |
+|---------|---------|-------------|
+| Máx. entradas | 100 | Máximo de entradas activas |
+| Días de archivo | 30 | Días antes de archivar |
+| Archivo de archivo | `archive.toon` | Dónde van las entradas archivadas |
+
+## Casos de uso
+
+- **Mantener memoria limpia** — Evita crecimiento ilimitado
+- **Referencia histórica** — Decisiones antiguas aún accesibles
+- **Rendimiento** — Búsquedas más rápidas con menos entradas
+- **Contexto temporal** — TTL maneja fechas límite, sprints, notas sensibles al tiempo

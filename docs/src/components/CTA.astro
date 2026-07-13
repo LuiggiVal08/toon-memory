@@ -1,14 +1,22 @@
 ---
+import { getContent } from '../i18n';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
+
 const actions = [
-  { label: 'Get Started', href: '/toon-memory/getting-started/quickstart', primary: true },
-  { label: 'View on GitHub', href: 'https://github.com/LuiggiVal08/toon-memory', primary: false },
+  { label: c.cta.getStarted, href: lang === 'es' ? '/toon-memory/es/getting-started/quickstart' : '/toon-memory/getting-started/quickstart', primary: true },
+  { label: c.cta.viewGithub, href: 'https://github.com/LuiggiVal08/toon-memory', primary: false },
 ];
 ---
 
 <section class="content-section cta-section">
   <div class="cta-box">
-    <h2>Ready to give your agent a memory?</h2>
-    <p>Install in seconds and never re-explain context to your agent again.</p>
+    <h2>{c.cta.title}</h2>
+    <p>{c.cta.subtitle}</p>
     <div class="cta-actions">
       {
         actions.map((a) => (

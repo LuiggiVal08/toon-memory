@@ -1,0 +1,71 @@
+---
+title: Estructura de archivos
+description: Cómo toon-memory organiza los archivos
+---
+
+## Estructura del proyecto
+
+```
+.toon-memory/
+├── memory/
+│   ├── data.toon        # Archivo de memoria principal
+│   ├── archive.toon     # Entradas archivadas (>30 días o TTL expirado)
+│   ├── config.json      # Configuración de encriptación
+│   └── backups/         # Backups del modo watch
+│       ├── backup-2026-07-11T16-00-00-000Z.toon
+│       └── backup-2026-07-11T16-10-00-000Z.toon
+└── hooks/
+    ├── session-start-claude.sh
+    ├── session-start-codex.sh
+    ├── session-start-gemini.sh
+    └── session-start-antigravity.sh
+```
+
+## Descripción de archivos
+
+### data.toon
+
+El archivo de memoria principal que contiene todas las entradas activas:
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|use-zod|Usar Zod para validación|src/types.ts|validation;types|2026-07-10|
+  e5f6g7h8|pattern|pydantic-configs|El proyecto usa Pydantic v2|config.py|python;patterns|2026-07-10|
+  i9j0k1l2|bug|redis-pool-fix|Se agregó max_connections=20|redis.ts|redis;fix|2026-07-10|7d
+```
+
+### archive.toon
+
+Contiene entradas con más de 30 días o con TTL expirado:
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  x1y2z3w4|knowledge|old-knowledge|Esto era importante...|src/old.ts|knowledge|2026-06-01
+```
+
+### config.json
+
+Configuración de encriptación (solo existe cuando la encriptación está habilitada):
+
+```json
+{
+  "encrypted": true
+}
+```
+
+### backups/
+
+Directorio que contiene backups con marca de tiempo del modo watch:
+
+```
+backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-10-00-000Z.toon
+└── backup-2026-07-11T16-20-00-000Z.toon
+```
+
+## Git Ignore
+
+toon-memory agrega automáticamente `.toon-memory/memory/` a `.gitignore` para evitar hacer commit de datos sensibles.

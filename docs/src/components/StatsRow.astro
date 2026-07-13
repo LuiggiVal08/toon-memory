@@ -1,15 +1,16 @@
 ---
-const stats = [
-  { number: '10', label: 'MCP Tools' },
-  { number: '15', label: 'Agents' },
-  { number: '22%', label: 'Fewer Tokens' },
-  { number: '0', label: 'Config Needed' },
-];
+import { getContent } from '../i18n';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
 ---
 
 <div class="stats-row">
   {
-    stats.map((s) => (
+    c.stats.items.map((s) => (
       <div class="stat-card">
         <span class="stat-number">{s.number}</span>
         <span class="stat-label">{s.label}</span>

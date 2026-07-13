@@ -1,0 +1,155 @@
+---
+title: Herramientas MCP
+description: Las 11 herramientas de memoria y 3 recursos para tu agente de IA
+---
+
+## Resumen
+
+toon-memory proporciona 11 herramientas MCP y 3 recursos MCP para gestionar la memoria persistente:
+
+## Herramientas
+
+| Herramienta | Descripción |
+|------|-------------|
+| `memory_remember` | Guarda una decisión, patrón, bug o conocimiento (con TTL opcional e inferencia automática de etiquetas) |
+| `memory_recall` | Busca en la memoria (úsalo ANTES de leer archivos, filtra entradas con TTL expirado) |
+| `memory_forget` | Elimina una entrada por key o id |
+| `memory_stats` | Ver el estado de la memoria (incluyendo estadísticas de TTL) |
+| `memory_summary` | Guardar/recuperar resúmenes de archivos |
+| `memory_archive` | Archiva entradas antiguas (>30 días) y entradas con TTL expirado |
+| `memory_diff` | Muestra cambios desde una fecha (24h, 7d, o fecha exacta) |
+| `memory_suggest` | Encuentra entradas relacionadas para un contexto dado |
+| `memory_encrypt` | Habilita encriptación AES-256-GCM |
+| `memory_decrypt` | Deshabilita la encriptación |
+
+## Recursos MCP
+
+La memoria también se expone como recursos MCP para lectura directa de contexto:
+
+| Recurso | URI | Descripción |
+|----------|-----|-------------|
+| Entradas de memoria | `toon://memory/entries` | Volcado completo de la memoria |
+| Estadísticas de memoria | `toon://memory/stats` | Conteos por categoría e info de TTL |
+| Resúmenes de memoria | `toon://memory/summaries` | Resúmenes de archivos |
+
+Los recursos permiten a los agentes leer la memoria como contexto sin invocar herramientas — útil para system prompts o el inicio de sesión.
+
+## Ejemplos
+
+### Recordar una decisión
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Usar Zod para validación",
+  file: "src/types.ts",
+  tags: "validation;types"
+})
+// 🧠 Guardado: decision/use-zod (a1b2c3d4)
+// 🔗 Entradas relacionadas:
+//   [pattern] zod-schemas — Schemas Zod compartidos para validación de API
+```
+
+### Recordar con TTL
+
+```typescript
+memory_remember({
+  category: "knowledge",
+  key: "sprint-deadline",
+  content: "El sprint termina el 18 de julio, el congelamiento de features es el 16 de julio",
+  ttl: "7d"
+})
+// 🧠 Guardado: knowledge/sprint-deadline (x1y2z3w4)
+// ⏰ TTL: 2026-07-19
+```
+
+Usa `ttl` para contexto temporal como fechas límite o información de sprints. Soporta relativos (`7d`, `30d`) o fechas exactas (`2026-12-31`). Las entradas expiradas se filtran automáticamente de la búsqueda.
+
+### Etiquetas inferidas automáticamente
+
+```typescript
+memory_remember({
+  category: "bug",
+  key: "redis-connection-timeout",
+  content: "Timeout de conexión Redis en producción, se aumentó el pool"
+  // tags vacío — se infiere automáticamente del contenido
+})
+// 🧠 Guardado: bug/redis-connection-timeout (a1b2c3d4)
+// 🏷️ Tags inferidos: redis
+```
+
+Cuando `tags` está vacío, el sistema los infiere del contenido usando un vocabulario de 20+ categorías: redis, auth, api, db, security, test, deploy, config, performance, refactor, error, logging, types, async, state, ui, storage, email, payment, webhook.
+
+### Buscar en la memoria
+
+```typescript
+memory_recall({ query: "redis" })
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Se agregó max_connections=20
+//   Archivo: redis.ts | Tags: redis;fix | Fecha: 2026-07-10
+```
+
+### Buscar con filtro de fecha
+
+```typescript
+memory_recall({
+  query: "redis",
+  from_date: "2026-07-01",
+  to_date: "2026-07-31"
+})
+```
+
+### Mostrar cambios desde la última sesión
+
+```typescript
+memory_diff({ since: "24h" })
+// 📋 Cambios desde 2026-07-11:
+//
+// ➕ Nuevas (2):
+//   [decision] use-zod (a1b2c3d4)
+//     Usar Zod para validación
+//   [bug] redis-timeout (e5f6g7h8)
+//     Arreglo de timeout de conexión Redis
+```
+
+Soporta `since` como relativo (`24h`, `7d`) o fecha exacta. Filtra por `type`: `all`, `created`, o `updated`.
+
+### Encontrar entradas relacionadas
+
+```typescript
+memory_suggest({ context: "configuración de caché redis" })
+// 🔍 Sugerencias para "configuración de caché redis":
+//
+// [decision] redis-cache-config (a1b2c3d4)
+//   Capa de caché Redis para almacenamiento de sesión
+//   Archivo: src/cache.ts | Tags: redis;cache | Fecha: 2026-07-10
+```
+
+### Archivar entradas antiguas
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+### Habilitar encriptación
+
+```typescript
+memory_encrypt()
+// 🔐 Encriptación habilitada
+// ⚠️ Guarda esta clave (no se puede recuperar):
+// a1b2c3d4...
+```
+
+## Categorías
+
+Las entradas se organizan por categoría:
+
+| Categoría | Caso de uso |
+|----------|----------|
+| `decision` | Decisiones de diseño ("¿Por qué X sobre Y?") |
+| `pattern` | Patrones del proyecto ("Usa Zod para validación") |
+| `bug` | Arreglos de bugs ("Agotamiento de pool Redis") |
+| `knowledge` | Conocimiento general ("El broker usa RESP") |

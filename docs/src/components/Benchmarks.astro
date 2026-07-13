@@ -1,4 +1,12 @@
 ---
+import { getContent } from '../i18n';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
+
 const jsonTokens = 1097;
 const toonTokens = 850;
 const reductionPct = 22.5;
@@ -13,8 +21,8 @@ const rows = [
 
 <section class="content-section benchmarks-section">
   <div class="section-header">
-    <h2>Benchmarks</h2>
-    <p>Token efficiency of the TOON format — measured, not assumed</p>
+    <h2>{c.benchmarks.title}</h2>
+    <p>{c.benchmarks.subtitle}</p>
   </div>
 
   <div class="savings-bars">
@@ -35,21 +43,17 @@ const rows = [
   <div class="savings-stats">
     <div class="savings-stat">
       <span class="savings-num">{reductionPct}%</span>
-      <span class="savings-cap">fewer tokens than JSON</span>
+      <span class="savings-cap">{c.benchmarks.fewerTokens}</span>
     </div>
     <div class="savings-stat">
       <span class="savings-num">{singleReductionPct}%</span>
-      <span class="savings-cap">on a single entry</span>
+      <span class="savings-cap">{c.benchmarks.onSingle}</span>
     </div>
     <div class="savings-stat">
       <span class="savings-num">{entries}</span>
-      <span class="savings-cap">entries measured</span>
+      <span class="savings-cap">{c.benchmarks.entriesMeasured}</span>
     </div>
   </div>
 
-  <p class="savings-note">
-    Measured with <code>gpt-tokenizer</code> (cl100k_base) over {entries} representative memory
-    entries, comparing the real on-disk TOON format against compact JSON. Reproducible:
-    <code>npm run bench</code>.
-  </p>
+  <p class="savings-note" set:html={c.benchmarks.note}></p>
 </section>

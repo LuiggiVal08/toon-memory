@@ -1,37 +1,30 @@
 ---
-const agents = [
-  { name: 'OpenCode', icon: '🤖' },
-  { name: 'VS Code / Copilot', icon: '🆚' },
-  { name: 'Claude', icon: '✳️' },
-  { name: 'Cursor', icon: '🖱️' },
-  { name: 'Windsurf', icon: '🏄' },
-  { name: 'Cline', icon: '🧩' },
-  { name: 'Continue', icon: '⏯️' },
-  { name: 'Codex', icon: '⚡' },
-  { name: 'Gemini', icon: '✨' },
-  { name: 'Zed', icon: '⚡' },
-  { name: 'Antigravity', icon: '🌌' },
-  { name: 'Aider', icon: '🤝' },
-  { name: 'KiloCode', icon: '⚖️' },
-  { name: 'OpenClaw', icon: '🐾' },
-  { name: 'Kiro', icon: '🪶' },
-];
+import { getContent } from '../i18n';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
 ---
 
 <section class="content-section agents-section">
   <div class="section-header">
-    <h2>Works with 15+ AI coding agents</h2>
-    <p>Zero configuration — toon-memory auto-detects and configures each one</p>
+    <h2>{c.agents.title}</h2>
+    <p>{c.agents.subtitle}</p>
   </div>
 
   <div class="agents-grid">
     {
-      agents.map((a) => (
-        <div class="agent-chip">
-          <span class="agent-icon">{a.icon}</span>
-          <span class="agent-name">{a.name}</span>
-        </div>
-      ))
+      ['OpenCode', 'VS Code / Copilot', 'Claude', 'Cursor', 'Windsurf', 'Cline', 'Continue', 'Codex', 'Gemini', 'Zed', 'Antigravity', 'Aider', 'KiloCode', 'OpenClaw', 'Kiro'].map((name, i) => {
+        const icons = ['🤖', '🆚', '✳️', '🖱️', '🏄', '🧩', '⏯️', '⚡', '✨', '⚡', '🌌', '🤝', '⚖️', '🐾', '🪶'];
+        return (
+          <div class="agent-chip">
+            <span class="agent-icon">{icons[i]}</span>
+            <span class="agent-name">{name}</span>
+          </div>
+        );
+      })
     }
   </div>
 </section>

@@ -1,0 +1,65 @@
+---
+import logoSrc from '../../assets/logo.svg';
+import SiteHeader from '../../components/SiteHeader.astro';
+import Hero from '../../components/Hero.astro';
+import FeatureGrid from '../../components/FeatureGrid.astro';
+import StatsRow from '../../components/StatsRow.astro';
+import Tips from '../../components/Tips.astro';
+import Comparison from '../../components/Comparison.astro';
+import CodeExamples from '../../components/CodeExamples.astro';
+import FAQ from '../../components/FAQ.astro';
+import CTA from '../../components/CTA.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import Agents from '../../components/Agents.astro';
+import Tools from '../../components/Tools.astro';
+import Benchmarks from '../../components/Benchmarks.astro';
+import Problem from '../../components/Problem.astro';
+import HowItWorks from '../../components/HowItWorks.astro';
+import TokenSavings from '../../components/TokenSavings.astro';
+import { getContent } from '../../i18n';
+
+const c = getContent('es');
+const description =
+  'Memoria persistente para agentes de IA. Recuerda decisiones, patrones y bugs entre sesiones.';
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>toon-memory — Memoria persistente para agentes de IA</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={logoSrc.src} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="toon-memory — Memoria persistente para agentes de IA" />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content="https://luiggival08.github.io/toon-memory/" />
+    <meta property="og:image" content="https://luiggival08.github.io/toon-memory/favicon.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="toon-memory" />
+    <meta name="twitter:description" content={description} />
+  </head>
+  <body>
+    <SiteHeader lang="es" />
+
+    <main>
+      <Hero lang="es" />
+      <Problem lang="es" />
+      <FeatureGrid lang="es" />
+      <Agents lang="es" />
+      <StatsRow lang="es" />
+      <HowItWorks lang="es" />
+      <Tips lang="es" />
+      <Comparison lang="es" />
+      <CodeExamples lang="es" />
+      <TokenSavings lang="es" />
+      <Benchmarks lang="es" />
+      <Tools lang="es" />
+      <FAQ lang="es" />
+      <CTA lang="es" />
+    </main>
+
+    <SiteFooter lang="es" />
+  </body>
+</html>

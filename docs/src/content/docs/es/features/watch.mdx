@@ -1,0 +1,88 @@
+---
+title: Modo watch
+description: Auto-backup de la memoria con compresión y registro
+---
+
+## Resumen
+
+El modo watch ejecuta un daemon que automáticamente hace backup de tu archivo de memoria cuando detecta cambios. Soporta compresión, registro y poda automática de backups antiguos.
+
+## Uso
+
+```bash
+# Por defecto: backup cada 5 minutos, mantiene 10 backups
+npx toon-memory watch
+
+# Intervalo personalizado (en minutos)
+npx toon-memory watch 10
+
+# Habilitar compresión gzip
+npx toon-memory watch -c
+
+# Habilitar registro en archivo
+npx toon-memory watch -l
+
+# Mantener máximo 20 backups
+npx toon-memory watch -m 20
+
+# Todas las opciones combinadas
+npx toon-memory watch 15 -c -l -m 20
+
+# Presiona Ctrl+C para detener
+```
+
+## Opciones
+
+| Opción | Descripción | Por defecto |
+|--------|-------------|---------|
+| `[interval]` | Intervalo de backup en minutos | 5 |
+| `-c, --compress` | Habilita compresión gzip | off |
+| `-l, --log [path]` | Habilita registro en archivo | off |
+| `-m, --max-backups <n>` | Máximo de backups a mantener (0=ilimitado) | 10 |
+
+## Salida de ejemplo
+
+```bash
+$ npx toon-memory watch 15 -c -l -m 20
+
+🧠 toon-memory watch
+
+Vigilando el archivo de memoria cada 15 minutos...
+Máximo de backups: 20
+Compresión: habilitada
+Registro: habilitado (.opencode/memory/watch.log)
+Presiona Ctrl+C para detener
+
+📦 Backup #1 creado: 2026-07-11T16-00-00-000Z
+📦 Backup #2 creado: 2026-07-11T16-15-00-00Z
+🗑️  Podado 1 backup antiguo(s)
+^C
+✅ Watch detenido. 2 backups creados.
+```
+
+## Cómo funciona
+
+1. Vigila `.opencode/memory/data.toon` por cambios
+2. Cuando el contenido cambia, crea un backup con marca de tiempo
+3. Los backups se guardan en `.opencode/memory/backups/`
+4. Solo crea backup cuando el contenido realmente cambia
+5. Si se excede max-backups, se podan los más antiguos
+6. La compresión gzip opcional reduce el tamaño del backup ~60-80%
+7. El registro opcional escribe eventos a un archivo
+
+## Archivos de backup
+
+```
+.opencode/memory/backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-15-00-00Z.toon.gz    # comprimido
+└── backup-2026-07-11T16-30-00-00Z.toon
+```
+
+## Casos de uso
+
+- **Sesiones de código largas** — Auto-backup mientras trabajas
+- **Pre-despliegue** — Ejecuta antes de cambios importantes
+- **CI/CD** — Backup antes de cambios automatizados
+- **Poco espacio en disco** — Usa `-c` para compresión
+- **Depuración** — Usa `-l` para registrar eventos de backup

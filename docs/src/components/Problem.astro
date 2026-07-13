@@ -1,32 +1,22 @@
 ---
-const problems = [
-  {
-    icon: '🌀',
-    title: 'Context resets daily',
-    body: 'Every new session, your agent forgets the decisions, patterns, and bugs it learned yesterday. You re-explain the same context over and over.',
-  },
-  {
-    icon: '🔍',
-    title: 'Hunting through history',
-    body: 'Without memory, agents grep git history and re-read files to reconstruct why something was built a certain way — burning tokens and time.',
-  },
-  {
-    icon: '📋',
-    title: 'Copy-paste notes',
-    body: 'Developers paste context between chats by hand. It is fragile, gets stale, and never reaches the next autonomous run.',
-  },
-];
+import { getContent } from '../i18n';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
 ---
 
 <section class="content-section problem-section">
   <div class="section-header">
-    <h2>Why do agents lose context between sessions?</h2>
-    <p>AI coding agents start every session with amnesia</p>
+    <h2>{c.problem.title}</h2>
+    <p>{c.problem.subtitle}</p>
   </div>
 
   <div class="problem-grid">
     {
-      problems.map((p) => (
+      c.problem.cards.map((p) => (
         <div class="problem-card">
           <div class="problem-icon">{p.icon}</div>
           <h3>{p.title}</h3>
@@ -36,7 +26,5 @@ const problems = [
     }
   </div>
 
-  <p class="problem-resolution">
-    toon-memory gives your agent a persistent, queryable memory — so context survives every session, automatically.
-  </p>
+  <p class="problem-resolution">{c.problem.resolution}</p>
 </section>

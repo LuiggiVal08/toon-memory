@@ -1,0 +1,68 @@
+---
+title: Cómo contribuir
+description: Cómo contribuir a toon-memory
+---
+
+## Contribuciones
+
+¡Las contribuciones son bienvenidas! Por favor sigue estos pasos:
+
+## Cómo contribuir
+
+1. **Haz fork** del repositorio
+2. **Crea** una rama de feature (`git checkout -b feature/increible-feature`)
+3. **Haz commit** de tus cambios (`git commit -m 'feat: add amazing feature'`)
+4. **Sube** la rama (`git push origin feature/increible-feature`)
+5. **Abre** un Pull Request
+
+## Configuración de desarrollo
+
+```bash
+git clone https://github.com/LuiggiVal08/toon-memory.git
+cd toon-memory
+npm install
+npm run build
+npm test
+```
+
+## Estructura del proyecto
+
+```
+toon-memory/
+├── src/
+│   ├── bin/              # Punto de entrada
+│   ├── cli/              # Comandos CLI
+│   ├── mcp/              # Servidor MCP
+│   └── memory.ts         # Herramienta personalizada
+├── tests/                # Pruebas unitarias
+├── docs/                 # Documentación (Astro)
+└── package.json
+```
+
+## Scripts
+
+```bash
+npm run build         # Construir todo
+npm run build:cli     # Construir CLI
+npm run build:mcp     # Construir servidor MCP
+npm test              # Ejecutar pruebas
+npm run test:watch    # Ejecutar pruebas en modo watch
+```
+
+## Estilo de código
+
+- TypeScript con modo strict
+- Indentación de 2 espacios
+- camelCase para variables/funciones
+- PascalCase para clases
+
+## Guías de Pull Request
+
+- Escribe mensajes de commit claros
+- Agrega pruebas para nuevas funcionalidades
+- Actualiza la documentación si es necesario
+- Sigue el estilo de código existente
+
+## Código de conducta
+
+Por favor lee nuestro [Código de conducta](/toon-memory/es/community/code-of-conduct) antes de contribuir.

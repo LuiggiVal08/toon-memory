@@ -1,5 +1,12 @@
 ---
 import logoSrc from '../assets/logo.svg';
+import { getContent } from '../i18n';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
 ---
 
 <header class="site-header">
@@ -8,8 +15,8 @@ import logoSrc from '../assets/logo.svg';
     <span class="logo-text">toon-memory</span>
   </a>
   <nav class="site-nav">
-    <a href="/toon-memory/getting-started/quickstart">Docs</a>
-    <a href="https://www.npmjs.com/package/toon-memory" target="_blank" rel="noopener noreferrer">npm</a>
-    <a href="https://github.com/LuiggiVal08/toon-memory" target="_blank" rel="noopener noreferrer">GitHub</a>
+    <a href={lang === 'es' ? '/toon-memory/es/getting-started/quickstart' : '/toon-memory/getting-started/quickstart'}>{c.nav.docs}</a>
+    <a href="https://www.npmjs.com/package/toon-memory" target="_blank" rel="noopener noreferrer">{c.nav.npm}</a>
+    <a href="https://github.com/LuiggiVal08/toon-memory" target="_blank" rel="noopener noreferrer">{c.nav.github}</a>
   </nav>
 </header>

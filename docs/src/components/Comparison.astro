@@ -1,35 +1,30 @@
 ---
-const before = [
-  'Repeat explanations every session',
-  'Forget why a decision was made',
-  'Hunt through git history for context',
-  'Copy-paste notes between chats',
-];
-const after = [
-  'Agent remembers everything',
-  'Decisions are one query away',
-  'Patterns persist across projects',
-  'Zero context loss between sessions',
-];
+import { getContent } from '../i18n';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
 ---
 
 <section class="content-section">
   <div class="section-header">
-    <h2>Before vs After</h2>
-    <p>See how toon-memory changes your workflow</p>
+    <h2>{c.comparison.title}</h2>
+    <p>{c.comparison.subtitle}</p>
   </div>
 
   <div class="comparison">
     <div class="compare-box before">
-      <h3>Before</h3>
+      <h3>{c.comparison.beforeTitle}</h3>
       <ul>
-        {before.map((item) => <li>{item}</li>)}
+        {c.comparison.before.map((item) => <li>{item}</li>)}
       </ul>
     </div>
     <div class="compare-box after">
-      <h3>After</h3>
+      <h3>{c.comparison.afterTitle}</h3>
       <ul>
-        {after.map((item) => <li>{item}</li>)}
+        {c.comparison.after.map((item) => <li>{item}</li>)}
       </ul>
     </div>
   </div>

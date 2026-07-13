@@ -1,31 +1,22 @@
 ---
-const rememberCode = `memory_remember({
-  category: "decision",
-  key: "use-zod",
-  content: "Use Zod for validation",
-  file: "src/types.ts"
-})`;
+import { getContent } from '../i18n';
 
-const recallCode = `memory_recall({ query: "validation" })
-// [decision] use-zod (a1b2c3d4)
-//   Use Zod for validation — src/types.ts`;
-
-const steps = [
-  { n: 1, title: 'Install', body: 'One command. Zero configuration for 15+ agents.', code: 'npm install -g toon-memory' },
-  { n: 2, title: 'Remember', body: 'Save decisions, patterns, and bugs as you work — with auto-tag inference and optional TTL.', code: rememberCode },
-  { n: 3, title: 'Recall', body: 'Your agent queries memory on demand — no re-explaining, no token waste.', code: recallCode },
-];
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
 ---
 
 <section class="content-section how-section">
   <div class="section-header">
-    <h2>How does it work?</h2>
-    <p>Three steps from amnesia to memory</p>
+    <h2>{c.howItWorks.title}</h2>
+    <p>{c.howItWorks.subtitle}</p>
   </div>
 
   <div class="steps">
     {
-      steps.map((s) => (
+      c.howItWorks.steps.map((s) => (
         <div class="step">
           <div class="step-num">{s.n}</div>
           <h3>{s.title}</h3>

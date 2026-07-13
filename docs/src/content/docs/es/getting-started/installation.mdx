@@ -1,0 +1,59 @@
+---
+title: Instalación
+description: Instala toon-memory en tu sistema
+---
+
+## Requisitos
+
+- Node.js 20 o superior
+- npm, yarn, o pnpm
+
+## Métodos de instalación
+
+### npm (Recomendado)
+
+```bash
+npm install -g toon-memory
+```
+
+### Scripts independientes
+
+#### macOS / Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+```
+
+#### Windows (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex
+```
+
+### Desde el código fuente
+
+```bash
+git clone https://github.com/LuiggiVal08/toon-memory.git
+cd toon-memory
+npm install
+npm run build
+npm link
+```
+
+## Verificar la instalación
+
+```bash
+toon-memory --version
+# o
+npx toon-memory status
+```
+
+## Desinstalar
+
+```bash
+# Eliminar de todos los agentes
+npx toon-memory uninstall
+
+# O con instalación global
+toon-memory uninstall
+```

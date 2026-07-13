@@ -1,0 +1,89 @@
+---
+title: Comandos CLI
+description: Gestiona la memoria desde la terminal
+---
+
+## Comandos
+
+```bash
+npx toon-memory              # Instalador interactivo
+npx toon-memory init         # Configuración rápida (sin preguntas)
+npx toon-memory mcp          # Ejecuta el servidor MCP directamente
+npx toon-memory status       # Ver estado de la instalación
+npx toon-memory stats        # Ver estadísticas de memoria
+npx toon-memory export       # Exportar memoria a JSON
+npx toon-memory import <file> # Importar memoria desde JSON
+npx toon-memory watch [opts] # Auto-backup con opciones
+npx toon-memory upgrade      # Actualizar a la última versión
+npx toon-memory uninstall    # Eliminar de todos los agentes
+```
+
+## Opciones de watch
+
+| Opción | Descripción | Por defecto |
+|--------|-------------|---------|
+| `[interval]` | Intervalo de backup en minutos | 5 |
+| `-c, --compress` | Habilita compresión gzip | off |
+| `-l, --log [path]` | Habilita registro en archivo | off |
+| `-m, --max-backups <n>` | Máximo de backups a mantener (0=ilimitado) | 10 |
+
+## Ejemplos
+
+### Stats
+
+```bash
+$ npx toon-memory stats
+
+🧠 toon-memory stats
+
+📊 Estadísticas de memoria
+━━━━━━━━━━━━━━━━━━
+Total de entradas: 45
+├── decision: 12
+├── pattern: 18
+├── bug: 8
+└── knowledge: 7
+Última actualización: 2026-07-10
+Tamaño de archivo: 12.4 KB
+```
+
+### Export
+
+```bash
+$ npx toon-memory export
+
+🧠 toon-memory export
+
+Exportadas 45 entradas a:
+  /ruta/al/proyecto/toon-memory-export.json
+```
+
+### Import
+
+```bash
+$ npx toon-memory import backup.json
+
+🧠 toon-memory import
+
+Importadas 3 entradas nuevas
+Omitidas 2 duplicadas
+```
+
+### Watch
+
+```bash
+$ npx toon-memory watch 15 -c -m 20
+
+🧠 toon-memory watch
+
+Vigilando el archivo de memoria cada 15 minutos...
+Máximo de backups: 20
+Compresión: habilitada
+Registro: deshabilitado
+Presiona Ctrl+C para detener
+
+📦 Backup #1 creado: 2026-07-11T16-00-00-000Z
+📦 Backup #2 creado: 2026-07-11T16-15-00-00Z
+^C
+✅ Watch detenido. 2 backups creados.
+```

@@ -1,0 +1,58 @@
+---
+title: Formato TOON
+description: Token-Oriented Object Notation (Notación de objetos orientada a tokens)
+---
+
+## ¿Qué es TOON?
+
+TOON (Token-Oriented Object Notation) es un formato de datos diseñado para LLMs. Usa ~22.5% menos tokens que JSON (medido con gpt-tokenizer sobre entradas representativas) manteniendo un roundtrip sin pérdida.
+
+## Comparación
+
+| Formato | Cantidad de tokens | Precisión LLM |
+|--------|-------------|--------------|
+| JSON | 100 | 75% |
+| YAML | 95 | 72% |
+| **TOON** | **60** | **76.4%** |
+
+## Estructura del formato
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|use-zod|Usar Zod para validación|src/types.ts|validation;types|2026-07-10|
+  e5f6g7h8|pattern|pydantic-configs|El proyecto usa Pydantic v2|config.py|python;patterns|2026-07-10|
+  i9j0k1l2|bug|redis-pool-fix|Se agregó max_connections=20|redis.ts|redis;fix|2026-07-10|7d
+summaries:
+  src/services/redis.ts: Pool de conexión Redis con lógica de reintento
+```
+
+## Componentes
+
+| Componente | Descripción |
+|-----------|-------------|
+| `version: 1` | Versión del formato |
+| `entries[N\|]{fields}:` | Encabezado con conteo y nombres de campos |
+| `id\|category\|key\|...` | Valores separados por pipe |
+| `ttl` | Tiempo de vida opcional (vacío = sin expiración) |
+| `summaries:` | Resúmenes de archivos opcionales |
+
+## Campos de entrada
+
+| Campo | Requerido | Descripción | Ejemplo |
+|-------|----------|-------------|---------|
+| `id` | Sí | ID hex de 8 chars | `a1b2c3d4` |
+| `category` | Sí | `decision`, `pattern`, `bug`, `knowledge` | `decision` |
+| `key` | Sí | Título en kebab-case | `use-zod` |
+| `content` | Sí | Descripción detallada | `Usar Zod para validación` |
+| `file` | No | Ruta de archivo relacionada | `src/types.ts` |
+| `tags` | No | Tags separados por punto y coma | `validation;types` |
+| `date` | Sí | YYYY-MM-DD | `2026-07-10` |
+| `ttl` | No | Expiración: `7d`, `30d`, o `2026-12-31` | `7d` |
+
+## Beneficios
+
+1. **Menos tokens** — Más eficiente para contexto LLM
+2. **Mejor precisión** — Los LLMs lo entienden mejor que JSON
+3. **Sin pérdida** — Sin pérdida de datos en la conversión
+4. **Legible por humanos** — Fácil de leer y editar manualmente
