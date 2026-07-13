@@ -1,0 +1,5 @@
+# Ensure .astro files are counted as the Astro language
+*.astro linguist-language=Astro
+
+# Lockfiles are generated; exclude them from repository language statistics
+package-lock.json linguist-generated=true
