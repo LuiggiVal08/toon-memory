@@ -91,7 +91,7 @@ function ensureMemoryDir(): void {
 function ensureMemoryFile(): void {
   ensureMemoryDir()
   if (!existsSync(MEMORY_FILE)) {
-    writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date}:\n")
+    writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date|ttl}:\n")
   }
 }
 
@@ -208,6 +208,35 @@ function generateId(): string {
 }
 
 /**
+ * Parse a TTL value into an absolute date string (YYYY-MM-DD).
+ * Supports: exact dates (2026-07-17), relative days (7d, 30d).
+ * Returns empty string if no TTL.
+ */
+function parseTTL(ttl: string): string {
+  if (!ttl || !ttl.trim()) return ""
+  const trimmed = ttl.trim()
+  const dayMatch = trimmed.match(/^(\d+)d$/)
+  if (dayMatch) {
+    const days = parseInt(dayMatch[1])
+    const d = new Date()
+    d.setDate(d.getDate() + days)
+    return d.toISOString().split("T")[0]
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed
+  return ""
+}
+
+/**
+ * Check if a TTL value has expired (date is in the past).
+ */
+function isExpired(ttl: string): boolean {
+  if (!ttl) return false
+  const ttlDate = parseTTL(ttl) || ttl
+  const today = new Date().toISOString().split("T")[0]
+  return ttlDate <= today
+}
+
+/**
  * Archive entries older than ARCHIVE_DAYS to archive.toon.
  * 
  * Moves old entries from data.toon to archive.toon to keep
@@ -241,7 +270,10 @@ function archiveOldEntries(): { archived: number; kept: number } {
     const parts = line.trim().split("|")
     if (parts.length >= 7) {
       const date = parts[6]
-      if (date < cutoffStr) {
+      const ttl = parts[7] || ""
+      const isOld = date < cutoffStr
+      const isTtlExpired = ttl && isExpired(ttl)
+      if (isOld || isTtlExpired) {
         toArchive.push(line.trim())
       } else {
         toKeep.push(line.trim())
@@ -316,9 +348,10 @@ server.registerTool(
       content: z.string().describe("Contenido detallado del hecho"),
       file: z.string().optional().default("").describe("Archivo o línea relacionada (ej: spec.md:145)"),
       tags: z.string().optional().default("").describe("Tags separados por punto y coma (ej: risk;spec)"),
+      ttl: z.string().optional().default("").describe("Time to live (ej: 7d, 2026-07-17). Vacío = sin expiración"),
     },
   },
-  async ({ category, key, content, file, tags }) => {
+  async ({ category, key, content, file, tags, ttl }) => {
     const data = readMemory()
     const newId = generateId()
     const date = new Date().toISOString().split("T")[0]
@@ -346,7 +379,8 @@ server.registerTool(
     }
 
     const entryId = existingIdx !== -1 ? existingId : newId
-    const newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${tags || ""}|${date}`
+    const resolvedTtl = parseTTL(ttl)
+    const newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${tags || ""}|${date}|${resolvedTtl}`
     let action = "Guardado"
 
     if (existingIdx !== -1) {
@@ -374,8 +408,9 @@ server.registerTool(
       }
     }
 
+    const ttlMsg = resolvedTtl ? `\n⏰ TTL: ${resolvedTtl}` : ""
     return {
-      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${entryId})\n${content}${archiveMsg}` }],
+      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${entryId})\n${content}${ttlMsg}${archiveMsg}` }],
     }
   }
 )
@@ -416,10 +451,11 @@ server.registerTool(
         const trimmed = line.trim()
         const parts = trimmed.split("|")
         if (parts.length < 7) return null
-        const [id, cat, key, content, file, tags, date] = parts
+        const [id, cat, key, content, file, tags, date, ttl] = parts
         if (category && cat !== category) return null
         if (from_date && date < from_date) return null
         if (to_date && date > to_date) return null
+        if (ttl && isExpired(ttl)) return null
         const searchStr = normalize(`${id} ${cat} ${key} ${content} ${file} ${tags}`)
         // All query tokens must match (AND logic)
         if (!queryTokens.every((token) => searchStr.includes(token))) return null
@@ -506,13 +542,16 @@ server.registerTool(
     const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
     const entries = lines.map((l) => {
       const parts = l.trim().split("|")
-      return { category: parts[1] || "unknown" }
+      return { category: parts[1] || "unknown", ttl: parts[7] || "" }
     })
 
     const byCategory: Record<string, number> = {}
     for (const e of entries) {
       byCategory[e.category] = (byCategory[e.category] || 0) + 1
     }
+
+    const withTtl = entries.filter((e) => e.ttl).length
+    const expired = entries.filter((e) => e.ttl && isExpired(e.ttl)).length
 
     const summaryLines = data.split("\n").filter((l) => l.includes(":") && !l.startsWith("  ") && !l.startsWith("version") && !l.startsWith("entries") && !/^\[\d+\|]/.test(l))
     const stats = [
@@ -522,10 +561,13 @@ server.registerTool(
       "Por categoría:",
       ...Object.entries(byCategory).map(([k, v]) => `  ${k}: ${v}`),
       "",
+      `TTL: ${withTtl} con expiración, ${expired} expiradas`,
+      "",
       `Últimas 5 entradas:`,
       ...lines.slice(-5).map((l) => {
         const parts = l.trim().split("|")
-        return `  [${parts[1]}] ${parts[2]} (${parts[0]})`
+        const ttlInfo = parts[7] ? ` | TTL: ${parts[7]}` : ""
+        return `  [${parts[1]}] ${parts[2]} (${parts[0]})${ttlInfo}`
       }),
     ]
 

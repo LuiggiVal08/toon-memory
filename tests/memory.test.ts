@@ -149,4 +149,103 @@ describe("Memory Operations", () => {
     const updatedData = readFileSync(memoryFile, "utf-8")
     expect(updatedData).toContain(`  ${filePath}: ${summary}`)
   })
+
+  it("should support TTL field in entries", () => {
+    const ttlDate = "2026-12-31"
+    const entry = `  ttl12345|decision|temp-config|Temporary config|config.ts|temp|2026-07-10|${ttlDate}`
+
+    const data = readFileSync(memoryFile, "utf-8")
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries["))
+    lines.splice(headerIdx + 1, 0, entry)
+    lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, "[1|]")
+    writeFileSync(memoryFile, lines.join("\n"))
+
+    const updatedData = readFileSync(memoryFile, "utf-8")
+    const entryLine = updatedData.split("\n").find((l) => l.includes("ttl12345"))
+    expect(entryLine).toBeDefined()
+    const parts = entryLine!.trim().split("|")
+    expect(parts[7]).toBe(ttlDate)
+  })
+
+  it("should filter expired TTL entries in search", () => {
+    const entries = [
+      "  ttl000001|decision|active-decision|Still valid|file.ts|tag|2026-07-10|2027-12-31",
+      "  ttl000002|decision|expired-decision|Already expired|file.ts|tag|2026-07-10|2026-01-01",
+      "  ttl000003|decision|no-ttl-decision|No TTL at all|file.ts|tag|2026-07-10|",
+    ]
+
+    const data = readFileSync(memoryFile, "utf-8")
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries["))
+    lines.splice(headerIdx + 1, 0, ...entries)
+    lines[headerIdx] = "entries[3|]{id|category|key|content|file|tags|date|ttl}:"
+    writeFileSync(memoryFile, lines.join("\n"))
+
+    const updatedData = readFileSync(memoryFile, "utf-8")
+    const entryLines = updatedData.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
+
+    const today = new Date().toISOString().split("T")[0]
+    const results = entryLines
+      .map((line) => {
+        const parts = line.trim().split("|")
+        if (parts.length < 7) return null
+        const ttl = parts[7] || ""
+        if (ttl && ttl <= today) return null
+        return { id: parts[0], key: parts[2] }
+      })
+      .filter(Boolean)
+
+    expect(results).toHaveLength(2)
+    expect(results.map((r) => r!.key)).toContain("active-decision")
+    expect(results.map((r) => r!.key)).toContain("no-ttl-decision")
+    expect(results.map((r) => r!.key)).not.toContain("expired-decision")
+  })
+
+  it("should archive entries with expired TTL", () => {
+    const entries = [
+      "  ttl000001|decision|keep-this|Still valid|file.ts|tag|2026-07-10|2027-12-31",
+      "  ttl000002|decision|archive-this|Has expired TTL|file.ts|tag|2026-07-10|2026-01-01",
+      "  ttl000003|decision|old-entry|Old by date|file.ts|tag|2025-01-01|",
+    ]
+
+    const data = readFileSync(memoryFile, "utf-8")
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries["))
+    lines.splice(headerIdx + 1, 0, ...entries)
+    lines[headerIdx] = "entries[3|]{id|category|key|content|file|tags|date|ttl}:"
+    writeFileSync(memoryFile, lines.join("\n"))
+
+    const updatedData = readFileSync(memoryFile, "utf-8")
+    const entryLines = updatedData.split("\n").filter((l) => l.trim().length > 0 && l.includes("|") && !l.startsWith("version") && !l.startsWith("entries"))
+
+    const today = new Date().toISOString().split("T")[0]
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - 30)
+    const cutoffStr = cutoff.toISOString().split("T")[0]
+
+    const toArchive: string[] = []
+    const toKeep: string[] = []
+
+    for (const line of entryLines) {
+      const parts = line.trim().split("|")
+      if (parts.length >= 7) {
+        const date = parts[6]
+        const ttl = parts[7] || ""
+        const isOld = date < cutoffStr
+        const isTtlExpired = ttl && ttl <= today
+        if (isOld || isTtlExpired) {
+          toArchive.push(line.trim())
+        } else {
+          toKeep.push(line.trim())
+        }
+      }
+    }
+
+    expect(toArchive).toHaveLength(2)
+    expect(toKeep).toHaveLength(1)
+    expect(toKeep[0]).toContain("keep-this")
+    expect(toArchive.some((l) => l.includes("archive-this"))).toBe(true)
+    expect(toArchive.some((l) => l.includes("old-entry"))).toBe(true)
+  })
 })
