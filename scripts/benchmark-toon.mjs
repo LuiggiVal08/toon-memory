@@ -1,9 +1,11 @@
-// Reproducible token benchmark: real toon-memory format vs JSON.
+// Reproducible benchmark: real toon-memory format vs JSON.
+// Measures both token efficiency and parse speed.
 // Run with: npm run bench
 //
 // The actual on-disk format (data.toon) is a header + pipe-delimited
 // lines, NOT the @toon-format/toon object encoder. This benchmark
-// serializes the same data both ways and counts real LLM tokens.
+// serializes the same data both ways and counts real LLM tokens, then
+// parses both representations the way the project does.
 import { encode as encodeTokens } from 'gpt-tokenizer';
 
 // Representative corpus of real-world toon-memory entries.
@@ -47,28 +49,54 @@ const toonStr =
 // so any savings reported are a conservative lower bound.
 const jsonStr = JSON.stringify(entries);
 
+// --- Token efficiency ---
 const toonTokens = encodeTokens(toonStr).length;
 const jsonTokens = encodeTokens(jsonStr).length;
 const reduction = ((1 - toonTokens / jsonTokens) * 100).toFixed(1);
 
-// Single-entry example, echoing the README "per entry" style.
 const sample = entries[0];
 const sampleToon = `  ${sample.id}|${sample.category}|${sample.key}|${sample.content}|${sample.file}|${sample.tags}|${sample.date}|${sample.ttl}`;
 const sampleToonTokens = encodeTokens(sampleToon).length;
 const sampleJsonTokens = encodeTokens(JSON.stringify(sample)).length;
 const sampleReduction = ((1 - sampleToonTokens / sampleJsonTokens) * 100).toFixed(1);
 
-console.log('toon-memory — real format vs JSON token benchmark');
-console.log('Tokenizer: gpt-tokenizer (cl100k_base)');
-console.log(`Corpus: ${entries.length} representative memory entries\n`);
+// --- Parse speed (the way the project reads each representation) ---
+function parseToon(str) {
+  const lines = str.split('\n');
+  const out = [];
+  for (const line of lines) {
+    if (!line.startsWith('  ') || !line.includes('|')) continue;
+    const p = line.trim().split('|');
+    out.push({ id: p[0], category: p[1], key: p[2], content: p[3], file: p[4], tags: p[5], date: p[6], ttl: p[7] });
+  }
+  return out;
+}
+
+function benchParse(fn, input, iterations) {
+  for (let i = 0; i < 200; i++) fn(input); // warmup
+  const start = performance.now();
+  let sink = 0;
+  for (let i = 0; i < iterations; i++) sink += fn(input).length;
+  const avgMs = (performance.now() - start) / iterations;
+  return { avgMs, sink };
+}
+
+const ITER = 20000;
+const toonParse = benchParse(parseToon, toonStr, ITER);
+const jsonParse = benchParse(JSON.parse, jsonStr, ITER);
+const parseSpeedup = (jsonParse.avgMs / toonParse.avgMs).toFixed(1);
+
+// --- Report ---
+console.log('toon-memory — real format vs JSON benchmark');
+console.log('Tokenizer: gpt-tokenizer (cl100k_base)\n');
 console.log('┌───────────┬────────────┬───────────┐');
 console.log('│ Format    │ Chars      │ Tokens    │');
 console.log('├───────────┼────────────┼───────────┤');
 console.log(`│ JSON      │ ${String(jsonStr.length).padStart(10)} │ ${String(jsonTokens).padStart(9)} │`);
 console.log(`│ TOON      │ ${String(toonStr.length).padStart(10)} │ ${String(toonTokens).padStart(9)} │`);
 console.log('└───────────┴────────────┴───────────┘');
-console.log(`\nTOON uses ${reduction}% fewer tokens than JSON (corpus level).`);
-console.log(`Single entry: ${sampleReduction}% fewer tokens (JSON ${sampleJsonTokens} → TOON ${sampleToonTokens}).`);
+console.log(`\nTokens: TOON uses ${reduction}% fewer than JSON (corpus); ${sampleReduction}% on a single entry.`);
+console.log(`Parse : TOON ${toonParse.avgMs.toFixed(4)} ms/op vs JSON ${jsonParse.avgMs.toFixed(4)} ms/op → ${parseSpeedup}x ${Number(parseSpeedup) >= 1 ? 'faster' : 'slower'}.`);
 
 console.log('\n// metrics for the docs site');
 console.log(JSON.stringify({
@@ -77,4 +105,9 @@ console.log(JSON.stringify({
   toonTokens,
   reductionPct: Number(reduction),
   singleEntry: { jsonTokens: sampleJsonTokens, toonTokens: sampleToonTokens, reductionPct: Number(sampleReduction) },
+  parse: {
+    toonMsPerOp: Number(toonParse.avgMs.toFixed(4)),
+    jsonMsPerOp: Number(jsonParse.avgMs.toFixed(4)),
+    speedupX: Number(parseSpeedup),
+  },
 }, null, 2));
