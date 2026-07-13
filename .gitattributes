@@ -1,5 +1,9 @@
 # Ensure .astro files are counted as the Astro language
 *.astro linguist-language=Astro
 
-# Lockfiles are generated; exclude them from repository language statistics
+# Lockfiles are generated; exclude them from language statistics
 package-lock.json linguist-generated=true
+
+# The docs/ site is the project's actual Astro codebase (not just docs),
+# so stop Linguist from excluding it from the language statistics.
+docs/** linguist-documentation=false
