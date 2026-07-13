@@ -310,7 +310,7 @@ a:hover { text-decoration: underline; }
   grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
   padding: 0 2rem 3rem;
-  max-width: 720px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 .card {
@@ -410,7 +410,7 @@ a:hover { text-decoration: underline; }
 
 /* Content */
 .content-section {
-  max-width: 720px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 0 2rem 4rem;
 }
