@@ -17,6 +17,7 @@
 - [Quick Start](#quick-start)
 - [Supported Agents](#supported-agents)
 - [MCP Tools](#mcp-tools)
+- [Coordinación multi-sesión](#coordinación-multi-sesión)
 - [Tips & Best Practices](#tips--best-practices)
 - [CLI Commands](#cli-commands)
 - [Configuration](#configuration)
@@ -59,7 +60,7 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 
 ## Features
 
-- **10 MCP tools** — Full memory management via Model Context Protocol
+- **13 MCP tools** — Full memory management via Model Context Protocol, including `memory_sessions` for multi-session coordination
 - **MCP Resources** — Read memory as context without tool invocations
 - **15 agents supported** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Interactive installer** — Select which agents to configure from a menu
@@ -160,6 +161,9 @@ memory_remember   # Save important decisions
 | `memory_suggest` | Find related entries for a given context |
 | `memory_encrypt` | Enable AES-256-GCM encryption |
 | `memory_decrypt` | Disable encryption |
+| `memory_captured` | List activity auto-captured by hooks (opt-in) or clear the log |
+| `memory_consolidate` | De-duplicate entries with identical content (deterministic, no LLM) |
+| `memory_sessions` | Show active agent sessions (branch, files, last-seen) and soft conflicts for parallel work |
 
 ### MCP Resources
 
@@ -295,6 +299,58 @@ memory_encrypt()
 ```
 
 > **Warning:** Save the encryption key somewhere safe. If you lose it, your memory data is gone forever.
+
+---
+
+## Coordinación multi-sesión
+
+When you run **several AI agent sessions in parallel** (e.g. three OpenCode sessions on the same repo at once), they can accidentally clobber each other's work. toon-memory ships with **`memory_sessions`**, a file-based coordination tool that lets every session see what its siblings are doing — with **no server, no network, and no LLM calls**.
+
+### How it works
+
+- On startup, a `SessionStart` hook writes a **heartbeat file** for the session at `.toon-memory/memory/sessions/<id>.json`. Each process writes *only its own* file, so there's no lock contention.
+- The heartbeat records the agent name, the **git branch**, the **files touched**, and a **last-seen** timestamp.
+- Reading across all those files gives every session a shared, eventually-consistent view of who else is active.
+- Dead sessions (process PID no longer alive **and** a stale heartbeat past the TTL window) are pruned lazily.
+
+### The `memory_sessions` tool
+
+```typescript
+memory_sessions({ conflictsOnly: false })
+// 🧭 Sesiones activas (2) — ventana 30 min:
+//
+// • opencode @ feature/auth (tú)
+//   id: a1b2c3d4
+//   hace 2 min
+//   Archivos:
+//     • src/auth.ts
+//
+// • claude @ feature/db
+//   id: e5f6g7h8
+//   hace 9 min
+//     • src/db.ts
+//
+// 🔥 Conflictos suaves (1):
+//   ⚠️ src/types.ts  ↔  opencode @ feature/auth, claude @ feature/db
+```
+
+- Pass `conflictsOnly: true` to skip the session list and show only soft conflicts:
+  ```typescript
+  memory_sessions({ conflictsOnly: true })
+  // 🔥 Conflictos suaves (1):
+  //
+  // ⚠️ src/types.ts
+  //    ↔ opencode @ feature/auth (a1b2c3d4), claude @ feature/db (e5f6g7h8)
+  ```
+- A **soft conflict** is any file touched by 2+ active sessions — a heads-up that you might be editing the same code. It's not a hard lock, just a warning to coordinate.
+
+### Recommended parallel-session habit
+
+1. At the start of every session, the `SessionStart` hook already prints the other active sessions and any soft conflicts.
+2. Run `memory_sessions()` to see the full picture (branches, files, last-seen) and `memory_sessions({ conflictsOnly: true })` if you only care about clashes.
+3. If you share a file with another session, sync up before editing so you don't overwrite each other's changes.
+
+> **Tip:** This is purely local and lock-free — safe to run as often as you like. Combine it with `memory_recall({ query: "project context" })` at session start for both cross-session *memory* and cross-session *presence*.
 
 ---
 

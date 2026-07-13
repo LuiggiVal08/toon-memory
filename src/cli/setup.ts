@@ -25,13 +25,45 @@ interface Agent {
   needsHooks: boolean
   needsInstructions: boolean
   instructionFile?: string
+  /** Claude Code-style hook events for activity capture (e.g. PostToolUse, Stop) */
+  captureJson?: string[]
+  /** Codex TOML hook events for activity capture (e.g. post_tool_use, stop) */
+  captureToml?: string[]
 }
 
-/** Hook script content for SessionStart reminder */
-const HOOK_CONTENT = `#!/bin/bash
-echo "toon-memory: Use memory_recall BEFORE reading files for project context."
+/** Path to the compiled capture script (dist/cli/capture.js) */
+const CAPTURE_JS = join(__dirname, "capture.js")
+
+/** Path to the compiled session-start reminder script (dist/cli/session-start.js) */
+const SESSION_START_JS = join(__dirname, "session-start.js")
+
+/** Hook script content for SessionStart reminder (prints active sessions + conflicts) */
+function sessionStartHookContent(agentName: string): string {
+  return `#!/bin/bash
+node "${SESSION_START_JS}" ${agentName}
 exit 0
 `
+}
+
+/** Config file that holds the opt-in capture flag */
+const CAPTURE_CONFIG = join(MEMORY_DIR, "config.json")
+
+/**
+ * Hook script content for activity capture. It is a no-op unless capture is
+ * explicitly enabled (env TOON_MEMORY_CAPTURE or config.json `"capture": true`),
+ * so registering it costs almost nothing when disabled.
+ */
+function captureHookContent(agentName: string): string {
+  return `#!/bin/bash
+CFG="${CAPTURE_CONFIG}"
+if [ -z "$TOON_MEMORY_CAPTURE" ]; then
+  if [ ! -f "$CFG" ]; then exit 0; fi
+  grep -q '"capture"[[:space:]]*:[[:space:]]*true' "$CFG" 2>/dev/null || exit 0
+fi
+node "${CAPTURE_JS}" ${agentName}
+exit 0
+`
+}
 
 /** Base instruction content for agents */
 const INSTRUCTION_CONTENT = `# toon-memory
@@ -69,9 +101,10 @@ function detectAgents(): Agent[] {
     local: join(projectRoot, ".opencode", "opencode.json"),
     mcpKey: "mcp",
     format: "json",
-    needsHooks: false,
+    needsHooks: true,
     needsInstructions: true,
-    instructionFile: join(projectRoot, "AGENTS.md")
+    instructionFile: join(projectRoot, "AGENTS.md"),
+    captureJson: ["PostToolUse", "Stop"]
   })
 
   // VS Code / GitHub Copilot
@@ -93,7 +126,8 @@ function detectAgents(): Agent[] {
     format: "json",
     needsHooks: true,
     needsInstructions: true,
-    instructionFile: join(projectRoot, ".claude", "AGENTS.md")
+    instructionFile: join(projectRoot, ".claude", "AGENTS.md"),
+    captureJson: ["PostToolUse", "Stop"]
   })
 
   // Cursor
@@ -144,7 +178,8 @@ function detectAgents(): Agent[] {
     format: "toml",
     needsHooks: true,
     needsInstructions: true,
-    instructionFile: join(projectRoot, ".codex", "AGENTS.md")
+    instructionFile: join(projectRoot, ".codex", "AGENTS.md"),
+    captureToml: ["post_tool_use", "stop"]
   })
 
   // Gemini CLI
@@ -424,7 +459,7 @@ function installHooks(agent: Agent): void {
   if (!existsSync(hookDir)) mkdirSync(hookDir, { recursive: true })
 
   const hookPath = join(hookDir, `session-start-${agent.name}.sh`)
-  writeFileSync(hookPath, HOOK_CONTENT)
+  writeFileSync(hookPath, sessionStartHookContent(agent.name))
   chmodSync(hookPath, 0o755)
   console.log(`  Hook script created at ${hookPath}`)
 
@@ -434,6 +469,66 @@ function installHooks(agent: Agent): void {
   } else if (agent.format === "json" || agent.format === "jsonc") {
     registerHookJSON(agent, hookPath)
   }
+
+  // Activity capture hooks (opt-in, no-op unless explicitly enabled)
+  if (agent.captureJson && agent.format === "json") {
+    const capPath = join(hookDir, `capture-${agent.name}.sh`)
+    writeFileSync(capPath, captureHookContent(agent.name))
+    chmodSync(capPath, 0o755)
+    console.log(`  Capture hook created at ${capPath}`)
+    registerCaptureHookJSON(agent, capPath)
+  }
+  if (agent.captureToml && agent.format === "toml" && agent.local) {
+    const capPath = join(hookDir, `capture-${agent.name}.sh`)
+    writeFileSync(capPath, captureHookContent(agent.name))
+    chmodSync(capPath, 0o755)
+    console.log(`  Capture hook created at ${capPath}`)
+    registerCaptureHookTOML(agent, capPath)
+  }
+}
+
+/** Register activity-capture hooks (PostToolUse/Stop) in a JSON agent config. */
+function registerCaptureHookJSON(agent: Agent, scriptPath: string): void {
+  const configPath = agent.local || agent.global
+  if (!configPath) return
+
+  const configDir = dirname(configPath)
+  if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
+
+  let config: Record<string, any> = {}
+  if (existsSync(configPath)) {
+    try {
+      config = JSON.parse(readFileSync(configPath, "utf-8"))
+    } catch {
+      config = {}
+    }
+  }
+
+  if (!config.hooks) config.hooks = {}
+  for (const event of agent.captureJson || []) {
+    if (!config.hooks[event]) config.hooks[event] = []
+    if (!config.hooks[event].some((h: any) => h.command === scriptPath)) {
+      config.hooks[event].push({ command: scriptPath })
+    }
+  }
+
+  writeFileSync(configPath, JSON.stringify(config, null, 2))
+  console.log(`  Capture hooks registered in ${configPath}`)
+}
+
+/** Register activity-capture hooks (post_tool_use/stop) in a Codex TOML config. */
+function registerCaptureHookTOML(agent: Agent, scriptPath: string): void {
+  const configPath = agent.local
+  if (!configPath || !existsSync(configPath)) return
+
+  let content = readFileSync(configPath, "utf-8")
+  for (const event of agent.captureToml || []) {
+    if (content.includes(`[hooks.${event}]`)) continue
+    content += `\n[hooks.${event}]\ncommand = "${scriptPath}"\n`
+  }
+
+  writeFileSync(configPath, content)
+  console.log(`  Capture hooks registered in ${configPath}`)
 }
 
 /** Register SessionStart hook in TOML config (Codex CLI) */
@@ -475,8 +570,8 @@ function registerHookJSON(agent: Agent, hookPath: string): void {
     }
   }
 
-  // Claude Code format
-  if (agent.name === "claude") {
+  // Claude Code / OpenCode (Claude-compatible) format
+  if (agent.name === "claude" || agent.name === "opencode") {
     if (!config.hooks) config.hooks = {}
     if (!config.hooks.SessionStart) config.hooks.SessionStart = []
     if (!config.hooks.SessionStart.some((h: any) => h.command === hookPath)) {
@@ -634,6 +729,17 @@ function status(): void {
   } else {
     console.log("Memory: not initialized")
   }
+
+  // Capture status
+  let capture = false
+  if (process.env.TOON_MEMORY_CAPTURE) capture = true
+  else if (existsSync(CAPTURE_CONFIG)) {
+    try {
+      const c = JSON.parse(readFileSync(CAPTURE_CONFIG, "utf-8"))
+      if (c.capture) capture = true
+    } catch {}
+  }
+  console.log(`Capture: ${capture ? "enabled" : "disabled (opt-in)"}`)
 
   // Check agent configs
   const agents = detectAgents()
@@ -949,11 +1055,6 @@ function compressData(data: string): Buffer {
   return gzipSync(Buffer.from(data, "utf-8"))
 }
 
-/** Decompress gzip data to string */
-function decompressData(data: Buffer): string {
-  return gunzipSync(data).toString("utf-8")
-}
-
 /**
  * Watch mode - backup memory every N minutes
  */
@@ -1052,8 +1153,40 @@ function watch(): void {
   })
 }
 
+/**
+ * Enable or disable activity capture (the opt-in hook log).
+ */
+function captureToggle(enable: boolean): void {
+  if (!existsSync(MEMORY_DIR)) mkdirSync(MEMORY_DIR, { recursive: true })
+
+  let config: Record<string, any> = {}
+  if (existsSync(CAPTURE_CONFIG)) {
+    try {
+      config = JSON.parse(readFileSync(CAPTURE_CONFIG, "utf-8"))
+    } catch {
+      config = {}
+    }
+  }
+
+  config.capture = enable
+  writeFileSync(CAPTURE_CONFIG, JSON.stringify(config, null, 2))
+
+  if (enable) {
+    console.log("\n🔴 Captura de actividad HABILITADA.")
+    console.log("Los hooks grabarán observaciones en .toon-memory/memory/observations.toon.")
+    console.log("Revisa con `memory_captured` y promuévelas con `memory_remember`.\n")
+  } else {
+    console.log("\n⚪ Captura de actividad DESHABILITADA.\n")
+  }
+}
+
 // Main
 const args = process.argv.slice(2)
+
+if (args[0] === "capture") {
+  captureToggle(args[1] === "on")
+  process.exit(0)
+}
 
 if (args[0] === "uninstall") {
   uninstall()

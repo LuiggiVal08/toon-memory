@@ -1,11 +1,11 @@
 ---
 title: MCP Tools
-description: The 11 memory tools and 3 resources for your AI agent
+description: The 13 memory tools and 3 resources for your AI agent
 ---
 
 ## Overview
 
-toon-memory provides 11 MCP tools and 3 MCP resources for managing persistent memory:
+toon-memory provides 13 MCP tools and 3 MCP resources for managing persistent memory:
 
 ## Tools
 
@@ -19,8 +19,11 @@ toon-memory provides 11 MCP tools and 3 MCP resources for managing persistent me
 | `memory_archive` | Archive old entries (>30 days) and expired TTL entries |
 | `memory_diff` | Show changes since a date (24h, 7d, or exact date) |
 | `memory_suggest` | Find related entries for a given context |
+| `memory_captured` | List activity auto-captured by hooks (opt-in) or clear the log |
+| `memory_consolidate` | De-duplicate entries with identical content (deterministic, no LLM) |
 | `memory_encrypt` | Enable AES-256-GCM encryption |
 | `memory_decrypt` | Disable encryption |
+| `memory_sessions` | Show active agent sessions, branches, and soft file conflicts for parallel-session coordination |
 
 ## MCP Resources
 
@@ -142,6 +145,43 @@ memory_encrypt()
 // ⚠️ Guarda esta clave (no se puede recuperar):
 // a1b2c3d4...
 ```
+
+### List active sessions and conflicts
+
+```typescript
+memory_sessions({ conflictsOnly: false })
+// 🧭 Sesiones activas (2) — ventana 10 min:
+//
+// • opencode @ feature/foo
+//    id: sess-B
+//    Archivos:
+//      • src/shared.ts
+// • claude @ feature/foo (tú)
+//    id: sess-A
+//
+// 🔥 Conflictos suaves (1):
+//   ⚠️ src/shared.ts  ↔  opencode@feature/foo, claude@feature/foo
+```
+
+Use `memory_sessions({ conflictsOnly: true })` if you only care about clashes. See [Coordinación multi-sesión](#coordinación-multi-sesión) below.
+
+## Coordinación multi-sesión
+
+When you run **several AI agent sessions in parallel** (e.g. three OpenCode sessions on the same repo at once), they can clobber each other's work. `memory_sessions` is a **file-based** coordination tool — **no server, no network, no LLM calls** — that lets every session see what its siblings are doing.
+
+### How it works
+
+- On startup, a `SessionStart` hook writes a **heartbeat file** for the session at `.toon-memory/memory/sessions/<id>.json`. Each process writes *only its own* file, so there is no lock contention.
+- The heartbeat records the agent name, the **git branch**, the **files touched**, and a **last-seen** timestamp.
+- Reading across all those files gives every session a shared, eventually-consistent view of who else is active.
+- A session is "active" while its last heartbeat is within the TTL window (10 min). Dead sessions (process PID no longer alive **and** a stale heartbeat) are pruned lazily.
+- Soft conflicts are files touched by **2+ active sessions** — surfaced by `memory_sessions` so you can avoid stepping on sibling work.
+
+### Recommended habit for parallel sessions
+
+1. At session start, the `SessionStart` hook prints other active sessions, their branches, and any soft conflicts.
+2. Before editing shared files, run `memory_sessions()` to confirm no sibling is touching them.
+3. When you finish, your heartbeat is marked ended and the files are released.
 
 ## Categories
 

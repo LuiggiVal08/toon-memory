@@ -5,6 +5,8 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs"
 import { dirname, join } from "path"
 import { fileURLToPath } from "url"
 import { randomBytes, createCipheriv, createDecipheriv } from "crypto"
+import { withLockSync, atomicWrite, readUnderLock } from "../lib/lock"
+import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } from "../lib/sessions"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -17,6 +19,9 @@ const MEMORY_FILE = join(MEMORY_DIR, "data.toon")
 /** Archive file for old entries */
 const ARCHIVE_FILE = join(MEMORY_DIR, "archive.toon")
 
+/** Observations log written by capture hooks (opt-in, separate from memory) */
+const OBSERVATIONS_FILE = join(MEMORY_DIR, "observations.toon")
+
 /** Configuration file for encryption settings */
 const CONFIG_FILE = join(MEMORY_DIR, "config.json")
 
@@ -25,6 +30,15 @@ const MAX_ENTRIES = 100
 
 /** Days before entries are archived */
 const ARCHIVE_DAYS = 30
+
+/**
+ * Write `content` to a memory file atomically and safely across processes.
+ * Uses an advisory lock (temp+rename) so parallel sessions can't corrupt
+ * the same file. Encryption, if enabled, is applied by the caller.
+ */
+function safeWrite(file: string, content: string): void {
+  withLockSync(file, () => atomicWrite(file, content))
+}
 
 /** Encryption algorithm for AES-256-GCM */
 const ALGORITHM = "aes-256-gcm"
@@ -91,7 +105,7 @@ function ensureMemoryDir(): void {
 function ensureMemoryFile(): void {
   ensureMemoryDir()
   if (!existsSync(MEMORY_FILE)) {
-    writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date|ttl}:\n")
+    writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date|ttl|accessed}:\n")
   }
 }
 
@@ -131,7 +145,11 @@ function encrypt(text: string, key: string): string {
  */
 function decrypt(encryptedData: string, key: string): string {
   const keyBuffer = Buffer.from(key, "hex")
-  const [ivHex, authTagHex, encrypted] = encryptedData.split(":")
+  const parts = encryptedData.split(":")
+  if (parts.length !== 3) {
+    throw new Error("Invalid encrypted data format: expected iv:authTag:ciphertext")
+  }
+  const [ivHex, authTagHex, encrypted] = parts
   
   const iv = Buffer.from(ivHex, "hex")
   const authTag = Buffer.from(authTagHex, "hex")
@@ -145,15 +163,6 @@ function decrypt(encryptedData: string, key: string): string {
 }
 
 /**
- * Generate a random 256-bit encryption key.
- * 
- * @returns Hex-encoded key (64 chars)
- */
-function generateKey(): string {
-  return randomBytes(32).toString("hex")
-}
-
-/**
  * Read memory file, decrypting if encryption is enabled.
  * Key is read from TOON_MEMORY_KEY env var.
  * 
@@ -162,7 +171,7 @@ function generateKey(): string {
 function readMemory(): string {
   ensureMemoryFile()
   const config = loadConfig()
-  const data = readFileSync(MEMORY_FILE, "utf-8")
+  const data = readUnderLock(MEMORY_FILE)
   
   if (config.encrypted) {
     const key = getKey()
@@ -191,11 +200,11 @@ function writeMemory(content: string): void {
     const key = getKey()
     if (!key) return
     const encrypted = encrypt(content, key)
-    writeFileSync(MEMORY_FILE, encrypted)
+    safeWrite(MEMORY_FILE, encrypted)
     return
   }
   
-  writeFileSync(MEMORY_FILE, content)
+  safeWrite(MEMORY_FILE, content)
 }
 
 /**
@@ -345,41 +354,109 @@ function findRelatedEntries(text: string, excludeKey: string = "", limit: number
  * console.log(`Archived: ${result.archived}, Kept: ${result.kept}`)
  * ```
  */
-function archiveOldEntries(): { archived: number; kept: number } {
+/**
+ * Importance score for an entry: blends recency and access frequency.
+ * Deterministic — no LLM. Higher = more worth keeping.
+ */
+function entryScore(dateStr: string, accessed: number): number {
+  const days = (Date.now() - new Date(`${dateStr}T00:00:00`).getTime()) / 86400000
+  const recency = Math.max(0, 30 - days) / 30
+  const freq = Math.min(1, accessed / 5)
+  return recency * 0.6 + freq * 0.4
+}
+
+function entryScoreForLine(line: string): number {
+  const parts = line.trim().split("|")
+  const date = parts[6] || new Date().toISOString().split("T")[0]
+  const accessed = parts.length > 8 ? parseInt(parts[8]) || 0 : 0
+  return entryScore(date, accessed)
+}
+
+/**
+ * Increment the `accessed` counter for the given entry ids.
+ * Used by recall/suggest so frequently-used memories rank higher.
+ */
+function bumpAccessed(ids: string[]): void {
+  if (ids.length === 0) return
+  const idSet = new Set(ids)
+  const data = readMemory()
+  const lines = data.split("\n")
+  const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+  if (headerIdx === -1) return
+
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line.startsWith("  ") || !line.includes("|")) continue
+    if (line.startsWith("  summaries:")) break
+    const parts = line.trim().split("|")
+    if (idSet.has(parts[0])) {
+      const accessed = parts.length > 8 ? (parseInt(parts[8]) || 0) + 1 : 1
+      parts[8] = String(accessed)
+      lines[i] = `  ${parts.join("|")}`
+    }
+  }
+  writeMemory(lines.join("\n"))
+}
+
+/**
+ * Read captured activity from observations.toon (written by hooks).
+ */
+function readObservations(): Array<{ ts: string; session: string; agent: string; branch: string; tool: string; file: string; summary: string }> {
+  if (!existsSync(OBSERVATIONS_FILE)) return []
+  return readFileSync(OBSERVATIONS_FILE, "utf-8")
+    .split("\n")
+    .filter((l) => l.startsWith("  ") && l.includes("|"))
+    .map((l) => {
+      const p = l.trim().split("|")
+      return { ts: p[0] || "", session: p[1] || "", agent: p[2] || "", branch: p[3] || "", tool: p[4] || "", file: p[6] || "", summary: p[7] || "" }
+    })
+}
+
+/**
+ * Archive entries older than ARCHIVE_DAYS or with expired TTL.
+ * When `trimToMax` is set, also archive the lowest-importance entries
+ * until the active count is at or below MAX_ENTRIES.
+ */
+function archiveOldEntries(opts: { trimToMax?: boolean } = {}): { archived: number; kept: number } {
   const data = readMemory()
   const lines = data.split("\n")
   const headerIdx = lines.findIndex((l) => l.startsWith("entries["))
-  
+
   if (headerIdx === -1) return { archived: 0, kept: 0 }
-  
+
   const today = new Date()
   const cutoff = new Date(today)
   cutoff.setDate(cutoff.getDate() - ARCHIVE_DAYS)
   const cutoffStr = cutoff.toISOString().split("T")[0]
-  
+
   const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0)
-  const toArchive: string[] = []
-  const toKeep: string[] = []
-  
-  for (const line of entryLines) {
+  const toArchive = new Set<number>()
+
+  entryLines.forEach((line, idx) => {
     const parts = line.trim().split("|")
-    if (parts.length >= 7) {
-      const date = parts[6]
-      const ttl = parts[7] || ""
-      const isOld = date < cutoffStr
-      const isTtlExpired = ttl && isExpired(ttl)
-      if (isOld || isTtlExpired) {
-        toArchive.push(line.trim())
-      } else {
-        toKeep.push(line.trim())
-      }
-    } else {
-      toKeep.push(line.trim())
+    if (parts.length < 7) return
+    const date = parts[6]
+    const ttl = parts[7] || ""
+    if (date < cutoffStr || (ttl && isExpired(ttl))) toArchive.add(idx)
+  })
+
+  if (opts.trimToMax) {
+    const remaining = entryLines.length - toArchive.size
+    if (remaining > MAX_ENTRIES) {
+      const need = remaining - MAX_ENTRIES
+      const candidates = entryLines
+        .map((line, idx) => ({ idx, score: entryScoreForLine(line) }))
+        .filter((c) => !toArchive.has(c.idx))
+        .sort((a, b) => a.score - b.score)
+      for (let i = 0; i < need && i < candidates.length; i++) toArchive.add(candidates[i].idx)
     }
   }
-  
-  if (toArchive.length === 0) return { archived: 0, kept: toKeep.length }
-  
+
+  if (toArchive.size === 0) return { archived: 0, kept: entryLines.length }
+
+  const toArchiveLines = entryLines.filter((_, idx) => toArchive.has(idx)).map((l) => l.trim())
+  const toKeepLines = entryLines.filter((_, idx) => !toArchive.has(idx)).map((l) => l.trim())
+
   // Write archived entries
   let archiveContent = ""
   if (existsSync(ARCHIVE_FILE)) {
@@ -387,30 +464,117 @@ function archiveOldEntries(): { archived: number; kept: number } {
   } else {
     archiveContent = `version: 1\narchived:\n`
   }
-  
+
   const archiveLines = archiveContent.split("\n")
   let archiveHeaderIdx = archiveLines.findIndex((l) => l.startsWith("archived["))
   if (archiveHeaderIdx === -1) {
     archiveLines.push(`archived[0|]{id|category|key|content|file|tags|date}:`)
     archiveHeaderIdx = archiveLines.length - 1
   }
-  
+
   const archiveMatch = archiveLines[archiveHeaderIdx].match(/archived\[(\d+)\|/)
   const archiveCount = archiveMatch ? parseInt(archiveMatch[1]) : 0
-  
-  for (const entry of toArchive) {
+
+  for (const entry of toArchiveLines) {
     archiveLines.splice(archiveHeaderIdx + 1, 0, `  ${entry}`)
   }
-  archiveLines[archiveHeaderIdx] = archiveLines[archiveHeaderIdx].replace(/archived\[\d+\|/, `[${archiveCount + toArchive.length}|`)
-  
-  writeFileSync(ARCHIVE_FILE, archiveLines.join("\n"))
-  
+  archiveLines[archiveHeaderIdx] = archiveLines[archiveHeaderIdx].replace(/archived\[\d+\|/, `[${archiveCount + toArchiveLines.length}|`)
+
+  safeWrite(ARCHIVE_FILE, archiveLines.join("\n"))
+
   // Update main file
-  lines[headerIdx] = lines[headerIdx].replace(/entries\[\d+\|/, `[${toKeep.length}|`)
-  lines.splice(headerIdx + 1, entryLines.length, ...toKeep.map((l) => `  ${l}`))
+  lines[headerIdx] = lines[headerIdx].replace(/entries\[\d+\|/, `[${toKeepLines.length}|`)
+  const keepSet = new Set(toKeepLines)
+  const allEntryLines = lines.slice(headerIdx + 1)
+  const newEntryLines = allEntryLines.filter((l) => {
+    if (l.trim().length === 0) return false
+    return keepSet.has(l.trim())
+  })
+  lines.splice(headerIdx + 1, allEntryLines.length, ...newEntryLines.map((l) => `  ${l.trim()}`))
   writeMemory(lines.join("\n"))
-  
-  return { archived: toArchive.length, kept: toKeep.length }
+
+  return { archived: toArchiveLines.length, kept: toKeepLines.length }
+}
+
+/**
+ * Remove entries whose TTL has expired, run at server startup.
+ * Distinct from archiveOldEntries: pruning == hard delete of entries that
+ * have outlived their TTL (they've passed their useful window), rather than
+ * archiving by age. Runs entirely under the memory-file lock so parallel
+ * sessions can't corrupt the file mid-prune.
+ *
+ * @returns Number of entries pruned
+ */
+function pruneExpiredEntries(): number {
+  ensureMemoryFile()
+  if (!existsSync(MEMORY_FILE)) return 0
+  let pruned = 0
+  withLockSync(MEMORY_FILE, () => {
+    const data = readMemory()
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries["))
+    if (headerIdx === -1) return
+
+    const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
+    const kept = entryLines.filter((l) => {
+      const parts = l.trim().split("|")
+      if (parts.length < 8) return true
+      const ttl = parts[7] || ""
+      if (ttl && isExpired(ttl)) {
+        pruned++
+        return false
+      }
+      return true
+    })
+    if (pruned === 0) return
+
+    lines[headerIdx] = lines[headerIdx].replace(/entries\[\d+\|/, `[${kept.length}|`)
+    const keepSet = new Set(kept.map((l) => l.trim()))
+    const allEntryLines = lines.slice(headerIdx + 1)
+    const newLines = allEntryLines.filter((l) => l.trim().length === 0 || keepSet.has(l.trim()))
+    lines.splice(headerIdx + 1, allEntryLines.length, ...newLines.map((l) => (l.trim().length ? `  ${l.trim()}` : l)))
+    writeMemory(lines.join("\n"))
+  })
+  return pruned
+}
+
+/**
+ * Deterministic consolidation: remove entries with identical (normalized)
+ * content, keeping the first. No LLM involved.
+ */
+function consolidateEntries(): { removed: number; kept: number; duplicates: string[] } {
+  const data = readMemory()
+  const lines = data.split("\n")
+  const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+  if (headerIdx === -1) return { removed: 0, kept: 0, duplicates: [] }
+
+  const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
+  const seen = new Map<string, string>()
+  const order: string[] = []
+  const duplicates: string[] = []
+
+  for (const line of entryLines) {
+    const parts = line.trim().split("|")
+    if (parts.length < 3) {
+      order.push(line.trim())
+      continue
+    }
+    const content = (parts[3] || "").toLowerCase().replace(/\s+/g, " ").trim()
+    if (seen.has(content)) {
+      duplicates.push(parts[2])
+      continue
+    }
+    seen.set(content, line.trim())
+    order.push(line.trim())
+  }
+
+  if (duplicates.length === 0) return { removed: 0, kept: order.length, duplicates: [] }
+
+  lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${order.length}|`)
+  lines.splice(headerIdx + 1, lines.length - headerIdx - 1, ...order.map((l) => `  ${l}`))
+  writeMemory(lines.join("\n"))
+
+  return { removed: duplicates.length, kept: order.length, duplicates }
 }
 
 const server = new McpServer(
@@ -539,7 +703,7 @@ server.registerTool(
     const entryId = existingIdx !== -1 ? existingId : newId
     const resolvedTtl = parseTTL(ttl)
     const resolvedTags = tags ? tags : inferTags(content, key)
-    const newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}`
+    const newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|0`
     let action = "Guardado"
     const tagsInferred = !tags && resolvedTags ? true : false
 
@@ -557,14 +721,14 @@ server.registerTool(
 
     writeMemory(lines.join("\n"))
 
-    // Auto-archive if we exceed MAX_ENTRIES
+    // Auto-archive if we exceed MAX_ENTRIES (old entries, then lowest-importance)
     const headerMatch = lines[headerIdx].match(/\[(\d+)\|/)
     const entryCount = headerMatch ? parseInt(headerMatch[1]) : 0
     let archiveMsg = ""
     if (entryCount > MAX_ENTRIES) {
-      const result = archiveOldEntries()
+      const result = archiveOldEntries({ trimToMax: true })
       if (result.archived > 0) {
-        archiveMsg = `\n📦 Auto-archived ${result.archived} old entries (${result.kept} kept)`
+        archiveMsg = `\n📦 Auto-archived ${result.archived} low-importance entries (${result.kept} kept)`
       }
     }
 
@@ -609,7 +773,7 @@ server.registerTool(
   },
   async ({ query, category, from_date, to_date }) => {
     const data = readMemory()
-    const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("summaries:"))
+    const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
 
     // Normalize for fuzzy matching: hyphens/underscores → spaces, collapse whitespace
     const normalize = (s: string) => s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim()
@@ -620,7 +784,7 @@ server.registerTool(
         const trimmed = line.trim()
         const parts = trimmed.split("|")
         if (parts.length < 7) return null
-        const [id, cat, key, content, file, tags, date, ttl] = parts
+        const [id, cat, key, content, file, tags, date, ttl, accessedRaw] = parts
         if (category && cat !== category) return null
         if (from_date && date < from_date) return null
         if (to_date && date > to_date) return null
@@ -628,16 +792,24 @@ server.registerTool(
         const searchStr = normalize(`${id} ${cat} ${key} ${content} ${file} ${tags}`)
         // All query tokens must match (AND logic)
         if (!queryTokens.every((token) => searchStr.includes(token))) return null
-        return { id, cat, key, content, file, tags, date }
+        const accessed = accessedRaw ? parseInt(accessedRaw) || 0 : 0
+        return { id, cat, key, content, file, tags, date, accessed }
       })
-      .filter(Boolean)
+      .filter(Boolean) as Array<{ id: string; cat: string; key: string; content: string; file: string; tags: string; date: string; accessed: number }>
 
     if (results.length === 0) {
       return { content: [{ type: "text" as const, text: `No se encontraron resultados para "${query}"` }] }
     }
 
-    const formatted = results
-      .map((r) => `[${r!.cat}] ${r!.key} (${r!.id})\n  ${r!.content}\n  File: ${r!.file} | Tags: ${r!.tags} | Date: ${r!.date}`)
+    // Rank by importance (recency + access frequency), then bump access counts.
+    const ranked = results
+      .map((r) => ({ ...r, score: entryScore(r.date, r.accessed) }))
+      .sort((a, b) => b.score - a.score)
+
+    bumpAccessed(ranked.map((r) => r.id))
+
+    const formatted = ranked
+      .map((r) => `[${r.cat}] ${r.key} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags} | Date: ${r.date}`)
       .join("\n\n")
 
     return { content: [{ type: "text" as const, text: formatted }] }
@@ -671,7 +843,7 @@ server.registerTool(
       return { content: [{ type: "text" as const, text: "No hay entradas en memoria" }] }
     }
 
-    const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("summaries:"))
+    const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
     const filtered = entryLines.filter((l) => {
       const parts = l.trim().split("|")
       return parts[0] !== key && parts[2] !== key
@@ -1035,6 +1207,156 @@ server.registerTool(
     }
   }
 )
+
+/**
+ * Register the memory_captured tool.
+ * Show activity captured automatically by hooks (opt-in, off by default).
+ */
+server.registerTool(
+  "memory_captured",
+  {
+    title: "List Captured Activity",
+    description: "Muestra el log de actividad capturado automáticamente por los hooks (solo si la captura está habilitada). Útil para promover observaciones a memoria con memory_remember.",
+    inputSchema: {
+      limit: z.number().optional().default(20).describe("Máximo de observaciones a mostrar"),
+      tool: z.string().optional().default("").describe("Filtrar por nombre de herramienta"),
+      file: z.string().optional().default("").describe("Filtrar por archivo"),
+      clear: z.boolean().optional().default(false).describe("Si true, limpia el log de captura"),
+    },
+  },
+  async ({ limit, tool, file, clear }) => {
+    if (clear) {
+      if (existsSync(OBSERVATIONS_FILE)) {
+        writeFileSync(OBSERVATIONS_FILE, "version: 1\nobservations[0|]{ts|session|agent|branch|tool|hash|file|summary}:\n")
+      }
+      return { content: [{ type: "text" as const, text: "🧹 Log de captura limpiado" }] }
+    }
+
+    let obs = readObservations()
+    if (tool) obs = obs.filter((o) => o.tool.toLowerCase().includes(tool.toLowerCase()))
+    if (file) obs = obs.filter((o) => o.file.toLowerCase().includes(file.toLowerCase()))
+    obs = obs.slice(-limit).reverse()
+
+    if (obs.length === 0) {
+      return {
+        content: [{
+          type: "text" as const,
+          text: "No hay actividad capturada. La captura está desactivada por defecto; actívala con `toon-memory capture on`.",
+        }],
+      }
+    }
+
+    const formatted = obs
+      .map((o) => `[${o.ts}] ${o.agent}@${o.branch}/${o.tool}${o.file ? ` (${o.file})` : ""}\n  ${o.summary}`)
+      .join("\n\n")
+
+    return { content: [{ type: "text" as const, text: `🔍 Actividad capturada (${obs.length}):\n\n${formatted}` }] }
+  }
+)
+
+/**
+ * Register the memory_consolidate tool.
+ * Deterministic de-duplication of memory entries (no LLM).
+ */
+server.registerTool(
+  "memory_consolidate",
+  {
+    title: "Consolidate Memory",
+    description: "Consolida la memoria eliminando entradas con contenido idéntico (mantiene la primera). Determinista, sin LLM.",
+    inputSchema: {},
+  },
+  async () => {
+    const result = consolidateEntries()
+    if (result.removed === 0) {
+      return { content: [{ type: "text" as const, text: `✅ Memoria ya consolidada (${result.kept} entradas, 0 duplicados)` }] }
+    }
+    return {
+      content: [{
+        type: "text" as const,
+        text: `🧹 Consolidadas ${result.removed} entradas duplicadas.\nQuedan ${result.kept} activas.\nDuplicados: ${result.duplicates.join(", ")}`,
+      }],
+    }
+  }
+)
+
+/**
+ * Register the memory_sessions tool.
+ * File-based multi-session coordination — shows other active agent sessions
+ * (branch, files, last-seen) and soft conflicts, so parallel sessions don't
+ * step on each other. No server, no network, no LLM.
+ */
+server.registerTool(
+  "memory_sessions",
+  {
+    title: "Active Sessions & Conflicts",
+    description: "Muestra las sesiones de agente activas en este proyecto (rama git, archivos tocados, last-seen) y detecta conflictos suaves (archivos tocados por 2+ sesiones). Úsalo al iniciar para no pisar el trabajo de otras sesiones paralelas.",
+    inputSchema: {
+      conflictsOnly: z.boolean().optional().default(false).describe("Si true, muestra solo conflictos suaves"),
+    },
+  },
+  async ({ conflictsOnly }) => {
+    const selfId = resolveSessionId()
+    const { active, conflicts } = coordinationView(selfId)
+
+    if (conflictsOnly) {
+      if (conflicts.length === 0) {
+        return { content: [{ type: "text" as const, text: "✅ No hay conflictos suaves entre sesiones activas." }] }
+      }
+      const lines = conflicts.map((c) => {
+        const who = c.sessions.map((s) => `${s.agent}@${s.branch} (${s.id})`).join(", ")
+        return `⚠️ ${c.file}\n   ↔ ${who}`
+      })
+      return {
+        content: [{ type: "text" as const, text: `🔥 Conflictos suaves (${conflicts.length}):\n\n${lines.join("\n\n")}` }],
+      }
+    }
+
+    if (active.length === 0) {
+      return {
+        content: [{
+          type: "text" as const,
+          text: "🟢 No hay otras sesiones activas en este proyecto.\n(Esta sesión: " + selfId + " @ " + currentBranch() + ")",
+        }],
+      }
+    }
+
+    const ttlMin = Math.round(SESSION_TTL_MS / 60000)
+    const section = (s: ReturnType<typeof coordinationView>["active"][number]) => {
+      const mins = Math.max(0, Math.round(s.ageMs / 60000))
+      const tag = s.id === selfId ? " (tú)" : ""
+      const ended = s.ended ? " 🏁" : ""
+      const files = Object.keys(s.files).slice(0, 8).map((f) => `      • ${f}`).join("\n")
+      const fileBlock = files ? `\n   Archivos:\n${files}` : ""
+      return `• ${s.agent} @ ${s.branch}${tag}${ended}\n   id: ${s.id}\n   hace ${mins} min${fileBlock}`
+    }
+
+    const parts = [
+      `🧭 Sesiones activas (${active.length}) — ventana ${ttlMin} min:`,
+      "",
+      ...active.map(section),
+    ]
+
+    if (conflicts.length > 0) {
+      parts.push("", `🔥 Conflictos suaves (${conflicts.length}):`)
+      for (const c of conflicts) {
+        const who = c.sessions.map((s) => `${s.agent}@${s.branch}`).join(", ")
+        parts.push(`   ⚠️ ${c.file}  ↔  ${who}`)
+      }
+    } else {
+      parts.push("", "✅ Sin conflictos suaves detectados.")
+    }
+
+    return { content: [{ type: "text" as const, text: parts.join("\n") }] }
+  }
+)
+
+// Startup TTL prune: drop entries whose TTL has elapsed. Best-effort — never
+// block server startup on a prune failure.
+try {
+  pruneExpiredEntries()
+} catch {
+  // ignore — pruning is non-critical for serving requests
+}
 
 const transport = new StdioServerTransport()
 await server.connect(transport)

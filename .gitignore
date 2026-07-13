@@ -5,3 +5,4 @@ bin/toon-memory.js
 *.tgz
 .opencode/
 .opencode/memory/
+.toon-memory/memory/

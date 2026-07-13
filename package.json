@@ -20,7 +20,7 @@
     "build": "npm run build:bin && npm run build:mcp && npm run build:cli",
     "build:bin": "esbuild src/bin/toon-memory.ts --platform=node --format=esm --outfile=bin/toon-memory.js",
     "build:mcp": "esbuild src/mcp/server.ts --bundle --platform=node --format=esm --outfile=mcp/server.js",
-    "build:cli": "esbuild src/cli/setup.ts --platform=node --format=esm --outfile=dist/cli/setup.js && esbuild src/cli/toon-memory.ts --platform=node --format=esm --outfile=dist/cli/toon-memory.js",
+    "build:cli": "esbuild src/cli/setup.ts --bundle --platform=node --format=esm --outfile=dist/cli/setup.js && esbuild src/cli/toon-memory.ts --bundle --platform=node --format=esm --outfile=dist/cli/toon-memory.js && esbuild src/cli/capture.ts --bundle --platform=node --format=esm --outfile=dist/cli/capture.js && esbuild src/cli/session-start.ts --bundle --platform=node --format=esm --outfile=dist/cli/session-start.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "bench": "node scripts/benchmark-toon.mjs",

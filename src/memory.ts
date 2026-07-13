@@ -11,7 +11,7 @@ const MEMORY_FILE = join(MEMORY_DIR, "data.toon")
 function ensureMemoryFile() {
   if (!existsSync(MEMORY_DIR)) mkdirSync(MEMORY_DIR, { recursive: true })
   if (!existsSync(MEMORY_FILE)) {
-    writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date}:\n")
+    writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date|ttl}:\n")
   }
 }
 
