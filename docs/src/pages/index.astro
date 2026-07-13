@@ -704,7 +704,7 @@ const description =
       /* How it works */
       .steps {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: 1fr;
         gap: 1rem;
       }
       .step {
@@ -713,6 +713,12 @@ const description =
         border-radius: 12px;
         padding: 1.5rem;
         position: relative;
+        min-width: 0;
+      }
+      .step pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-x: hidden;
       }
       .step-num {
         width: 36px;
