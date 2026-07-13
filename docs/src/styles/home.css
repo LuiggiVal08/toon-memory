@@ -553,6 +553,88 @@ pre code {
   100% { transform: translateY(430%); }
 }
 
+/* Memory Graph showcase */
+.graph-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+.graph-points {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.graph-points li {
+  display: flex;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.graph-points li::before {
+  content: '▹';
+  color: var(--brand);
+  font-weight: 700;
+}
+.graph-code {
+  font-size: 0.85rem;
+  margin: 0 0 0.75rem;
+}
+.graph-caption {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin: 0;
+}
+.graph-viz svg { width: 100%; height: auto; display: block; }
+.graph-edge {
+  stroke: var(--brand);
+  stroke-width: 2;
+  fill: none;
+  stroke-dasharray: 260;
+  stroke-dashoffset: 260;
+  transition: stroke-dashoffset 1.1s ease;
+}
+.graph-showcase.in-view .graph-edge { stroke-dashoffset: 0; }
+.graph-node {
+  fill: var(--bg-card);
+  stroke: var(--brand);
+  stroke-width: 2;
+  opacity: 0;
+  transform: scale(0.4);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.graph-showcase.in-view .graph-node { opacity: 1; transform: scale(1); }
+.graph-node.center { fill: var(--brand); stroke: var(--brand); }
+.graph-label {
+  fill: var(--text);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.graph-showcase.in-view .graph-label { opacity: 1; }
+.graph-halo {
+  fill: var(--brand);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.graph-showcase.in-view .graph-halo {
+  animation: graphPulse 2.8s ease-in-out 1.4s infinite;
+}
+@keyframes graphPulse {
+  0%, 100% { opacity: 0; transform: scale(0.9); }
+  50% { opacity: 0.18; transform: scale(1.15); }
+}
+
 /* Footer */
 .site-footer {
   border-top: 1px solid var(--border);
@@ -852,6 +934,7 @@ pre code {
   .hero { padding: 3rem 1rem 2rem; }
   .site-header { padding: 0.75rem 1rem; }
   .feature-cards { grid-template-columns: 1fr; }
+  .graph-grid { grid-template-columns: 1fr; }
   .tip-grid { grid-template-columns: 1fr; }
   .comparison { grid-template-columns: 1fr; }
   .stats-row { gap: 1.5rem; }
@@ -866,4 +949,8 @@ pre code {
   .bar-toon.is-animated { animation: none; }
   .tool-card.pre-reveal { opacity: 1; transform: none; transition: none; }
   .code-block::after { animation: none; display: none; }
+  .graph-edge { stroke-dashoffset: 0; transition: none; }
+  .graph-node { opacity: 1; transform: none; transition: none; }
+  .graph-label { opacity: 1; transition: none; }
+  .graph-halo { animation: none; }
 }

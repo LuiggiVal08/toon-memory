@@ -67,3 +67,25 @@ export function revealCards(root: HTMLElement, selector: string) {
 	);
 	cards.forEach((c) => io.observe(c));
 }
+
+/**
+ * Add `cls` to `root` the first time it scrolls into view. Used to trigger
+ * CSS transitions (graph draw-in, etc.) without animating above the fold.
+ */
+export function revealOnView(root: HTMLElement, cls: string) {
+	if (reduceMotion()) {
+		root.classList.add(cls);
+		return;
+	}
+	const io = new IntersectionObserver(
+		(entries, obs) => {
+			for (const e of entries) {
+				if (!e.isIntersecting) continue;
+				e.target.classList.add(cls);
+				obs.unobserve(e.target);
+			}
+		},
+		{ threshold: 0.35 }
+	);
+	io.observe(root);
+}

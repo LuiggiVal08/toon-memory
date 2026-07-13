@@ -224,6 +224,17 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'memory_decrypt', title: 'Disable Encryption', desc: 'Decrypt and disable encryption.' },
 			],
 		},
+		graphSection: {
+			title: 'Your memory, as a graph',
+			subtitle:
+				'Connect decisions to their specs, bugs, and architecture. Recall returns the right context — not just keyword matches.',
+			points: [
+				'Link entries with `links` or `[[key]]` refs — no embeddings, no LLM',
+				'`memory_recall({ mode: "graph" })` expands a relationship-aware subgraph',
+				'Fewer tokens, higher precision, fully offline and deterministic',
+			],
+			caption: 'A decision ripples to its spec and architecture — the agent sees the whole picture.',
+		},
 		faq: {
 			title: 'Frequently Asked Questions',
 			subtitle: 'Everything you need to know about giving your agent a memory',
@@ -504,6 +515,17 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'memory_encrypt', title: 'Habilitar encriptación', desc: 'Encriptación AES-256-GCM con clave autogenerada.' },
 				{ name: 'memory_decrypt', title: 'Deshabilitar encriptación', desc: 'Desencripta y deshabilita la encriptación.' },
 			],
+		},
+		graphSection: {
+			title: 'Tu memoria, como un grafo',
+			subtitle:
+				'Conecta decisiones con sus specs, bugs y arquitectura. El recall devuelve el contexto correcto, no solo coincidencias de palabras.',
+			points: [
+				'Enlaza entries con `links` o referencias `[[key]]` — sin embeddings, sin LLM',
+				'`memory_recall({ mode: "graph" })` expande un subgrafo consciente de las relaciones',
+				'Menos tokens, más precisión, 100% offline y determinista',
+			],
+			caption: 'Una decisión se propaga a su spec y arquitectura — el agente ve el cuadro completo.',
 		},
 		faq: {
 			title: 'Preguntas frecuentes',

@@ -1,0 +1,89 @@
+---
+import { getContent } from '../i18n';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
+const g = c.graphSection;
+
+// Illustrative graph: a decision linked to its spec, architecture, and bugs.
+const nodes = [
+	{ id: 'center', label: 'risk-engine', x: 180, y: 150, r: 14, center: true, delay: 0 },
+	{ id: 'spec', label: 'risk-spec', x: 60, y: 72, r: 10, delay: 0.15 },
+	{ id: 'arch', label: 'engine-arch', x: 300, y: 72, r: 10, delay: 0.3 },
+	{ id: 'bug', label: 'redis-pool', x: 60, y: 240, r: 10, delay: 0.45 },
+	{ id: 'auth', label: 'auth-decision', x: 300, y: 240, r: 10, delay: 0.6 },
+];
+const edges = nodes
+	.filter((n) => !n.center)
+	.map((n) => ({ from: nodes[0], to: n, delay: 0.35 }));
+---
+
+<section class="content-section graph-showcase">
+	<div class="section-header">
+		<h2>{g.title}</h2>
+		<p>{g.subtitle}</p>
+	</div>
+
+	<div class="graph-grid">
+		<div class="graph-text">
+			<ul class="graph-points">
+				{g.points.map((p) => <li set:html={p} />)}
+			</ul>
+			<pre class="code-block graph-code"><code>{`memory_recall({
+  query: "riesgo",
+  mode: "graph",
+  hops: 2
+})`}</code></pre>
+			<p class="graph-caption">{g.caption}</p>
+		</div>
+
+		<div class="graph-viz" aria-hidden="true">
+			<svg viewBox="0 0 360 300" role="img">
+				{
+					edges.map((e) => (
+						<line
+							class="graph-edge"
+							x1={e.from.x}
+							y1={e.from.y}
+							x2={e.to.x}
+							y2={e.to.y}
+							style={`transition-delay:${e.delay}s`}
+						/>
+					))
+				}
+				{
+					nodes.map((n) => (
+						<>
+							{n.center && <circle class="graph-halo" cx={n.x} cy={n.y} r={n.r + 8} />}
+							<circle
+								class={`graph-node${n.center ? ' center' : ''}`}
+								cx={n.x}
+								cy={n.y}
+								r={n.r}
+								style={`transition-delay:${n.delay}s`}
+							/>
+							<text
+								class="graph-label"
+								x={n.x}
+								y={n.y + (n.center ? n.r + 14 : n.r + 16)}
+								text-anchor="middle"
+								style={`transition-delay:${n.delay + 0.15}s`}
+							>
+								{n.label}
+							</text>
+						</>
+					))
+				}
+			</svg>
+		</div>
+	</div>
+</section>
+
+<script>
+	import { revealOnView } from '../scripts/home-anim';
+	const root = document.querySelector<HTMLElement>('.graph-showcase');
+	if (root) revealOnView(root, 'in-view');
+</script>
