@@ -6,7 +6,7 @@ export const content = {
 			github: 'GitHub',
 		},
 		hero: {
-			tagline: 'Persistent memory for AI coding agents',
+			tagline: 'Offline, token-efficient memory for AI coding agents — recall context across sessions',
 			subtitle: 'Remember decisions, patterns, and bugs — and recover context with 68% fewer tokens every session',
 			getStarted: 'Get Started',
 			viewGithub: 'View on GitHub',

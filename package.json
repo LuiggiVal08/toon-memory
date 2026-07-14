@@ -1,7 +1,7 @@
 {
   "name": "toon-memory",
   "version": "2.3.0",
-  "description": "Persistent memory system for AI coding agents using TOON format (22% fewer tokens than JSON, measured)",
+  "description": "Offline, token-efficient persistent memory for AI coding agents — recall decisions, patterns, and bugs across sessions with 22% fewer tokens than JSON. No LLM, no server; works with 15+ agents.",
   "type": "module",
   "bin": {
     "toon-memory": "./bin/toon-memory.js"
