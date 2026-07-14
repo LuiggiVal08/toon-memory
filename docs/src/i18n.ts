@@ -41,8 +41,8 @@ export const content = {
 			cards: [
 				{
 					icon: '🧩',
-					title: '10 MCP Tools + 3 Resources',
-					body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, encrypt, decrypt. Plus resources for direct context reading.',
+					title: '13 MCP Tools + 3 Resources',
+					body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, encrypt, decrypt, captured, consolidate, sessions. Plus resources for direct context reading.',
 					tags: ['remember', 'recall', 'diff', 'suggest'],
 				},
 				{
@@ -58,9 +58,15 @@ export const content = {
 					stats: ['22% less tokens', '1.4x faster parse'],
 				},
 				{
+					icon: '🔎',
+					title: 'Smart Recall',
+					body: 'Graph-aware recall re-ranked by BM25 relevance and graph centrality (hubs surface even without the query word). Per-hop decay keeps distant context low. Token-efficient `compact` mode returns numeric-indexed, snippet-truncated results.',
+					stats: ['BM25', 'Centrality', 'compact'],
+				},
+				{
 					icon: '🧠',
 					title: 'Smart Memory',
-					body: 'Auto-tag inference, related entry suggestions, memory diff, and configurable TTL for temporary context.',
+					body: 'Auto-tag inference from a built-in vocabulary plus your project dependencies, related entry suggestions, memory diff, and configurable TTL for temporary context.',
 					stats: ['Auto-tags', 'TTL', 'Diff'],
 				},
 				{
@@ -77,7 +83,7 @@ export const content = {
 		},
 		stats: {
 			items: [
-				{ number: '10', label: 'MCP Tools' },
+				{ number: '13', label: 'MCP Tools' },
 				{ number: '15', label: 'Agents' },
 				{ number: '22%', label: 'Fewer Tokens' },
 				{ number: '0', label: 'Config Needed' },
@@ -235,6 +241,26 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			],
 			caption: 'A decision ripples to its spec and architecture — the agent sees the whole picture.',
 		},
+		smartRecallSection: {
+			title: 'Smart, token-efficient recall',
+			subtitle:
+				'Recall is re-ranked offline by BM25 relevance and graph centrality — then shrunk to a compact form when tokens matter.',
+			points: [
+				'BM25 scoring over id + category + key + content + tags',
+				'Graph centrality surfaces hub entries even without the query word',
+				'`compact: true` → numeric indices, dropped id/date/file, snippet-truncated neighbors',
+			],
+			standardCode: `memory_recall({ query: "riesgo", mode: "graph" })
+[decision] risk-engine-priority (a1b2c3d4)
+  The engine prioritizes risk over speed.
+  File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01
+  links: engine-arch`,
+			compactCode: `memory_recall({ query: "riesgo", mode: "graph", compact: true })
+[1] decision/risk-engine-priority
+  The engine prioritizes risk over speed.
+  tags: risk;spec · edges: ->2, ->3`,
+			caption: 'Compact mode keeps the same context in fewer tokens — the .toon file is never changed.',
+		},
 		faq: {
 			title: 'Frequently Asked Questions',
 			subtitle: 'Everything you need to know about giving your agent a memory',
@@ -333,8 +359,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			cards: [
 				{
 					icon: '🧩',
-					title: '10 herramientas MCP + 3 recursos',
-					body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, encrypt, decrypt. Más recursos para lectura directa de contexto.',
+					title: '13 herramientas MCP + 3 recursos',
+					body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, encrypt, decrypt, captured, consolidate, sessions. Más recursos para lectura directa de contexto.',
 					tags: ['remember', 'recall', 'diff', 'suggest'],
 				},
 				{
@@ -350,9 +376,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					stats: ['22% menos tokens', '1.4x más rápido'],
 				},
 				{
+					icon: '🔎',
+					title: 'Recuperación inteligente',
+					body: 'Recall basado en grafo re-ordenado por relevancia BM25 y centralidad del grafo (los hubs aparecen aunque no tengan la palabra de búsqueda). El decay por salto mantiene el contexto lejano abajo. El modo `compact` devuelve resultados con índices numéricos y snippets.',
+					stats: ['BM25', 'Centralidad', 'compact'],
+				},
+				{
 					icon: '🧠',
 					title: 'Memoria inteligente',
-					body: 'Inferencia automática de etiquetas, sugerencias de entradas relacionadas, diff de memoria y TTL configurable para contexto temporal.',
+					body: 'Inferencia automática de etiquetas desde un vocabulario integrado más tus dependencias del proyecto, sugerencias de entradas relacionadas, diff de memoria y TTL configurable para contexto temporal.',
 					stats: ['Auto-etiquetas', 'TTL', 'Diff'],
 				},
 				{
@@ -369,7 +401,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		stats: {
 			items: [
-				{ number: '10', label: 'Herramientas MCP' },
+				{ number: '13', label: 'Herramientas MCP' },
 				{ number: '15', label: 'Agentes' },
 				{ number: '22%', label: 'Menos tokens' },
 				{ number: '0', label: 'Config necesaria' },
@@ -526,6 +558,26 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				'Menos tokens, más precisión, 100% offline y determinista',
 			],
 			caption: 'Una decisión se propaga a su spec y arquitectura — el agente ve el cuadro completo.',
+		},
+		smartRecallSection: {
+			title: 'Recuperación inteligente y eficiente',
+			subtitle:
+				'El recall se re-ordena offline por relevancia BM25 y centralidad del grafo, y luego se comprime a una forma compacta cuando importan los tokens.',
+			points: [
+				'Puntuación BM25 sobre id + categoría + key + contenido + tags',
+				'La centralidad del grafo hace aparecer los hubs aunque no tengan la palabra',
+				'`compact: true` → índices numéricos, sin id/fecha/archivo, vecinos como snippet',
+			],
+			standardCode: `memory_recall({ query: "riesgo", mode: "graph" })
+[decision] risk-engine-priority (a1b2c3d4)
+  El motor prioriza riesgo sobre velocidad.
+  File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01
+  links: engine-arch`,
+			compactCode: `memory_recall({ query: "riesgo", mode: "graph", compact: true })
+[1] decision/risk-engine-priority
+  El motor prioriza riesgo sobre velocidad.
+  tags: risk;spec · edges: ->2, ->3`,
+			caption: 'El modo compact conserva el mismo contexto en menos tokens — el archivo .toon nunca cambia.',
 		},
 		faq: {
 			title: 'Preguntas frecuentes',

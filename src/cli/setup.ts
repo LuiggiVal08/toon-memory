@@ -3,6 +3,7 @@ import { basename, dirname, join } from "path"
 import { fileURLToPath } from "url"
 import { createInterface } from "readline"
 import { gzipSync, gunzipSync } from "zlib"
+import { extractProjectDeps } from "../lib/vocab"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const projectRoot = process.cwd()
@@ -602,15 +603,41 @@ function installForAgent(agent: Agent, scope: string): void {
 }
 
 /**
+ * Read/write the shared memory config.json, preserving unknown keys
+ * (e.g. `encrypted`, `capture`) so we never clobber sibling settings.
+ */
+function updateMemoryConfig(patch: Record<string, any>): void {
+  if (!existsSync(MEMORY_DIR)) mkdirSync(MEMORY_DIR, { recursive: true })
+  let cfg: Record<string, any> = {}
+  if (existsSync(CAPTURE_CONFIG)) {
+    try {
+      cfg = JSON.parse(readFileSync(CAPTURE_CONFIG, "utf-8"))
+    } catch {
+      cfg = {}
+    }
+  }
+  Object.assign(cfg, patch)
+  writeFileSync(CAPTURE_CONFIG, JSON.stringify(cfg, null, 2))
+}
+
+/**
  * Initialize toon-memory for all detected agents (non-interactive).
  *
- * Installs MCP server configs, creates memory directory, and
- * updates `.gitignore`.
+ * Installs MCP server configs, creates memory directory, discovers project
+ * dependencies for tag inference, and updates `.gitignore`.
  */
 function init(scope: string = "local"): void {
   console.log("\n🧠 toon-memory init\n")
 
   installMemoryDir()
+
+  // Hito 7 (B): derive a project-specific tag vocabulary from dependencies.
+  const deps = extractProjectDeps(projectRoot)
+  const depCount = Object.keys(deps).length
+  if (depCount > 0) {
+    updateMemoryConfig({ vocab: deps })
+    console.log(`  Detected ${depCount} dependencies → auto-tag vocabulary written to config.json`)
+  }
 
   const agents = detectAgents()
   for (const agent of agents) {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { parseEntries, buildGraph, graphRecall } from "../src/lib/graph"
+import { parseEntries, buildGraph, graphRecall, graphRecallDetailed, bm25Scores, centrality, renderCompact } from "../src/lib/graph"
 
 const SAMPLE = `version: 1
 entries[5|]{id|category|key|content|file|tags|date|ttl|accessed|links}:
@@ -8,6 +8,14 @@ entries[5|]{id|category|key|content|file|tags|date|ttl|accessed|links}:
   a3|pattern|engine-arch|Arquitectura del motor.|arch.ts:5|engine|2026-07-01||0|risk-spec deep-node
   a4|bug|unrelated-bug|Bug en ui sin relacion.|ui.ts:1|ui|2026-07-01||0|
   a5|knowledge|deep-node|Nodo profundo conectado al grafo.|x.ts:1|deep|2026-07-01||0|
+`
+
+const BM25_SAMPLE = `version: 1
+entries[4|]{id|category|key|content|file|tags|date|ttl|accessed|links}:
+  b1|knowledge|redis-cache|Usamos redis para cache de sesiones.|cache.ts|redis|2026-07-01||0|
+  b2|knowledge|redis-pubsub|Redis pubsub para eventos en tiempo real.|events.ts|redis|2026-07-01||0|
+  b3|knowledge|postgres-db|Postgres guarda el estado principal.|db.ts|db|2026-07-01||0|
+  b4|knowledge|unrelated|Cosa sin relacion con la query.|x.ts|misc|2026-07-01||0|
 `
 
 describe("parseEntries", () => {
@@ -80,5 +88,85 @@ describe("graphRecall", () => {
   it("falls back to top-by-importance when nothing matches", () => {
     const res = graphRecall(SAMPLE, "zzz-sin-coincidencia")
     expect(res.length).toBeGreaterThan(0)
+  })
+})
+
+describe("bm25Scores", () => {
+  it("scores entries sharing query tokens above entries that do not", () => {
+    const entries = parseEntries(BM25_SAMPLE)
+    const scores = bm25Scores(entries, "redis cache")
+    expect(scores.get("redis-cache")!).toBeGreaterThan(0)
+    expect(scores.get("redis-pubsub")!).toBeGreaterThan(0)
+    expect(scores.get("unrelated")!).toBe(0)
+    // the entry that contains BOTH query terms ranks highest
+    expect(scores.get("redis-cache")!).toBeGreaterThan(scores.get("redis-pubsub")!)
+  })
+
+  it("returns an empty map for an empty corpus", () => {
+    expect(bm25Scores([], "anything").size).toBe(0)
+  })
+})
+
+describe("centrality", () => {
+  it("gives the highest degree node the max score (1) and leaves isolated nodes at 0", () => {
+    const { adjacency } = buildGraph(parseEntries(SAMPLE))
+    const cent = centrality(adjacency)
+    const max = Math.max(...[...cent.values()])
+    expect(max).toBe(1)
+    // engine-arch (connected to risk-engine, risk-spec, deep-node) is the hub
+    expect(cent.get("engine-arch")).toBe(1)
+    // unrelated-bug has no edges → not present / 0
+    expect(cent.get("unrelated-bug") ?? 0).toBe(0)
+  })
+})
+
+describe("graphRecallDetailed (decay + scoring)", () => {
+  it("applies per-hop decay so nodes further from seeds score lower", () => {
+    const d1 = graphRecallDetailed(SAMPLE, "riesgo", { hops: 2 })
+    const seedScore = d1.scores.get("risk-engine")!
+    const deepScore = d1.scores.get("deep-node")!
+    // deep-node is 2 hops from the seed, so it must score below the seed
+    expect(deepScore).toBeLessThan(seedScore)
+    // both are positive because deep-node is still reached
+    expect(deepScore).toBeGreaterThan(0)
+  })
+
+  it("scores reflect a real combined value (seed bonus dominates its neighbors)", () => {
+    const d = graphRecallDetailed(SAMPLE, "riesgo", { hops: 1 })
+    const seed = d.scores.get("risk-engine")!
+    const neighbor = d.scores.get("risk-spec")!
+    expect(seed).toBeGreaterThan(neighbor)
+  })
+})
+
+describe("renderCompact", () => {
+  it("drops id/date/file and assigns stable numeric indices", () => {
+    const entries = graphRecall(SAMPLE, "riesgo", { hops: 1 })
+    const out = renderCompact(entries)
+    expect(out).not.toMatch(/File:/)
+    expect(out).not.toMatch(/Date:/)
+    expect(out).toMatch(/\[1\] /)
+    expect(out).toMatch(/\[2\] /)
+    // tags are preserved
+    expect(out).toMatch(/tags: risk/)
+  })
+
+  it("renders graph edges as numeric '->2' references", () => {
+    const d = graphRecallDetailed(SAMPLE, "riesgo", { hops: 1 })
+    const out = renderCompact(d.entries, { adjacency: d.adjacency, seeds: d.seeds })
+    expect(out).toMatch(/->\d/)
+  })
+
+  it("truncates non-seed neighbors to a snippet (ellipsis) but keeps seeds full", () => {
+    const d = graphRecallDetailed(SAMPLE, "riesgo", { hops: 2, snippetLen: 20 })
+    const seed = d.entries.find((e) => d.seeds.has(e.key))!
+    const neighbor = d.entries.find((e) => !d.seeds.has(e.key))!
+    const out = renderCompact(d.entries, { adjacency: d.adjacency, seeds: d.seeds, snippetLen: 20 })
+    // seed line should contain its FULL content (no ellipsis)
+    expect(out).toContain(seed.content)
+    // a neighbor longer than the snippet should be truncated
+    if (neighbor.content.length > 20) {
+      expect(out).toContain("…")
+    }
   })
 })

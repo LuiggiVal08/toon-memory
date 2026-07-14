@@ -12,7 +12,7 @@ toon-memory provides 13 MCP tools and 3 MCP resources for managing persistent me
 | Tool | Description |
 |------|-------------|
 | `memory_remember` | Save a decision, pattern, bug, or knowledge (optional TTL, auto-tag inference, and `links` to build the memory graph) |
-| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision |
+| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. `compact: true` returns a token-efficient, numeric-indexed format |
 | `memory_forget` | Remove an entry by key or id |
 | `memory_stats` | View memory state (including TTL stats) |
 | `memory_summary` | Save/retrieve file summaries |
@@ -82,7 +82,7 @@ memory_remember({
 // 🏷️ Tags inferidos: redis
 ```
 
-When `tags` is empty, the system infers them from content using a vocabulary of 20+ categories: redis, auth, api, db, security, test, deploy, config, performance, refactor, error, logging, types, async, state, ui, storage, email, payment, webhook.
+When `tags` is empty, the system infers them from content using a vocabulary of 20+ categories: redis, auth, api, db, security, test, deploy, config, performance, refactor, error, logging, types, async, state, ui, storage, email, payment, webhook. On top of that, `toon-memory init` writes a **project vocabulary** derived from your dependencies (`package.json`, `Cargo.toml`, `requirements.txt`, `pyproject.toml`, `go.mod`), so an entry mentioning a dependency like `redis` also gets auto-tagged `redis`.
 
 ### Search memory
 
@@ -227,6 +227,61 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2 })
 ```
 
 > Use `mode: "graph"` when a decision ripples across several entries (architecture, specs, related bugs). For isolated facts, the default `flat` mode is enough. The graph is built on read, so there is no extra index file to maintain.
+
+### Token-efficient recall (`compact: true`)
+
+When every token counts, pass `compact: true` to get a denser output:
+
+```typescript
+memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
+// [1] decision/risk-engine-priority
+//   The engine prioritizes risk over speed (see [[risk-spec]]).
+//   tags: risk;spec · edges: ->2, ->3
+//
+// [2] knowledge/risk-spec
+//   Risk specification for the engine.
+//   tags: risk · edges: ->1
+//
+// [3] pattern/engine-arch
+//   Engine architecture.
+//   tags: engine · edges: ->1
+```
+
+What `compact` changes:
+
+- Each entry gets a stable numeric index (`[1]`, `[2]`, …) in score order.
+- `id`, `date`, and `file` are dropped — only `tags` is kept.
+- In `graph` mode, edges render as `->2` (numeric, not key names).
+- Neighbors reached via the graph (non-seeds) are truncated to a short snippet with an ellipsis, while directly-matched seeds keep their full content.
+- The stored `.toon` file is **never** mutated — `compact` only reshapes the response.
+
+### How recall ranks results
+
+Recall is deterministic and offline (no embeddings, no LLM). Each candidate entry gets a combined score from:
+
+- **BM25 relevance** — probabilistic term-frequency score over `id` + `category` + `key` + `content` + `file` + `tags`.
+- **Graph centrality** — degree-normalized (0..1); a hub connected to many entries scores near 1, so it surfaces even without the query word.
+- **Importance** — recency + access frequency.
+- **Seed bonus** — entries that directly match the query get a flat boost.
+- **Per-hop decay** — nodes `d` hops from a seed are multiplied by `0.5^d`, keeping distant context below nearby context.
+
+In `graph` mode, recall seeds on keyword matches, expands the ego-subgraph up to `hops`, and returns the top `limit` (default 6) by combined score.
+
+### Auto-tag from project dependencies
+
+On `toon-memory init`, the CLI scans your dependency manifests and writes a `vocab` table into `.toon-memory/memory/config.json`:
+
+```json
+{
+  "vocab": {
+    "react": ["react"],
+    "zod": ["zod"],
+    "redis": ["redis"]
+  }
+}
+```
+
+`memory_remember` matches new entries against this vocabulary on top of the built-in one. Re-run `toon-memory init` after adding major dependencies to refresh it. The `vocab` key is merged (never clobbered) with the `encrypted`/`capture` flags in `config.json`.
 
 ## Categories
 

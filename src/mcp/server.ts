@@ -7,7 +7,7 @@ import { fileURLToPath } from "url"
 import { randomBytes, createCipheriv, createDecipheriv } from "crypto"
 import { withLockSync, atomicWrite, readUnderLock } from "../lib/lock"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } from "../lib/sessions"
-import { graphRecall } from "../lib/graph"
+import { graphRecallDetailed, renderCompact } from "../lib/graph"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -48,6 +48,8 @@ const ALGORITHM = "aes-256-gcm"
 interface MemoryConfig {
   /** Whether encryption is enabled */
   encrypted: boolean
+  /** Project-specific tag vocabulary discovered from dependencies (Hito 7). */
+  vocab?: Record<string, string[]>
 }
 
 /**
@@ -81,7 +83,16 @@ function loadConfig(): MemoryConfig {
  */
 function saveConfig(config: MemoryConfig): void {
   ensureMemoryDir()
-  writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2))
+  // Merge so we never clobber a `vocab` written by `toon-memory init`.
+  let existing: Partial<MemoryConfig> = {}
+  if (existsSync(CONFIG_FILE)) {
+    try {
+      existing = JSON.parse(readFileSync(CONFIG_FILE, "utf-8"))
+    } catch {
+      existing = {}
+    }
+  }
+  writeFileSync(CONFIG_FILE, JSON.stringify({ ...existing, ...config }, null, 2))
 }
 
 /**
@@ -272,14 +283,23 @@ const TAG_VOCABULARY: Record<string, string[]> = {
 
 /**
  * Infer tags from content and key by matching against vocabulary.
+ * The built-in vocabulary is always used; a project-specific `vocab`
+ * (discovered from dependencies at `init`) is matched on top of it.
  * Returns semicolon-separated tags.
  */
-function inferTags(content: string, key: string): string {
+function inferTags(content: string, key: string, vocab?: Record<string, string[]>): string {
   const text = `${key} ${content}`.toLowerCase()
   const matched: string[] = []
   for (const [tag, keywords] of Object.entries(TAG_VOCABULARY)) {
     if (keywords.some((kw) => text.includes(kw))) {
       matched.push(tag)
+    }
+  }
+  if (vocab) {
+    for (const [tag, keywords] of Object.entries(vocab)) {
+      if (keywords.some((kw) => text.includes(kw))) {
+        matched.push(tag)
+      }
     }
   }
   return matched.join(";")
@@ -579,7 +599,7 @@ function consolidateEntries(): { removed: number; kept: number; duplicates: stri
 }
 
 const server = new McpServer(
-  { name: "toon-memory", version: "2.2.0" },
+  { name: "toon-memory", version: "2.3.0" },
   { capabilities: { tools: { listChanged: true }, resources: { listChanged: true } } }
 )
 
@@ -704,7 +724,7 @@ server.registerTool(
 
     const entryId = existingIdx !== -1 ? existingId : newId
     const resolvedTtl = parseTTL(ttl)
-    const resolvedTags = tags ? tags : inferTags(content, key)
+    const resolvedTags = tags ? tags : inferTags(content, key, loadConfig().vocab)
     // Preserve existing links on upsert unless new ones are provided.
     const existingParts = existingIdx !== -1 ? lines[existingIdx].trim().split("|") : []
     const resolvedLinks = links
@@ -778,9 +798,10 @@ server.registerTool(
       to_date: z.string().optional().default("").describe("Fecha fin filtro (YYYY-MM-DD)"),
       mode: z.enum(["flat", "graph"]).optional().default("flat").describe("'flat' = búsqueda por palabra clave (default). 'graph' = recall basado en grafo: expande el subgrafo de entradas relacionadas desde las coincidencias (más preciso, menos tokens)."),
       hops: z.number().optional().default(1).describe("Profundidad del grafo en modo 'graph' (1 o 2). Default 1."),
+      compact: z.boolean().optional().default(false).describe("Salida token-efficient: índices numéricos (1, 2), omite id/fecha/archivo (conserva tags), aristas como '->2', y trunca vecinos del grafo a un snippet. No muta el archivo .toon."),
     },
   },
-  async ({ query, category, from_date, to_date, mode, hops }) => {
+  async ({ query, category, from_date, to_date, mode, hops, compact }) => {
     const data = readMemory()
     const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
 
@@ -813,12 +834,20 @@ server.registerTool(
     // Graph mode: expand the ego-subgraph from keyword matches and return the
     // focused, relationship-aware result set (fewer tokens, higher precision).
     if (mode === "graph") {
-      const subgraph = graphRecall(data, query, { category, from_date, to_date, hops })
-      if (subgraph.length === 0) {
+      const detail = graphRecallDetailed(data, query, { category, from_date, to_date, hops })
+      if (detail.entries.length === 0) {
         return { content: [{ type: "text" as const, text: `No se encontraron resultados para "${query}"` }] }
       }
-      bumpAccessed(subgraph.map((e) => e.id))
-      const formatted = subgraph
+      bumpAccessed(detail.entries.map((e) => e.id))
+      if (compact) {
+        const formatted = renderCompact(detail.entries, {
+          adjacency: detail.adjacency,
+          seeds: detail.seeds,
+          snippetLen: 90,
+        })
+        return { content: [{ type: "text" as const, text: formatted }] }
+      }
+      const formatted = detail.entries
         .map((r) => {
           const links = r.links.length ? `\n  links: ${r.links.join(", ")}` : ""
           return `[${r.category}] ${r.key} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}`
@@ -833,6 +862,23 @@ server.registerTool(
       .sort((a, b) => b.score - a.score)
 
     bumpAccessed(ranked.map((r) => r.id))
+
+    if (compact) {
+      const entries = ranked.map((r) => ({
+        id: r.id,
+        category: r.cat,
+        key: r.key,
+        content: r.content,
+        file: r.file,
+        tags: r.tags ? r.tags.split(";").filter(Boolean) : [],
+        date: r.date,
+        ttl: "",
+        accessed: r.accessed,
+        links: [] as string[],
+      }))
+      const formatted = renderCompact(entries)
+      return { content: [{ type: "text" as const, text: formatted }] }
+    }
 
     const formatted = ranked
       .map((r) => `[${r.cat}] ${r.key} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags} | Date: ${r.date}`)

@@ -75,10 +75,13 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 - **Encryption** — AES-256-GCM encryption for sensitive data
 - **Watch mode** — Auto-backup every N minutes
 - **Memory TTL** — Configurable per-entry expiration (7d, 30d, or exact dates)
-- **Tag inference** — Auto-detect tags from content when tags are empty
+- **Tag inference** — Auto-detect tags from content when tags are empty (built-in vocabulary + project dependencies)
 - **Memory diff** — See what changed since your last session
 - **Related entries** — Auto-suggest related memories when saving
 - **Memory graph** — Connect entries with `links`/`[[key]]` refs; `memory_recall` can expand a relationship-aware subgraph for more precise, lower-token recall (no embeddings, no LLM)
+- **Token-efficient recall** — `memory_recall({ compact: true })` returns numeric-indexed entries, drops `id`/`date`/`file`, renders graph edges as `->2`, and truncates graph neighbors to snippets
+- **BM25 + centrality ranking** — Recall re-ranks by BM25 relevance and graph centrality (hubs surface even without the query word); per-hop decay keeps distant nodes low
+- **Auto-tag from dependencies** — `toon-memory init` scans `package.json`/`Cargo.toml`/`requirements.txt`/`go.mod` and writes a project vocabulary so entries mentioning a dependency get auto-tagged with it
 
 ---
 
@@ -154,7 +157,7 @@ memory_remember   # Save important decisions
 | Tool | Description |
 |------|-------------|
 | `memory_remember` | Save a decision, pattern, bug, or knowledge (optional TTL, auto-tag inference, and `links` to build the memory graph) |
-| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision |
+| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. `compact: true` returns a token-efficient, numeric-indexed format |
 | `memory_forget` | Remove an entry by key or id |
 | `memory_stats` | View memory state (including TTL stats) |
 | `memory_summary` | Save/retrieve file summaries |
@@ -224,7 +227,7 @@ memory_remember({
 // 🏷️ Tags inferidos: redis
 ```
 
-> **Tip:** Leave `tags` empty and the system will infer them from your content using a vocabulary of 20+ categories (redis, auth, api, db, security, etc.).
+> **Tip:** Leave `tags` empty and the system will infer them from your content using a built-in vocabulary of 20+ categories (redis, auth, api, db, security, etc.) **plus** a project vocabulary derived from your dependencies at `init` time. So if your project depends on `redis`, any entry mentioning "redis" gets auto-tagged `redis`.
 
 #### Search memory
 
@@ -405,6 +408,65 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2 })
 ```
 
 > **Tip:** Use `mode: "graph"` when a decision ripples across several entries (architecture, specs, related bugs). For isolated facts, the default `flat` mode is enough. The graph is built on read, so there's no extra index file to maintain.
+
+### Token-efficient recall (`compact`)
+
+When every token counts, pass `compact: true` to get a denser output:
+
+```typescript
+memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
+// [1] decision/risk-engine-priority
+//   The engine prioritizes risk over speed (see [[risk-spec]]).
+//   tags: risk;spec · edges: ->2, ->3
+//
+// [2] knowledge/risk-spec
+//   Risk specification for the engine.
+//   tags: risk · edges: ->1
+//
+// [3] pattern/engine-arch
+//   Engine architecture.
+//   tags: engine · edges: ->1
+```
+
+How `compact` changes the output:
+
+- Each entry gets a stable numeric index (`[1]`, `[2]`, …) in score order.
+- `id`, `date`, and `file` are dropped — only `tags` is kept.
+- In `graph` mode, edges render as `->2` (numeric, not key names).
+- Neighbors reached via the graph (non-seeds) are truncated to a short snippet with an ellipsis, while directly-matched seeds keep their full content.
+- The stored `.toon` file is **never** mutated — `compact` only reshapes the response.
+
+> **Tip:** Combine `compact: true` with `mode: "graph"` for the smallest possible context window when recalling from a large, interconnected memory.
+
+### How recall ranks results
+
+Recall is deterministic and offline (no embeddings, no LLM). Each candidate entry gets a combined score:
+
+- **BM25 relevance** — classic probabilistic term-frequency score against the query, using `id` + `category` + `key` + `content` + `file` + `tags`.
+- **Graph centrality** — degree-normalized (0..1); a hub connected to many entries scores near 1, so it surfaces even without the query word.
+- **Importance** — recency + access frequency (same signal used elsewhere).
+- **Seed bonus** — entries that directly match the query get a flat boost.
+- **Per-hop decay** — nodes `d` hops from a seed are multiplied by `0.5^d`, so distant context ranks below nearby context.
+
+In `graph` mode, recall seeds on keyword matches, expands the ego-subgraph up to `hops`, and returns the top `limit` (default 6) by combined score.
+
+### Auto-tag from project dependencies
+
+On `toon-memory init`, the CLI scans your dependency manifests and writes a `vocab` table into `.toon-memory/memory/config.json`:
+
+```json
+{
+  "vocab": {
+    "react": ["react"],
+    "zod": ["zod"],
+    "redis": ["redis"]
+  }
+}
+```
+
+`memory_remember` then matches new entries against this vocabulary on top of the built-in one, so mentioning a dependency in your content auto-attaches its tag. Supported manifests: `package.json`, `Cargo.toml`, `requirements.txt`, `pyproject.toml`, `go.mod`.
+
+> **Tip:** Re-run `toon-memory init` after adding major dependencies to refresh the vocabulary. The `vocab` key is merged (never clobbered) with the `encrypted`/`capture` flags in `config.json`.
 
 ---
 
@@ -818,7 +880,8 @@ toon-memory/
 │   ├── lib/
 │   │   ├── lock.ts              # Advisory file lock + atomic write
 │   │   ├── sessions.ts          # Multi-session coordination
-│   │   └── graph.ts             # Memory graph (parse, build, graph recall)
+│   │   ├── graph.ts             # Memory graph (parse, build, BM25, centrality, compact render)
+│   │   └── vocab.ts             # Project-vocabulary discovery from dependencies
 │   └── memory.ts                # Custom tool (OpenCode)
 ├── tests/
 │   ├── cli.test.ts              # CLI tests
