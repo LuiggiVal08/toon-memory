@@ -8,6 +8,26 @@ import { extractProjectDeps } from "../lib/vocab"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const projectRoot = process.cwd()
 const sourceDir = join(__dirname, "..", "..", "src")
+
+/** Resolve this package's package.json by walking up from the module location.
+ *  Setup logic may run from dist/cli/setup.js, so a fixed relative path is wrong. */
+function resolvePackageJson(): string | null {
+  let dir = __dirname
+  while (true) {
+    const candidate = join(dir, "package.json")
+    if (existsSync(candidate)) {
+      try {
+        const p = JSON.parse(readFileSync(candidate, "utf-8"))
+        if (p && p.name === "toon-memory") return candidate
+      } catch {
+        // ignore and keep walking
+      }
+    }
+    const parent = dirname(dir)
+    if (parent === dir) return null
+    dir = parent
+  }
+}
 const HOME = process.env.HOME || process.env.USERPROFILE || "~"
 
 /** Shared memory directory (agent-agnostic) */
@@ -865,12 +885,16 @@ function status(): void {
   console.log("\n🧠 toon-memory status\n")
 
   // Check npm package
-  try {
-    const pkg = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8"))
-    console.log(`Version: ${pkg.version}`)
-  } catch {
-    console.log("Version: unknown")
+  const pkgPath = resolvePackageJson()
+  let version = "unknown"
+  if (pkgPath) {
+    try {
+      version = JSON.parse(readFileSync(pkgPath, "utf-8")).version
+    } catch {
+      // keep "unknown"
+    }
   }
+  console.log(`Version: ${version}`)
 
   // Check memory file
   const memoryFile = join(MEMORY_DIR, "data.toon")
@@ -960,8 +984,8 @@ function upgrade(): void {
   console.log("\n🧠 toon-memory upgrade\n")
 
   try {
-    const pkg = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8"))
-    const currentVersion = pkg.version
+    const pkgPath = resolvePackageJson()
+    const currentVersion = pkgPath ? JSON.parse(readFileSync(pkgPath, "utf-8")).version : "unknown"
 
     console.log(`Current version: ${currentVersion}`)
     console.log("\nTo upgrade, run:")
