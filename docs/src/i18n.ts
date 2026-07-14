@@ -55,7 +55,7 @@ export const content = {
 					icon: '📄',
 					title: 'TOON Format',
 					body: '22% fewer tokens than JSON (measured). Custom encoding designed for LLM comprehension and token efficiency.',
-					stats: ['22% less tokens', '1.4x faster parse'],
+					stats: ['22% less tokens', '1.3x faster parse'],
 				},
 				{
 					icon: '🔎',
@@ -200,7 +200,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			subtitle: 'The TOON format is built for LLMs, not for humans',
 			stats: [
 				{ num: '22%', cap: 'fewer tokens than JSON' },
-				{ num: '1.4x', cap: 'faster to parse' },
+				{ num: '1.3x', cap: 'faster to parse' },
 				{ num: '0', cap: 'config needed' },
 			],
 			note: 'TOON encodes memory entries in a compact, token-efficient structure designed for LLM comprehension — so your agent spends tokens on reasoning, not on parsing verbose JSON.',
@@ -373,7 +373,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					icon: '📄',
 					title: 'Formato TOON',
 					body: '22% menos tokens que JSON (medido). Codificación diseñada para la comprensión de LLMs y la eficiencia de tokens.',
-					stats: ['22% menos tokens', '1.4x más rápido'],
+					stats: ['22% menos tokens', '1.3x más rápido'],
 				},
 				{
 					icon: '🔎',
@@ -518,7 +518,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			subtitle: 'El formato TOON está hecho para LLMs, no para humanos',
 			stats: [
 				{ num: '22%', cap: 'menos tokens que JSON' },
-				{ num: '1.4x', cap: 'más rápido de parsear' },
+				{ num: '1.3x', cap: 'más rápido de parsear' },
 				{ num: '0', cap: 'config necesaria' },
 			],
 			note: 'TOON codifica las entradas de memoria en una estructura compacta y eficiente en tokens diseñada para la comprensión de LLMs — para que tu agente gaste tokens en razonar, no en parsear JSON verboso.',
