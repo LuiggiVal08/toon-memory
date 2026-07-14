@@ -51,7 +51,10 @@ const s = c.smartRecallSection;
 		display: grid;
 		grid-template-columns: 1fr 1.2fr;
 		gap: 2rem;
-		align-items: center;
+		align-items: stretch;
+	}
+	.recall-points {
+		display: flex;
 	}
 	.recall-points ul {
 		list-style: none;
@@ -77,17 +80,20 @@ const s = c.smartRecallSection;
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 1rem;
+		align-items: stretch;
 	}
 	.recall-col {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+		height: 100%;
 	}
 	.recall-tag {
 		font-size: 0.72rem;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--text-muted, #889);
+		min-height: 1rem;
 	}
 	.compact-col .recall-tag {
 		color: var(--accent, #6cf);
@@ -101,6 +107,11 @@ const s = c.smartRecallSection;
 		border-radius: 10px;
 		padding: 0.9rem 1rem;
 		overflow-x: auto;
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+	.recall-col .code-block {
+		flex: 1;
 	}
 	.compact-col .code-block {
 		border-color: color-mix(in srgb, var(--accent, #6cf) 40%, transparent);
