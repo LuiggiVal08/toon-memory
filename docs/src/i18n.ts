@@ -7,7 +7,7 @@ export const content = {
 		},
 		hero: {
 			tagline: 'Persistent memory for AI coding agents',
-			subtitle: 'Remember decisions, patterns, and bugs between sessions',
+			subtitle: 'Remember decisions, patterns, and bugs — and recover context with 68% fewer tokens every session',
 			getStarted: 'Get Started',
 			viewGithub: 'View on GitHub',
 			copy: 'Copy',
@@ -213,6 +213,17 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			entriesMeasured: 'entries measured',
 			note: 'Measured with <code>gpt-tokenizer</code> (cl100k_base) over 16 representative memory entries, comparing the real on-disk TOON format against compact JSON. Reproducible: <code>npm run bench</code>.',
 		},
+		impactSection: {
+			title: '68% fewer tokens per session',
+			subtitle:
+				'With toon-memory your agent recalls context instead of re-reading every file — measured, not assumed.',
+			stats: [
+				{ num: '68%', cap: 'fewer context tokens per session' },
+				{ num: '3', cap: 'realistic scenarios measured' },
+				{ num: '0', cap: 'config needed' },
+			],
+			note: 'Simulation of retrieving context with vs without memory: without, the agent re-reads the source files; with, it calls <code>memory_recall({ compact: true })</code>. Reproducible: <code>npm run bench:impact</code>.',
+		},
 		tools: {
 			title: '13 MCP tools, 3 resources',
 			subtitle: 'Everything your agent needs to remember, recall, and reason',
@@ -325,7 +336,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		hero: {
 			tagline: 'Memoria persistente para agentes de IA',
-			subtitle: 'Recuerda decisiones, patrones y bugs entre sesiones',
+			subtitle: 'Recuerda decisiones, patrones y bugs — y recupera contexto con 68% menos tokens en cada sesión',
 			getStarted: 'Empezar',
 			viewGithub: 'Ver en GitHub',
 			copy: 'Copiar',
@@ -530,6 +541,17 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			onSingle: 'en una sola entrada',
 			entriesMeasured: 'entradas medidas',
 			note: 'Medido con <code>gpt-tokenizer</code> (cl100k_base) sobre 16 entradas de memoria representativas, comparando el formato TOON real en disco contra JSON compacto. Reproducible: <code>npm run bench</code>.',
+		},
+		impactSection: {
+			title: '68% menos tokens por sesión',
+			subtitle:
+				'Con toon-memory tu agente recuerda el contexto en vez de re-leer cada archivo — medido, no asumido.',
+			stats: [
+				{ num: '68%', cap: 'menos tokens de contexto por sesión' },
+				{ num: '3', cap: 'escenarios realistas medidos' },
+				{ num: '0', cap: 'config necesaria' },
+			],
+			note: 'Simulación de recuperar contexto con y sin memoria: sin memoria el agente re-lee los archivos fuente; con memoria llama <code>memory_recall({ compact: true })</code>. Reproducible: <code>npm run bench:impact</code>.',
 		},
 		tools: {
 			title: '10 herramientas MCP, 3 recursos',

@@ -1,0 +1,80 @@
+---
+import { getContent } from '../i18n';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
+const s = c.impactSection;
+
+// Mirror of scripts/benchmark-impact.mjs: without = re-read files (100%),
+// with = compact recall (31.5% of without → 68.5% fewer tokens).
+const withoutPct = 100;
+const withPct = 31.5;
+---
+
+<section class="content-section impact-section">
+	<div class="section-header">
+		<h2>{s.title}</h2>
+		<p>{s.subtitle}</p>
+	</div>
+
+	<div class="savings-bars impact-bars">
+		<div class="savings-bar">
+			<span class="savings-label">Without memory</span>
+			<div class="bar-track">
+				<div class="bar bar-json" style={`--pct:${withoutPct}%`} data-pct={withoutPct}><span>{withoutPct}%</span></div>
+			</div>
+		</div>
+		<div class="savings-bar">
+			<span class="savings-label">With toon-memory</span>
+			<div class="bar-track">
+				<div class="bar bar-toon" style={`--pct:${withPct}%`} data-pct={withPct}><span>{withPct}%</span></div>
+			</div>
+		</div>
+	</div>
+
+	<div class="savings-stats impact-stats">
+		{
+			s.stats.map((st: { num: string; cap: string }) => (
+				<div class="savings-stat">
+					<span class="savings-num impact-num" data-count={st.num}>{st.num}</span>
+					<span class="savings-cap">{st.cap}</span>
+				</div>
+			))
+		}
+	</div>
+
+	<p class="savings-note" set:html={s.note}></p>
+</section>
+
+<script>
+	import { animateCountsAndBars } from '../scripts/home-anim';
+	const root = document.querySelector<HTMLElement>('.impact-section');
+	if (root) animateCountsAndBars(root);
+</script>
+
+<style>
+	.impact-section {
+		background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(99, 102, 241, 0.05));
+		border: 1px solid rgba(139, 92, 246, 0.25);
+	}
+	.impact-section .section-header h2 {
+		font-size: 2.1rem;
+		background: linear-gradient(90deg, #a78bfa, #6366f1);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+	.impact-num {
+		font-size: 2.4rem;
+		background: linear-gradient(90deg, #a78bfa, #6366f1);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+	.impact-stats {
+		margin-top: 1.5rem;
+	}
+</style>
