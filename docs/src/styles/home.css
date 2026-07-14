@@ -307,7 +307,7 @@ a:hover { text-decoration: underline; }
 /* Feature cards */
 .feature-cards {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
   padding: 0 2rem 3rem;
   max-width: 1000px;
@@ -341,7 +341,6 @@ a:hover { text-decoration: underline; }
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 .card.featured {
-  grid-column: 1 / -1;
   border-color: rgba(139, 92, 246, 0.5);
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(99, 102, 241, 0.04));
 }
@@ -933,7 +932,7 @@ pre code {
   .hero-title { font-size: 2.5rem; }
   .hero { padding: 3rem 1rem 2rem; }
   .site-header { padding: 0.75rem 1rem; }
-  .feature-cards { grid-template-columns: 1fr; }
+  .feature-cards { grid-template-columns: repeat(2, 1fr); }
   .graph-grid { grid-template-columns: 1fr; }
   .tip-grid { grid-template-columns: 1fr; }
   .comparison { grid-template-columns: 1fr; }
@@ -941,6 +940,7 @@ pre code {
   .stat-number { font-size: 2rem; }
 }
 @media (max-width: 600px) {
+  .feature-cards { grid-template-columns: 1fr; }
   .hero-actions { flex-direction: column; align-items: stretch; }
   .btn-install { width: 100%; justify-content: center; }
 }
