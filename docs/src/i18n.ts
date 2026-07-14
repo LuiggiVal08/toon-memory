@@ -335,7 +335,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			github: 'GitHub',
 		},
 		hero: {
-			tagline: 'Memoria persistente para agentes de IA',
+			tagline: 'Servidor de memoria MCP para agentes de IA',
 			subtitle: 'Recuerda decisiones, patrones y bugs — y recupera contexto con 68% menos tokens en cada sesión',
 			getStarted: 'Empezar',
 			viewGithub: 'Ver en GitHub',
