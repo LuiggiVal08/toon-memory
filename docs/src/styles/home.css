@@ -862,9 +862,9 @@ pre code {
   transform: translateY(-2px);
 }
 .agent-icon {
-  width: 1.75rem;
-  height: 1.75rem;
-  padding: 0.3rem;
+  width: 2.625rem;
+  height: 2.625rem;
+  padding: 0.35rem;
   flex-shrink: 0;
   object-fit: contain;
   background: #fff;
