@@ -24,6 +24,7 @@ Commands:
   init [local|global]   Install memory tools + hooks for detected agents
   status                Show version, memory count, and agent config status
   stats                 Show memory statistics
+  dump                  Print memory as injectable markdown (auto-load)
   export [file]         Export memory to a TOON/JSON file
   import <file>         Import memory from a TOON/JSON file
   watch                 Watch memory file and re-render on change

@@ -311,4 +311,95 @@ describe("CLI Commands", () => {
     expect(output).toContain("Comando desconocido")
     expect(output).toContain("Uso:")
   })
+
+  it("should dump memory as injectable markdown", () => {
+    const memoryDir = join(testDir, ".toon-memory", "memory")
+    mkdirSync(memoryDir, { recursive: true })
+    writeFileSync(
+      join(memoryDir, "data.toon"),
+      "version: 1\nentries[1|]{id|category|key|content|file|tags|date}:\n  1|decision|my-key|my content|src/a.ts|tag1;tag2|2026-07-14\n"
+    )
+
+    const output = execSync(`node ${cliPath} dump`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    expect(output).toContain("# toon-memory (auto-loaded)")
+    expect(output).toContain("## decision: my-key")
+    expect(output).toContain("my content")
+    expect(output).toContain("- file: src/a.ts")
+    expect(output).toContain("- tags: tag1, tag2")
+    expect(output).toContain("- date: 2026-07-14")
+  })
+
+  it("should dump (empty) when no memory exists", () => {
+    const emptyDir = join(tmpdir(), "toon-dump-empty-" + Date.now())
+    mkdirSync(emptyDir, { recursive: true })
+    const output = execSync(`node ${cliPath} dump`, {
+      cwd: emptyDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: emptyDir },
+    })
+    expect(output).toContain("# toon-memory")
+    expect(output).toContain("(empty)")
+    rmSync(emptyDir, { recursive: true, force: true })
+  })
+
+  it("should not list dump as an unknown command", () => {
+    const output = execSync(`node ${cliPath} dump`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir, TOON_MEMORY_DUMP_NOOP: "1" },
+    })
+    expect(output).not.toContain("Comando desconocido")
+  })
+
+  it("should init OpenCode plugin with passive injection hooks", () => {
+    execSync(`node ${cliPath} init local`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const plugin = readFileSync(join(testDir, ".opencode", "plugins", "toon-memory.ts"), "utf-8")
+    expect(plugin).toContain('"session.created"')
+    expect(plugin).toContain('"experimental.session.compacting"')
+    expect(plugin).toContain('"tool.execute.after"')
+    expect(plugin).toContain(".opencode/instructions")
+    expect(plugin).toContain("npx -y toon-memory dump")
+    expect(plugin).toContain("output.context")
+    expect(plugin).toContain("worktree || directory")
+
+    // Auto-loaded memory file seeded at install time
+    const autoload = join(testDir, ".opencode", "instructions", "memory-autoload.md")
+    expect(existsSync(autoload)).toBe(true)
+  })
+
+  it("should seed OpenCode AGENTS.md with a passive note", () => {
+    execSync(`node ${cliPath} init local`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const content = readFileSync(join(testDir, "AGENTS.md"), "utf-8")
+    expect(content).toContain("auto-inyecta")
+    expect(content).toContain("memory-autoload.md")
+    expect(content).toContain("memory_recall")
+    // Passive, not an active "run memory_recall before reading files" mandate
+    expect(content).not.toContain("BEFORE reading files")
+  })
+
+  it("should add the auto-load cache to .gitignore", () => {
+    execSync(`node ${cliPath} init local`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const gitignore = readFileSync(join(testDir, ".gitignore"), "utf-8")
+    expect(gitignore).toContain(".opencode/instructions/memory-autoload.md")
+  })
 })

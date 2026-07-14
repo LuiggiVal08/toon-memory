@@ -107,6 +107,18 @@ Persistent memory for this project. Use it to avoid re-investigating things.
 `
 
 /**
+ * Passive instruction note for OpenCode. Unlike other agents, OpenCode gets its
+ * memory auto-injected via `.opencode/instructions/memory-autoload.md` (written
+ * by the plugin on session.created), so the agent should NOT be told to actively
+ * run memory_recall — that would duplicate context. memory_recall is only a
+ * fallback for deep/semantic queries beyond the auto-loaded dump.
+ */
+const OPENCODE_PASSIVE_INSTRUCTION = `# toon-memory
+
+La memoria se auto-inyecta vía .opencode/instructions/memory-autoload.md; usa memory_recall solo como fallback.
+`
+
+/**
  * Detect all supported AI coding agents on the system.
  *
  * Scans for configuration files in both global (~/.config/) and local
@@ -303,18 +315,19 @@ function installMemoryDir(): void {
  */
 function ensureGitignore(): void {
   const gitignorePath = join(projectRoot, ".gitignore")
-  const entry = ".toon-memory/memory/"
+  const entries = [".toon-memory/memory/", ".opencode/instructions/memory-autoload.md"]
 
   if (!existsSync(gitignorePath)) {
-    writeFileSync(gitignorePath, `${entry}\n`)
+    writeFileSync(gitignorePath, `${entries.join("\n")}\n`)
     console.log("  Created .gitignore with memory exclusion")
     return
   }
 
   const content = readFileSync(gitignorePath, "utf-8")
-  if (!content.includes(entry)) {
-    writeFileSync(gitignorePath, `${content.trim()}\n${entry}\n`)
-    console.log("  Added .toon-memory/memory/ to .gitignore")
+  const missing = entries.filter((e) => !content.includes(e))
+  if (missing.length > 0) {
+    writeFileSync(gitignorePath, `${content.trim()}\n${missing.join("\n")}\n`)
+    console.log(`  Added to .gitignore: ${missing.join(", ")}`)
   }
 }
 
@@ -454,6 +467,10 @@ function installInstructions(agent: Agent): void {
 
   if (!existsSync(fileDir)) mkdirSync(fileDir, { recursive: true })
 
+  const content = agent.name === "opencode"
+    ? OPENCODE_PASSIVE_INSTRUCTION
+    : INSTRUCTION_CONTENT
+
   if (existsSync(filePath)) {
     const existing = readFileSync(filePath, "utf-8")
     if (existing.includes("toon-memory") || existing.includes("memory_recall")) {
@@ -461,10 +478,10 @@ function installInstructions(agent: Agent): void {
       return
     }
     // Append to existing file
-    writeFileSync(filePath, `${existing.trim()}\n\n${INSTRUCTION_CONTENT}`)
+    writeFileSync(filePath, `${existing.trim()}\n\n${content}`)
     console.log(`  Appended toon-memory instructions to ${filePath}`)
   } else {
-    writeFileSync(filePath, INSTRUCTION_CONTENT)
+    writeFileSync(filePath, content)
     console.log(`  Created ${filePath}`)
   }
 }
@@ -571,20 +588,48 @@ function registerHookTOML(agent: Agent, hookPath: string): void {
 }
 
 /**
- * OpenCode plugin source (hooks only). OpenCode 1.17+ delivers hooks via
- * plugins, not a top-level `hooks` config key, so `init` writes this file into
- * `.opencode/plugins/`. It reuses the compiled CLI commands for the actual logic.
+ * OpenCode plugin source with PASSIVE memory injection. OpenCode 1.17+ delivers
+ * hooks via plugins (not a top-level `hooks` config key), so `init` writes this
+ * file into `.opencode/plugins/`. The plugin:
+ *  - on `session.created` runs `npx -y toon-memory dump` and writes the result to
+ *    `.opencode/instructions/memory-autoload.md`, which OpenCode loads into every
+ *    session automatically — no agent action required.
+ *  - on `experimental.session.compacting` re-injects the dump into `output.context`
+ *    so memory survives compaction.
+ *  - on `tool.execute.after` keeps the opt-in activity capture (gated by
+ *    TOON_MEMORY_CAPTURE).
+ * Uses `worktree || directory` as the project root.
  */
 function opencodePluginContent(): string {
-  return `export const ToonMemory = async ({ $, directory }) => {
-  const ss = directory + "/bin/cli/session-start.js"
-  const cap = directory + "/bin/cli/capture.js"
+  return `import * as fs from "fs"
+
+export const ToonMemory = async ({ $, directory, worktree }) => {
+  const root = worktree || directory
+  const INS = root + "/.opencode/instructions"
+  const OUT = INS + "/memory-autoload.md"
+  const dump = async () => {
+    return await $\`npx -y toon-memory dump\`.cwd(root).text()
+  }
+  const write = (text) => {
+    fs.mkdirSync(INS, { recursive: true })
+    fs.writeFileSync(OUT, text)
+  }
   return {
     "session.created": async () => {
-      try { await $\`node \${ss} opencode\`.quiet() } catch {}
+      try {
+        const out = await dump()
+        write(out)
+      } catch {}
+    },
+    "experimental.session.compacting": async ({ output }) => {
+      try {
+        const out = await dump()
+        if (Array.isArray(output?.context)) output.context.push(out)
+      } catch {}
     },
     "tool.execute.after": async (input) => {
       if (!process.env.TOON_MEMORY_CAPTURE) return
+      const cap = directory + "/bin/cli/capture.js"
       try {
         const payload = JSON.stringify({
           session_id: input?.session?.id ?? "",
@@ -610,6 +655,14 @@ function installOpenCodePlugin(agent: Agent): void {
   const dest = join(pluginsDir, "toon-memory.ts")
   writeFileSync(dest, opencodePluginContent())
   console.log(`  Plugin created at ${dest}`)
+
+  // Seed the auto-loaded memory file at install time so the very first session
+  // already has memory in context (resolves session.created timing on first boot).
+  const instrDir = join(projectRoot, ".opencode", "instructions")
+  if (!existsSync(instrDir)) mkdirSync(instrDir, { recursive: true })
+  const instrFile = join(instrDir, "memory-autoload.md")
+  writeFileSync(instrFile, dumpMemoryMarkdown())
+  console.log(`  Seeded ${instrFile}`)
 
   const configPath = agent.local || agent.global
   if (configPath && existsSync(configPath)) {
@@ -1159,6 +1212,83 @@ function importMemory(): void {
   console.log(`Skipped ${importData.entries.length - newEntries.length} duplicates\n`)
 }
 
+/**
+ * Render the project memory as markdown ready to be injected into agent
+ * context. Reads `.toon-memory/memory/data.toon` (projectRoot = cwd), parses
+ * entries and file summaries, and returns a string. If there is no memory
+ * yet, returns a minimal "(empty)" document.
+ */
+function dumpMemoryMarkdown(): string {
+  const memoryFile = join(MEMORY_DIR, "data.toon")
+
+  if (!existsSync(memoryFile)) {
+    return "# toon-memory\n(empty)\n"
+  }
+
+  const data = readFileSync(memoryFile, "utf-8")
+  const lines = data.split("\n").filter((l: string) => l.startsWith("  ") && l.includes("|"))
+
+  const entries = lines.map((line: string) => {
+    const parts = line.trim().split("|")
+    return {
+      id: parts[0],
+      category: parts[1],
+      key: parts[2],
+      content: parts[3],
+      file: parts[4],
+      tags: parts[5] ? parts[5].split(";").filter(Boolean) : [],
+      date: parts[6],
+    }
+  })
+
+  // File summaries live in the `summaries:` section as `  <file>: <summary>`.
+  const allLines = data.split("\n")
+  const summaryIdx = allLines.findIndex((l: string) => l.trim().startsWith("summaries:"))
+  const summaries: { file: string; summary: string }[] = []
+  if (summaryIdx !== -1) {
+    for (const sl of allLines.slice(summaryIdx + 1)) {
+      if (!sl.includes(":") || !sl.startsWith("  ")) continue
+      const idx = sl.indexOf(":")
+      const file = sl.slice(0, idx).trim()
+      const summary = sl.slice(idx + 1).trim()
+      if (file && summary) summaries.push({ file, summary })
+    }
+  }
+
+  if (entries.length === 0 && summaries.length === 0) {
+    return "# toon-memory\n(empty)\n"
+  }
+
+  const out: string[] = ["# toon-memory (auto-loaded)", ""]
+
+  for (const e of entries) {
+    out.push(`## ${e.category}: ${e.key}`)
+    out.push(e.content)
+    out.push(`- file: ${e.file}`)
+    out.push(`- tags: ${e.tags.join(", ")}`)
+    out.push(`- date: ${e.date}`)
+    out.push("")
+  }
+
+  if (summaries.length > 0) {
+    out.push("## file summaries")
+    for (const s of summaries) {
+      out.push(`- ${s.file}: ${s.summary}`)
+    }
+    out.push("")
+  }
+
+  return out.join("\n").trimEnd() + "\n"
+}
+
+/**
+ * Print the project memory as injectable markdown (the `dump` CLI command).
+ */
+function dumpMemory(): void {
+  console.log(dumpMemoryMarkdown())
+}
+
+
 /** Watch mode options */
 interface WatchOptions {
   interval: number
@@ -1389,6 +1519,11 @@ if (args[0] === "upgrade") {
 
 if (args[0] === "stats") {
   stats()
+  process.exit(0)
+}
+
+if (args[0] === "dump") {
+  dumpMemory()
   process.exit(0)
 }
 
