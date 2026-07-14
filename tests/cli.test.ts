@@ -285,4 +285,30 @@ describe("CLI Commands", () => {
     // Check hooks were removed
     expect(existsSync(join(testDir, ".toon-memory", "hooks"))).toBe(false)
   })
+
+  it("should show non-interactive hint when no TTY (no args)", () => {
+    // In CI/tests stdin is piped (not a TTY), so the installer must not hang.
+    const output = execSync(`node ${cliPath}`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+    expect(output).toContain("instalación interactiva")
+    expect(output).toContain("init [local|global]")
+  })
+
+  it("should report unknown command with usage", () => {
+    let output = ""
+    try {
+      execSync(`node ${cliPath} bogus-cmd`, {
+        cwd: testDir,
+        encoding: "utf-8",
+        env: { ...process.env, HOME: testDir },
+      })
+    } catch (e: any) {
+      output = e.stdout?.toString() || ""
+    }
+    expect(output).toContain("Comando desconocido")
+    expect(output).toContain("Uso:")
+  })
 })

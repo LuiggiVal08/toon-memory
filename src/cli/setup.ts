@@ -1383,56 +1383,156 @@ if (args[0] === "watch") {
   process.exit(0)
 }
 
-// Interactive installer
-const agents = detectAgents()
-console.log("\n🧠 toon-memory installer\n")
+// Interactive installer when no command is given; otherwise report unknown command.
+if (args.length === 0) {
+  await interactiveInstall()
+  process.exit(0)
+}
 
-console.log("Available agents:")
-agents.forEach((a: Agent, i: number) => {
-  const hasConfig = a.format !== "none" && ((a.local && existsSync(a.local)) || (a.global && existsSync(a.global)))
-  const indicator = hasConfig ? "✓" : "·"
-  console.log(`  ${indicator} ${i + 1}. ${a.name}`)
-})
-console.log("")
+console.log(`Comando desconocido: '${args[0]}'\n`)
+printUsage()
+process.exit(1)
 
-const rl = createInterface({ input: process.stdin, output: process.stdout })
+/** Minimal usage string for unknown commands (full help lives in the entry point). */
+function printUsage(): void {
+  console.log(`Uso: toon-memory <comando> [alcance]
+Comandos: init, status, stats, export, import, watch, uninstall, capture, upgrade, mcp
+Opciones: -v/--version, -h/--help
+Sin argumentos inicia el instalador interactivo.`)
+}
 
-rl.question("Select agents (numbers separated by commas, 'all', or Enter for all): ", (answer: string) => {
-  let selected: Agent[]
+/** Promise wrapper around readline question. */
+function ask(rl: ReturnType<typeof createInterface>, prompt: string): Promise<string> {
+  return new Promise((resolve) => rl.question(prompt, resolve))
+}
 
-  const trimmed = answer.trim().toLowerCase()
-  if (trimmed === "all" || trimmed === "") {
-    selected = agents
-  } else if (trimmed === "none") {
-    selected = []
-  } else {
-    const indices = trimmed.split(",").map(s => parseInt(s.trim(), 10) - 1).filter(i => i >= 0 && i < agents.length)
-    selected = indices.map(i => agents[i])
+/**
+ * Guided interactive installer: pick agents, choose local vs global scope,
+ * confirm, then install. Requires a TTY; otherwise prints a non-interactive hint.
+ */
+async function interactiveInstall(): Promise<void> {
+  if (!process.stdin.isTTY) {
+    console.log("\n🧠 toon-memory — la instalación interactiva requiere una terminal.")
+    console.log("Ejecuta 'toon-memory init [local|global]' para instalación no interactiva.\n")
+    return
+  }
+
+  const agents = detectAgents()
+  console.log("\n🧠 toon-memory installer\n")
+  console.log("Agentes detectados:")
+  agents.forEach((a: Agent, i: number) => {
+    const hasConfig = a.format !== "none" && ((a.local && existsSync(a.local)) || (a.global && existsSync(a.global)))
+    const indicator = hasConfig ? "✓" : "·"
+    const scopeNote = a.format === "none" ? "(instrucciones)" : a.global ? "(local/global)" : "(solo local)"
+    console.log(`  ${indicator} ${i + 1}. ${a.name} ${scopeNote}`)
+  })
+  console.log("")
+
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
+
+  // 1) Agent selection
+  let selected: Agent[] = []
+  while (true) {
+    const answer = (await ask(rl, "Selecciona agentes (números separados por comas, nombres, 'all', o Enter para todos; 'q' para salir): "))
+      .trim()
+      .toLowerCase()
+    if (answer === "q") {
+      console.log("\nInstalación cancelada.\n")
+      rl.close()
+      return
+    }
+    if (answer === "all" || answer === "") {
+      selected = agents
+      break
+    }
+    if (answer === "none") {
+      selected = []
+      break
+    }
+    const tokens = answer.split(",").map((s) => s.trim()).filter(Boolean)
+    const matched: Agent[] = []
+    let valid = true
+    for (const tok of tokens) {
+      const num = parseInt(tok, 10)
+      if (!isNaN(num) && num >= 1 && num <= agents.length) {
+        matched.push(agents[num - 1])
+      } else {
+        const found = agents.find((a) => a.name.toLowerCase() === tok)
+        if (found) matched.push(found)
+        else {
+          console.log(`  ⚠️ '${tok}' no coincide con ningún agente.`)
+          valid = false
+          break
+        }
+      }
+    }
+    if (valid && matched.length > 0) {
+      selected = matched
+      break
+    }
+    console.log("Intenta de nuevo.\n")
   }
 
   if (selected.length === 0) {
-    console.log("\nNo agents selected. Nothing installed.\n")
+    console.log("\nNo se seleccionaron agentes. Nada instalado.\n")
     rl.close()
     return
   }
 
-  console.log(`\nSelected: ${selected.map(a => a.name).join(", ")}\n`)
+  console.log(`\nSeleccionados: ${selected.map((a) => a.name).join(", ")}\n`)
 
-  rl.question("Installation scope — (1) Local or (2) Global? [1/2]: ", (scopeAnswer: string) => {
-    const scope = scopeAnswer === "2" ? "global" : "local"
-    console.log(`\nInstalling ${scope}ly...\n`)
-
-    installMemoryDir()
-
-    for (const agent of selected) {
-      installForAgent(agent, scope)
-      console.log("")
+  // 2) Scope
+  let scope = "local"
+  while (true) {
+    const scopeAnswer = (await ask(rl, "Alcance — (1) Local (proyecto) o (2) Global (~home)? [1/2]: ")).trim()
+    if (scopeAnswer === "" || scopeAnswer === "1") {
+      scope = "local"
+      break
     }
+    if (scopeAnswer === "2") {
+      scope = "global"
+      break
+    }
+    console.log("Escribe 1 (local) o 2 (global).\n")
+  }
 
-    ensureGitignore()
+  // 3) Confirmation summary
+  console.log("\nSe instalará:")
+  for (const a of selected) {
+    const resolved = scope === "global" && a.global ? "global" : "local"
+    const parts: string[] = []
+    if (a.format !== "none") parts.push("MCP")
+    if (a.needsPlugin) parts.push("plugin")
+    else if (a.needsHooks) parts.push("hooks")
+    if (a.needsInstructions) parts.push("instrucciones")
+    const target = resolved === "global" && a.global ? a.global : a.local || "(instrucciones)"
+    console.log(`  • ${a.name} [${resolved}] → ${target}${parts.length ? ` (${parts.join(", ")})` : ""}`)
+  }
 
-    console.log("Done! Restart your agent to use memory tools.")
-    console.log("Run 'npx toon-memory uninstall' to remove.\n")
+  const confirm = (await ask(rl, "\n¿Proceder? [Y/n]: ")).trim().toLowerCase()
+  if (confirm === "n" || confirm === "no") {
+    console.log("\nInstalación cancelada.\n")
     rl.close()
-  })
-})
+    return
+  }
+
+  console.log(`\nInstalando (${scope})...\n`)
+  installMemoryDir()
+
+  const deps = extractProjectDeps(projectRoot)
+  if (Object.keys(deps).length > 0) {
+    updateMemoryConfig({ vocab: deps })
+    console.log(`  Detected ${Object.keys(deps).length} dependencies → auto-tag vocabulary written to config.json`)
+  }
+
+  for (const agent of selected) {
+    installForAgent(agent, scope)
+    console.log("")
+  }
+
+  ensureGitignore()
+
+  console.log("Done! Restart your agent to use memory tools.")
+  console.log("Run 'npx toon-memory uninstall' to remove.\n")
+  rl.close()
+}

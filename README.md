@@ -633,11 +633,17 @@ Press Ctrl+C to stop
 npx toon-memory
 ```
 
-The installer will:
-1. Show all 15 supported agents with detection status
-2. Let you select which ones to configure (comma-separated, `all`, or Enter)
-3. Ask for local or global installation scope
-4. Configure MCP server, instruction files, and hooks automatically
+The installer (requires a terminal) will:
+1. Show all 15 supported agents with detection status (`✓` config found) and their supported scope (`local/global` or `solo local`)
+2. Let you select which ones to configure — by number (`1,3,5`), by name (`claude,codex`), `all`, Enter for all, or `q` to quit
+3. Ask for the installation scope: **(1) Local** (project: `.toon-memory` + agent configs in the repo) or **(2) Global** (`~home` configs)
+4. Show a confirmation summary (`agent → scope → path (MCP/plugin/hooks/instrucciones)`) and ask `¿Proceder? [Y/n]`
+5. Configure MCP server, instruction files, and hooks automatically
+
+> Sin una terminal (CI/pipes) `npx toon-memory` imprime la ayuda de instalación no interactiva. Usa `npx toon-memory init [local|global]` para instalar sin preguntas. Unknown commands print usage and exit with an error.
+
+
+
 
 ### OpenCode
 
