@@ -29,6 +29,46 @@ describe("CLI Commands", () => {
     expect(output).toContain("Agent configs:")
   })
 
+  it("should print version with -v", () => {
+    const output = execSync(`node ${cliPath} -v`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+    expect(output.trim()).toMatch(/^\d+\.\d+\.\d+/)
+  })
+
+  it("should print version with --version", () => {
+    const output = execSync(`node ${cliPath} --version`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+    expect(output.trim()).toMatch(/^\d+\.\d+\.\d+/)
+  })
+
+  it("should print help with -h", () => {
+    const output = execSync(`node ${cliPath} -h`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+    expect(output).toContain("toon-memory — Persistent memory for AI agents")
+    expect(output).toContain("Usage:")
+    expect(output).toContain("--version")
+    expect(output).toContain("--help")
+  })
+
+  it("should print help with --help", () => {
+    const output = execSync(`node ${cliPath} --help`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+    expect(output).toContain("toon-memory — Persistent memory for AI agents")
+    expect(output).toContain("Commands:")
+  })
+
   it("should init with local scope", () => {
     const output = execSync(`node ${cliPath} init local`, {
       cwd: testDir,
