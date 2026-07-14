@@ -782,8 +782,8 @@ pre code {
   gap: 0.75rem;
   margin-bottom: 1.5rem;
 }
-.savings-bar { display: flex; align-items: center; gap: 1rem; }
-.savings-label { width: 56px; font-weight: 600; font-size: 0.9rem; }
+.savings-bar { display: flex; flex-direction: column; align-items: stretch; gap: 0.35rem; }
+.savings-label { width: auto; font-weight: 600; font-size: 0.9rem; }
 .bar-track {
   flex: 1;
   background: var(--bg-card);
