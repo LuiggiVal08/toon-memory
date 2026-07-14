@@ -14,8 +14,9 @@ Build must complete before tests — `tests/cli.test.ts` executes `bin/toon-memo
 
 - `src/bin/toon-memory.ts` — Entry point. Routes `mcp` arg to MCP server, everything else to CLI.
 - `src/mcp/server.ts` — MCP server with 8 tools (memory_remember, memory_recall, memory_forget, memory_stats, memory_summary, memory_archive, memory_encrypt, memory_decrypt).
-- `src/cli/setup.ts` — CLI commands: init, status, stats, export, import, watch, upgrade, uninstall.
-- `src/memory.ts` — **Excluded from tsconfig.** OpenCode custom plugin using `@opencode-ai/plugin`. Not part of main build.
+- `src/cli/setup.ts` — CLI commands: init, status, stats, export, import, watch, upgrade, uninstall. Also installs hooks per agent (Claude/Codex/Gemini via config, Antigravity via `hooks.json`, OpenCode via an embedded plugin template written to `.opencode/plugins/toon-memory.ts`). The OpenCode plugin template is inlined here — there is no separate `src/memory.ts` anymore.
+
+Build outputs (`bin/`, `mcp/`, `dist/`) are gitignored. `tsconfig.json` type-checks `src/` (excluding `tests`).
 
 Build outputs (`bin/`, `mcp/`, `dist/`) are gitignored.
 

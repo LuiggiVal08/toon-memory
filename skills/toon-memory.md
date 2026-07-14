@@ -8,17 +8,17 @@ A persistent memory system for AI coding agents. It remembers decisions, pattern
 
 | Agent | Config File | Format | Hooks |
 |-------|-------------|--------|-------|
-| OpenCode | `.opencode/opencode.json` | MCP server | — |
+| OpenCode | `.opencode/opencode.json` + `.opencode/plugins/toon-memory.ts` | Plugin | SessionStart (plugin, no top-level `hooks`) |
 | VS Code / Copilot | `.vscode/mcp.json` | MCP server | — |
-| Claude Code | `.claude/settings.json` | MCP server | SessionStart |
+| Claude Code | `.claude/settings.json` | MCP server | SessionStart + PostToolUse + Stop |
 | Cursor | `.cursor/mcp.json` | MCP server | — |
 | Windsurf | `~/.codeium/windsurf/mcp_config.json` | MCP server | — |
 | Cline | `.cline/mcp.json` | MCP server | — |
 | Continue | `.continue/config.json` | MCP server | — |
-| Codex CLI | `.codex/config.toml` | TOML | SessionStart |
-| Gemini CLI | `.gemini/settings.json` | MCP server | SessionStart |
+| Codex CLI | `.codex/config.toml` | TOML | SessionStart + PostToolUse + Stop (`[[hooks]] event=`) |
+| Gemini CLI | `.gemini/settings.json` | MCP server | SessionStart + PostToolUse + Stop (`hooks.*`) |
 | Zed | `~/.config/zed/settings.json` | JSONC | — |
-| Antigravity | `.gemini/config/mcp_config.json` | MCP server | SessionStart |
+| Antigravity | `.gemini/config/mcp_config.json` + `.gemini/config/hooks.json` | hooks.json | PreInvocation + PostToolUse + Stop (no SessionStart event) |
 | Aider | — | Instructions only | — |
 | KiloCode | `~/.kilocode/mcp_settings.json` | MCP server | — |
 | OpenClaw | `.openclaw.json` | MCP server | — |

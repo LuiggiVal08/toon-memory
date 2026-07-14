@@ -30,6 +30,8 @@ interface Agent {
   captureJson?: string[]
   /** Codex TOML hook events for activity capture (e.g. post_tool_use, stop) */
   captureToml?: string[]
+  /** OpenCode: install the toon-memory plugin instead of a `hooks` config key */
+  needsPlugin?: boolean
 }
 
 /** Path to the compiled capture script (dist/cli/capture.js) */
@@ -102,10 +104,10 @@ function detectAgents(): Agent[] {
     local: join(projectRoot, ".opencode", "opencode.json"),
     mcpKey: "mcp",
     format: "json",
-    needsHooks: true,
+    needsHooks: false,
+    needsPlugin: true,
     needsInstructions: true,
-    instructionFile: join(projectRoot, "AGENTS.md"),
-    captureJson: ["PostToolUse", "Stop"]
+    instructionFile: join(projectRoot, "AGENTS.md")
   })
 
   // VS Code / GitHub Copilot
@@ -180,7 +182,7 @@ function detectAgents(): Agent[] {
     needsHooks: true,
     needsInstructions: true,
     instructionFile: join(projectRoot, ".codex", "AGENTS.md"),
-    captureToml: ["post_tool_use", "stop"]
+    captureToml: ["PostToolUse", "Stop"]
   })
 
   // Gemini CLI
@@ -517,35 +519,135 @@ function registerCaptureHookJSON(agent: Agent, scriptPath: string): void {
   console.log(`  Capture hooks registered in ${configPath}`)
 }
 
-/** Register activity-capture hooks (post_tool_use/stop) in a Codex TOML config. */
+/** Register activity-capture hooks (PostToolUse/Stop) in a Codex TOML config. */
 function registerCaptureHookTOML(agent: Agent, scriptPath: string): void {
   const configPath = agent.local
   if (!configPath || !existsSync(configPath)) return
 
   let content = readFileSync(configPath, "utf-8")
   for (const event of agent.captureToml || []) {
-    if (content.includes(`[hooks.${event}]`)) continue
-    content += `\n[hooks.${event}]\ncommand = "${scriptPath}"\n`
+    if (content.includes(`event = "${event}"`)) continue
+    content += `\n[[hooks]]\nevent = "${event}"\ncommand = "${scriptPath}"\n`
   }
 
   writeFileSync(configPath, content)
   console.log(`  Capture hooks registered in ${configPath}`)
 }
 
-/** Register SessionStart hook in TOML config (Codex CLI) */
+/** Register SessionStart hook in TOML config (Codex CLI, stable [[hooks]] format). */
 function registerHookTOML(agent: Agent, hookPath: string): void {
   const configPath = agent.local
   if (!configPath || !existsSync(configPath)) return
 
   let content = readFileSync(configPath, "utf-8")
-  if (content.includes("session_start")) {
+  if (content.includes('event = "SessionStart"')) {
     console.log(`  Hook already registered in ${configPath}`)
     return
   }
 
-  content += `\n[hooks.session_start]\ncommand = "${hookPath}"\n`
+  content += `\n[[hooks]]\nevent = "SessionStart"\ncommand = "${hookPath}"\n`
   writeFileSync(configPath, content)
   console.log(`  Hook registered in ${configPath}`)
+}
+
+/**
+ * OpenCode plugin source (hooks only). OpenCode 1.17+ delivers hooks via
+ * plugins, not a top-level `hooks` config key, so `init` writes this file into
+ * `.opencode/plugins/`. It reuses the compiled CLI commands for the actual logic.
+ */
+function opencodePluginContent(): string {
+  return `export const ToonMemory = async ({ $, directory }) => {
+  const ss = directory + "/bin/cli/session-start.js"
+  const cap = directory + "/bin/cli/capture.js"
+  return {
+    "session.created": async () => {
+      try { await $\`node \${ss} opencode\`.quiet() } catch {}
+    },
+    "tool.execute.after": async (input) => {
+      if (!process.env.TOON_MEMORY_CAPTURE) return
+      try {
+        const payload = JSON.stringify({
+          session_id: input?.session?.id ?? "",
+          tool_name: input?.tool ?? "",
+          tool_input: input?.args ?? {},
+        })
+        await $\`node \${cap} opencode\`.stdin(payload).quiet()
+      } catch {}
+    },
+  }
+}
+`
+}
+
+/**
+ * Install the toon-memory OpenCode plugin (auto-capture via hooks) and remove
+ * any stale top-level `hooks` key left by older versions.
+ */
+function installOpenCodePlugin(agent: Agent): void {
+  const pluginsDir = join(projectRoot, ".opencode", "plugins")
+  if (!existsSync(pluginsDir)) mkdirSync(pluginsDir, { recursive: true })
+
+  const dest = join(pluginsDir, "toon-memory.ts")
+  writeFileSync(dest, opencodePluginContent())
+  console.log(`  Plugin created at ${dest}`)
+
+  const configPath = agent.local || agent.global
+  if (configPath && existsSync(configPath)) {
+    try {
+      const config = JSON.parse(readFileSync(configPath, "utf-8"))
+      if (config.hooks) {
+        delete config.hooks
+        writeFileSync(configPath, JSON.stringify(config, null, 2))
+        console.log(`  Removed stale "hooks" key from ${configPath}`)
+      }
+    } catch {}
+  }
+}
+
+/**
+  * Install Antigravity hooks. Antigravity keeps hooks in a separate `hooks.json`
+  * (under .gemini/config/). The official schema maps arbitrary hook NAMES to
+  * event configs; each event wraps handlers in `hooks: [{ type, command }]`.
+  * Supported events: PreToolUse, PostToolUse, PreInvocation, PostInvocation, Stop.
+  * There is no SessionStart event (issue #180 open), so the session-start
+  * reminder runs on PreInvocation (fires before the model is called).
+  */
+const ANTIGRAVITY_HOOK_NAME = "toon-memory"
+function registerAntigravityHooks(agent: Agent): void {
+  const hookDir = join(projectRoot, ".toon-memory", "hooks")
+  if (!existsSync(hookDir)) mkdirSync(hookDir, { recursive: true })
+
+  const sessionPath = join(hookDir, "session-start-antigravity.sh")
+  writeFileSync(sessionPath, sessionStartHookContent("antigravity"))
+  chmodSync(sessionPath, 0o755)
+  console.log(`  Hook script created at ${sessionPath}`)
+
+  const capPath = join(hookDir, "capture-antigravity.sh")
+  writeFileSync(capPath, captureHookContent("antigravity"))
+  chmodSync(capPath, 0o755)
+  console.log(`  Capture hook created at ${capPath}`)
+
+  const base = agent.local ? dirname(agent.local) : projectRoot
+  const hooksFile = join(base, "hooks.json")
+  mkdirSync(base, { recursive: true })
+
+  let cfg: Record<string, any> = {}
+  if (existsSync(hooksFile)) {
+    try {
+      cfg = JSON.parse(readFileSync(hooksFile, "utf-8"))
+    } catch {
+      cfg = {}
+    }
+  }
+
+  cfg[ANTIGRAVITY_HOOK_NAME] = {
+    PreInvocation: [{ type: "command", command: sessionPath }],
+    PostToolUse: [{ matcher: "*", hooks: [{ type: "command", command: capPath }] }],
+    Stop: [{ type: "command", command: capPath }],
+  }
+
+  writeFileSync(hooksFile, JSON.stringify(cfg, null, 2))
+  console.log(`  Antigravity hooks registered in ${hooksFile}`)
 }
 
 /** Register SessionStart hook in JSON config */
@@ -571,8 +673,9 @@ function registerHookJSON(agent: Agent, hookPath: string): void {
     }
   }
 
-  // Claude Code / OpenCode (Claude-compatible) format
-  if (agent.name === "claude" || agent.name === "opencode") {
+  // Claude Code / Gemini CLI format: `hooks.SessionStart` object
+  // (OpenCode uses a plugin instead; Antigravity uses its own hooks.json)
+  if (agent.name === "claude" || agent.name === "gemini") {
     if (!config.hooks) config.hooks = {}
     if (!config.hooks.SessionStart) config.hooks.SessionStart = []
     if (!config.hooks.SessionStart.some((h: any) => h.command === hookPath)) {
@@ -581,14 +684,6 @@ function registerHookJSON(agent: Agent, hookPath: string): void {
       console.log(`  Hook registered in ${configPath}`)
     }
     return
-  }
-
-  // Gemini CLI / Antigravity format
-  if (!config.session_start_hooks) config.session_start_hooks = []
-  if (!config.session_start_hooks.includes(hookPath)) {
-    config.session_start_hooks.push(hookPath)
-    writeFileSync(configPath, JSON.stringify(config, null, 2))
-    console.log(`  Hook registered in ${configPath}`)
   }
 }
 
@@ -599,7 +694,9 @@ function installForAgent(agent: Agent, scope: string): void {
   console.log(`${agent.name}:`)
   installMCPConfig(agent, scope)
   installInstructions(agent)
-  installHooks(agent)
+  if (agent.needsPlugin) installOpenCodePlugin(agent)
+  else if (agent.name === "antigravity") registerAntigravityHooks(agent)
+  else installHooks(agent)
 }
 
 /**
@@ -728,6 +825,34 @@ function uninstall(): void {
     console.log("  Removed .opencode/tools/memory.ts")
   }
 
+  // Remove OpenCode plugin
+  const ocPlugin = join(projectRoot, ".opencode", "plugins", "toon-memory.ts")
+  if (existsSync(ocPlugin)) {
+    unlinkSync(ocPlugin)
+    console.log("  Removed .opencode/plugins/toon-memory.ts")
+  }
+
+  // Remove toon-memory hook from Antigravity hooks.json (leave other hooks intact)
+  const agyHooks = join(projectRoot, ".gemini", "config", "hooks.json")
+  if (existsSync(agyHooks)) {
+    try {
+      const agyCfg = JSON.parse(readFileSync(agyHooks, "utf-8"))
+      if (agyCfg[ANTIGRAVITY_HOOK_NAME]) {
+        delete agyCfg[ANTIGRAVITY_HOOK_NAME]
+        if (Object.keys(agyCfg).length === 0) {
+          unlinkSync(agyHooks)
+          console.log("  Removed .gemini/config/hooks.json")
+        } else {
+          writeFileSync(agyHooks, JSON.stringify(agyCfg, null, 2))
+          console.log("  Removed toon-memory hook from .gemini/config/hooks.json")
+        }
+      }
+    } catch {
+      unlinkSync(agyHooks)
+      console.log("  Removed .gemini/config/hooks.json")
+    }
+  }
+
   console.log("\n✅ toon-memory uninstalled from all agents\n")
 }
 
@@ -808,16 +933,19 @@ function status(): void {
     // Check instructions
     const hasInstructions = agent.instructionFile ? existsSync(agent.instructionFile) : false
 
-    // Check hooks
+    // Check hooks / plugin
     const hookPath = join(projectRoot, ".toon-memory", "hooks", `session-start-${agent.name}.sh`)
-    const hasHooks = existsSync(hookPath)
+    let hasHooks = existsSync(hookPath)
+    if (agent.needsPlugin) {
+      hasHooks = existsSync(join(projectRoot, ".opencode", "plugins", "toon-memory.ts"))
+    }
 
     if (agent.format === "none") {
       console.log(`  ${hasInstructions ? "✅" : "❌"} ${agent.name} (instructions only)`)
     } else {
       const mcpStatus = configured ? "✅" : "❌"
       const instrStatus = agent.needsInstructions ? (hasInstructions ? " 📝" : "") : ""
-      const hookStatus = agent.needsHooks ? (hasHooks ? " 🪝" : "") : ""
+      const hookStatus = (agent.needsHooks || agent.needsPlugin) ? (hasHooks ? " 🪝" : "") : ""
       console.log(`  ${mcpStatus} ${agent.name}${instrStatus}${hookStatus}`)
     }
   }

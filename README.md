@@ -132,17 +132,17 @@ memory_remember   # Save important decisions
 
 | Agent | Config Location | Format | Hooks | Auto-Setup |
 |-------|-----------------|--------|-------|------------|
-| **OpenCode** | `.opencode/opencode.json` | JSON | — | ✅ |
+| **OpenCode** | `.opencode/opencode.json` + `.opencode/plugins/toon-memory.ts` | Plugin | SessionStart (plugin, no top-level `hooks`) | ✅ |
 | **VS Code / Copilot** | `.vscode/mcp.json` | JSON | — | ✅ |
-| **Claude Code** | `.claude/settings.json` | JSON | SessionStart | ✅ |
+| **Claude Code** | `.claude/settings.json` | JSON | SessionStart + PostToolUse + Stop | ✅ |
 | **Cursor** | `.cursor/mcp.json` | JSON | — | ✅ |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | JSON | — | ✅ |
 | **Cline** | `.cline/mcp.json` | JSON | — | ✅ |
 | **Continue** | `.continue/config.json` | JSON | — | ✅ |
-| **Codex CLI** | `.codex/config.toml` | TOML | SessionStart | ✅ |
-| **Gemini CLI** | `.gemini/settings.json` | JSON | SessionStart | ✅ |
+| **Codex CLI** | `.codex/config.toml` | TOML | SessionStart + PostToolUse + Stop (`[[hooks]] event=`) | ✅ |
+| **Gemini CLI** | `.gemini/settings.json` | JSON | SessionStart + PostToolUse + Stop (`hooks.*`) | ✅ |
 | **Zed** | `~/.config/zed/settings.json` | JSONC | — | ✅ |
-| **Antigravity** | `.gemini/config/mcp_config.json` | JSON | SessionStart | ✅ |
+| **Antigravity** | `.gemini/config/mcp_config.json` + `.gemini/config/hooks.json` | hooks.json | PreInvocation + PostToolUse + Stop (no SessionStart event) | ✅ |
 | **Aider** | — | — | — | 📝 Instructions |
 | **KiloCode** | `~/.kilocode/mcp_settings.json` | JSON | — | ✅ |
 | **OpenClaw** | `.openclaw.json` | JSON | — | ✅ |
@@ -655,6 +655,8 @@ Add to `.opencode/opencode.json` or `~/.config/opencode/opencode.json`:
 }
 ```
 
+> **Hooks are delivered via a plugin**, not a top-level `hooks` key. OpenCode 1.17+ rejects `"Unrecognized key: hooks"` in its config — `toon-memory init` writes `.opencode/plugins/toon-memory.ts` instead. Do not add `hooks` to `opencode.json`.
+
 ### Claude Code
 
 Add to `.claude/settings.json`:
@@ -884,7 +886,6 @@ toon-memory/
 │   │   ├── sessions.ts          # Multi-session coordination
 │   │   ├── graph.ts             # Memory graph (parse, build, BM25, centrality, compact render)
 │   │   └── vocab.ts             # Project-vocabulary discovery from dependencies
-│   └── memory.ts                # Custom tool (OpenCode)
 ├── tests/
 │   ├── cli.test.ts              # CLI tests
 │   ├── memory.test.ts           # Memory tests

@@ -15,5 +15,5 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "tests", "src/memory.ts"]
+  "exclude": ["node_modules", "dist", "tests"]
 }

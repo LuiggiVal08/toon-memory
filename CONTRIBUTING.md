@@ -74,8 +74,7 @@ src/
 ├── cli/
 │   ├── setup.ts             # CLI commands
 │   └── toon-memory.ts       # CLI runner
-├── mcp/server.ts            # MCP server (8 tools)
-└── memory.ts                # Custom tool (OpenCode plugin)
+├── mcp/server.ts            # MCP server (13 tools + 3 resources)
 tests/
 ├── cli.test.ts
 └── memory.test.ts

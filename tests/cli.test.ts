@@ -48,6 +48,9 @@ describe("CLI Commands", () => {
     expect(opencodeConfig.mcp["toon-memory"].enabled).toBe(true)
     expect(opencodeConfig.mcp["toon-memory"].type).toBe("local")
     expect(opencodeConfig.mcp["toon-memory"].command).toEqual(["npx", "-y", "toon-memory", "mcp"])
+    // OpenCode must use a plugin, never a top-level `hooks` key (rejected by OpenCode 1.17+)
+    expect(opencodeConfig.hooks).toBeUndefined()
+    expect(existsSync(join(testDir, ".opencode", "plugins", "toon-memory.ts"))).toBe(true)
 
     // Check VS Code config
     expect(existsSync(join(testDir, ".vscode", "mcp.json"))).toBe(true)
@@ -66,12 +69,33 @@ describe("CLI Commands", () => {
     expect(codexConfig).toContain("toon-memory")
     expect(codexConfig).toContain("npx")
     expect(existsSync(join(testDir, ".codex", "AGENTS.md"))).toBe(true)
+    // Codex hooks use the stable [[hooks]] event= format (not [hooks.*] tables)
+    expect(codexConfig).toContain('[[hooks]]')
+    expect(codexConfig).toContain('event = "SessionStart"')
+    expect(codexConfig).toContain('event = "PostToolUse"')
+    expect(codexConfig).toContain('event = "Stop"')
+    expect(codexConfig).not.toContain('[hooks.session_start]')
 
     // Check Gemini CLI config + instructions
     expect(existsSync(join(testDir, ".gemini", "settings.json"))).toBe(true)
     const geminiConfig = JSON.parse(readFileSync(join(testDir, ".gemini", "settings.json"), "utf-8"))
     expect(geminiConfig.mcpServers?.["toon-memory"]).toBeDefined()
     expect(existsSync(join(testDir, ".gemini", "GEMINI.md"))).toBe(true)
+    // Gemini uses hooks.SessionStart (not the legacy session_start_hooks key)
+    expect(geminiConfig.hooks?.SessionStart).toBeDefined()
+    expect(Array.isArray(geminiConfig.hooks.SessionStart)).toBe(true)
+    expect(geminiConfig.hooks.SessionStart.length).toBeGreaterThan(0)
+    expect(existsSync(geminiConfig.hooks.SessionStart[0].command)).toBe(true)
+
+    // Check Antigravity hooks.json (official schema: hook-name -> events -> handlers)
+    expect(existsSync(join(testDir, ".gemini", "config", "hooks.json"))).toBe(true)
+    const agyHooks = JSON.parse(readFileSync(join(testDir, ".gemini", "config", "hooks.json"), "utf-8"))
+    expect(agyHooks["toon-memory"]).toBeDefined()
+    expect(Array.isArray(agyHooks["toon-memory"].PreInvocation)).toBe(true)
+    expect(Array.isArray(agyHooks["toon-memory"].PostToolUse)).toBe(true)
+    expect(Array.isArray(agyHooks["toon-memory"].Stop)).toBe(true)
+    expect(agyHooks["toon-memory"].PreInvocation[0].command).toBeDefined()
+    expect(agyHooks["toon-memory"].PostToolUse[0].hooks[0].command).toBeDefined()
 
     // Check .gitignore
     expect(existsSync(join(testDir, ".gitignore"))).toBe(true)
@@ -107,7 +131,7 @@ describe("CLI Commands", () => {
     expect(toml).toContain('"-y", "toon-memory", "mcp"')
   })
 
-  it("should init Gemini CLI with hooks", () => {
+  it("should init Gemini CLI with hooks.SessionStart (not session_start_hooks)", () => {
     execSync(`node ${cliPath} init local`, {
       cwd: testDir,
       encoding: "utf-8",
@@ -115,13 +139,59 @@ describe("CLI Commands", () => {
     })
 
     const geminiConfig = JSON.parse(readFileSync(join(testDir, ".gemini", "settings.json"), "utf-8"))
-    expect(geminiConfig.session_start_hooks).toBeDefined()
-    expect(Array.isArray(geminiConfig.session_start_hooks)).toBe(true)
-    expect(geminiConfig.session_start_hooks.length).toBeGreaterThan(0)
+    expect(geminiConfig.session_start_hooks).toBeUndefined()
+    expect(geminiConfig.hooks?.SessionStart).toBeDefined()
+    expect(Array.isArray(geminiConfig.hooks.SessionStart)).toBe(true)
+    expect(geminiConfig.hooks.SessionStart.length).toBeGreaterThan(0)
 
     // Check hook script exists
-    const hookPath = geminiConfig.session_start_hooks[0]
+    const hookPath = geminiConfig.hooks.SessionStart[0].command
     expect(existsSync(hookPath)).toBe(true)
+  })
+
+  it("should init OpenCode with plugin and no top-level hooks key", () => {
+    execSync(`node ${cliPath} init local`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const opencodeConfig = JSON.parse(readFileSync(join(testDir, ".opencode", "opencode.json"), "utf-8"))
+    expect(opencodeConfig.hooks).toBeUndefined()
+    expect(existsSync(join(testDir, ".opencode", "plugins", "toon-memory.ts"))).toBe(true)
+  })
+
+  it("should init Codex with stable [[hooks]] event= format", () => {
+    execSync(`node ${cliPath} init local`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const toml = readFileSync(join(testDir, ".codex", "config.toml"), "utf-8")
+    expect(toml).toContain('[[hooks]]')
+    expect(toml).toContain('event = "SessionStart"')
+    expect(toml).toContain('event = "PostToolUse"')
+    expect(toml).toContain('event = "Stop"')
+    expect(toml).not.toContain('[hooks.session_start]')
+  })
+
+  it("should init Antigravity with hooks.json (PreToolUse/PostToolUse/Stop)", () => {
+    execSync(`node ${cliPath} init local`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const agyHooks = JSON.parse(readFileSync(join(testDir, ".gemini", "config", "hooks.json"), "utf-8"))
+    expect(agyHooks["toon-memory"]).toBeDefined()
+    expect(Array.isArray(agyHooks["toon-memory"].PreInvocation)).toBe(true)
+    expect(Array.isArray(agyHooks["toon-memory"].PostToolUse)).toBe(true)
+    expect(Array.isArray(agyHooks["toon-memory"].Stop)).toBe(true)
+    expect(agyHooks["toon-memory"].PreInvocation[0].command).toBeDefined()
+    expect(agyHooks["toon-memory"].PostToolUse[0].hooks[0].command).toBeDefined()
+    // Antigravity has no SessionStart event: PreInvocation is the start-of-session hook
+    expect(agyHooks["toon-memory"].PreInvocation[0].command).toBeDefined()
   })
 
   it("should init Claude Code with hooks", () => {
