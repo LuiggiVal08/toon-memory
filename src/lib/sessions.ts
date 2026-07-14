@@ -1,6 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, unlinkSync, statSync } from "fs"
 import { join } from "path"
-import { execSync } from "child_process"
 
 /**
  * File-based multi-session coordination — no server, no network, no LLM.
@@ -74,18 +73,31 @@ export function resolveSessionId(payload: Record<string, unknown> = {}): string 
   return `proc-${process.pid}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-/** Detect the current git branch; falls back to env or "unknown". */
+/** Detect the current git branch by reading .git/HEAD directly (no shell). */
 export function currentBranch(): string {
   if (process.env.TOON_MEMORY_BRANCH && process.env.TOON_MEMORY_BRANCH.trim()) {
     return process.env.TOON_MEMORY_BRANCH.trim()
   }
   try {
-    const branch = execSync("git rev-parse --abbrev-ref HEAD", {
-      encoding: "utf-8",
-      timeout: 2000,
-      stdio: ["ignore", "pipe", "ignore"],
-    }).trim()
-    return branch || "unknown"
+    let gitDir = join(process.cwd(), ".git")
+    // .git may be a file pointing at the real git dir (worktrees).
+    if (existsSync(gitDir) && !statSync(gitDir).isDirectory()) {
+      const pointer = readFileSync(gitDir, "utf-8").trim()
+      if (pointer.startsWith("gitdir:")) {
+        const target = pointer.slice(7).trim()
+        gitDir = target.startsWith("/") ? target : join(process.cwd(), target)
+      }
+    }
+    const headPath = join(gitDir, "HEAD")
+    if (!existsSync(headPath)) return "unknown"
+    const head = readFileSync(headPath, "utf-8").trim()
+    if (head.startsWith("ref:")) {
+      const ref = head.slice(4).trim()
+      const parts = ref.split("/")
+      return parts[parts.length - 1] || "unknown"
+    }
+    // Detached HEAD: HEAD holds a commit hash.
+    return head ? head.slice(0, 7) : "unknown"
   } catch {
     return "unknown"
   }
