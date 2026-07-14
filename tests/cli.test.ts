@@ -53,7 +53,7 @@ describe("CLI Commands", () => {
       encoding: "utf-8",
       env: { ...process.env, HOME: testDir },
     })
-    expect(output).toContain("toon-memory — Persistent memory for AI agents")
+    expect(output).toContain("toon-memory — MCP memory server for AI coding agents")
     expect(output).toContain("Usage:")
     expect(output).toContain("--version")
     expect(output).toContain("--help")
@@ -65,7 +65,7 @@ describe("CLI Commands", () => {
       encoding: "utf-8",
       env: { ...process.env, HOME: testDir },
     })
-    expect(output).toContain("toon-memory — Persistent memory for AI agents")
+    expect(output).toContain("toon-memory — MCP memory server for AI coding agents")
     expect(output).toContain("Commands:")
   })
 

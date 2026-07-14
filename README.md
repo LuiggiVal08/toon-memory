@@ -1,6 +1,6 @@
 # toon-memory
 
-> Persistent memory for AI coding agents — remember decisions, patterns, and bugs between sessions.
+> MCP memory server for AI coding agents — remember decisions, patterns, and bugs between sessions.
 
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

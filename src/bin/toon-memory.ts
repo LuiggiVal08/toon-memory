@@ -15,7 +15,7 @@ function getVersion(): string {
   }
 }
 
-const HELP = `toon-memory — Persistent memory for AI agents
+const HELP = `toon-memory — MCP memory server for AI coding agents
 
 Usage:
   toon-memory <command> [scope]
