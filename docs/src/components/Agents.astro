@@ -6,6 +6,29 @@ interface Props {
 }
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
+
+import opencode from '../assets/agents/opencode.svg';
+import vscode from '../assets/agents/vscode.svg';
+import claude from '../assets/agents/claude.svg';
+import cursor from '../assets/agents/cursor.svg';
+import windsurf from '../assets/agents/windsurf.svg';
+import cline from '../assets/agents/cline.svg';
+import continueSvg from '../assets/agents/continue.svg';
+import codex from '../assets/agents/codex.svg';
+import gemini from '../assets/agents/gemini.svg';
+import zed from '../assets/agents/zed.svg';
+import antigravity from '../assets/agents/antigravity.svg';
+import aider from '../assets/agents/aider.svg';
+import kilocode from '../assets/agents/kilocode.svg';
+import openclaw from '../assets/agents/openclaw.svg';
+import kiro from '../assets/agents/kiro.svg';
+
+const logoMap: Record<string, string> = {
+  opencode: opencode.src, vscode: vscode.src, claude: claude.src, cursor: cursor.src,
+  windsurf: windsurf.src, cline: cline.src, continue: continueSvg.src,
+  codex: codex.src, gemini: gemini.src, zed: zed.src, antigravity: antigravity.src,
+  aider: aider.src, kilocode: kilocode.src, openclaw: openclaw.src, kiro: kiro.src,
+};
 ---
 
 <section class="content-section agents-section">
@@ -16,15 +39,28 @@ const c = getContent(lang);
 
   <div class="agents-grid">
     {
-      ['OpenCode', 'VS Code / Copilot', 'Claude', 'Cursor', 'Windsurf', 'Cline', 'Continue', 'Codex', 'Gemini', 'Zed', 'Antigravity', 'Aider', 'KiloCode', 'OpenClaw', 'Kiro'].map((name, i) => {
-        const icons = ['🤖', '🆚', '✳️', '🖱️', '🏄', '🧩', '⏯️', '⚡', '✨', '⚡', '🌌', '🤝', '⚖️', '🐾', '🪶'];
-        return (
-          <div class="agent-chip">
-            <span class="agent-icon">{icons[i]}</span>
-            <span class="agent-name">{name}</span>
-          </div>
-        );
-      })
+      [
+        { name: 'OpenCode', key: 'opencode' },
+        { name: 'VS Code / Copilot', key: 'vscode' },
+        { name: 'Claude', key: 'claude' },
+        { name: 'Cursor', key: 'cursor' },
+        { name: 'Windsurf', key: 'windsurf' },
+        { name: 'Cline', key: 'cline' },
+        { name: 'Continue', key: 'continue' },
+        { name: 'Codex', key: 'codex' },
+        { name: 'Gemini', key: 'gemini' },
+        { name: 'Zed', key: 'zed' },
+        { name: 'Antigravity', key: 'antigravity' },
+        { name: 'Aider', key: 'aider' },
+        { name: 'KiloCode', key: 'kilocode' },
+        { name: 'OpenClaw', key: 'openclaw' },
+        { name: 'Kiro', key: 'kiro' },
+      ].map((agent) => (
+        <div class="agent-chip">
+          <img class="agent-icon" src={logoMap[agent.key]} alt={agent.name} width="20" height="20" />
+          <span class="agent-name">{agent.name}</span>
+        </div>
+      ))
     }
   </div>
 </section>
