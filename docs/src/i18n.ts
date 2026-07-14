@@ -85,7 +85,7 @@ export const content = {
 			items: [
 				{ number: '13', label: 'MCP Tools' },
 				{ number: '15', label: 'Agents' },
-				{ number: '22%', label: 'Fewer Tokens' },
+				{ number: '68%', label: 'Fewer Tokens / session' },
 				{ number: '0', label: 'Config Needed' },
 			],
 		},
@@ -414,7 +414,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			items: [
 				{ number: '13', label: 'Herramientas MCP' },
 				{ number: '15', label: 'Agentes' },
-				{ number: '22%', label: 'Menos tokens' },
+				{ number: '68%', label: 'Menos tokens por sesión' },
 				{ number: '0', label: 'Config necesaria' },
 			],
 		},
