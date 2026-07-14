@@ -779,6 +779,8 @@ TOON (Token-Oriented Object Notation) is designed for LLMs:
 
 Measured with `gpt-tokenizer` (cl100k_base) over 16 representative memory entries — see `scripts/benchmark-toon.mjs` (`npm run bench`).
 
+The token savings compound at session time: `npm run bench:impact` simulates retrieving context **with vs without** memory and measures ~68% fewer tokens to get the same context (recall `compact` instead of re-reading source files).
+
 - **22.5% fewer tokens** than JSON at file level (up to 30.5% on a single entry)
 - **Lossless roundtrip** — No data loss
 - **Better LLM comprehension** — Structured for AI consumption

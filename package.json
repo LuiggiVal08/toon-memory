@@ -24,6 +24,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "bench": "node scripts/benchmark-toon.mjs",
+    "bench:impact": "node scripts/benchmark-impact.mjs",
     "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
