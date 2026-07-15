@@ -1231,13 +1231,13 @@ function dumpMemoryMarkdown(): string {
   const entries = lines.map((line: string) => {
     const parts = line.trim().split("|")
     return {
-      id: parts[0],
-      category: parts[1],
-      key: parts[2],
-      content: parts[3],
-      file: parts[4],
+      id: parts[0] ?? "",
+      category: parts[1] ?? "",
+      key: parts[2] ?? "",
+      content: parts[3] ?? "",
+      file: parts[4] ?? "",
       tags: parts[5] ? parts[5].split(";").filter(Boolean) : [],
-      date: parts[6],
+      date: parts[6] ?? "",
     }
   })
 
@@ -1264,9 +1264,9 @@ function dumpMemoryMarkdown(): string {
   for (const e of entries) {
     out.push(`## ${e.category}: ${e.key}`)
     out.push(e.content)
-    out.push(`- file: ${e.file}`)
-    out.push(`- tags: ${e.tags.join(", ")}`)
-    out.push(`- date: ${e.date}`)
+    if (e.file) out.push(`- file: ${e.file}`)
+    if (e.tags.length) out.push(`- tags: ${e.tags.join(", ")}`)
+    if (e.date) out.push(`- date: ${e.date}`)
     out.push("")
   }
 

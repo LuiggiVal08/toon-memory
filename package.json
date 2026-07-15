@@ -1,6 +1,6 @@
 {
   "name": "toon-memory",
-  "version": "2.4.4",
+  "version": "2.4.5",
   "description": "MCP server giving AI coding agents offline, token-efficient persistent memory — recall decisions, patterns, and bugs across sessions with 68.5% fewer tokens than re-reading context. No LLM, no server; works with 15+ agents.",
   "type": "module",
   "bin": {

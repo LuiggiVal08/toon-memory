@@ -347,6 +347,38 @@ describe("CLI Commands", () => {
     rmSync(emptyDir, { recursive: true, force: true })
   })
 
+  it("should dump entries with empty/short fields without 'undefined'", () => {
+    const memoryDir = join(testDir, ".toon-memory", "memory")
+    mkdirSync(memoryDir, { recursive: true })
+    // Short entry (4 fields, no file/date) — mirrors legacy/partial entries.
+    writeFileSync(
+      join(memoryDir, "data.toon"),
+      "version: 1\nentries[2|]{id|category|key|content|file|tags|date}:\n" +
+        "  1|error|types;webhook|webhook retry failed|||\n" +
+        "  2|decision|ok-key|ok content|src/b.ts|tag|2026-07-14\n"
+    )
+
+    const output = execSync(`node ${cliPath} dump`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    expect(output).not.toContain("undefined")
+    expect(output).toContain("## error: types;webhook")
+    expect(output).toContain("webhook retry failed")
+    // The short entry must not emit `undefined` for its missing file/date/tags
+    const errorBlock = output.split("## decision: ok-key")[0]
+    expect(errorBlock).not.toContain("undefined")
+    expect(errorBlock).not.toContain("- file:")
+    expect(errorBlock).not.toContain("- date:")
+    expect(errorBlock).not.toContain("- tags:")
+    // Full entry still shows its fields
+    expect(output).toContain("## decision: ok-key")
+    expect(output).toContain("- file: src/b.ts")
+    expect(output).toContain("- date: 2026-07-14")
+  })
+
   it("should not list dump as an unknown command", () => {
     const output = execSync(`node ${cliPath} dump`, {
       cwd: testDir,
