@@ -8,10 +8,13 @@ const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 const s = c.impactSection;
 
-// Mirror of scripts/benchmark-impact.mjs: without = re-read files (100%),
-// with = compact recall (31.5% of without → 68.5% fewer tokens).
-const withoutPct = 100;
-const withPct = 31.5;
+// Benchmark 1: memory_recall compact vs re-reading files (68.5% savings)
+const recallWithoutPct = 100;
+const recallWithPct = 31.5;
+
+// Benchmark 2: full session — tool calls 25→5 (80% fewer)
+const sessionWithoutPct = 100;
+const sessionWithPct = 20;
 ---
 
 <section class="content-section impact-section">
@@ -20,17 +23,40 @@ const withPct = 31.5;
 		<p>{s.subtitle}</p>
 	</div>
 
-	<div class="savings-bars impact-bars">
-		<div class="savings-bar">
-			<span class="savings-label">{lang === 'es' ? 'Sin memoria' : 'Without memory'}</span>
-			<div class="bar-track">
-				<div class="bar bar-json" style={`--pct:${withoutPct}%`} data-pct={withoutPct}><span>{withoutPct}%</span></div>
+	<div class="benchmark-pair">
+		<div class="benchmark-block">
+			<h3 class="benchmark-label">{lang === 'es' ? 'Recall compacto vs re-leer archivos' : 'Compact recall vs re-reading files'}</h3>
+			<div class="savings-bars impact-bars">
+				<div class="savings-bar">
+					<span class="savings-label">{lang === 'es' ? 'Re-leer archivos' : 'Re-read files'}</span>
+					<div class="bar-track">
+						<div class="bar bar-json" style={`--pct:${recallWithoutPct}%`} data-pct={recallWithoutPct}><span>{recallWithoutPct}%</span></div>
+					</div>
+				</div>
+				<div class="savings-bar">
+					<span class="savings-label">{lang === 'es' ? 'memory_recall compacto' : 'memory_recall compact'}</span>
+					<div class="bar-track">
+						<div class="bar bar-toon" style={`--pct:${recallWithPct}%`} data-pct={recallWithPct}><span>{recallWithPct}%</span></div>
+					</div>
+				</div>
 			</div>
 		</div>
-		<div class="savings-bar">
-			<span class="savings-label">{lang === 'es' ? 'Con toon-memory' : 'With toon-memory'}</span>
-			<div class="bar-track">
-				<div class="bar bar-toon" style={`--pct:${withPct}%`} data-pct={withPct}><span>{withPct}%</span></div>
+
+		<div class="benchmark-block">
+			<h3 class="benchmark-label">{lang === 'es' ? 'Sesión completa: tool calls' : 'Full session: tool calls'}</h3>
+			<div class="savings-bars impact-bars">
+				<div class="savings-bar">
+					<span class="savings-label">{lang === 'es' ? 'Sin memoria (25 calls)' : 'Without memory (25 calls)'}</span>
+					<div class="bar-track">
+						<div class="bar bar-json" style={`--pct:${sessionWithoutPct}%`} data-pct={sessionWithoutPct}><span>{sessionWithoutPct}%</span></div>
+					</div>
+				</div>
+				<div class="savings-bar">
+					<span class="savings-label">{lang === 'es' ? 'Con context_* (5 calls)' : 'With context_* (5 calls)'}</span>
+					<div class="bar-track">
+						<div class="bar bar-toon" style={`--pct:${sessionWithPct}%`} data-pct={sessionWithPct}><span>{sessionWithPct}%</span></div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -82,5 +108,30 @@ const withPct = 31.5;
 	}
 	.impact-stats {
 		margin-top: 1.5rem;
+	}
+	.benchmark-pair {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 2rem;
+		margin-bottom: 1.5rem;
+	}
+	.benchmark-block {
+		padding: 1.25rem;
+		border-radius: 12px;
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid rgba(139, 92, 246, 0.15);
+	}
+	.benchmark-label {
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: #a78bfa;
+		margin-bottom: 1rem;
+		text-transform: uppercase;
+		letter-spacing: .05em;
+	}
+	@media (max-width: 768px) {
+		.benchmark-pair {
+			grid-template-columns: 1fr;
+		}
 	}
 </style>

@@ -61,7 +61,7 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 
 ## Features
 
-- **15 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall), `memory_sessions` for multi-session coordination, and `context_brief` for one-call context generation
+- **20 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall), `memory_sessions` for multi-session coordination, and `context_*` tools for one-call context generation (briefing, diff, focus, health audit, export)
 - **MCP Resources** — Read memory as context without tool invocations, including a System Primer (auto-generated knowledge map)
 - **15 agents supported** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Interactive installer** — Select which agents to configure from a menu
@@ -86,6 +86,7 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 - **Quality scoring** — Every entry gets a 0–1 quality score based on structure (tags, links, content specificity, recency); high-quality entries surface first
 - **Merge-dedup** — Saving with the same `key` merges attributes (union of tags, max confidence, latest date, combined links) instead of overwriting
 - **Confidence score** — Each entry tracks reliability: user-asserted = 1.0, inferred = 0.65–0.75
+- **Context generation tools** — `context_generate` (full briefing), `context_diff` (incremental), `context_focus` (targeted), `context_health` (audit), `context_export` (markdown) — each replaces 5-6 manual tool calls. Zero LLM, pure deterministic aggregation
 - **System Primer** — Auto-generated knowledge map exposed as MCP resource; agents load it at session start for instant context
 
 ---
@@ -176,6 +177,11 @@ memory_remember   # Save important decisions
 | `memory_consolidate` | Merge-dedup entries: same-key entries are merged (tags union, max confidence, latest date), then exact-content duplicates removed (deterministic, no LLM) |
 | `memory_sessions` | Show active agent sessions (branch, files, last-seen) and soft conflicts for parallel work |
 | `context_brief` | **One-call context briefing**: memory + sessions + health in compact markdown. Use instead of 5-6 separate memory_* calls. Zero LLM, pure deterministic aggregation |
+| `context_generate` | **Full project briefing**: combines project structure, git state, memory entries, and active sessions in one call. Replaces 5-6 manual tool calls |
+| `context_diff` | **Incremental briefing**: git commits + modified files + new/updated memory + active sessions since last session |
+| `context_focus` | **Hyper-focused briefing**: only relevant memory + related source files + callers + test files for a query |
+| `context_health` | **Memory health audit**: orphan links, duplicates, broken file refs, expired TTL, stale sessions, score 0–100 |
+| `context_export` | **Export memory as markdown**: injectable context for system prompts (full or compact) |
 
 ### MCP Resources
 
@@ -322,6 +328,54 @@ memory_smart_recall({ intent: "diseño de base de datos para backend" })
 ```
 
 > **Tip:** Use `memory_smart_recall` at the START of every task. It combines BM25 + graph + decay + quality in one call — no need to guess what to search for.
+
+#### Full project briefing (one call)
+
+```typescript
+context_generate({})
+// # Project Briefing (full)
+//
+// ## Project
+// - Name: my-app
+// - Root: /path/to/project
+// - Package Manager: npm
+// - TypeScript: ✓ (v5.3)
+//
+// ## Git Status
+// - Branch: main
+// - 3 uncommitted, 0 untracked
+//
+// ## Memory (42 entries, 12 patterns, 8 bugs)
+// [1] decision/use-postgres
+//   Choose Postgres for ACID compliance
+//   tags: db;decision
+//
+// ## Sessions
+// - egraterol (main, 2m ago): 42 files touched
+```
+
+> **Tip:** Use `context_generate` at the start of a session to get full context in one call. Replaces 5-6 separate tool calls.
+
+#### Memory health audit
+
+```typescript
+context_health({})
+// # Memory Health (score: 87/100)
+//
+// ## Summary
+// - 42 entries (12 patterns, 8 bugs, 15 decisions, 7 knowledge)
+// - 65.3% average quality
+//
+// ## Issues (3)
+// - Orphan link: pattern/db-migrations → pattern/db-seed (key not found)
+// - Duplicate: [bug] redis-pool-fix has identical content
+// - Expired TTL: [knowledge] sprint-deadline (expired 2026-07-20)
+//
+// ## Stale Files (1)
+// - src/legacy.ts (deleted, 2 refs)
+```
+
+> **Tip:** Run `context_health` when memory feels cluttered. Shows orphan links, duplicates, expired TTL entries, and broken file references.
 
 #### Merge-dedup (automatic)
 
@@ -942,6 +996,71 @@ memory_recall (graph, compact)  ~900                     -70%
 memory_smart_recall             ~850                     -72%
 ```
 
+### Context tools benchmark (measured)
+
+The `context_*` tools replace 3–6 separate tool calls with a single call, saving both tokens and tool-call overhead.
+
+```
+Scenario                          Without   With    Saved    Tools
+────────────────────────────────  ────────  ──────  ───────  ──────
+context_generate (full briefing)    5,556     378    93.2%   6 → 1
+context_diff (incremental)            533     152    71.5%   4 → 1
+context_focus (targeted)              413     225    45.5%   4 → 1
+context_health (audit)                322     246    23.6%   5 → 1
+context_export (injectable md)      1,178     218    81.5%   3 → 1
+────────────────────────────────  ────────  ──────  ───────  ──────
+TOTAL                              8,002   1,219    84.8%  22 → 5
+```
+
+**What each scenario measures:**
+
+| Tool | Without (manual path) | With (single call) | Why it saves |
+|------|----------------------|-------------------|-------------|
+| `context_generate` | Read `package.json` + `README` + `tsconfig.json` + full memory dump + memory stats + sessions = 6 calls | One compact briefing with everything | Eliminates 5 redundant reads; output is deduplicated and compact |
+| `context_diff` | `git log` + `git diff --name-only` + `memory_diff` + sessions = 4 calls | One incremental diff | Combines git state + memory changes in one output; no overlap |
+| `context_focus` | `memory_recall` + `findCallers` + `findRelatedFiles` + `findTestFiles` = 4 calls | One targeted briefing | Only returns what's relevant; no full memory scan needed |
+| `context_health` | `memory_stats` + orphan scan + duplicate scan + file ref validation + stale sessions = 5 calls | One health report | Each check is done once and deduplicated; no redundant queries |
+| `context_export` | `memory_stats` + `memory_recall({ compact: true, mode: "graph" })` + manual formatting = 3 calls | One markdown export | Formats output directly; agent skips the "format as markdown" step |
+
+> **Tip:** Use `context_generate` at session start (93% token savings). Use `context_diff` for "what changed since last time?" (72% savings). Use `context_focus` for deep dives on specific topics (45% savings).
+
+Measured with `gpt-tokenizer` (cl100k_base) over realistic project scenarios — see `scripts/bench-context-tools.mjs` (`npm run bench:context`).
+
+### Full session impact (measured)
+
+Simulates a complete 5-phase agent session (session start → debug → implement → review → wrap-up) across 3 approaches: without memory, with `memory_recall`, and with `context_*` tools.
+
+```
+Phase                                   Without memory     memory_recall      context_* tools
+──────────────────────────────────────  ─────────────────  ─────────────────  ─────────────────
+Phase 1: Session Start                  516 t /  6 c       409 t /  3 c       373 t /  1 c
+Phase 2: Debug Issue                    176 t /  4 c       182 t /  2 c       252 t /  1 c
+Phase 3: Implement Feature              189 t /  6 c       183 t /  3 c       305 t /  1 c
+Phase 4: Code Review                    316 t /  4 c       130 t /  2 c       243 t /  1 c
+Phase 5: Wrap-up                      1,214 t /  5 c        68 t /  2 c       117 t /  1 c
+──────────────────────────────────────  ─────────────────  ─────────────────  ─────────────────
+TOTAL                                 2,411 t / 25 c       972 t / 12 c     1,290 t /  5 c
+```
+
+**Key findings:**
+
+| Metric | Without memory | With memory_recall | With context_* tools |
+|--------|---------------|-------------------|---------------------|
+| Tokens per session | 2,411 | 972 (-60%) | 1,290 (-47%) |
+| Tool calls per session | 25 | 12 (-52%) | **5 (-80%)** |
+| Cost per session (GPT-4) | $0.072 | $0.029 | $0.039 |
+
+**The trade-off:** `memory_recall` uses fewer tokens (972 vs 1,290) because it returns only matching entries. `context_*` tools return **richer context** (callers, related files, test files, health audit) — more tokens per call, but **80% fewer tool calls**. In practice, the agent avoids 3-4 follow-up "find related" calls that `context_focus` already includes.
+
+**Where context_* wins big:**
+- **Session start** (Phase 1): 28% fewer tokens + 6→1 calls — one briefing replaces reading 6 files
+- **Wrap-up** (Phase 5): 90% fewer tokens — `context_health` replaces 5 manual scans
+- **Tool calls**: 25→5 calls = **80% less latency overhead** per session
+
+> **Tip:** Use `memory_recall` when you need specific entries (fewer tokens). Use `context_*` when you need comprehensive context with fewer round-trips (fewer calls).
+
+Measured with `gpt-tokenizer` (cl100k_base) — see `scripts/bench-full-impact.mjs` (`npm run bench:full`).
+
 > **Tip:** `memory_smart_recall` combines BM25 + graph + quality in one call, saving both tokens and tool-call overhead. Use it at the start of every task.
 
 ---
@@ -1036,7 +1155,7 @@ toon-memory/
 │   │   ├── setup.ts             # CLI commands
 │   │   └── toon-memory.ts       # CLI runner
 │   ├── mcp/
-│   │   └── server.ts            # MCP server (15 tools + 3 resources)
+│   │   └── server.ts            # MCP server (20 tools + 3 resources)
 │   ├── lib/
 │   │   ├── lock.ts              # Advisory file lock + atomic write
 │   │   ├── sessions.ts          # Multi-session coordination

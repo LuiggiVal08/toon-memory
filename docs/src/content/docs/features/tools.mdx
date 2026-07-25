@@ -1,11 +1,11 @@
 ---
 title: MCP Tools
-description: The 15 memory tools and 3 resources for your AI agent
+description: The 20 memory and context tools and 3 resources for your AI agent
 ---
 
 ## Overview
 
-toon-memory provides 15 MCP tools and 3 MCP resources for managing persistent memory:
+toon-memory provides 20 MCP tools and 3 MCP resources for managing persistent memory:
 
 ## Tools
 
@@ -25,6 +25,11 @@ toon-memory provides 15 MCP tools and 3 MCP resources for managing persistent me
 | `memory_decrypt` | Disable encryption |
 | `memory_sessions` | Show active agent sessions, branches, and soft file conflicts for parallel-session coordination |
 | `context_brief` | **One-call context briefing**: memory + sessions + health in compact markdown. Use instead of 5-6 separate memory_* calls. Zero LLM |
+| `context_generate` | **Full project briefing**: combines project structure, git state, memory entries, and active sessions in one call. Replaces 5-6 manual tool calls |
+| `context_diff` | **Incremental briefing**: git commits + modified files + new/updated memory + active sessions since last session |
+| `context_focus` | **Hyper-focused briefing**: only relevant memory + related source files + callers + test files for a query |
+| `context_health` | **Memory health audit**: orphan links, duplicates, broken file refs, expired TTL, stale sessions, score 0–100 |
+| `context_export` | **Export memory as markdown**: injectable context for system prompts (full or compact) |
 | `memory_smart_recall` | Unified search: BM25 + graph + quality + freshness + decay in one call |
 
 ## MCP Resources
