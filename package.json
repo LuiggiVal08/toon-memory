@@ -1,6 +1,6 @@
 {
   "name": "toon-memory",
-  "version": "2.4.5",
+  "version": "2.5.0",
   "description": "MCP server giving AI coding agents offline, token-efficient persistent memory — recall decisions, patterns, and bugs across sessions with 68.5% fewer tokens than re-reading context. No LLM, no server; works with 15+ agents.",
   "type": "module",
   "bin": {
@@ -20,16 +20,22 @@
     "build": "npm run build:bin && npm run build:mcp && npm run build:cli",
     "build:bin": "esbuild src/bin/toon-memory.ts --platform=node --format=esm --outfile=bin/toon-memory.js",
     "build:mcp": "esbuild src/mcp/server.ts --bundle --platform=node --format=esm --outfile=mcp/server.js",
-    "build:cli": "esbuild src/cli/setup.ts --bundle --platform=node --format=esm --outfile=dist/cli/setup.js && esbuild src/cli/toon-memory.ts --bundle --platform=node --format=esm --outfile=dist/cli/toon-memory.js && esbuild src/cli/capture.ts --bundle --platform=node --format=esm --outfile=dist/cli/capture.js && esbuild src/cli/session-start.ts --bundle --platform=node --format=esm --outfile=dist/cli/session-start.js",
+    "build:cli": "esbuild src/cli/setup.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/cli/setup.js && esbuild src/cli/toon-memory.ts --bundle --platform=node --format=esm --outfile=dist/cli/toon-memory.js && esbuild src/cli/capture.ts --bundle --platform=node --format=esm --outfile=dist/cli/capture.js && esbuild src/cli/session-start.ts --bundle --platform=node --format=esm --outfile=dist/cli/session-start.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "bench": "node scripts/benchmark-toon.mjs",
     "bench:impact": "node scripts/benchmark-impact.mjs",
+    "inspect": "npm run build && npx @modelcontextprotocol/inspector node bin/toon-memory.js mcp",
     "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@inquirer/prompts": "^8.5.2",
     "@modelcontextprotocol/server": "^2.0.0-beta.3",
     "@toon-format/toon": "^2.3.0",
+    "ffmpeg-static": "^5.3.0",
+    "hyperframes": "^0.7.59",
+    "yauzl": "^3.4.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

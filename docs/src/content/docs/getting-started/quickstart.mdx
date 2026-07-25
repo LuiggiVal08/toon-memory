@@ -19,8 +19,11 @@ npm i -g toon-memory
 ## 2. Configure your agent(s)
 
 ```bash
-# Interactive installer — detects agents and configures MCP
+# Interactive installer — select agents with arrow keys, Space, Enter
 npx toon-memory
+
+# Or non-interactive: specify agent(s) and scope
+npx toon-memory init --agent opencode --scope global
 ```
 
 ## 3. Use it
@@ -36,6 +39,6 @@ memory_remember   # Save important decisions
 
 Your agent now has persistent memory across sessions. Learn more about:
 
-- [MCP Tools](/toon-memory/features/tools) — The 13 memory tools and 3 resources
+- [MCP Tools](/toon-memory/features/tools) — The 14 memory tools and 3 resources
 - [CLI Commands](/toon-memory/features/cli) — Manage memory from terminal
 - [Configuration](/toon-memory/configuration/agents) — Agent-specific setup

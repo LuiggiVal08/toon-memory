@@ -6,8 +6,11 @@ description: Gestiona la memoria desde la terminal
 ## Comandos
 
 ```bash
-npx toon-memory              # Instalador interactivo
-npx toon-memory init         # Configuración rápida (sin preguntas)
+npx toon-memory              # Instalador interactivo (selección de agentes)
+npx toon-memory init         # Configuración interactiva con selección de agentes
+npx toon-memory init --agent opencode       # No interactivo: configurar un agente específico
+npx toon-memory init --agent opencode --agent claude  # Configurar múltiples agentes
+npx toon-memory init --agent opencode --scope global  # Configurar globalmente
 npx toon-memory mcp          # Ejecuta el servidor MCP directamente
 npx toon-memory status       # Ver estado de la instalación
 npx toon-memory stats        # Ver estadísticas de memoria
@@ -17,6 +20,13 @@ npx toon-memory watch [opts] # Auto-backup con opciones
 npx toon-memory upgrade      # Actualizar a la última versión
 npx toon-memory uninstall    # Eliminar de todos los agentes
 ```
+
+## Opciones de init
+
+| Opción | Descripción | Por defecto |
+|--------|-------------|---------|
+| `--agent <nombre>` | No interactivo: configurar agente(s) específico(s). Repetir para múltiples. | interactivo |
+| `--scope <scope>` | `local` o `global` — dónde almacenar la configuración del agente | interactivo |
 
 ## Opciones de watch
 

@@ -57,6 +57,7 @@ describe("CLI Commands", () => {
     expect(output).toContain("Usage:")
     expect(output).toContain("--version")
     expect(output).toContain("--help")
+    expect(output).toContain("--agent")
   })
 
   it("should print help with --help", () => {
@@ -294,7 +295,83 @@ describe("CLI Commands", () => {
       env: { ...process.env, HOME: testDir },
     })
     expect(output).toContain("instalación interactiva")
-    expect(output).toContain("init [local|global]")
+    expect(output).toContain("init [--agent")
+  })
+
+  it("should print help with --help showing --agent option", () => {
+    const output = execSync(`node ${cliPath} --help`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+    expect(output).toContain("--agent")
+    expect(output).toContain("--scope")
+  })
+
+  it("should init with --agent flag (single agent)", () => {
+    const output = execSync(`node ${cliPath} init --agent opencode`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    expect(output).toContain("toon-memory init")
+    expect(output).toContain("opencode")
+
+    // OpenCode should be configured
+    expect(existsSync(join(testDir, ".opencode", "opencode.json"))).toBe(true)
+    const opencodeConfig = JSON.parse(readFileSync(join(testDir, ".opencode", "opencode.json"), "utf-8"))
+    expect(opencodeConfig.mcp?.["toon-memory"]).toBeDefined()
+
+    // Claude should NOT be configured
+    expect(existsSync(join(testDir, ".claude", "settings.json"))).toBe(false)
+
+    // Codex should NOT be configured
+    expect(existsSync(join(testDir, ".codex", "config.toml"))).toBe(false)
+  })
+
+  it("should init with --agent flag (multiple agents)", () => {
+    const output = execSync(`node ${cliPath} init --agent opencode --agent claude`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    expect(output).toContain("opencode")
+    expect(output).toContain("claude")
+
+    // Both should be configured
+    expect(existsSync(join(testDir, ".opencode", "opencode.json"))).toBe(true)
+    expect(existsSync(join(testDir, ".claude", "settings.json"))).toBe(true)
+
+    // Codex should NOT be configured
+    expect(existsSync(join(testDir, ".codex", "config.toml"))).toBe(false)
+  })
+
+  it("should fail with unknown agent name", () => {
+    let output = ""
+    try {
+      execSync(`node ${cliPath} init --agent fake-agent-xyz`, {
+        cwd: testDir,
+        encoding: "utf-8",
+        env: { ...process.env, HOME: testDir },
+      })
+    } catch (e: any) {
+      output = e.stdout?.toString() || ""
+    }
+    expect(output).toContain("Agentes no encontrados")
+    expect(output).toContain("fake-agent-xyz")
+  })
+
+  it("should init with --scope flag", () => {
+    const output = execSync(`node ${cliPath} init --agent opencode --scope local`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    expect(output).toContain("local")
+    expect(existsSync(join(testDir, ".opencode", "opencode.json"))).toBe(true)
   })
 
   it("should report unknown command with usage", () => {

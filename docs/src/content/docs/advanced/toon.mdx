@@ -19,10 +19,10 @@ TOON (Token-Oriented Object Notation) is a data format designed for LLMs. It use
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date|ttl}:
-  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10|
-  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10|
-  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0|patterns/zod-schemas|0.80|1.00
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.72|1.00
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d|3||0.68|0.85
 summaries:
   src/services/redis.ts: Redis connection pool with retry logic
 ```
@@ -35,6 +35,10 @@ summaries:
 | `entries[N\|]{fields}:` | Header with count and field names |
 | `id\|category\|key\|...` | Pipe-separated values |
 | `ttl` | Optional time-to-live (empty = no expiration) |
+| `accessed` | Access count (for importance ranking) |
+| `links` | Semicolon-separated entry keys (graph edges) |
+| `quality` | Quality score 0-1 (auto-calculated) |
+| `confidence` | Confidence score 0-1 (1.0=asserted, &lt;1.0=inferred) |
 | `summaries:` | Optional file summaries |
 
 ## Entry Fields
@@ -49,6 +53,10 @@ summaries:
 | `tags` | No | Semicolon-separated tags | `validation;types` |
 | `date` | Yes | YYYY-MM-DD | `2026-07-10` |
 | `ttl` | No | Expiration: `7d`, `30d`, or `2026-12-31` | `7d` |
+| `accessed` | No | Access count (auto-incremented on recall) | `3` |
+| `links` | No | Semicolon-separated entry keys (graph edges) | `patterns/zod-schemas` |
+| `quality` | No | Quality score 0-1 (auto-calculated) | `0.80` |
+| `confidence` | No | Confidence score 0-1 (1.0=asserted) | `1.00` |
 
 ## Benefits
 

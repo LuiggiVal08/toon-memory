@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, cpSync, unlinkSync, readdirSync, statSync, chmodSync, rmSync } from "fs"
 import { basename, dirname, join } from "path"
 import { fileURLToPath } from "url"
-import { createInterface, emitKeypressEvents, type Key } from "readline"
+import { checkbox, select, confirm } from "@inquirer/prompts"
 import { gzipSync, gunzipSync } from "zlib"
 import { extractProjectDeps } from "../lib/vocab"
 
@@ -791,12 +791,28 @@ function updateMemoryConfig(patch: Record<string, any>): void {
 }
 
 /**
- * Initialize toon-memory for all detected agents (non-interactive).
- *
- * Installs MCP server configs, creates memory directory, discovers project
- * dependencies for tag inference, and updates `.gitignore`.
+ * Interactive multi-select for agents using @inquirer/prompts.
+ * Returns the selected Agent array.
  */
-function init(scope: string = "local"): void {
+async function promptAgentSelection(agents: Agent[]): Promise<Agent[]> {
+  return checkbox({
+    message: "¿Qué agentes quieres configurar?",
+    choices: agents.map((a) => ({
+      name: `${a.name} (${a.format === "none" ? "instrucciones" : a.global ? "local/global" : "solo local"})`,
+      value: a,
+      checked: true
+    }))
+  })
+}
+
+/**
+ * Initialize toon-memory. Behaviour depends on flags and TTY:
+ *
+ *  - `--agent` flag → non-interactive install for the listed agents
+ *  - No `--agent`, TTY present → interactive checkbox + scope prompt
+ *  - No `--agent`, no TTY → install for ALL agents (CI fallback)
+ */
+async function init(scope?: string, agentFilter?: string[]): Promise<void> {
   console.log("\n🧠 toon-memory init\n")
 
   installMemoryDir()
@@ -810,8 +826,43 @@ function init(scope: string = "local"): void {
   }
 
   const agents = detectAgents()
-  for (const agent of agents) {
-    installForAgent(agent, scope)
+  let selected: Agent[]
+  let finalScope = scope || "local"
+
+  if (agentFilter && agentFilter.length > 0) {
+    selected = agents.filter((a) => agentFilter.includes(a.name.toLowerCase()))
+    if (selected.length === 0) {
+      console.log(`Agentes no encontrados: ${agentFilter.join(", ")}`)
+      console.log(`Disponibles: ${agents.map((a) => a.name).join(", ")}`)
+      process.exit(1)
+    }
+  } else if (process.stdin.isTTY) {
+    selected = await promptAgentSelection(agents)
+    if (selected.length === 0) {
+      console.log("\nNo se seleccionaron agentes. Nada instalado.\n")
+      return
+    }
+    finalScope = await select({
+      message: "Alcance:",
+      choices: [
+        { name: "Local (proyecto)", value: "local" },
+        { name: "Global (~home)", value: "global" }
+      ],
+      default: finalScope as "local" | "global"
+    })
+    const ok = await confirm({ message: "¿Proceder?", default: true })
+    if (!ok) {
+      console.log("\nInstalación cancelada.\n")
+      return
+    }
+  } else {
+    selected = agents
+  }
+
+  console.log(`\nInstalando (${finalScope}) — ${selected.map((a) => a.name).join(", ")}...\n`)
+
+  for (const agent of selected) {
+    installForAgent(agent, finalScope)
     console.log("")
   }
 
@@ -1503,7 +1554,25 @@ if (args[0] === "uninstall") {
 }
 
 if (args[0] === "init") {
-  init(args[1] || "local")
+  const rest = args.slice(1)
+  const agentNames: string[] = []
+  let scope: string | undefined
+  let i = 0
+  while (i < rest.length) {
+    if (rest[i] === "--agent" && rest[i + 1]) {
+      agentNames.push(rest[i + 1].toLowerCase())
+      i += 2
+    } else if (rest[i] === "--scope" && rest[i + 1]) {
+      scope = rest[i + 1]
+      i += 2
+    } else if (rest[i] !== "--agent" && rest[i] !== "--scope") {
+      scope = rest[i]
+      i++
+    } else {
+      i++
+    }
+  }
+  await init(scope, agentNames.length > 0 ? agentNames : undefined)
   process.exit(0)
 }
 
@@ -1554,15 +1623,13 @@ process.exit(1)
 
 /** Minimal usage string for unknown commands (full help lives in the entry point). */
 function printUsage(): void {
-  console.log(`Uso: toon-memory <comando> [alcance]
+  console.log(`Uso: toon-memory <comando> [opciones]
 Comandos: init, status, stats, export, import, watch, uninstall, capture, upgrade, mcp
+Init: toon-memory init [--agent <nombre> --agent <nombre>...] [--scope local|global]
+  Sin --agent: selector interactivo de agentes y scope.
+  Con --agent: instalación no interactiva (default: scope local).
 Opciones: -v/--version, -h/--help
 Sin argumentos inicia el instalador interactivo.`)
-}
-
-/** Promise wrapper around readline question. */
-function ask(rl: ReturnType<typeof createInterface>, prompt: string): Promise<string> {
-  return new Promise((resolve) => rl.question(prompt, resolve))
 }
 
 /**
@@ -1572,62 +1639,32 @@ function ask(rl: ReturnType<typeof createInterface>, prompt: string): Promise<st
 async function interactiveInstall(): Promise<void> {
   if (!process.stdin.isTTY) {
     console.log("\n🧠 toon-memory — la instalación interactiva requiere una terminal.")
-    console.log("Ejecuta 'toon-memory init [local|global]' para instalación no interactiva.\n")
+    console.log("Ejecuta 'toon-memory init [--agent <nombre>]' para instalación no interactiva.\n")
     return
   }
 
   const agents = detectAgents()
-  const selected = await runAgentChecklist(agents)
-  if (selected === null) {
-    console.log("\nInstalación cancelada.\n")
-    return
-  }
-
+  const selected = await promptAgentSelection(agents)
   if (selected.length === 0) {
     console.log("\nNo se seleccionaron agentes. Nada instalado.\n")
     return
   }
 
-  console.log(`\nSeleccionados: ${selected.map((a) => a.name).join(", ")}\n`)
+  const scope = await select({
+    message: "Alcance:",
+    choices: [
+      { name: "Local (proyecto)", value: "local" },
+      { name: "Global (~home)", value: "global" }
+    ]
+  })
 
-  const rl = createInterface({ input: process.stdin, output: process.stdout })
-
-  // 2) Scope
-  let scope = "local"
-  while (true) {
-    const scopeAnswer = (await ask(rl, "Alcance — (1) Local (proyecto) o (2) Global (~home)? [1/2]: ")).trim()
-    if (scopeAnswer === "" || scopeAnswer === "1") {
-      scope = "local"
-      break
-    }
-    if (scopeAnswer === "2") {
-      scope = "global"
-      break
-    }
-    console.log("Escribe 1 (local) o 2 (global).\n")
-  }
-
-  // 3) Confirmation summary
-  console.log("\nSe instalará:")
-  for (const a of selected) {
-    const resolved = scope === "global" && a.global ? "global" : "local"
-    const parts: string[] = []
-    if (a.format !== "none") parts.push("MCP")
-    if (a.needsPlugin) parts.push("plugin")
-    else if (a.needsHooks) parts.push("hooks")
-    if (a.needsInstructions) parts.push("instrucciones")
-    const target = resolved === "global" && a.global ? a.global : a.local || "(instrucciones)"
-    console.log(`  • ${a.name} [${resolved}] → ${target}${parts.length ? ` (${parts.join(", ")})` : ""}`)
-  }
-
-  const confirm = (await ask(rl, "\n¿Proceder? [Y/n]: ")).trim().toLowerCase()
-  if (confirm === "n" || confirm === "no") {
+  const ok = await confirm({ message: "¿Proceder?", default: true })
+  if (!ok) {
     console.log("\nInstalación cancelada.\n")
-    rl.close()
     return
   }
 
-  console.log(`\nInstalando (${scope})...\n`)
+  console.log(`\nInstalando (${scope}) — ${selected.map((a) => a.name).join(", ")}...\n`)
   installMemoryDir()
 
   const deps = extractProjectDeps(projectRoot)
@@ -1645,93 +1682,4 @@ async function interactiveInstall(): Promise<void> {
 
   console.log("Done! Restart your agent to use memory tools.")
   console.log("Run 'npx toon-memory uninstall' to remove.\n")
-  rl.close()
-}
-
-/**
- * Navigable multi-select checklist rendered in the terminal (no dependencies).
- * ↑/↓ (or k/j) move the cursor, space toggles a selection, 'a' toggles all,
- * Enter confirms, 'q'/'c'/Ctrl-C aborts. Requires a TTY.
- */
-async function runAgentChecklist(agents: Agent[]): Promise<Agent[] | null> {
-  const n = agents.length
-  let cursor = 0
-  const selected = new Set<number>()
-  let prevLines = 0
-
-  const render = (): void => {
-    let out = ""
-    if (prevLines > 0) out += `\x1b[${prevLines}A\x1b[J`
-    const lines: string[] = []
-    lines.push("\n🧠 toon-memory installer")
-    lines.push("")
-    lines.push("Agentes detectados:")
-    agents.forEach((a: Agent, i: number) => {
-      const isCursor = i === cursor
-      const isSel = selected.has(i)
-      const box = isSel ? "[x]" : "[ ]"
-      const cur = isCursor ? ">" : " "
-      const hasConfig = a.format !== "none" && ((a.local && existsSync(a.local)) || (a.global && existsSync(a.global)))
-      const indicator = hasConfig ? "✓" : "·"
-      const scopeNote = a.format === "none" ? "(instrucciones)" : a.global ? "(local/global)" : "(solo local)"
-      lines.push(`  ${cur} ${box} ${indicator} ${i + 1}. ${a.name} ${scopeNote}`)
-    })
-    lines.push("")
-    lines.push("  ↑/↓ mover · espacio marcar · 'a' todos · Enter confirmar · 'q' salir")
-    process.stdout.write(out + lines.join("\n") + "\n")
-    prevLines = lines.length
-  }
-
-  return new Promise<Agent[] | null>((resolve) => {
-    emitKeypressEvents(process.stdin)
-    process.stdin.setRawMode(true)
-    process.stdin.resume()
-
-    const finish = (result: Agent[] | null): void => {
-      process.stdin.setRawMode(false)
-      process.stdin.removeListener("keypress", onKey)
-      process.stdout.write("\n")
-      resolve(result)
-    }
-
-    const onKey = (_str: string, key: Key | undefined): void => {
-      if (!key) return
-      if (key.ctrl && key.name === "c") {
-        finish(null)
-        return
-      }
-      switch (key.name) {
-        case "up":
-        case "k":
-          cursor = (cursor - 1 + n) % n
-          break
-        case "down":
-        case "j":
-          cursor = (cursor + 1) % n
-          break
-        case "space":
-          if (selected.has(cursor)) selected.delete(cursor)
-          else selected.add(cursor)
-          break
-        case "a":
-          if (selected.size === n) selected.clear()
-          else for (let i = 0; i < n; i++) selected.add(i)
-          break
-        case "return":
-          finish(agents.filter((_: Agent, i: number) => selected.has(i)))
-          return
-        case "q":
-        case "c":
-          finish(null)
-          return
-        default:
-          render()
-          return
-      }
-      render()
-    }
-
-    process.stdin.on("keypress", onKey)
-    render()
-  })
 }

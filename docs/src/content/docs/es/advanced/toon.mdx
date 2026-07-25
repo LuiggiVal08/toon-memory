@@ -19,10 +19,10 @@ TOON (Token-Oriented Object Notation) es un formato de datos diseñado para LLMs
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date|ttl}:
-  a1b2c3d4|decision|use-zod|Usar Zod para validación|src/types.ts|validation;types|2026-07-10|
-  e5f6g7h8|pattern|pydantic-configs|El proyecto usa Pydantic v2|config.py|python;patterns|2026-07-10|
-  i9j0k1l2|bug|redis-pool-fix|Se agregó max_connections=20|redis.ts|redis;fix|2026-07-10|7d
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1b2c3d4|decision|use-zod|Usar Zod para validación|src/types.ts|validation;types|2026-07-10||0|patterns/zod-schemas|0.80|1.00
+  e5f6g7h8|pattern|pydantic-configs|El proyecto usa Pydantic v2|config.py|python;patterns|2026-07-10||0||0.72|1.00
+  i9j0k1l2|bug|redis-pool-fix|Se agregó max_connections=20|redis.ts|redis;fix|2026-07-10|7d|3||0.68|0.85
 summaries:
   src/services/redis.ts: Pool de conexión Redis con lógica de reintento
 ```
@@ -35,6 +35,10 @@ summaries:
 | `entries[N\|]{fields}:` | Encabezado con conteo y nombres de campos |
 | `id\|category\|key\|...` | Valores separados por pipe |
 | `ttl` | Tiempo de vida opcional (vacío = sin expiración) |
+| `accessed` | Conteo de accesos (para ranking de importancia) |
+| `links` | Keys de entradas separados por punto y coma (edges del grafo) |
+| `quality` | Score de calidad 0-1 (calculado automáticamente) |
+| `confidence` | Score de confianza 0-1 (1.0=afirmado, &lt;1.0=inferido) |
 | `summaries:` | Resúmenes de archivos opcionales |
 
 ## Campos de entrada
@@ -49,6 +53,10 @@ summaries:
 | `tags` | No | Tags separados por punto y coma | `validation;types` |
 | `date` | Sí | YYYY-MM-DD | `2026-07-10` |
 | `ttl` | No | Expiración: `7d`, `30d`, o `2026-12-31` | `7d` |
+| `accessed` | No | Conteo de accesos (auto-incrementado en recall) | `3` |
+| `links` | No | Keys de entradas separados por punto y coma (edges del grafo) | `patterns/zod-schemas` |
+| `quality` | No | Score de calidad 0-1 (calculado automáticamente) | `0.80` |
+| `confidence` | No | Score de confianza 0-1 (1.0=afirmado) | `1.00` |
 
 ## Beneficios
 

@@ -1,29 +1,30 @@
 ---
 title: MCP Tools
-description: The 13 memory tools and 3 resources for your AI agent
+description: The 14 memory tools and 3 resources for your AI agent
 ---
 
 ## Overview
 
-toon-memory provides 13 MCP tools and 3 MCP resources for managing persistent memory:
+toon-memory provides 14 MCP tools and 3 MCP resources for managing persistent memory:
 
 ## Tools
 
 | Tool | Description |
 |------|-------------|
-| `memory_remember` | Save a decision, pattern, bug, or knowledge (optional TTL, auto-tag inference, and `links` to build the memory graph) |
-| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. `compact: true` returns a token-efficient, numeric-indexed format |
+| `memory_remember` | Save a decision, pattern, bug, or knowledge (optional TTL, auto-tag inference, `links`, auto quality score, merge-dedup, confidence) |
+| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. Quality-weighted ranking |
 | `memory_forget` | Remove an entry by key or id |
-| `memory_stats` | View memory state (including TTL stats) |
+| `memory_stats` | View memory state (including TTL stats and quality distribution) |
 | `memory_summary` | Save/retrieve file summaries |
 | `memory_archive` | Archive old entries (>30 days) and expired TTL entries |
 | `memory_diff` | Show changes since a date (24h, 7d, or exact date) |
 | `memory_suggest` | Find related entries for a given context |
 | `memory_captured` | List activity auto-captured by hooks (opt-in) or clear the log |
-| `memory_consolidate` | De-duplicate entries with identical content (deterministic, no LLM) |
+| `memory_consolidate` | De-duplicate entries with identical content and merge attributes (deterministic, no LLM) |
 | `memory_encrypt` | Enable AES-256-GCM encryption |
 | `memory_decrypt` | Disable encryption |
 | `memory_sessions` | Show active agent sessions, branches, and soft file conflicts for parallel-session coordination |
+| `memory_smart_recall` | Unified search: BM25 + graph + quality + freshness + decay in one call |
 
 ## MCP Resources
 
@@ -33,9 +34,9 @@ Memory is also exposed as MCP resources for direct context reading:
 |----------|-----|-------------|
 | Memory Entries | `toon://memory/entries` | Full memory dump |
 | Memory Stats | `toon://memory/stats` | Category counts and TTL info |
-| Memory Summaries | `toon://memory/summaries` | File summaries |
+| Memory Summaries | `toon://memory/summaries` | Auto-generated system primer: knowledge map, recent memories, and key decisions |
 
-Resources let agents read memory as context without tool invocations — useful for system prompts or session startup.
+Resources let agents read memory as context without tool invocations — useful for system prompts or session startup. The system primer provides instant context about your project's knowledge state.
 
 ## Examples
 
@@ -50,9 +51,12 @@ memory_remember({
   tags: "validation;types"
 })
 // 🧠 Guardado: decision/use-zod (a1b2c3d4)
+// 🎯 Quality: 0.80 | Confidence: 1.00
 // 🔗 Entradas relacionadas:
 //   [pattern] zod-schemas — Shared Zod schemas for API validation
 ```
+
+Entries are auto-scored for quality (0-1) based on tags, links, content detail, and specificity. You-asserted memories get confidence 1.0; inferred/gathered memories get 0.65-0.75.
 
 ### Remember with TTL
 
@@ -64,6 +68,7 @@ memory_remember({
   ttl: "7d"
 })
 // 🧠 Guardado: knowledge/sprint-deadline (x1y2z3w4)
+// 🎯 Quality: 0.55 | Confidence: 1.00
 // ⏰ TTL: 2026-07-19
 ```
 
@@ -82,7 +87,7 @@ memory_remember({
 // 🏷️ Tags inferidos: redis
 ```
 
-When `tags` is empty, the system infers them from content using a vocabulary of 20+ categories: redis, auth, api, db, security, test, deploy, config, performance, refactor, error, logging, types, async, state, ui, storage, email, payment, webhook. On top of that, `toon-memory init` writes a **project vocabulary** derived from your dependencies (`package.json`, `Cargo.toml`, `requirements.txt`, `pyproject.toml`, `go.mod`), so an entry mentioning a dependency like `redis` also gets auto-tagged `redis`.
+When `tags` is empty, the system infers them from content using a vocabulary of 20+ categories: redis, auth, api, db, security, test, deploy, config, performance, refactor, error, logging, types, async, state, ui, storage, email, payment, webhook. On top of that, `toon-memory init` writes a **project vocabulary** derived from your dependencies (`package.json`, `Cargo.toml`, `requirements.txt`, `pyproject.toml`, `go.mod`), so an entry mentioning a dependency like `redis` also gets auto-tagged `redis`. More tags = higher quality score.
 
 ### Search memory
 
@@ -90,8 +95,10 @@ When `tags` is empty, the system infers them from content using a vocabulary of 
 memory_recall({ query: "redis" })
 // [bug] redis-pool-fix (i9j0k1l2)
 //   Added max_connections=20
-//   File: redis.ts | Tags: redis;fix | Date: 2026-07-10
+//   File: redis.ts | Tags: redis;fix | Date: 2026-07-10 | Quality: 0.82
 ```
+
+Results are quality-weighted — entries with more detail, tags, and links surface first.
 
 ### Search with date filter
 
@@ -185,7 +192,7 @@ When you run **several AI agent sessions in parallel** (e.g. three OpenCode sess
 
 ## Memory Graph (recall basado en grafo)
 
-For larger memories, a flat keyword search can return too much or miss relationships. toon-memory can treat memory as a **lightweight knowledge graph** so recall returns the *right* entries with fewer tokens.
+For larger memories, a flat keyword search can return too much or miss relationships. toon-memory can treat memory as a **lightweight knowledge graph** so recall returns the *right* entries with fewer tokens. Combined with quality scoring, the most useful entries surface first.
 
 It is fully **deterministic and offline** — no embeddings, no vector DB, no LLM, no server. Edges come from:
 
@@ -262,10 +269,48 @@ Recall is deterministic and offline (no embeddings, no LLM). Each candidate entr
 - **BM25 relevance** — probabilistic term-frequency score over `id` + `category` + `key` + `content` + `file` + `tags`.
 - **Graph centrality** — degree-normalized (0..1); a hub connected to many entries scores near 1, so it surfaces even without the query word.
 - **Importance** — recency + access frequency.
+- **Quality boost** — entries with higher quality scores (more tags, links, detail) get a ranking boost.
 - **Seed bonus** — entries that directly match the query get a flat boost.
 - **Per-hop decay** — nodes `d` hops from a seed are multiplied by `0.5^d`, keeping distant context below nearby context.
 
-In `graph` mode, recall seeds on keyword matches, expands the ego-subgraph up to `hops`, and returns the top `limit` (default 6) by combined score.
+In `graph` mode, recall seeds on keyword matches, expands the ego-subgraph up to `hops`, and returns the top `limit` (default 6) by combined score. `memory_smart_recall` combines all these signals in one call.
+
+### Smart recall (`memory_smart_recall`)
+
+A unified search that combines BM25, graph, quality, freshness, and decay in one call:
+
+```typescript
+memory_smart_recall({ intent: "redis cache configuration", hops: 2 })
+// Combines BM25 relevance + graph centrality + quality score + freshness decay
+// Returns top results ranked by combined score
+```
+
+This is the recommended way to recall memory — it handles everything in a single call instead of requiring you to orchestrate multiple tools.
+
+### Quality scoring
+
+Every entry is automatically scored for quality (0-1) based on:
+
+- **Tag coverage** (0.3 weight) — more tags = higher score
+- **Link richness** (0.2 weight) — more links = more connected
+- **Content detail** (0.2 weight) — longer, more detailed content scores higher
+- **Recency** (0.15 weight) — recent entries score slightly higher
+- **Specificity** (0.15 weight) — entries with file references and specific keys score higher
+
+High-quality entries surface first in recall results, ensuring the most useful context is always prominent.
+
+### Merge-deduplication
+
+When you save an entry with an existing key, the system merges attributes:
+
+- **Tags**: union of both tag sets
+- **Links**: union of both link sets
+- **Quality**: max of both scores
+- **Confidence**: max of both scores
+- **Content**: kept as-is (no overwriting)
+- **Date**: updated to now
+
+This means re-saving an entry enriches it rather than replacing it.
 
 ### Auto-tag from project dependencies
 
@@ -281,7 +326,7 @@ On `toon-memory init`, the CLI scans your dependency manifests and writes a `voc
 }
 ```
 
-`memory_remember` matches new entries against this vocabulary on top of the built-in one. Re-run `toon-memory init` after adding major dependencies to refresh it. The `vocab` key is merged (never clobbered) with the `encrypted`/`capture` flags in `config.json`.
+`memory_remember` matches new entries against this vocabulary on top of the built-in one. Re-run `toon-memory init` after adding major dependencies to refresh it. The `vocab` key is merged (never clobbered) with the `encrypted`/`capture` flags in `config.json`. More tags = higher quality score.
 
 ## Categories
 

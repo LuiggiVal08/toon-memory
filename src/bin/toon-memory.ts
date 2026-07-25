@@ -18,26 +18,29 @@ function getVersion(): string {
 const HELP = `toon-memory — MCP memory server for AI coding agents
 
 Usage:
-  toon-memory <command> [scope]
+  toon-memory <command> [options]
 
 Commands:
-  init [local|global]   Install memory tools + hooks for detected agents
-  status                Show version, memory count, and agent config status
-  stats                 Show memory statistics
-  dump                  Print memory as injectable markdown (auto-load)
-  export [file]         Export memory to a TOON/JSON file
-  import <file>         Import memory from a TOON/JSON file
-  watch                 Watch memory file and re-render on change
-  uninstall             Remove toon-memory from all agents
-  capture <on|off>      Enable/disable activity capture hooks
-  upgrade               Upgrade to the latest version
+  init [--agent <name>...] [--scope local|global]
+                           Install memory tools + hooks
+                           Without --agent: interactive agent selection
+                           With --agent: non-interactive (default scope: local)
+  status                   Show version, memory count, and agent config status
+  stats                    Show memory statistics
+  dump                     Print memory as injectable markdown (auto-load)
+  export [file]            Export memory to a TOON/JSON file
+  import <file>            Import memory from a TOON/JSON file
+  watch                    Watch memory file and re-render on change
+  uninstall                Remove toon-memory from all agents
+  capture <on|off>         Enable/disable activity capture hooks
+  upgrade                  Upgrade to the latest version
 
 Options:
-  -v, --version         Show version
-  -h, --help            Show this help
+  -v, --version            Show version
+  -h, --help               Show this help
 
 MCP mode:
-  toon-memory mcp       Run as an MCP server (stdio)
+  toon-memory mcp          Run as an MCP server (stdio)
 `
 
 if (args[0] === "-v" || args[0] === "--version") {

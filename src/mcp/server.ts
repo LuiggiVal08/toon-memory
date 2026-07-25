@@ -7,7 +7,8 @@ import { fileURLToPath } from "url"
 import { randomBytes, createCipheriv, createDecipheriv } from "crypto"
 import { withLockSync, atomicWrite, readUnderLock } from "../lib/lock"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } from "../lib/sessions"
-import { graphRecallDetailed, renderCompact } from "../lib/graph"
+import { graphRecallDetailed, renderCompact, parseEntries, buildGraph, bm25Scores, centrality } from "../lib/graph"
+import { qualityScore, mergeEntries, generateSmartRecall, generateSystemPrimer } from "../lib/quality"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -117,7 +118,7 @@ function ensureMemoryDir(): void {
 function ensureMemoryFile(): void {
   ensureMemoryDir()
   if (!existsSync(MEMORY_FILE)) {
-    writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date|ttl|accessed|links}:\n")
+    writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:\n")
   }
 }
 
@@ -560,8 +561,9 @@ function pruneExpiredEntries(): number {
 }
 
 /**
- * Deterministic consolidation: remove entries with identical (normalized)
- * content, keeping the first. No LLM involved.
+ * Deterministic consolidation: merge entries with the same key (combining
+ * tags, links, max confidence, latest date), then remove exact-content
+ * duplicates. No LLM involved.
  */
 function consolidateEntries(): { removed: number; kept: number; duplicates: string[] } {
   const data = readMemory()
@@ -570,32 +572,61 @@ function consolidateEntries(): { removed: number; kept: number; duplicates: stri
   if (headerIdx === -1) return { removed: 0, kept: 0, duplicates: [] }
 
   const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
-  const seen = new Map<string, string>()
+
+  // Phase 1: Merge entries with the same key
+  const byKey = new Map<number, string>() // first occurrence index -> merged line
+  const keyOrder: number[] = []
+  const mergedAway: number[] = []
+
+  for (let i = 0; i < entryLines.length; i++) {
+    const line = entryLines[i].trim()
+    const parts = line.split("|")
+    if (parts.length < 3) continue
+    const key = parts[2]
+    const existingIdx = keyOrder.findIndex((idx) => {
+      const ep = entryLines[idx].trim().split("|")
+      return ep[2] === key
+    })
+    if (existingIdx !== -1) {
+      // Merge into the first occurrence
+      const mergedLine = mergeEntries(byKey.get(keyOrder[existingIdx])!, line)
+      byKey.set(keyOrder[existingIdx], mergedLine)
+      mergedAway.push(i)
+    } else {
+      byKey.set(i, line)
+      keyOrder.push(i)
+    }
+  }
+
+  // Phase 2: Remove exact-content duplicates (normalized)
+  const contentSeen = new Map<string, string>()
   const order: string[] = []
   const duplicates: string[] = []
 
-  for (const line of entryLines) {
-    const parts = line.trim().split("|")
+  for (const idx of keyOrder) {
+    const line = byKey.get(idx)!
+    const parts = line.split("|")
     if (parts.length < 3) {
-      order.push(line.trim())
+      order.push(line)
       continue
     }
     const content = (parts[3] || "").toLowerCase().replace(/\s+/g, " ").trim()
-    if (seen.has(content)) {
+    if (contentSeen.has(content)) {
       duplicates.push(parts[2])
       continue
     }
-    seen.set(content, line.trim())
-    order.push(line.trim())
+    contentSeen.set(content, line)
+    order.push(line)
   }
 
-  if (duplicates.length === 0) return { removed: 0, kept: order.length, duplicates: [] }
+  const totalRemoved = mergedAway.length + duplicates.length
+  if (totalRemoved === 0) return { removed: 0, kept: order.length, duplicates: [] }
 
   lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${order.length}|`)
   lines.splice(headerIdx + 1, lines.length - headerIdx - 1, ...order.map((l) => `  ${l}`))
   writeMemory(lines.join("\n"))
 
-  return { removed: duplicates.length, kept: order.length, duplicates }
+  return { removed: totalRemoved, kept: order.length, duplicates }
 }
 
 const server = new McpServer(
@@ -656,13 +687,8 @@ server.registerResource(
   { title: "Memory Summaries", mimeType: "text/plain" },
   async (uri) => {
     const data = readMemory()
-    const lines = data.split("\n")
-    const summaryIdx = lines.findIndex((l) => l.trim().startsWith("summaries:"))
-    if (summaryIdx === -1) {
-      return { contents: [{ uri: uri.href, text: "No hay resúmenes guardados" }] }
-    }
-    const summaryText = lines.slice(summaryIdx + 1).filter((l) => l.includes(":")).join("\n")
-    return { contents: [{ uri: uri.href, text: summaryText || "No hay resúmenes guardados" }] }
+    const primer = generateSystemPrimer(data)
+    return { contents: [{ uri: uri.href, text: primer }] }
   }
 )
 
@@ -730,16 +756,22 @@ server.registerTool(
     const resolvedLinks = links
       ? links.split(/[\s;]+/).filter(Boolean).join(" ")
       : existingParts[9] || ""
-    const newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|0|${resolvedLinks}`
+    let newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|0|${resolvedLinks}`
     let action = "Guardado"
+    let mergeInfo = ""
     const tagsInferred = !tags && resolvedTags ? true : false
 
     if (existingIdx !== -1) {
-      // Update existing entry
+      // Merge-dedup: combine attributes instead of overwriting
+      newEntry = mergeEntries(lines[existingIdx].trim(), newEntry)
       lines[existingIdx] = `  ${newEntry}`
       action = "Actualizado"
+      mergeInfo = "\n🔗 Merge: tags combinados, fecha y links actualizados"
     } else {
-      // Create new entry
+      // Create new entry with quality score and confidence
+      const quality = qualityScore(resolvedTags, resolvedLinks, content, date)
+      const confidence = 1.0 // User-asserted facts get max confidence
+      newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|0|${resolvedLinks}|${quality.toFixed(2)}|${confidence}`
       const match = lines[headerIdx].match(/\[(\d+)\|/)
       const count = match ? parseInt(match[1]) : 0
       lines.splice(headerIdx + 1, 0, `  ${newEntry}`)
@@ -770,7 +802,7 @@ server.registerTool(
     }
 
     return {
-      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${entryId})\n${content}${ttlMsg}${inferredMsg}${archiveMsg}${relatedMsg}` }],
+      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${entryId})\n${content}${ttlMsg}${inferredMsg}${archiveMsg}${mergeInfo}${relatedMsg}` }],
     }
   }
 )
@@ -815,17 +847,19 @@ server.registerTool(
         const parts = trimmed.split("|")
         if (parts.length < 7) return null
         const [id, cat, key, content, file, tags, date, ttl, accessedRaw] = parts
+        const qualityRaw = parts[10] || ""
+        const confidenceRaw = parts[11] || ""
         if (category && cat !== category) return null
         if (from_date && date < from_date) return null
         if (to_date && date > to_date) return null
         if (ttl && isExpired(ttl)) return null
-        const searchStr = normalize(`${id} ${cat} ${key} ${content} ${file} ${tags}`)
+        const searchStr = normalize(`${id} ${cat} ${key} ${content} ${file} ${tags} ${qualityRaw} ${confidenceRaw}`)
         // All query tokens must match (AND logic)
         if (!queryTokens.every((token) => searchStr.includes(token))) return null
         const accessed = accessedRaw ? parseInt(accessedRaw) || 0 : 0
-        return { id, cat, key, content, file, tags, date, accessed }
+        return { id, cat, key, content, file, tags, date, accessed, qualityRaw, confidenceRaw }
       })
-      .filter(Boolean) as Array<{ id: string; cat: string; key: string; content: string; file: string; tags: string; date: string; accessed: number }>
+      .filter(Boolean) as Array<{ id: string; cat: string; key: string; content: string; file: string; tags: string; date: string; accessed: number; qualityRaw: string; confidenceRaw: string }>
 
     if (results.length === 0) {
       return { content: [{ type: "text" as const, text: `No se encontraron resultados para "${query}"` }] }
@@ -856,9 +890,13 @@ server.registerTool(
       return { content: [{ type: "text" as const, text: formatted }] }
     }
 
-    // Rank by importance (recency + access frequency), then bump access counts.
+    // Rank by importance (recency + access frequency) + quality, then bump access counts.
     const ranked = results
-      .map((r) => ({ ...r, score: entryScore(r.date, r.accessed) }))
+      .map((r) => {
+        const quality = r.qualityRaw ? parseFloat(r.qualityRaw) || 0 : 0
+        const qualityBoost = quality * 0.15
+        return { ...r, score: entryScore(r.date, r.accessed) + qualityBoost }
+      })
       .sort((a, b) => b.score - a.score)
 
     bumpAccessed(ranked.map((r) => r.id))
@@ -955,7 +993,7 @@ server.registerTool(
     const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
     const entries = lines.map((l) => {
       const parts = l.trim().split("|")
-      return { category: parts[1] || "unknown", ttl: parts[7] || "" }
+      return { category: parts[1] || "unknown", ttl: parts[7] || "", quality: parts[10] || "" }
     })
 
     const byCategory: Record<string, number> = {}
@@ -965,6 +1003,10 @@ server.registerTool(
 
     const withTtl = entries.filter((e) => e.ttl).length
     const expired = entries.filter((e) => e.ttl && isExpired(e.ttl)).length
+    const withQuality = entries.filter((e) => e.quality).length
+    const avgQuality = withQuality > 0
+      ? (entries.reduce((sum, e) => sum + (e.quality ? parseFloat(e.quality) : 0), 0) / withQuality).toFixed(2)
+      : "N/A"
 
     const summaryLines = data.split("\n").filter((l) => l.includes(":") && !l.startsWith("  ") && !l.startsWith("version") && !l.startsWith("entries") && !/^\[\d+\|]/.test(l))
     const stats = [
@@ -975,12 +1017,14 @@ server.registerTool(
       ...Object.entries(byCategory).map(([k, v]) => `  ${k}: ${v}`),
       "",
       `TTL: ${withTtl} con expiración, ${expired} expiradas`,
+      `Calidad promedio: ${avgQuality} (${withQuality} con score)`,
       "",
       `Últimas 5 entradas:`,
       ...lines.slice(-5).map((l) => {
         const parts = l.trim().split("|")
         const ttlInfo = parts[7] ? ` | TTL: ${parts[7]}` : ""
-        return `  [${parts[1]}] ${parts[2]} (${parts[0]})${ttlInfo}`
+        const qualityInfo = parts[10] ? ` | Q: ${parts[10]}` : ""
+        return `  [${parts[1]}] ${parts[2]} (${parts[0]})${ttlInfo}${qualityInfo}`
       }),
     ]
 
@@ -1078,6 +1122,29 @@ server.registerTool(
       .join("\n\n")
 
     return { content: [{ type: "text" as const, text: `🔍 Sugerencias para "${context}":\n\n${formatted}` }] }
+  }
+)
+
+/**
+ * Register the memory_smart_recall tool.
+ * Unified recall: BM25 + graph traversal + quality + decay in one call.
+ * The LLM calls this at the start of a task to get everything it needs.
+ */
+server.registerTool(
+  "memory_smart_recall",
+  {
+    title: "Smart Recall (Unified)",
+    description: "Recuperación unificada: combina BM25 + grafo + decay + calidad en una sola llamada. Usar al INICIO de cada tarea para obtener todo el contexto relevante de memoria.",
+    inputSchema: {
+      intent: z.string().describe("Describe qué necesitas saber (ej: 'diseño de base de datos para backend')"),
+      limit: z.number().optional().default(8).describe("Máximo de entradas a devolver"),
+      category: z.string().optional().default("").describe("Filtrar por categoría (vacío = todos)"),
+    },
+  },
+  async ({ intent, limit, category }) => {
+    const data = readMemory()
+    const result = generateSmartRecall(data, intent, { limit, category })
+    return { content: [{ type: "text" as const, text: result }] }
   }
 )
 

@@ -1,26 +1,30 @@
 ---
 title: Herramientas MCP
-description: Las 11 herramientas de memoria y 3 recursos para tu agente de IA
+description: Las 14 herramientas de memoria y 3 recursos para tu agente de IA
 ---
 
 ## Resumen
 
-toon-memory proporciona 11 herramientas MCP y 3 recursos MCP para gestionar la memoria persistente:
+toon-memory proporciona 14 herramientas MCP y 3 recursos MCP para gestionar la memoria persistente:
 
 ## Herramientas
 
 | Herramienta | Descripción |
 |------|-------------|
-| `memory_remember` | Guarda una decisión, patrón, bug o conocimiento (con TTL opcional e inferencia automática de etiquetas) |
-| `memory_recall` | Busca en la memoria (úsalo ANTES de leer archivos, filtra entradas con TTL expirado) |
+| `memory_remember` | Guarda una decisión, patrón, bug o conocimiento (con TTL opcional, inferencia automática de etiquetas, `links`, quality score automático, merge-dedup, confidence) |
+| `memory_recall` | Busca en la memoria (úsalo ANTES de leer archivos, filtra entradas con TTL expirado). `mode: "graph"` expande un subgrafo con relaciones para mayor precisión. Ranking con quality scoring |
 | `memory_forget` | Elimina una entrada por key o id |
-| `memory_stats` | Ver el estado de la memoria (incluyendo estadísticas de TTL) |
+| `memory_stats` | Ver el estado de la memoria (incluyendo estadísticas de TTL y distribución de calidad) |
 | `memory_summary` | Guardar/recuperar resúmenes de archivos |
 | `memory_archive` | Archiva entradas antiguas (>30 días) y entradas con TTL expirado |
 | `memory_diff` | Muestra cambios desde una fecha (24h, 7d, o fecha exacta) |
 | `memory_suggest` | Encuentra entradas relacionadas para un contexto dado |
+| `memory_captured` | Lista actividad auto-capturada por hooks (opt-in) o limpia el log |
+| `memory_consolidate` | De-duplica entradas con contenido idéntico y merge de atributos (determinístico, sin LLM) |
 | `memory_encrypt` | Habilita encriptación AES-256-GCM |
 | `memory_decrypt` | Deshabilita la encriptación |
+| `memory_sessions` | Muestra sesiones activas de agentes, branches, y conflictos suaves de archivos para coordinación multi-sesión |
+| `memory_smart_recall` | Búsqueda unificada: BM25 + grafo + quality + freshness + decay en una sola llamada |
 
 ## Recursos MCP
 
@@ -30,9 +34,9 @@ La memoria también se expone como recursos MCP para lectura directa de contexto
 |----------|-----|-------------|
 | Entradas de memoria | `toon://memory/entries` | Volcado completo de la memoria |
 | Estadísticas de memoria | `toon://memory/stats` | Conteos por categoría e info de TTL |
-| Resúmenes de memoria | `toon://memory/summaries` | Resúmenes de archivos |
+| Resúmenes de memoria | `toon://memory/summaries` | System primer auto-generado: mapa de conocimiento, memorias recientes, y decisiones clave |
 
-Los recursos permiten a los agentes leer la memoria como contexto sin invocar herramientas — útil para system prompts o el inicio de sesión.
+Los recursos permiten a los agentes leer la memoria como contexto sin invocar herramientas — útil para system prompts o el inicio de sesión. El system primer proporciona contexto instantáneo sobre el estado de conocimiento de tu proyecto.
 
 ## Ejemplos
 

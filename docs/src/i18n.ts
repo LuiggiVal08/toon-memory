@@ -41,8 +41,8 @@ export const content = {
 			cards: [
 				{
 					icon: '🧩',
-					title: '13 MCP Tools + 3 Resources',
-					body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, encrypt, decrypt, captured, consolidate, sessions. Plus resources for direct context reading.',
+					title: '14 MCP Tools + 3 Resources',
+					body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions. Plus resources for direct context reading.',
 					tags: ['remember', 'recall', 'diff', 'suggest'],
 				},
 				{
@@ -66,8 +66,8 @@ export const content = {
 				{
 					icon: '🧠',
 					title: 'Smart Memory',
-					body: 'Auto-tag inference from a built-in vocabulary plus your project dependencies, related entry suggestions, memory diff, and configurable TTL for temporary context.',
-					stats: ['Auto-tags', 'TTL', 'Diff'],
+					body: 'Auto-tag inference from a built-in vocabulary plus your project dependencies, quality scoring, confidence scores, merge-dedup, related entry suggestions, memory diff, and configurable TTL for temporary context.',
+					stats: ['Auto-tags', 'Quality', 'Merge-dedup'],
 				},
 				{
 					icon: '🔒',
@@ -83,7 +83,7 @@ export const content = {
 		},
 		stats: {
 			items: [
-				{ number: '13', label: 'MCP Tools' },
+				{ number: '14', label: 'MCP Tools' },
 				{ number: '15', label: 'Agents' },
 				{ number: '68%', label: 'Fewer Tokens / session' },
 				{ number: '0', label: 'Config Needed' },
@@ -225,18 +225,19 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Simulation of retrieving context with vs without memory: without, the agent re-reads the source files; with, it calls <code>memory_recall({ compact: true })</code>. Reproducible: <code>npm run bench:impact</code>.',
 		},
 		tools: {
-			title: '13 MCP tools, 3 resources',
+			title: '14 MCP tools, 3 resources',
 			subtitle: 'Everything your agent needs to remember, recall, and reason',
 			resourcesLabel: 'Resources:',
 			cards: [
-				{ name: 'memory_remember', title: 'Save to Memory', desc: 'Store decisions, patterns, bugs, or knowledge — persisted across sessions.' },
-				{ name: 'memory_recall', title: 'Search Memory', desc: 'Query the knowledge graph before reading files.' },
+				{ name: 'memory_remember', title: 'Save to Memory', desc: 'Store decisions, patterns, bugs, or knowledge — persisted across sessions with auto quality scoring.' },
+				{ name: 'memory_recall', title: 'Search Memory', desc: 'Query the knowledge graph before reading files. Quality-weighted results.' },
 				{ name: 'memory_forget', title: 'Delete from Memory', desc: 'Remove an entry by key or id.' },
-				{ name: 'memory_stats', title: 'Memory Stats', desc: 'Show statistics about the project memory.' },
+				{ name: 'memory_stats', title: 'Memory Stats', desc: 'Show statistics about the project memory, including quality distribution.' },
 				{ name: 'memory_diff', title: 'Memory Diff', desc: 'See what changed since your last session.' },
 				{ name: 'memory_suggest', title: 'Suggest Related', desc: 'Surface related entries for a given context.' },
 				{ name: 'memory_summary', title: 'File Summary', desc: 'Save or retrieve a file summary to save tokens.' },
 				{ name: 'memory_archive', title: 'Archive Old', desc: 'Move entries older than 30 days to keep memory clean.' },
+				{ name: 'memory_smart_recall', title: 'Smart Recall', desc: 'Unified search combining BM25 + graph centrality + quality score + freshness in one call.' },
 				{ name: 'memory_encrypt', title: 'Enable Encryption', desc: 'AES-256-GCM encryption with an auto-generated key.' },
 				{ name: 'memory_decrypt', title: 'Disable Encryption', desc: 'Decrypt and disable encryption.' },
 			],
@@ -255,10 +256,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		smartRecallSection: {
 			title: 'Smart, token-efficient recall',
 			subtitle:
-				'Recall is re-ranked offline by BM25 relevance and graph centrality — then shrunk to a compact form when tokens matter.',
+				'Recall is re-ranked offline by BM25 relevance and graph centrality — then shrunk to a compact form when tokens matter. Quality scores and freshness boost the best entries.',
 			points: [
 				'BM25 scoring over id + category + key + content + tags',
 				'Graph centrality surfaces hub entries even without the query word',
+				'Quality score (0-1) and freshness decay boost the best, most recent entries',
 				'`compact: true` → numeric indices, dropped id/date/file, snippet-truncated neighbors',
 			],
 			standardCode: `memory_recall({ query: "riesgo", mode: "graph" })
@@ -370,8 +372,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			cards: [
 				{
 					icon: '🧩',
-					title: '13 herramientas MCP + 3 recursos',
-					body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, encrypt, decrypt, captured, consolidate, sessions. Más recursos para lectura directa de contexto.',
+					title: '14 herramientas MCP + 3 recursos',
+					body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions. Más recursos para lectura directa de contexto.',
 					tags: ['remember', 'recall', 'diff', 'suggest'],
 				},
 				{
@@ -395,8 +397,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{
 					icon: '🧠',
 					title: 'Memoria inteligente',
-					body: 'Inferencia automática de etiquetas desde un vocabulario integrado más tus dependencias del proyecto, sugerencias de entradas relacionadas, diff de memoria y TTL configurable para contexto temporal.',
-					stats: ['Auto-etiquetas', 'TTL', 'Diff'],
+					body: 'Inferencia automática de etiquetas desde un vocabulario integrado más tus dependencias del proyecto, puntuación de calidad, puntuaciones de confianza, merge-dedup, sugerencias de entradas relacionadas, diff de memoria y TTL configurable para contexto temporal.',
+					stats: ['Auto-etiquetas', 'Calidad', 'Merge-dedup'],
 				},
 				{
 					icon: '🔒',
@@ -412,7 +414,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		stats: {
 			items: [
-				{ number: '13', label: 'Herramientas MCP' },
+				{ number: '14', label: 'Herramientas MCP' },
 				{ number: '15', label: 'Agentes' },
 				{ number: '68%', label: 'Menos tokens por sesión' },
 				{ number: '0', label: 'Config necesaria' },
@@ -554,18 +556,19 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Simulación de recuperar contexto con y sin memoria: sin memoria el agente re-lee los archivos fuente; con memoria llama <code>memory_recall({ compact: true })</code>. Reproducible: <code>npm run bench:impact</code>.',
 		},
 		tools: {
-			title: '10 herramientas MCP, 3 recursos',
+			title: '14 herramientas MCP, 3 recursos',
 			subtitle: 'Todo lo que tu agente necesita para recordar, recuperar y razonar',
 			resourcesLabel: 'Recursos:',
 			cards: [
-				{ name: 'memory_remember', title: 'Guardar en memoria', desc: 'Almacena decisiones, patrones, bugs o conocimiento — persistente entre sesiones.' },
-				{ name: 'memory_recall', title: 'Buscar en memoria', desc: 'Consulta el grafo de conocimiento antes de leer archivos.' },
+				{ name: 'memory_remember', title: 'Guardar en memoria', desc: 'Almacena decisiones, patrones, bugs o conocimiento — persistente entre sesiones con puntuación de calidad automática.' },
+				{ name: 'memory_recall', title: 'Buscar en memoria', desc: 'Consulta el grafo de conocimiento antes de leer archivos. Resultados ponderados por calidad.' },
 				{ name: 'memory_forget', title: 'Eliminar de memoria', desc: 'Elimina una entrada por key o id.' },
-				{ name: 'memory_stats', title: 'Estadísticas', desc: 'Muestra estadísticas sobre la memoria del proyecto.' },
+				{ name: 'memory_stats', title: 'Estadísticas', desc: 'Muestra estadísticas sobre la memoria del proyecto, incluyendo distribución de calidad.' },
 				{ name: 'memory_diff', title: 'Diff de memoria', desc: 'Mira qué cambió desde tu última sesión.' },
 				{ name: 'memory_suggest', title: 'Sugerir relacionados', desc: 'Muestra entradas relacionadas para un contexto dado.' },
 				{ name: 'memory_summary', title: 'Resumen de archivo', desc: 'Guarda o recupera un resumen de archivo para ahorrar tokens.' },
 				{ name: 'memory_archive', title: 'Archivar antiguos', desc: 'Mueve entradas de más de 30 días para mantener la memoria limpia.' },
+				{ name: 'memory_smart_recall', title: 'Recuperación inteligente', desc: 'Búsqueda unificada combinando BM25 + centralidad + calidad + frescura en una sola llamada.' },
 				{ name: 'memory_encrypt', title: 'Habilitar encriptación', desc: 'Encriptación AES-256-GCM con clave autogenerada.' },
 				{ name: 'memory_decrypt', title: 'Deshabilitar encriptación', desc: 'Desencripta y deshabilita la encriptación.' },
 			],
@@ -584,10 +587,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		smartRecallSection: {
 			title: 'Recuperación inteligente y eficiente',
 			subtitle:
-				'El recall se re-ordena offline por relevancia BM25 y centralidad del grafo, y luego se comprime a una forma compacta cuando importan los tokens.',
+				'El recall se re-ordena offline por relevancia BM25 y centralidad del grafo, y luego se comprime a una forma compacta cuando importan los tokens. Las puntuaciones de calidad y frescura impulsan las mejores entradas.',
 			points: [
 				'Puntuación BM25 sobre id + categoría + key + contenido + tags',
 				'La centralidad del grafo hace aparecer los hubs aunque no tengan la palabra',
+				'La puntuación de calidad (0-1) y el decay de frescura impulsan las mejores entradas más recientes',
 				'`compact: true` → índices numéricos, sin id/fecha/archivo, vecinos como snippet',
 			],
 			standardCode: `memory_recall({ query: "riesgo", mode: "graph" })
