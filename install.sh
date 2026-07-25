@@ -4,8 +4,15 @@ set -e
 # toon-memory installer for macOS/Linux
 # Usage: curl -fsSL https://raw.githubusercontent.com/luiggival/toon-memory/main/install.sh | sh
 
-TOON_VERSION="1.0.8"
 NPM_REGISTRY="https://registry.npmjs.org"
+
+# Fetch latest version from npm registry
+TOON_VERSION=$(curl -fsSL "${NPM_REGISTRY}/toon-memory/latest" 2>/dev/null | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{console.log(JSON.parse(d).version)}catch{console.error('Failed to fetch version');process.exit(1)}})")
+if [ -z "${TOON_VERSION}" ]; then
+    echo "Error: Could not determine latest toon-memory version."
+    echo "You can install manually: npm install -g toon-memory"
+    exit 1
+fi
 
 echo "🧠 toon-memory installer"
 echo ""

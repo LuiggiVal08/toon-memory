@@ -35,9 +35,13 @@ A persistent memory system for AI coding agents. It remembers decisions, pattern
 | `memory_summary` | Save/retrieve file summaries |
 | `memory_archive` | Archive old entries and expired TTL entries |
 | `memory_diff` | Show changes since a date (24h, 7d, or exact date) |
+| `memory_smart_recall` | Unified retrieval: BM25 + graph + decay + quality in one call (use at session start) |
 | `memory_suggest` | Find related entries for a given context |
-| `memory_encrypt` | Enable encryption |
-| `memory_decrypt` | Disable encryption |
+| `memory_captured` | Show activity log captured automatically by hooks |
+| `memory_consolidate` | Deduplicate identical entries (keeps first, deterministic, no LLM) |
+| `memory_sessions` | Show active agent sessions and detect file conflicts |
+| `memory_encrypt` | Enable AES-256-GCM encryption |
+| `memory_decrypt` | Disable encryption and decode memory |
 
 ## MCP Resources
 

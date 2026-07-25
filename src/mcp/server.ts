@@ -10,6 +10,8 @@ import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } fro
 import { graphRecallDetailed, renderCompact, parseEntries, buildGraph, bm25Scores, centrality } from "../lib/graph"
 import { qualityScore, mergeEntries, generateSmartRecall, generateSystemPrimer } from "../lib/quality"
 
+declare const TOON_VERSION: string
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 /** Base directory for memory storage */
@@ -630,7 +632,7 @@ function consolidateEntries(): { removed: number; kept: number; duplicates: stri
 }
 
 const server = new McpServer(
-  { name: "toon-memory", version: "2.4.3" },
+  { name: "toon-memory", version: TOON_VERSION },
   { capabilities: { tools: { listChanged: true }, resources: { listChanged: true } } }
 )
 
