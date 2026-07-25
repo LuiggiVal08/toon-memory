@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.5.1] - 2026-07-25
+
+### Fixed
+- Escaped `<` character in TOON format docs (`toon.mdx`) that broke Astro/MDX build
+
 ## [2.5.0] - 2026-07-25
 
 ### Added
