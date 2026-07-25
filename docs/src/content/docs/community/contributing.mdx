@@ -30,12 +30,14 @@ npm test
 ```
 toon-memory/
 ├── src/
-│   ├── bin/              # Entry point
-│   ├── cli/              # CLI commands
-│   ├── mcp/              # MCP server
-│   └── memory.ts         # Custom tool
-├── tests/                # Unit tests
-├── docs/                 # Documentation (Astro)
+│   ├── bin/              # Entry point (CLI + MCP router)
+│   ├── cli/              # CLI commands (setup, capture, session-start)
+│   ├── lib/              # Core libraries (graph, quality, sessions, vocab, lock)
+│   └── mcp/              # MCP server (14 tools, 3 resources)
+├── tests/                # Unit tests (vitest)
+├── docs/                 # Documentation site (Astro + Starlight)
+├── bin/                  # Build output (entry point)
+├── mcp/                  # Build output (MCP server)
 └── package.json
 ```
 

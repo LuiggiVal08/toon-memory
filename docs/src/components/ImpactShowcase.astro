@@ -22,13 +22,13 @@ const withPct = 31.5;
 
 	<div class="savings-bars impact-bars">
 		<div class="savings-bar">
-			<span class="savings-label">Without memory</span>
+			<span class="savings-label">{lang === 'es' ? 'Sin memoria' : 'Without memory'}</span>
 			<div class="bar-track">
 				<div class="bar bar-json" style={`--pct:${withoutPct}%`} data-pct={withoutPct}><span>{withoutPct}%</span></div>
 			</div>
 		</div>
 		<div class="savings-bar">
-			<span class="savings-label">With toon-memory</span>
+			<span class="savings-label">{lang === 'es' ? 'Con toon-memory' : 'With toon-memory'}</span>
 			<div class="bar-track">
 				<div class="bar bar-toon" style={`--pct:${withPct}%`} data-pct={withPct}><span>{withPct}%</span></div>
 			</div>

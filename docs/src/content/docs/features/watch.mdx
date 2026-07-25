@@ -50,7 +50,7 @@ $ npx toon-memory watch 15 -c -l -m 20
 Watching memory file every 15 minutes...
 Max backups: 20
 Compression: enabled
-Logging: enabled (.opencode/memory/watch.log)
+Logging: enabled (.toon-memory/memory/watch.log)
 Press Ctrl+C to stop
 
 📦 Backup #1 created: 2026-07-11T16-00-00-000Z
@@ -62,9 +62,9 @@ Press Ctrl+C to stop
 
 ## How It Works
 
-1. Watches `.opencode/memory/data.toon` for changes
+1. Watches `.toon-memory/memory/data.toon` for changes
 2. When content changes, creates a timestamped backup
-3. Backups are stored in `.opencode/memory/backups/`
+3. Backups are stored in `.toon-memory/memory/backups/`
 4. Only creates backup when content actually changes
 5. If max-backups is exceeded, oldest backups are pruned
 6. Optional gzip compression reduces backup size by ~60-80%
@@ -73,10 +73,10 @@ Press Ctrl+C to stop
 ## Backup Files
 
 ```
-.opencode/memory/backups/
+.toon-memory/memory/backups/
 ├── backup-2026-07-11T16-00-00-000Z.toon
 ├── backup-2026-07-11T16-15-00-00-000Z.toon.gz    # compressed
-└── backup-2026-07-11T16-30-00-000Z.toon
+└── backup-2026-07-11T16-30-00-00-000Z.toon
 ```
 
 ## Use Cases

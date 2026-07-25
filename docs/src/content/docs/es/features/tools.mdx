@@ -147,6 +147,181 @@ memory_encrypt()
 // a1b2c3d4...
 ```
 
+### Listar sesiones activas y conflictos
+
+```typescript
+memory_sessions({ conflictsOnly: false })
+// 🧭 Sesiones activas (2) — ventana 10 min:
+//
+// • opencode @ feature/foo
+//    id: sess-B
+//    Archivos:
+//      • src/shared.ts
+// • claude @ feature/foo (tú)
+//    id: sess-A
+//
+// 🔥 Conflictos suaves (1):
+//   ⚠️ src/shared.ts  ↔  opencode@feature/foo, claude@feature/foo
+```
+
+Usa `memory_sessions({ conflictsOnly: true })` si solo te interesan los choques. Ver [Coordinación multi-sesión](#coordinación-multi-sesión) más abajo.
+
+## Coordinación multi-sesión
+
+Cuando ejecutas **varias sesiones de agente de IA en paralelo** (ej. tres sesiones de OpenCode en el mismo repo), pueden pisarse el trabajo. `memory_sessions` es una herramienta de coordinación **basada en archivos** — **sin servidor, sin red, sin llamadas a LLM** — que permite a cada sesión ver qué hacen las demás.
+
+### Cómo funciona
+
+- Al inicio, un hook `SessionStart` escribe un **archivo de heartbeat** para la sesión en `.toon-memory/memory/sessions/<id>.json`. Cada proceso escribe *solo su propio archivo*, sin contención de locks.
+- El heartbeat registra el nombre del agente, la **branch de git**, los **archivos tocados** y un **last-seen** timestamp.
+- Leer entre esos archivos le da a cada sesión una vista compartida, eventualmente consistente, de quién está activo.
+- Una sesión está "activa" mientras su heartbeat esté dentro de la ventana TTL (10 min). Sesiones muertas (PID ya no vivo **y** heartbeat obsoleto) se limpiar perezosamente.
+- Los conflictos suaves son archivos tocados por **2+ sesiones activas** — surfaca por `memory_sessions` para que puedas evitar pisar el trabajo de hermanos.
+
+### Hábito recomendado para sesiones paralelas
+
+1. Al inicio de sesión, el hook `SessionStart` imprime otras sesiones activas, sus branches, y conflictos suaves.
+2. Antes de editar archivos compartidos, ejecuta `memory_sessions()` para confirmar que ningún hermano los está tocando.
+3. Al terminar, tu heartbeat se marca como terminado y los archivos se liberan.
+
+## Memoria como grafo (recall basado en grafo)
+
+Para memorias grandes, una búsqueda plana por palabras clave puede devolver demasiado o perder relaciones. toon-memory puede tratar la memoria como un **grafo de conocimiento ligero** para que recall devuelva las *entradas correctas* con menos tokens. Combinado con quality scoring, las entradas más útiles aparecen primero.
+
+Es **completamente determinístico y offline** — sin embeddings, sin vector DB, sin LLM, sin servidor. Los edges vienen de:
+
+- **`links` explícitos** — keys que declaras al guardar una entrada.
+- **Referencias `[[key]]` implícitas** — cualquier mención `[[alguna-key]]` dentro del contenido.
+
+### Recordar con links
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "risk-engine-priority",
+  content: "El motor prioriza riesgo sobre velocidad (ver [[risk-spec]]).",
+  file: "spec.md:10",
+  tags: "risk;spec",
+  links: "engine-arch"   // edge explícito a otra entrada
+})
+// 🧠 Guardado: decision/risk-engine-priority (a1b2c3d4)
+```
+
+### Recall con modo grafo
+
+`memory_recall({ mode: "graph" })` encuentra coincidencias por palabras clave (seeds) y expande el **ego-subgrafo** hasta `hops` (1 o 2). La relevancia se propaga de seeds a vecinos, así que un spec o decisión relacionada aparece aunque no tenga la palabra de búsqueda. El resultado se limita (`limit`, default 6) para un contexto más pequeño y preciso.
+
+```typescript
+memory_recall({ query: "riesgo", mode: "graph", hops: 2 })
+// [decision] risk-engine-priority (a1b2c3d4)
+//   El motor prioriza riesgo sobre velocidad (ver [[risk-spec]]).
+//   File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01
+//   links: engine-arch
+//
+// [knowledge] risk-spec (a2b3c4d5)
+//   Especificación de riesgo para el motor.
+//   links: risk-engine-priority;engine-arch
+//
+// [pattern] engine-arch (e6f7g8h9)
+//   Arquitectura del motor.
+//   links: risk-spec
+```
+
+> Usa `mode: "graph"` cuando una decisión se extiende a varias entradas (arquitectura, specs, bugs relacionados). Para hechos aislados, el modo `flat` por defecto es suficiente. El grafo se construye al leer, así que no hay archivo de índice extra que mantener.
+
+### Recall eficiente en tokens (`compact: true`)
+
+Cuando cada token cuenta, pasa `compact: true` para una salida más densa:
+
+```typescript
+memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
+// [1] decision/risk-engine-priority
+//   El motor prioriza riesgo sobre velocidad (ver [[risk-spec]]).
+//   tags: risk;spec · edges: ->2, ->3
+//
+// [2] knowledge/risk-spec
+//   Especificación de riesgo para el motor.
+//   tags: risk · edges: ->1
+//
+// [3] pattern/engine-arch
+//   Arquitectura del motor.
+//   tags: engine · edges: ->1
+```
+
+Qué cambia `compact`:
+
+- Cada entrada obtiene un índice numérico estable (`[1]`, `[2]`, …) en orden de score.
+- `id`, `date` y `file` se eliminan — solo se conserva `tags`.
+- En modo `graph`, los edges se renderizan como `->2` (numéricos, no nombres de key).
+- Los vecinos alcanzados vía el grafo (no-seeds) se truncan a un snippet con elipsis, mientras que los seeds directos conservan su contenido completo.
+- El archivo `.toon` **nunca** se muta — `compact` solo reformatea la respuesta.
+
+### Cómo ordena recall los resultados
+
+El recall es determinístico y offline (sin embeddings, sin LLM). Cada entrada candidata recibe un score combinado de:
+
+- **Relevancia BM25** — score probabilístico de frecuencia de término sobre `id` + `category` + `key` + `content` + `file` + `tags`.
+- **Centralidad del grafo** — normalizado por grado (0..1); un hub conectado a muchas entradas obtiene cerca de 1, así que aparece aunque no tenga la palabra de búsqueda.
+- **Importancia** — recencia + frecuencia de acceso.
+- **Boost de calidad** — entradas con mayor quality score (más tags, links, detalle) obtienen un boost en ranking.
+- **Bonus de seed** — entradas que coinciden directamente con la query obtienen un boost plano.
+- **Decay por salto** — nodos a `d` hops de un seed se multiplican por `0.5^d`, manteniendo el contexto lejano por debajo del cercano.
+
+En modo `graph`, recall busca por palabras clave, expande el ego-subgrafo hasta `hops`, y devuelve los top `limit` (default 6) por score combinado. `memory_smart_recall` combina todas estas señales en una sola llamada.
+
+### Recuperación inteligente (`memory_smart_recall`)
+
+Búsqueda unificada que combina BM25, grafo, calidad, frescura y decay en una sola llamada:
+
+```typescript
+memory_smart_recall({ intent: "configuración de caché redis", hops: 2 })
+// Combina relevancia BM25 + centralidad del grafo + quality score + decay de frescura
+// Devuelve los top resultados ordenados por score combinado
+```
+
+Esta es la forma recomendada de recuperar memoria — maneja todo en una sola llamada en vez de requerir orquestación de múltiples herramientas.
+
+### Puntuación de calidad
+
+Cada entrada recibe automáticamente una puntuación de calidad (0-1) basada en:
+
+- **Cobertura de tags** (peso 0.3) — más tags = mayor score
+- **Riqueza de links** (peso 0.2) — más links = más conectada
+- **Detalle del contenido** (peso 0.2) — contenido más largo y detallado = mayor score
+- **Frescura** (peso 0.15) — entradas recientes obtienen un ligero boost
+- **Especificidad** (peso 0.15) — entradas con referencias a archivos y keys específicas obtienen mayor score
+
+Las entradas de alta calidad aparecen primero en los resultados de recall, asegurando que el contexto más útil siempre sea prominente.
+
+### Merge-deduplicación
+
+Cuando guardas una entrada con una key existente, el sistema fusiona atributos:
+
+- **Tags**: unión de ambos conjuntos
+- **Links**: unión de ambos conjuntos
+- **Calidad**: máximo de ambos scores
+- **Confianza**: máximo de ambos scores
+- **Contenido**: se conserva tal cual (sin sobrescribir)
+- **Fecha**: se actualiza a ahora
+
+Esto significa que re-guardar una entrada la enriquece en vez de reemplazarla.
+
+### Auto-tag desde dependencias del proyecto
+
+En `toon-memory init`, el CLI escanea tus manifiestos de dependencias y escribe una tabla `vocab` en `.toon-memory/memory/config.json`:
+
+```json
+{
+  "vocab": {
+    "react": ["react"],
+    "zod": ["zod"],
+    "redis": ["redis"]
+  }
+}
+```
+
+`memory_remember` compara nuevas entradas contra este vocabulario además del integrado. Re-ejecuta `toon-memory init` después de agregar dependencias mayores para actualizarlo. La clave `vocab` se fusiona (sin sobrescribir) con las flags `encrypted`/`capture` en `config.json`. Más tags = mayor quality score.
+
 ## Categorías
 
 Las entradas se organizan por categoría:

@@ -169,7 +169,7 @@ memory_remember({
   content: "Use Zod for validation",
   file: "src/types.ts"
 })
-// 🏷️ Tags inferidos: types
+// 🏷️ Tags inferred: types
 
 // Save with TTL (expires in 7 days)
 memory_remember({
@@ -238,6 +238,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'memory_summary', title: 'File Summary', desc: 'Save or retrieve a file summary to save tokens.' },
 				{ name: 'memory_archive', title: 'Archive Old', desc: 'Move entries older than 30 days to keep memory clean.' },
 				{ name: 'memory_smart_recall', title: 'Smart Recall', desc: 'Unified search combining BM25 + graph centrality + quality score + freshness in one call.' },
+				{ name: 'memory_captured', title: 'Captured Activity', desc: 'View auto-captured hook activity log — promote observations to memory.' },
+				{ name: 'memory_consolidate', title: 'Consolidate', desc: 'Merge duplicate entries with identical content deterministically.' },
+				{ name: 'memory_sessions', title: 'Sessions', desc: 'Show active agent sessions and detect soft conflicts.' },
 				{ name: 'memory_encrypt', title: 'Enable Encryption', desc: 'AES-256-GCM encryption with an auto-generated key.' },
 				{ name: 'memory_decrypt', title: 'Disable Encryption', desc: 'Decrypt and disable encryption.' },
 			],
@@ -284,7 +287,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				},
 				{
 					q: 'Which agents are supported?',
-					a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue and more — 15+ agents with zero configuration via the MCP server.',
+					a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw, and Kiro — 15+ agents with zero configuration via the MCP server.',
 				},
 				{
 					q: 'How is my data stored?',
@@ -311,12 +314,24 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					a: 'Yes. toon-memory is MIT licensed and free to use. The source is available on GitHub and the package is published on npm.',
 				},
 				{
-					q: 'How is this different from my agent’s built-in memory?',
+					q: 'How is this different from my agent\'s built-in memory?',
 					a: 'Built-in memory is often ephemeral or vendor-specific. toon-memory gives you a portable, diffable, encrypted memory file you fully control across agents and projects.',
 				},
 				{
 					q: 'Can I expire temporary context?',
 					a: 'Yes. Set a TTL (e.g. ttl: "7d") on any entry and it auto-expires — perfect for sprints, deadlines, and time-sensitive notes.',
+				},
+				{
+					q: 'What is smart recall?',
+					a: 'memory_smart_recall combines BM25 keyword search, graph centrality, quality scoring, and freshness decay in a single call — the best of all ranking strategies without manual orchestration.',
+				},
+				{
+					q: 'How does quality scoring work?',
+					a: 'Every entry gets an automatic quality score (0-1) based on tag coverage, link richness, content detail, recency, and specificity. High-quality entries surface first in recall results.',
+				},
+				{
+					q: 'What happens if I save the same key twice?',
+					a: 'The system merges attributes instead of replacing: tags and links are unioned, quality and confidence take the max, and the date is updated. Your entry gets richer over time.',
 				},
 			],
 		},
@@ -569,6 +584,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'memory_summary', title: 'Resumen de archivo', desc: 'Guarda o recupera un resumen de archivo para ahorrar tokens.' },
 				{ name: 'memory_archive', title: 'Archivar antiguos', desc: 'Mueve entradas de más de 30 días para mantener la memoria limpia.' },
 				{ name: 'memory_smart_recall', title: 'Recuperación inteligente', desc: 'Búsqueda unificada combinando BM25 + centralidad + calidad + frescura en una sola llamada.' },
+				{ name: 'memory_captured', title: 'Actividad capturada', desc: 'Muestra el log de actividad capturado por hooks — promueve observaciones a memoria.' },
+				{ name: 'memory_consolidate', title: 'Consolidar', desc: 'Combina entradas duplicadas con contenido idéntico de forma determinista.' },
+				{ name: 'memory_sessions', title: 'Sesiones', desc: 'Muestra sesiones de agente activas y detecta conflictos suaves.' },
 				{ name: 'memory_encrypt', title: 'Habilitar encriptación', desc: 'Encriptación AES-256-GCM con clave autogenerada.' },
 				{ name: 'memory_decrypt', title: 'Deshabilitar encriptación', desc: 'Desencripta y deshabilita la encriptación.' },
 			],
@@ -615,7 +633,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				},
 				{
 					q: '¿Qué agentes son compatibles?',
-					a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue y más — 15+ agentes sin configuración vía el servidor MCP.',
+					a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw y Kiro — 15+ agentes sin configuración vía el servidor MCP.',
 				},
 				{
 					q: '¿Cómo se almacenan mis datos?',
@@ -648,6 +666,18 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{
 					q: '¿Puedo hacer expirar contexto temporal?',
 					a: 'Sí. Define un TTL (ej. ttl: "7d") en cualquier entrada y expira automáticamente — ideal para sprints, fechas límite y notas sensibles al tiempo.',
+				},
+				{
+					q: '¿Qué es la recuperación inteligente?',
+					a: 'memory_smart_recall combina búsqueda BM25 por palabras clave, centralidad del grafo, puntuación de calidad y decay de frescura en una sola llamada — lo mejor de todas las estrategias sin orquestación manual.',
+				},
+				{
+					q: '¿Cómo funciona la puntuación de calidad?',
+					a: 'Cada entrada recibe automáticamente una puntuación de calidad (0-1) basada en cobertura de etiquetas, riqueza de enlaces, detalle del contenido, frescura y especificidad. Las entradas de alta calidad aparecen primero en los resultados.',
+				},
+				{
+					q: '¿Qué pasa si guardo la misma key dos veces?',
+					a: 'El sistema fusiona atributos en vez de reemplazar: etiquetas y enlaces se unen, calidad y confianza toman el máximo, y la fecha se actualiza. Tu entrada se enriquece con el tiempo.',
 				},
 			],
 		},
