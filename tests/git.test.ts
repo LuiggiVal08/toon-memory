@@ -113,7 +113,7 @@ describe("gitStatusSummary", () => {
     git("commit -m 'init'")
 
     const summary = gitStatusSummary()
-    expect(summary.branch).toBe("main")
+    expect(summary.branch).toMatch(/^(main|master)$/)
     expect(summary.head).toMatch(/^[0-9a-f]{40}$/)
     expect(summary.trackedFiles).toBe(1)
     expect(summary.recentCommits).toHaveLength(1)
