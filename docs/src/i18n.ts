@@ -41,8 +41,8 @@ export const content = {
 			cards: [
 				{
 					icon: '🧩',
-					title: '14 MCP Tools + 3 Resources',
-					body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions. Plus resources for direct context reading.',
+					title: '15 MCP Tools + 3 Resources',
+					body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief. Plus resources for direct context reading.',
 					tags: ['remember', 'recall', 'diff', 'suggest'],
 				},
 				{
@@ -83,7 +83,7 @@ export const content = {
 		},
 		stats: {
 			items: [
-				{ number: '14', label: 'MCP Tools' },
+				{ number: '15', label: 'MCP Tools' },
 				{ number: '15', label: 'Agents' },
 				{ number: '68%', label: 'Fewer Tokens / session' },
 				{ number: '0', label: 'Config Needed' },
@@ -225,7 +225,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Simulation of retrieving context with vs without memory: without, the agent re-reads the source files; with, it calls <code>memory_recall({ compact: true })</code>. Reproducible: <code>npm run bench:impact</code>.',
 		},
 		tools: {
-			title: '14 MCP tools, 3 resources',
+			title: '15 MCP tools, 3 resources',
 			subtitle: 'Everything your agent needs to remember, recall, and reason',
 			resourcesLabel: 'Resources:',
 			cards: [
@@ -241,6 +241,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'memory_captured', title: 'Captured Activity', desc: 'View auto-captured hook activity log — promote observations to memory.' },
 				{ name: 'memory_consolidate', title: 'Consolidate', desc: 'Merge duplicate entries with identical content deterministically.' },
 				{ name: 'memory_sessions', title: 'Sessions', desc: 'Show active agent sessions and detect soft conflicts.' },
+				{ name: 'context_brief', title: 'Context Briefing', desc: 'One-call context briefing: memory + sessions + health in compact markdown. Zero LLM.' },
 				{ name: 'memory_encrypt', title: 'Enable Encryption', desc: 'AES-256-GCM encryption with an auto-generated key.' },
 				{ name: 'memory_decrypt', title: 'Disable Encryption', desc: 'Decrypt and disable encryption.' },
 			],
@@ -387,8 +388,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			cards: [
 				{
 					icon: '🧩',
-					title: '14 herramientas MCP + 3 recursos',
-					body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions. Más recursos para lectura directa de contexto.',
+					title: '15 herramientas MCP + 3 recursos',
+					body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief. Más recursos para lectura directa de contexto.',
 					tags: ['remember', 'recall', 'diff', 'suggest'],
 				},
 				{
@@ -429,7 +430,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		stats: {
 			items: [
-				{ number: '14', label: 'Herramientas MCP' },
+				{ number: '15', label: 'Herramientas MCP' },
 				{ number: '15', label: 'Agentes' },
 				{ number: '68%', label: 'Menos tokens por sesión' },
 				{ number: '0', label: 'Config necesaria' },
@@ -571,7 +572,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Simulación de recuperar contexto con y sin memoria: sin memoria el agente re-lee los archivos fuente; con memoria llama <code>memory_recall({ compact: true })</code>. Reproducible: <code>npm run bench:impact</code>.',
 		},
 		tools: {
-			title: '14 herramientas MCP, 3 recursos',
+			title: '15 herramientas MCP, 3 recursos',
 			subtitle: 'Todo lo que tu agente necesita para recordar, recuperar y razonar',
 			resourcesLabel: 'Recursos:',
 			cards: [
@@ -587,6 +588,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'memory_captured', title: 'Actividad capturada', desc: 'Muestra el log de actividad capturado por hooks — promueve observaciones a memoria.' },
 				{ name: 'memory_consolidate', title: 'Consolidar', desc: 'Combina entradas duplicadas con contenido idéntico de forma determinista.' },
 				{ name: 'memory_sessions', title: 'Sesiones', desc: 'Muestra sesiones de agente activas y detecta conflictos suaves.' },
+				{ name: 'context_brief', title: 'Briefing de contexto', desc: 'Briefing de contexto en una sola llamada: memoria + sesiones + salud en markdown compacto. Cero LLM.' },
 				{ name: 'memory_encrypt', title: 'Habilitar encriptación', desc: 'Encriptación AES-256-GCM con clave autogenerada.' },
 				{ name: 'memory_decrypt', title: 'Deshabilitar encriptación', desc: 'Desencripta y deshabilita la encriptación.' },
 			],
