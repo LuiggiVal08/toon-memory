@@ -140,9 +140,9 @@ describe("MCP Integration", () => {
 
 	// ── Tool listing ──────────────────────────────────────────────
 
-	it("lists all 15 tools", async () => {
+	it("lists all 20 tools", async () => {
 		const tools = await client.listTools()
-		expect(tools.length).toBe(15)
+		expect(tools.length).toBe(20)
 		expect(tools).toContain("memory_remember")
 		expect(tools).toContain("memory_recall")
 		expect(tools).toContain("memory_forget")
@@ -158,6 +158,11 @@ describe("MCP Integration", () => {
 		expect(tools).toContain("memory_consolidate")
 		expect(tools).toContain("memory_sessions")
 		expect(tools).toContain("context_brief")
+		expect(tools).toContain("context_generate")
+		expect(tools).toContain("context_diff")
+		expect(tools).toContain("context_focus")
+		expect(tools).toContain("context_health")
+		expect(tools).toContain("context_export")
 	})
 
 	// ── Resource listing ──────────────────────────────────────────
@@ -252,6 +257,53 @@ describe("MCP Integration", () => {
 		const result = await client.callTool("context_brief")
 		expect(result).toContain("Memoria")
 		expect(result).toContain("Top memorias")
+	})
+
+	// ── context_generate ─────────────────────────────────────────
+
+	it("context_generate returns full context briefing", async () => {
+		const result = await client.callTool("context_generate")
+		expect(result).toContain("Memoria")
+		expect(result).toContain("Sesiones")
+	})
+
+	it("context_generate with task ranks entries by relevance", async () => {
+		const result = await client.callTool("context_generate", { task: "validation" })
+		expect(result).toContain("Memoria")
+	})
+
+	// ── context_diff ─────────────────────────────────────────────
+
+	it("context_diff returns changes", async () => {
+		const result = await client.callTool("context_diff")
+		expect(result.length).toBeGreaterThan(0)
+	})
+
+	// ── context_focus ────────────────────────────────────────────
+
+	it("context_focus returns focused context for a task", async () => {
+		const result = await client.callTool("context_focus", { task: "validation" })
+		expect(result.length).toBeGreaterThan(0)
+	})
+
+	// ── context_health ───────────────────────────────────────────
+
+	it("context_health returns health audit with score", async () => {
+		const result = await client.callTool("context_health")
+		expect(result).toContain("Memory Health")
+		expect(result).toContain("/100")
+	})
+
+	// ── context_export ───────────────────────────────────────────
+
+	it("context_export returns full markdown export", async () => {
+		const result = await client.callTool("context_export", { format: "full" })
+		expect(result).toContain("toon-memory export")
+	})
+
+	it("context_export compact format works", async () => {
+		const result = await client.callTool("context_export", { format: "compact" })
+		expect(result).toContain("toon-memory export")
 	})
 
 	// ── memory_smart_recall ───────────────────────────────────────

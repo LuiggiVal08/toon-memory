@@ -17,7 +17,10 @@ import { existsSync, readFileSync } from "fs"
 import { join } from "path"
 import { parseEntries, buildGraph, bm25Scores, centrality, renderCompact, type GraphEntry } from "./graph"
 import { qualityScore } from "./quality"
-import { coordinationView, currentBranch, pruneSessions } from "./sessions"
+import { coordinationView, currentBranch, pruneSessions, listSessions } from "./sessions"
+import { readRecentCommits, gitStatusSummary, readGitIndex } from "./git"
+import { scanProjectStructure, readManifest, readEnvExample } from "./project-scan"
+import { findFilesByPattern, searchCode, findCallers } from "./code-search"
 
 const normalize = (s: string): string =>
 	s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim()
@@ -269,4 +272,387 @@ function formatTopEntries(data: string, limit: number): string {
 
 	const rendered = renderCompact(top)
 	return `## Top memorias\n${rendered}`
+}
+
+// ── context_generate ─────────────────────────────────────────────────
+
+export interface ContextGenerateOpts {
+	task?: string
+}
+
+/**
+ * Full context briefing: project + git + memory → system prompt ready.
+ * Reads the actual project filesystem, not just memory.
+ * ~400-600 tokens. Zero LLM.
+ */
+export function generateContextGenerate(data: string, root: string, opts: ContextGenerateOpts = {}): string {
+	const sections: string[] = []
+
+	// 1. Project manifest
+	const manifest = readManifest(root)
+	if (manifest) {
+		const deps = manifest.deps.length > 0 ? manifest.deps.slice(0, 15).join(", ") : "ninguna"
+		const version = manifest.version ? ` v${manifest.version}` : ""
+		sections.push(`## Proyecto\n${manifest.name}${version} (${manifest.language})\nDeps: ${deps}`)
+	}
+
+	// 2. Structure
+	const structure = scanProjectStructure(root)
+	if (structure.dirs.length > 0 || structure.rootFiles.length > 0) {
+		const dirs = structure.dirs.length > 0 ? `Dirs: ${structure.dirs.join(", ")}` : ""
+		const files = structure.rootFiles.length > 0 ? `Root: ${structure.rootFiles.slice(0, 10).join(", ")}` : ""
+		const exts = Object.entries(structure.extensions)
+			.sort((a, b) => b[1] - a[1])
+			.slice(0, 5)
+			.map(([k, v]) => `${k}:${v}`)
+			.join(" ")
+		const src = `${structure.sourceFileCount} archivos fuente`
+		const parts = [dirs, files, `${src} ${exts ? `(${exts})` : ""}`].filter(Boolean)
+		if (parts.length > 0) sections.push(`## Estructura\n${parts.join("\n")}`)
+	}
+
+	// 3. Environment variables
+	const envVars = readEnvExample(root)
+	if (envVars.length > 0) {
+		const envLines = envVars.slice(0, 8).map((v) => `- ${v.name}${v.comment ? ` — ${v.comment}` : ""}`)
+		sections.push(`## Env vars (${envVars.length})\n${envLines.join("\n")}`)
+	}
+
+	// 4. Git status
+	const git = gitStatusSummary(root)
+	if (git.branch !== "unknown") {
+		const recent = git.recentCommits.slice(0, 3)
+		const commitLines = recent.map((c) => `- ${c.shortHash} ${c.subject}`)
+		const parts = [`Rama: ${git.branch}`, `Archivos tracked: ${git.trackedFiles}`]
+		if (commitLines.length > 0) parts.push(`Últimos commits:\n${commitLines.join("\n")}`)
+		sections.push(`## Git\n${parts.join("\n")}`)
+	}
+
+	// 5. Memory overview + entries
+	sections.push(formatOverview(data))
+	if (opts.task) {
+		const relevant = formatRelevantEntries(data, opts.task, 6)
+		if (relevant) sections.push(relevant)
+	} else {
+		const top = formatTopEntries(data, 6)
+		if (top) sections.push(top)
+	}
+	sections.push(formatPatterns(data))
+
+	// 6. Sessions
+	sections.push(formatSessions())
+
+	// 7. Health
+	sections.push(formatHealth(data))
+
+	return sections.filter(Boolean).join("\n\n")
+}
+
+// ── context_diff ─────────────────────────────────────────────────────
+
+/**
+ * What changed since the last session: git commits + memory changes + touched files.
+ * ~200-400 tokens. Zero LLM.
+ */
+export function generateContextDiff(data: string, root: string, since?: string): string {
+	const sections: string[] = []
+
+	// 1. Git commits
+	const commits = readRecentCommits(10, root)
+	if (commits.length > 0) {
+		const cutoff = since || commits[0]?.date || ""
+		const recent = cutoff
+			? commits.filter((c) => c.date >= cutoff)
+			: commits.slice(0, 5)
+		if (recent.length > 0) {
+			const lines = recent.map((c) => `- ${c.shortHash} (${c.date}) ${c.subject}`)
+			sections.push(`## Git commits (${recent.length})\n${lines.join("\n")}`)
+		}
+	}
+
+	// 2. Modified files from git index
+	const tracked = readGitIndex(root)
+	if (tracked.length > 0) {
+		sections.push(`## Archivos tracked (${tracked.length})\n${tracked.slice(0, 20).join("\n")}`)
+	}
+
+	// 3. Memory changes (reuse existing diff logic)
+	const entries = parseEntries(data)
+	const today = new Date().toISOString().split("T")[0]
+	const sinceDate = since || today
+	const recentEntries = entries.filter((e) => e.date >= sinceDate)
+	if (recentEntries.length > 0) {
+		const created = recentEntries.filter((e) => e.date === today)
+		const updated = recentEntries.filter((e) => e.date !== today)
+		const parts: string[] = []
+		if (created.length > 0) parts.push(`Nuevas: ${created.map((e) => e.key).join(", ")}`)
+		if (updated.length > 0) parts.push(`Actualizadas: ${updated.map((e) => e.key).join(", ")}`)
+		if (parts.length > 0) sections.push(`## Memoria (${recentEntries.length} cambios)\n${parts.join("\n")}`)
+	}
+
+	// 4. Active sessions
+	const sessions = listSessions().filter((s) => s.active)
+	if (sessions.length > 0) {
+		const lines = sessions.slice(0, 5).map((s) => `- ${s.agent}@${s.branch} (${Object.keys(s.files).length} archivos)`)
+		sections.push(`## Sesiones activas (${sessions.length})\n${lines.join("\n")}`)
+	}
+
+	if (sections.length === 0) return "Sin cambios recientes."
+	return sections.filter(Boolean).join("\n\n")
+}
+
+// ── context_focus ────────────────────────────────────────────────────
+
+export interface ContextFocusOpts {
+	/** Max entries to include. Default 6. */
+	limit?: number
+}
+
+/**
+ * Hyper-focused context for a specific task: memory entries + related files + code references.
+ * ~300-500 tokens. Zero LLM.
+ */
+export function generateContextFocus(data: string, root: string, task: string, opts: ContextFocusOpts = {}): string {
+	const sections: string[] = []
+	const limit = opts.limit ?? 6
+
+	// 1. Relevant memory entries
+	const relevant = formatRelevantEntries(data, task, limit)
+	if (relevant) sections.push(relevant)
+
+	// 2. Extract keywords from task for file/code search
+	const keywords = task.toLowerCase().split(/\s+/).filter((w) => w.length > 2)
+
+	// 3. Related files
+	const allFiles: string[] = []
+	for (const kw of keywords) {
+		allFiles.push(...findFilesByPattern(root, kw))
+	}
+	const uniqueFiles = [...new Set(allFiles)].slice(0, 10)
+	if (uniqueFiles.length > 0) {
+		sections.push(`## Archivos relacionados\n${uniqueFiles.join("\n")}`)
+	}
+
+	// 4. Code references (callers and matches)
+	for (const kw of keywords.slice(0, 3)) {
+		const callers = findCallers(root, kw)
+		if (callers.length > 0) {
+			const lines = callers.slice(0, 5).map((c) => `${c.file}:${c.line} — ${c.content.slice(0, 80)}`)
+			sections.push(`## Referencias: ${kw}\n${lines.join("\n")}`)
+		}
+	}
+
+	// 5. Related tests
+	const testFiles: string[] = []
+	for (const kw of keywords.slice(0, 2)) {
+		const tests = findFilesByPattern(root, ".test.")
+			.filter((f) => f.toLowerCase().includes(kw))
+		testFiles.push(...tests)
+	}
+	const uniqueTests = [...new Set(testFiles)].slice(0, 5)
+	if (uniqueTests.length > 0) {
+		sections.push(`## Tests existentes\n${uniqueTests.join("\n")}`)
+	}
+
+	if (sections.length === 0) return `Sin contexto encontrado para "${task}".`
+	return sections.filter(Boolean).join("\n\n")
+}
+
+// ── context_health ───────────────────────────────────────────────────
+
+export interface HealthReport {
+	score: number
+	warnings: string[]
+	info: string[]
+	critical: string[]
+}
+
+/**
+ * Full health audit: orphan links, duplicates, missing quality, expired TTL, broken file refs.
+ * Returns structured report + markdown string. Zero LLM.
+ */
+export function generateContextHealth(data: string, root: string): { report: HealthReport; markdown: string } {
+	const entries = parseEntries(data)
+	const critical: string[] = []
+	const warnings: string[] = []
+	const info: string[] = []
+	let score = 100
+
+	// 1. Orphan links
+	const keys = new Set(entries.map((e) => e.key))
+	const orphanLinks: string[] = []
+	for (const e of entries) {
+		for (const link of e.links) {
+			if (!keys.has(link)) orphanLinks.push(`${e.key}->${link}`)
+		}
+	}
+	if (orphanLinks.length > 0) {
+		warnings.push(`${orphanLinks.length} links huérfanos: ${orphanLinks.slice(0, 5).join(", ")}`)
+		score -= 5
+	}
+
+	// 2. Duplicate content
+	const contentMap = new Map<string, string[]>()
+	for (const e of entries) {
+		const existing = contentMap.get(e.content) || []
+		existing.push(e.key)
+		contentMap.set(e.content, existing)
+	}
+	const duplicates: string[] = []
+	for (const [_, keys] of contentMap) {
+		if (keys.length > 1) duplicates.push(keys.join(" = "))
+	}
+	if (duplicates.length > 0) {
+		warnings.push(`${duplicates.length} entradas duplicadas: ${duplicates.slice(0, 3).join("; ")}`)
+		score -= 5
+	}
+
+	// 3. Missing quality scores
+	const missingQuality = entries.filter((e) => {
+		// Quality is at index 10, check if it's missing or zero
+		return !e.accessed && e.accessed !== 0
+	})
+	if (missingQuality.length > 0) {
+		info.push(`${missingQuality.length} entradas sin quality score`)
+		score -= 2
+	}
+
+	// 4. Expired TTL
+	const expired = entries.filter((e) => e.ttl && isExpiredLocal(e.ttl))
+	if (expired.length > 0) {
+		info.push(`${expired.length} entradas con TTL expirado (auto-prune en próximo inicio)`)
+		score -= 3
+	}
+
+	// 5. Broken file refs
+	const brokenFiles: string[] = []
+	for (const e of entries) {
+		if (e.file) {
+			const filePath = e.file.split(":")[0]
+			if (filePath && !existsSync(join(root, filePath))) {
+				brokenFiles.push(`${e.key}: ${e.file}`)
+			}
+		}
+	}
+	if (brokenFiles.length > 0) {
+		warnings.push(`${brokenFiles.length} refs a archivos inexistentes: ${brokenFiles.slice(0, 3).join("; ")}`)
+		score -= 5
+	}
+
+	// 6. Stale sessions
+	const sessions = listSessions()
+	const stale = sessions.filter((s) => !s.active && !s.ended)
+	if (stale.length > 0) {
+		info.push(`${stale.length} sesiones stale (serán pruned automáticamente)`)
+	}
+
+	// 7. Entry count
+	if (entries.length > 80) {
+		warnings.push(`${entries.length} entradas (cerca del límite de 100)`)
+		score -= 3
+	} else if (entries.length === 0) {
+		info.push("Memoria vacía")
+	}
+
+	score = Math.max(0, score)
+
+	const report: HealthReport = { score, warnings, info, critical }
+
+	// Build markdown
+	const parts: string[] = [`## Memory Health: ${score >= 90 ? "✅" : score >= 70 ? "⚠️" : "❌"} ${score}/100`]
+
+	if (critical.length > 0) {
+		parts.push("", "### Crítico", ...critical.map((w) => `- ${w}`))
+	}
+	if (warnings.length > 0) {
+		parts.push("", "### Warnings", ...warnings.map((w) => `- ${w}`))
+	}
+	if (info.length > 0) {
+		parts.push("", "### Info", ...info.map((i) => `- ${i}`))
+	}
+
+	return { report, markdown: parts.join("\n") }
+}
+
+// ── context_export ───────────────────────────────────────────────────
+
+export type ExportFormat = "full" | "compact"
+
+/**
+ * Export memory as injectable markdown for other agents or sessions.
+ * Zero LLM. Output is complete memory dump in readable format.
+ */
+export function generateContextExport(data: string, format: ExportFormat = "full"): string {
+	const entries = parseEntries(data)
+	const sections: string[] = []
+
+	// Header
+	const today = new Date().toISOString().split("T")[0]
+	sections.push(`# toon-memory export\nFecha: ${today} | Entradas: ${entries.length}\n`)
+
+	if (entries.length === 0) {
+		sections.push("Memoria vacía.")
+		return sections.join("\n")
+	}
+
+	// Group by category
+	const byCategory: Record<string, GraphEntry[]> = {}
+	for (const e of entries) {
+		if (!byCategory[e.category]) byCategory[e.category] = []
+		byCategory[e.category].push(e)
+	}
+
+	const categoryLabels: Record<string, string> = {
+		decision: "Decisiones",
+		pattern: "Patrones",
+		bug: "Bugs",
+		knowledge: "Conocimiento",
+	}
+
+	for (const [cat, items] of Object.entries(byCategory)) {
+		const label = categoryLabels[cat] || cat
+		sections.push(`## ${label} (${items.length})`)
+
+		for (const e of items) {
+			if (format === "compact") {
+				sections.push(`- **${e.key}**: ${e.content.slice(0, 120)}`)
+			} else {
+				const tags = e.tags.length > 0 ? ` · tags: ${e.tags.join(";")}` : ""
+				const links = e.links.length > 0 ? ` · links: ${e.links.join(", ")}` : ""
+				const file = e.file ? ` · file: ${e.file}` : ""
+				sections.push(`### ${e.key}\n${e.content}\n_${e.date}${tags}${file}${links}_`)
+			}
+		}
+		sections.push("")
+	}
+
+	// Graph summary (full format only)
+	if (format === "full") {
+		const { adjacency } = buildGraph(entries)
+		if (adjacency.size > 0) {
+			const edges: string[] = []
+			for (const [key, neighbors] of adjacency) {
+				for (const n of neighbors) {
+					if (key < n) edges.push(`${key} -> ${n}`)
+				}
+			}
+			if (edges.length > 0) {
+				sections.push(`## Grafo (${edges.length} edges)`)
+				sections.push(edges.slice(0, 20).join("\n"))
+			}
+		}
+	}
+
+	// Sessions snapshot
+	const sessions = listSessions()
+	if (sessions.length > 0) {
+		const active = sessions.filter((s) => s.active)
+		sections.push(`## Sesiones (${active.length} activas / ${sessions.length} total)`)
+		for (const s of sessions.slice(0, 5)) {
+			const status = s.active ? "🟢" : "⚪"
+			sections.push(`- ${status} ${s.agent}@${s.branch} (${s.id})`)
+		}
+	}
+
+	return sections.filter(Boolean).join("\n")
 }

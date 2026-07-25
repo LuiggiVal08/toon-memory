@@ -11,7 +11,7 @@ import { consolidateEntries } from "./consolidation"
 import { encrypt, decrypt } from "./crypto"
 import { graphRecallDetailed, renderCompact } from "../lib/graph"
 import { qualityScore, mergeEntries, generateSmartRecall } from "../lib/quality"
-import { generateContextBrief } from "../lib/context"
+import { generateContextBrief, generateContextGenerate, generateContextDiff, generateContextFocus, generateContextHealth, generateContextExport } from "../lib/context"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } from "../lib/sessions"
 
 const normalize = (s: string) => s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim()
@@ -727,6 +727,99 @@ server.registerTool(
     const data = readMemory()
     const brief = generateContextBrief(data, { task: task || undefined, limit })
     return { content: [{ type: "text" as const, text: brief }] }
+  }
+)
+
+// ── context_generate ─────────────────────────────────────────────────
+
+server.registerTool(
+  "context_generate",
+  {
+    title: "Generate Full Context",
+    description: "Genera un system prompt completo: proyecto (package.json, deps, framework) + git (rama, commits) + memoria (entries relevantes) + sesiones. Un solo call para preparar al agente. Cero LLM.",
+    inputSchema: {
+      task: z.string().optional().default("").describe("Tarea del agente. Si se provee, rankea entries por relevancia a esta tarea."),
+    },
+  },
+  async ({ task }) => {
+    const data = readMemory()
+    const root = process.cwd()
+    const brief = generateContextGenerate(data, root, { task: task || undefined })
+    return { content: [{ type: "text" as const, text: brief }] }
+  }
+)
+
+// ── context_diff ─────────────────────────────────────────────────────
+
+server.registerTool(
+  "context_diff",
+  {
+    title: "Context Diff",
+    description: "Qué cambió desde la última sesión: git commits + archivos modificados + entradas de memoria nuevas/actualizadas. Cero LLM.",
+    inputSchema: {
+      since: z.string().optional().default("").describe("Fecha desde (YYYY-MM-DD o relativa como '7d'). Vacío = últimos cambios visibles."),
+    },
+  },
+  async ({ since }) => {
+    const data = readMemory()
+    const root = process.cwd()
+    const diff = generateContextDiff(data, root, since || undefined)
+    return { content: [{ type: "text" as const, text: diff }] }
+  }
+)
+
+// ── context_focus ────────────────────────────────────────────────────
+
+server.registerTool(
+  "context_focus",
+  {
+    title: "Focus Context for Task",
+    description: "Contexto hiper-enfocado para una tarea específica: entries relevantes + archivos relacionados + código que referencia el símbolo + tests existentes. Cero LLM.",
+    inputSchema: {
+      task: z.string().describe("Tarea o símbolo para buscar contexto (ej: 'fix auth bug', 'authenticate')"),
+      limit: z.number().optional().default(6).describe("Máximo de entries de memoria a incluir"),
+    },
+  },
+  async ({ task, limit }) => {
+    const data = readMemory()
+    const root = process.cwd()
+    const focused = generateContextFocus(data, root, task, { limit })
+    return { content: [{ type: "text" as const, text: focused }] }
+  }
+)
+
+// ── context_health ───────────────────────────────────────────────────
+
+server.registerTool(
+  "context_health",
+  {
+    title: "Memory Health Audit",
+    description: "Auditoría completa de salud de la memoria: links huérfanos, duplicados, refs rotos, TTL expirado, calidad, sesiones stale. Incluye score 0-100. Cero LLM.",
+    inputSchema: {},
+  },
+  async () => {
+    const data = readMemory()
+    const root = process.cwd()
+    const { markdown } = generateContextHealth(data, root)
+    return { content: [{ type: "text" as const, text: markdown }] }
+  }
+)
+
+// ── context_export ───────────────────────────────────────────────────
+
+server.registerTool(
+  "context_export",
+  {
+    title: "Export Memory as Markdown",
+    description: "Exporta toda la memoria como markdown inyectable para otros agentes o sesiones. Formato full (detallado) o compacto. Cero LLM.",
+    inputSchema: {
+      format: z.enum(["full", "compact"]).optional().default("full").describe("full = detallado con graph, compact = resumido sin edges"),
+    },
+  },
+  async ({ format }) => {
+    const data = readMemory()
+    const exported = generateContextExport(data, format as "full" | "compact")
+    return { content: [{ type: "text" as const, text: exported }] }
   }
 )
 
