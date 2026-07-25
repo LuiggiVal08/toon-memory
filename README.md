@@ -61,7 +61,7 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 
 ## Features
 
-- **14 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall) and `memory_sessions` for multi-session coordination
+- **15 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall), `memory_sessions` for multi-session coordination, and `context_brief` for one-call context generation
 - **MCP Resources** — Read memory as context without tool invocations, including a System Primer (auto-generated knowledge map)
 - **15 agents supported** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Interactive installer** — Select which agents to configure from a menu
@@ -175,6 +175,7 @@ memory_remember   # Save important decisions
 | `memory_captured` | List activity auto-captured by hooks (opt-in) or clear the log |
 | `memory_consolidate` | Merge-dedup entries: same-key entries are merged (tags union, max confidence, latest date), then exact-content duplicates removed (deterministic, no LLM) |
 | `memory_sessions` | Show active agent sessions (branch, files, last-seen) and soft conflicts for parallel work |
+| `context_brief` | **One-call context briefing**: memory + sessions + health in compact markdown. Use instead of 5-6 separate memory_* calls. Zero LLM, pure deterministic aggregation |
 
 ### MCP Resources
 
@@ -1035,12 +1036,13 @@ toon-memory/
 │   │   ├── setup.ts             # CLI commands
 │   │   └── toon-memory.ts       # CLI runner
 │   ├── mcp/
-│   │   └── server.ts            # MCP server (14 tools + 3 resources)
+│   │   └── server.ts            # MCP server (15 tools + 3 resources)
 │   ├── lib/
 │   │   ├── lock.ts              # Advisory file lock + atomic write
 │   │   ├── sessions.ts          # Multi-session coordination
 │   │   ├── graph.ts             # Memory graph (parse, build, BM25, centrality, compact render)
 │   │   ├── quality.ts           # Quality scoring, merge-dedup, smart recall, system primer
+│   │   ├── context.ts           # Context briefing generator (one-call context)
 │   │   └── vocab.ts             # Project-vocabulary discovery from dependencies
 ├── tests/
 │   ├── cli.test.ts              # CLI tests

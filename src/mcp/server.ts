@@ -9,6 +9,7 @@ import { withLockSync, atomicWrite, readUnderLock } from "../lib/lock"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } from "../lib/sessions"
 import { graphRecallDetailed, renderCompact, parseEntries, buildGraph, bm25Scores, centrality } from "../lib/graph"
 import { qualityScore, mergeEntries, generateSmartRecall, generateSystemPrimer } from "../lib/quality"
+import { generateContextBrief } from "../lib/context"
 
 declare const TOON_VERSION: string
 
@@ -1488,6 +1489,28 @@ server.registerTool(
     }
 
     return { content: [{ type: "text" as const, text: parts.join("\n") }] }
+  }
+)
+
+/**
+ * Register the context_brief tool.
+ * Single-call context briefing: memory + sessions + health in one compact markdown.
+ * Zero LLM calls — pure deterministic aggregation.
+ */
+server.registerTool(
+  "context_brief",
+  {
+    title: "Context Briefing",
+    description: "Genera un briefing de contexto compacto: memoria relevante + sesiones activas + salud del proyecto. Un solo call en vez de 5-6 llamadas separadas. Cero LLM, pura lógica determinista.",
+    inputSchema: {
+      task: z.string().optional().default("").describe("Tarea actual del agente. Si se provee, las entradas se rankean por relevancia a esta tarea. Si está vacío, muestra las top entradas por importancia."),
+      limit: z.number().optional().default(6).describe("Máximo de entradas relevantes a mostrar"),
+    },
+  },
+  async ({ task, limit }) => {
+    const data = readMemory()
+    const brief = generateContextBrief(data, { task: task || undefined, limit })
+    return { content: [{ type: "text" as const, text: brief }] }
   }
 )
 

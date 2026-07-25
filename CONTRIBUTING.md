@@ -74,9 +74,10 @@ src/
 ├── cli/
 │   ├── setup.ts             # CLI commands
 │   └── toon-memory.ts       # CLI runner
-├── mcp/server.ts            # MCP server (14 tools + 3 resources)
+├── mcp/server.ts            # MCP server (15 tools + 3 resources)
 tests/
 ├── cli.test.ts
+├── context.test.ts
 ├── graph.test.ts
 ├── memory.test.ts
 ├── quality.test.ts

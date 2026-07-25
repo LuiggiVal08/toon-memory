@@ -40,6 +40,7 @@ A persistent memory system for AI coding agents. It remembers decisions, pattern
 | `memory_captured` | Show activity log captured automatically by hooks |
 | `memory_consolidate` | Deduplicate identical entries (keeps first, deterministic, no LLM) |
 | `memory_sessions` | Show active agent sessions and detect file conflicts |
+| `context_brief` | One-call context briefing: memory + sessions + health in compact markdown |
 | `memory_encrypt` | Enable AES-256-GCM encryption |
 | `memory_decrypt` | Disable encryption and decode memory |
 
