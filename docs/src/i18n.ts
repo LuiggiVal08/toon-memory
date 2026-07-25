@@ -7,7 +7,7 @@ export const content = {
 		},
 		hero: {
 			tagline: 'MCP memory server for AI coding agents — recall context across sessions',
-			subtitle: 'Remember decisions, patterns, and bugs — and recover context with 68% fewer tokens every session',
+			subtitle: '20 tools, 80% fewer tool calls per session — remember decisions, patterns, and bugs with context_generate, context_diff, context_focus, context_health, and context_export',
 			getStarted: 'Get Started',
 			viewGithub: 'View on GitHub',
 			copy: 'Copy',
@@ -41,9 +41,9 @@ export const content = {
 			cards: [
 				{
 					icon: '🧩',
-					title: '15 MCP Tools + 3 Resources',
-					body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief. Plus resources for direct context reading.',
-					tags: ['remember', 'recall', 'diff', 'suggest'],
+					title: '20 MCP Tools + 3 Resources',
+					body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Plus resources for direct context reading.',
+					tags: ['remember', 'recall', 'context', 'diff'],
 				},
 				{
 					icon: '⭐',
@@ -83,15 +83,15 @@ export const content = {
 		},
 		stats: {
 			items: [
-				{ number: '15', label: 'MCP Tools' },
+				{ number: '20', label: 'MCP Tools' },
 				{ number: '15', label: 'Agents' },
-				{ number: '68%', label: 'Fewer Tokens / session' },
+				{ number: '80%', label: 'Fewer Tool Calls / session' },
 				{ number: '0', label: 'Config Needed' },
 			],
 		},
 		howItWorks: {
 			title: 'How does it work?',
-			subtitle: 'Three steps from amnesia to memory',
+			subtitle: 'Four steps from amnesia to memory',
 			steps: [
 				{ n: 1, title: 'Install', body: 'One command. Zero configuration for 15+ agents.', code: 'npm install -g toon-memory' },
 				{
@@ -112,6 +112,17 @@ export const content = {
 					code: `memory_recall({ query: "validation" })
 // [decision] use-zod (a1b2c3d4)
 //   Use Zod for validation — src/types.ts`,
+				},
+				{
+					n: 4,
+					title: 'Context',
+					body: 'One call gives your agent everything: project, git, memory, sessions. 80% fewer tool calls.',
+					code: `context_generate({})
+// # Project Briefing (full)
+// ## Project — toon-memory v2.6.0
+// ## Git — branch: main, 3 commits
+// ## Memory — 26 entries, 18 edges
+// ## Sessions — 2 active`,
 				},
 			],
 		},
@@ -154,8 +165,8 @@ export const content = {
 			],
 			after: [
 				'Agent remembers everything',
-				'Decisions are one query away',
-				'Patterns persist across projects',
+				'One call gives full project context',
+				'80% fewer tool calls per session',
 				'Zero context loss between sessions',
 			],
 		},
@@ -289,7 +300,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			items: [
 				{
 					q: 'What is toon-memory?',
-					a: 'A persistent memory layer for AI coding agents. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions.',
+					a: 'A persistent memory layer for AI coding agents with 20 MCP tools. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions — with 80% fewer tool calls per session.',
 				},
 				{
 					q: 'Which agents are supported?',
@@ -359,7 +370,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		hero: {
 			tagline: 'Servidor de memoria MCP para agentes de IA — recupera contexto entre sesiones',
-			subtitle: 'Recuerda decisiones, patrones y bugs — y recupera contexto con 68% menos tokens en cada sesión',
+			subtitle: '20 herramientas, 80% menos tool calls por sesión — recuerda decisiones, patrones y bugs con context_generate, context_diff, context_focus, context_health y context_export',
 			getStarted: 'Empezar',
 			viewGithub: 'Ver en GitHub',
 			copy: 'Copiar',
@@ -393,9 +404,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			cards: [
 				{
 					icon: '🧩',
-					title: '15 herramientas MCP + 3 recursos',
-					body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief. Más recursos para lectura directa de contexto.',
-					tags: ['remember', 'recall', 'diff', 'suggest'],
+					title: '20 herramientas MCP + 3 recursos',
+					body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Más recursos para lectura directa de contexto.',
+					tags: ['remember', 'recall', 'context', 'diff'],
 				},
 				{
 					icon: '⭐',
@@ -435,15 +446,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		stats: {
 			items: [
-				{ number: '15', label: 'Herramientas MCP' },
+				{ number: '20', label: 'Herramientas MCP' },
 				{ number: '15', label: 'Agentes' },
-				{ number: '68%', label: 'Menos tokens por sesión' },
+				{ number: '80%', label: 'Menos tool calls por sesión' },
 				{ number: '0', label: 'Config necesaria' },
 			],
 		},
 		howItWorks: {
 			title: '¿Cómo funciona?',
-			subtitle: 'Tres pasos de la amnesia a la memoria',
+			subtitle: 'Cuatro pasos de la amnesia a la memoria',
 			steps: [
 				{ n: 1, title: 'Instalar', body: 'Un solo comando. Sin configuración para 15+ agentes.', code: 'npm install -g toon-memory' },
 				{
@@ -464,6 +475,17 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					code: `memory_recall({ query: "validation" })
 // [decision] use-zod (a1b2c3d4)
 //   Usar Zod para validación — src/types.ts`,
+				},
+				{
+					n: 4,
+					title: 'Contexto',
+					body: 'Una llamada le da a tu agente todo: proyecto, git, memoria, sesiones. 80% menos tool calls.',
+					code: `context_generate({})
+// # Briefing del proyecto (completo)
+// ## Proyecto — toon-memory v2.6.0
+// ## Git — branch: main, 3 commits
+// ## Memoria — 26 entradas, 18 edges
+// ## Sesiones — 2 activas`,
 				},
 			],
 		},
@@ -506,8 +528,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			],
 			after: [
 				'El agente recuerda todo',
-				'Las decisiones están a una consulta',
-				'Los patrones persisten entre proyectos',
+				'Una llamada da el contexto completo del proyecto',
+				'80% menos tool calls por sesión',
 				'Cero pérdida de contexto entre sesiones',
 			],
 		},
