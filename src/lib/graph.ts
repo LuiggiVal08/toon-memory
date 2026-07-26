@@ -14,6 +14,8 @@
  * without mutating the stored `.toon` file.
  */
 
+import { normalize, isExpiredLocal, tokenize, importance } from "./utils"
+
 export interface GraphEntry {
 	id: string
 	category: string
@@ -34,15 +36,6 @@ export interface MemoryGraph {
 	/** key -> entry (first occurrence wins on duplicate keys). */
 	byKey: Map<string, GraphEntry>
 }
-
-const isExpiredLocal = (ttl: string): boolean => {
-	if (!ttl) return false
-	const today = new Date().toISOString().split("T")[0]
-	return ttl <= today
-}
-
-const normalize = (s: string): string =>
-	s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim()
 
 const entryLines = (data: string): string[] =>
 	data
@@ -124,17 +117,6 @@ export interface GraphRecallOpts {
 	/** Max entries returned (keeps token cost low). Default 6. */
 	limit?: number
 }
-
-const importance = (e: GraphEntry): number => {
-	const today = new Date().toISOString().split("T")[0]
-	const days =
-		(Date.now() - new Date(`${e.date || today}T00:00:00`).getTime()) / 86400000
-	const recency = Math.max(0, 30 - days) / 30
-	const freq = Math.min(1, e.accessed / 5)
-	return recency * 0.6 + freq * 0.4
-}
-
-const tokenize = (s: string): string[] => normalize(s).split(" ").filter(Boolean)
 
 /**
  * BM25 relevance of each entry for the query. Deterministic and offline.

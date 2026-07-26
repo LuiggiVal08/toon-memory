@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "fs"
 import { join } from "path"
 import { tmpdir } from "os"
+import { encrypt, decrypt } from "../src/mcp/crypto"
 
 // Test the memory operations directly (without MCP server)
 describe("Memory Operations", () => {
@@ -436,5 +437,48 @@ describe("Memory Operations", () => {
     expect(withTtl).toBe(1)
     expect(byCategory["decision"]).toBe(1)
     expect(byCategory["bug"]).toBe(1)
+  })
+})
+
+describe("Encryption roundtrip", () => {
+  const key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+  it("encrypts and decrypts correctly", () => {
+    const plaintext = "version: 1\nentries[1|]{id|category|key|content}:\n  a1|decision|test|hello world"
+    const encrypted = encrypt(plaintext, key)
+    expect(encrypted).not.toBe(plaintext)
+    expect(encrypted.split(":")).toHaveLength(3)
+
+    const decrypted = decrypt(encrypted, key)
+    expect(decrypted).toBe(plaintext)
+  })
+
+  it("rejects wrong key", () => {
+    const plaintext = "some data"
+    const encrypted = encrypt(plaintext, key)
+    const wrongKey = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    expect(() => decrypt(encrypted, wrongKey)).toThrow()
+  })
+
+  it("rejects tampered ciphertext", () => {
+    const encrypted = encrypt("test data", key)
+    const parts = encrypted.split(":")
+    // Tamper with the ciphertext
+    parts[2] = parts[2].slice(0, -4) + "ffff"
+    const tampered = parts.join(":")
+    expect(() => decrypt(tampered, key)).toThrow()
+  })
+
+  it("rejects invalid format", () => {
+    expect(() => decrypt("not:valid", key)).toThrow()
+    expect(() => decrypt("onlytwoparts", key)).toThrow()
+  })
+
+  it("produces different ciphertext each time (random IV)", () => {
+    const e1 = encrypt("same data", key)
+    const e2 = encrypt("same data", key)
+    expect(e1).not.toBe(e2)
+    // But both decrypt to the same plaintext
+    expect(decrypt(e1, key)).toBe(decrypt(e2, key))
   })
 })

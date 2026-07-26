@@ -1,23 +1,22 @@
 import type { McpServer } from "@modelcontextprotocol/server"
 import { z } from "zod"
 import { readFileSync, writeFileSync, existsSync } from "fs"
-import { readMemory, writeMemory } from "./memory-io"
+import { readMemory, writeMemory, safeWrite } from "./memory-io"
 import { loadConfig, saveConfig, getKey, MEMORY_FILE, OBSERVATIONS_FILE, MAX_ENTRIES } from "./config"
-import { generateId, parseTTL, isExpired, inferTags, parseRelativeDate } from "./entries"
+import { generateId, parseTTL, isExpired, inferTags, parseRelativeDate, normalize } from "./entries"
 import { entryScore, findRelatedEntries, bumpAccessed } from "./scoring"
 import { readObservations } from "./observations"
 import { archiveOldEntries } from "./archive"
 import { consolidateEntries } from "./consolidation"
+import { readUnderLock } from "../lib/lock"
 import { encrypt, decrypt } from "./crypto"
-import { graphRecallDetailed, renderCompact } from "../lib/graph"
+import { graphRecallDetailed, renderCompact, bm25Scores, parseEntries } from "../lib/graph"
 import { qualityScore, mergeEntries, generateSmartRecall } from "../lib/quality"
 import { generateContextBrief, generateContextGenerate, generateContextDiff, generateContextFocus, generateContextHealth, generateContextExport } from "../lib/context"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } from "../lib/sessions"
 
-const normalize = (s: string) => s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim()
-
 /**
- * Register all 15 memory tools.
+ * Register all 20 memory tools.
  */
 export function registerTools(server: McpServer): void {
 
@@ -188,11 +187,14 @@ server.registerTool(
       return { content: [{ type: "text" as const, text: formatted }] }
     }
 
+    const bm25 = bm25Scores(parseEntries(data), query)
+
     const ranked = results
       .map((r) => {
         const quality = r.qualityRaw ? parseFloat(r.qualityRaw) || 0 : 0
         const qualityBoost = quality * 0.15
-        return { ...r, score: entryScore(r.date, r.accessed) + qualityBoost }
+        const bm25Score = bm25.get(r.key) || 0
+        return { ...r, score: bm25Score + entryScore(r.date, r.accessed) + qualityBoost }
       })
       .sort((a, b) => b.score - a.score)
 
@@ -256,6 +258,13 @@ server.registerTool(
     lines.splice(headerIdx + 1, entryLines.length, ...filtered.map((l) => `  ${l.trim()}`))
 
     writeMemory(lines.join("\n"))
+
+    if (removed === 0) {
+      return {
+        content: [{ type: "text" as const, text: `No se encontró "${key}" en memoria.` }],
+      }
+    }
+
     return {
       content: [{ type: "text" as const, text: `"${key}" eliminado. Quedan ${count - removed} entradas.` }],
     }
@@ -511,7 +520,7 @@ server.registerTool(
   "memory_encrypt",
   {
     title: "Enable Encryption",
-    description: "Habilita encriptación AES-256-GCM para la memoria. La clave se genera automáticamente.",
+    description: "Habilita encriptación AES-256-GCM para la memoria. Requiere TOON_MEMORY_KEY en el entorno.",
     inputSchema: {},
   },
   async () => {
@@ -526,9 +535,9 @@ server.registerTool(
       return { content: [{ type: "text" as const, text: "❌ Define TOON_MEMORY_KEY en el entorno antes de encriptar" }] }
     }
 
-    const data = readFileSync(MEMORY_FILE, "utf-8")
+    const data = readUnderLock(MEMORY_FILE)
     const encrypted = encrypt(data, key)
-    writeFileSync(MEMORY_FILE, encrypted)
+    safeWrite(MEMORY_FILE, encrypted)
 
     saveConfig({ encrypted: true })
 
@@ -562,10 +571,10 @@ server.registerTool(
     }
 
     try {
-      const data = readFileSync(MEMORY_FILE, "utf-8")
+      const data = readUnderLock(MEMORY_FILE)
       const decrypted = decrypt(data, resolvedKey)
 
-      writeFileSync(MEMORY_FILE, decrypted)
+      safeWrite(MEMORY_FILE, decrypted)
       saveConfig({ encrypted: false })
 
       return {

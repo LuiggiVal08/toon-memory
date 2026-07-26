@@ -17,30 +17,11 @@ import { existsSync, readFileSync } from "fs"
 import { join } from "path"
 import { parseEntries, buildGraph, bm25Scores, centrality, renderCompact, type GraphEntry } from "./graph"
 import { qualityScore } from "./quality"
+import { normalize, isExpiredLocal, tokenize, importance } from "./utils"
 import { coordinationView, currentBranch, pruneSessions, listSessions } from "./sessions"
 import { readRecentCommits, gitStatusSummary, readGitIndex } from "./git"
 import { scanProjectStructure, readManifest, readEnvExample } from "./project-scan"
 import { findFilesByPattern, searchCode, findCallers } from "./code-search"
-
-const normalize = (s: string): string =>
-	s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim()
-
-const tokenize = (s: string): string[] => normalize(s).split(" ").filter(Boolean)
-
-const isExpiredLocal = (ttl: string): boolean => {
-	if (!ttl) return false
-	const today = new Date().toISOString().split("T")[0]
-	return ttl <= today
-}
-
-const importance = (e: GraphEntry): number => {
-	const today = new Date().toISOString().split("T")[0]
-	const days =
-		(Date.now() - new Date(`${e.date || today}T00:00:00`).getTime()) / 86400000
-	const recency = Math.max(0, 30 - days) / 30
-	const freq = Math.min(1, e.accessed / 5)
-	return recency * 0.6 + freq * 0.4
-}
 
 // ── Section builders ────────────────────────────────────────────────
 
@@ -507,13 +488,11 @@ export function generateContextHealth(data: string, root: string): { report: Hea
 		score -= 5
 	}
 
-	// 3. Missing quality scores
-	const missingQuality = entries.filter((e) => {
-		// Quality is at index 10, check if it's missing or zero
-		return !e.accessed && e.accessed !== 0
-	})
-	if (missingQuality.length > 0) {
-		info.push(`${missingQuality.length} entradas sin quality score`)
+	// 3. Never-accessed old entries (created >7d ago but never recalled = possibly stale)
+	const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0]
+	const staleNeverAccessed = entries.filter((e) => e.accessed === 0 && e.date < weekAgo)
+	if (staleNeverAccessed.length > 0) {
+		info.push(`${staleNeverAccessed.length} entradas antiguas nunca recuperadas (posiblemente obsoletas)`)
 		score -= 2
 	}
 

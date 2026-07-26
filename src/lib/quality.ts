@@ -8,26 +8,7 @@
  */
 
 import { parseEntries, buildGraph, bm25Scores, centrality, renderCompact, type GraphEntry } from "./graph"
-
-const normalize = (s: string): string =>
-	s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim()
-
-const tokenize = (s: string): string[] => normalize(s).split(" ").filter(Boolean)
-
-const isExpiredLocal = (ttl: string): boolean => {
-	if (!ttl) return false
-	const today = new Date().toISOString().split("T")[0]
-	return ttl <= today
-}
-
-const importance = (e: GraphEntry): number => {
-	const today = new Date().toISOString().split("T")[0]
-	const days =
-		(Date.now() - new Date(`${e.date || today}T00:00:00`).getTime()) / 86400000
-	const recency = Math.max(0, 30 - days) / 30
-	const freq = Math.min(1, e.accessed / 5)
-	return recency * 0.6 + freq * 0.4
-}
+import { normalize, isExpiredLocal, tokenize, importance } from "./utils"
 
 /**
  * Quality score for an entry (0..1). Pure heuristics, no LLM.

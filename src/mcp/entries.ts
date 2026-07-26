@@ -107,4 +107,4 @@ export function parseRelativeDate(since: string): string {
   return today
 }
 
-export const normalize = (s: string) => s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim()
+export { normalize } from "../lib/utils"

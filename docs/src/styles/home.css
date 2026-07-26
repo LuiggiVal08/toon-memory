@@ -580,29 +580,48 @@ pre code {
   stroke: var(--brand);
   stroke-width: 2;
   fill: none;
-  stroke-dasharray: 260;
-  stroke-dashoffset: 260;
-  transition: stroke-dashoffset 1.1s ease;
+  stroke-dasharray: 350;
+  stroke-dashoffset: 350;
+  transition: stroke-dashoffset 1.1s ease, opacity 0.3s ease, stroke 0.3s ease;
 }
 .graph-showcase.in-view .graph-edge { stroke-dashoffset: 0; }
+.graph-edge-group.dimmed .graph-edge { opacity: 0.15; }
+.graph-edge-group.highlighted .graph-edge { stroke-width: 3; opacity: 1; }
+.graph-particle { opacity: 0; }
+.graph-showcase.in-view .graph-particle { opacity: 0.8; }
+.graph-edge-group.dimmed .graph-particle { opacity: 0; }
 .graph-node {
-  fill: var(--bg-card);
-  stroke: var(--brand);
-  stroke-width: 2;
+  stroke-width: 1.5;
   opacity: 0;
   transform: scale(0.4);
   transform-box: fill-box;
   transform-origin: center;
-  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.3s ease;
 }
 .graph-showcase.in-view .graph-node { opacity: 1; transform: scale(1); }
-.graph-node.center { fill: var(--brand); stroke: var(--brand); }
+.graph-node.center { stroke-width: 2; }
+.graph-node-group { cursor: pointer; }
+.graph-node-group:hover .graph-node { filter: brightness(1.2) drop-shadow(0 0 10px currentColor); transform: scale(1.12); }
+.graph-node-group:hover .graph-shadow { opacity: 0.25; transform: translateY(2px) scaleY(0.8); }
+.graph-node-group:hover .graph-highlight { opacity: 0.45; }
+.graph-shadow {
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.graph-showcase.in-view .graph-shadow { opacity: 0.15; }
+.graph-highlight {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.graph-showcase.in-view .graph-highlight { opacity: 0.3; }
 .graph-label {
   fill: var(--text);
   font-size: 11px;
   font-family: var(--font-mono);
   opacity: 0;
   transition: opacity 0.5s ease;
+  pointer-events: none;
 }
 .graph-showcase.in-view .graph-label { opacity: 1; }
 .graph-halo {
@@ -945,6 +964,8 @@ pre code {
   .code-block::after { animation: none; display: none; }
   .graph-edge { stroke-dashoffset: 0; transition: none; }
   .graph-node { opacity: 1; transform: none; transition: none; }
+  .graph-shadow, .graph-highlight { display: none; }
   .graph-label { opacity: 1; transition: none; }
   .graph-halo { animation: none; }
+  .graph-particle { display: none; }
 }

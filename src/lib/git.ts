@@ -89,26 +89,25 @@ function parseIndex(dir: string): IndexEntry[] {
     const sha = buf.slice(offset + 32, offset + 52).toString("hex")
     const flags = buf.readUInt16BE(offset + 52)
 
-    // Name starts at offset 62, null-terminated, padded to 8-byte alignment
+    // v3/v4 entries have an extra 4-byte extended entry field after the standard 62 bytes
+    let nameOffset = 62
+    if (version >= 3) {
+      nameOffset += 4
+    }
+
+    // Name starts at entryStart + nameOffset, null-terminated, padded to 8-byte alignment
     const nameLen = flags & 0x0fff
-    const nameStart = entryStart + 62
+    const nameStart = entryStart + nameOffset
     let name: string
     if (nameLen > 0 && nameStart + nameLen <= buf.length) {
       name = buf.toString("utf-8", nameStart, nameStart + nameLen)
     } else {
-      // Read until null byte
       const end = buf.indexOf(0, nameStart)
       name = end >= 0 ? buf.toString("utf-8", nameStart, end) : buf.toString("utf-8", nameStart)
     }
 
-    // Skip extended data (v3+): 4 extra bytes of padding before the name
-    if (version >= 3) {
-      // In v3, there's an extra 4-byte field (padding/extended)
-      // The name starts at entryStart + 62 regardless in v2-v4
-    }
-
-    // Compute total entry size: 62 bytes + name length, padded to 8-byte boundary
-    const rawLen = 62 + name.length
+    // Compute total entry size: base bytes + name length, padded to 8-byte boundary
+    const rawLen = nameOffset + name.length
     const paddedLen = Math.ceil(rawLen / 8) * 8
     offset = entryStart + paddedLen
 

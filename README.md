@@ -452,13 +452,14 @@ The System Primer is an auto-generated knowledge map exposed as an MCP resource.
 #### Enable encryption
 
 ```typescript
+// First, set TOON_MEMORY_KEY in your environment (or .env file):
+// export TOON_MEMORY_KEY="your-secret-key-here"
+
 memory_encrypt()
 // 🔐 Encriptación habilitada
-// ⚠️ Guarda esta clave (no se puede recuperar):
-// a1b2c3d4...
 ```
 
-> **Warning:** Save the encryption key somewhere safe. If you lose it, your memory data is gone forever. Quality scores and confidence are preserved through encryption.
+> **Warning:** The encryption key must be set via `TOON_MEMORY_KEY` env var before encrypting. Save it somewhere safe — if you lose it, your memory data is gone forever. Quality scores and confidence are preserved through encryption.
 
 ---
 
