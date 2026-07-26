@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from "fs"
 import { withLockSync } from "../lib/lock"
 import { readMemory, writeMemory, safeWrite } from "./memory-io"
-import { ensureMemoryFile, MEMORY_FILE, MEMORY_DIR, MAX_ENTRIES, ARCHIVE_DAYS, ARCHIVE_FILE } from "./config"
+import { ensureMemoryFile, MEMORY_FILE, MEMORY_DIR, getMaxEntries, ARCHIVE_DAYS, ARCHIVE_FILE } from "./config"
 import { isExpired } from "./entries"
 import { entryScoreForLine } from "./scoring"
 
@@ -35,8 +35,9 @@ export function archiveOldEntries(opts: { trimToMax?: boolean } = {}): { archive
 
   if (opts.trimToMax) {
     const remaining = entryLines.length - toArchive.size
-    if (remaining > MAX_ENTRIES) {
-      const need = remaining - MAX_ENTRIES
+    const maxEntries = getMaxEntries()
+    if (remaining > maxEntries) {
+      const need = remaining - maxEntries
       const candidates = entryLines
         .map((line, idx) => ({ idx, score: entryScoreForLine(line) }))
         .filter((c) => !toArchive.has(c.idx))
@@ -61,7 +62,7 @@ export function archiveOldEntries(opts: { trimToMax?: boolean } = {}): { archive
   const archiveLines = archiveContent.split("\n")
   let archiveHeaderIdx = archiveLines.findIndex((l) => l.startsWith("archived["))
   if (archiveHeaderIdx === -1) {
-    archiveLines.push(`archived[0|]{id|category|key|content|file|tags|date}:`)
+    archiveLines.push(`archived[0|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:`)
     archiveHeaderIdx = archiveLines.length - 1
   }
 
