@@ -1,16 +1,17 @@
 import type { McpServer } from "@modelcontextprotocol/server"
 import { z } from "zod"
-import { readFileSync, writeFileSync, existsSync } from "fs"
+import { readFileSync, writeFileSync, existsSync, copyFileSync, mkdirSync, readdirSync } from "fs"
+import { join, basename } from "path"
 import { readMemory, writeMemory, safeWrite } from "./memory-io"
-import { loadConfig, saveConfig, getKey, MEMORY_FILE, OBSERVATIONS_FILE, MAX_ENTRIES } from "./config"
-import { generateId, parseTTL, isExpired, inferTags, parseRelativeDate, normalize } from "./entries"
-import { entryScore, findRelatedEntries, bumpAccessed } from "./scoring"
+import { loadConfig, saveConfig, getKey, MEMORY_FILE, OBSERVATIONS_FILE, MEMORY_DIR, MAX_ENTRIES, getMaxEntries, ARCHIVE_FILE } from "./config"
+import { generateId, parseTTL, isExpired, inferTags, parseRelativeDate } from "./entries"
+import { findRelatedEntries, bumpAccessed } from "./scoring"
 import { readObservations } from "./observations"
 import { archiveOldEntries } from "./archive"
 import { consolidateEntries } from "./consolidation"
 import { readUnderLock } from "../lib/lock"
 import { encrypt, decrypt } from "./crypto"
-import { graphRecallDetailed, renderCompact, bm25Scores, parseEntries } from "../lib/graph"
+import { graphRecallDetailed, renderCompact, parseEntries } from "../lib/graph"
 import { qualityScore, mergeEntries, generateSmartRecall } from "../lib/quality"
 import { generateContextBrief, generateContextGenerate, generateContextDiff, generateContextFocus, generateContextHealth, generateContextExport } from "../lib/context"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } from "../lib/sessions"
@@ -26,15 +27,15 @@ server.registerTool(
   "memory_remember",
   {
     title: "Save to Memory",
-    description: "Guarda un hecho en la memoria persistente del proyecto (decisiones, patrones, bugs, conocimiento). Se recuerda entre sesiones.",
+    description: "Save a fact to the project's persistent memory (decisions, patterns, bugs, knowledge). Persists between sessions.",
     inputSchema: {
-      category: z.enum(["decision", "pattern", "bug", "knowledge"]).describe("Categoría del hecho"),
-      key: z.string().describe("Título corto en kebab-case (ej: risk-engine-prioridad)"),
-      content: z.string().describe("Contenido detallado del hecho"),
-      file: z.string().optional().default("").describe("Archivo o línea relacionada (ej: spec.md:145)"),
-      tags: z.string().optional().default("").describe("Tags separados por punto y coma (ej: risk;spec)"),
-      ttl: z.string().optional().default("").describe("Time to live (ej: 7d, 2026-07-17). Vacío = sin expiración"),
-      links: z.string().optional().default("").describe("Entradas relacionadas por key, separadas por espacio o ';' (ej: risk-spec engine-arch). Construye aristas del grafo de memoria."),
+      category: z.enum(["decision", "pattern", "bug", "knowledge"]).describe("Category of the fact"),
+      key: z.string().describe("Short title in kebab-case (e.g. risk-engine-priority)"),
+      content: z.string().describe("Detailed content of the fact"),
+      file: z.string().optional().default("").describe("Related file or line (e.g. spec.md:145)"),
+      tags: z.string().optional().default("").describe("Semicolon-separated tags (e.g. risk;spec)"),
+      ttl: z.string().optional().default("").describe("Time to live (e.g. 7d, 2026-07-17). Empty = no expiration"),
+      links: z.string().optional().default("").describe("Related entry keys, separated by space or ';' (e.g. risk-spec engine-arch). Builds graph edges."),
     },
   },
   async ({ category, key, content, file, tags, ttl, links }) => {
@@ -71,15 +72,15 @@ server.registerTool(
       ? links.split(/[\s;]+/).filter(Boolean).join(" ")
       : existingParts[9] || ""
     let newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|0|${resolvedLinks}`
-    let action = "Guardado"
+    let action = "Saved"
     let mergeInfo = ""
     const tagsInferred = !tags && resolvedTags ? true : false
 
     if (existingIdx !== -1) {
       newEntry = mergeEntries(lines[existingIdx].trim(), newEntry)
       lines[existingIdx] = `  ${newEntry}`
-      action = "Actualizado"
-      mergeInfo = "\n🔗 Merge: tags combinados, fecha y links actualizados"
+      action = "Updated"
+      mergeInfo = "\nMerge: tags combined, date and links updated"
     } else {
       const quality = qualityScore(resolvedTags, resolvedLinks, content, date)
       const confidence = 1.0
@@ -95,7 +96,7 @@ server.registerTool(
     const headerMatch = lines[headerIdx].match(/\[(\d+)\|/)
     const entryCount = headerMatch ? parseInt(headerMatch[1]) : 0
     let archiveMsg = ""
-    if (entryCount > MAX_ENTRIES) {
+    if (entryCount > getMaxEntries()) {
       const result = archiveOldEntries({ trimToMax: true })
       if (result.archived > 0) {
         archiveMsg = `\n📦 Auto-archived ${result.archived} low-importance entries (${result.kept} kept)`
@@ -103,13 +104,13 @@ server.registerTool(
     }
 
     const ttlMsg = resolvedTtl ? `\n⏰ TTL: ${resolvedTtl}` : ""
-    const inferredMsg = tagsInferred ? `\n🏷️ Tags inferidos: ${resolvedTags}` : ""
+    const inferredMsg = tagsInferred ? `\n🏷️ Inferred tags: ${resolvedTags}` : ""
 
     const related = findRelatedEntries(`${key} ${content} ${resolvedTags}`, key, 3)
     let relatedMsg = ""
     if (related.length > 0) {
       const items = related.map((r) => `  [${r.cat}] ${r.key} — ${r.content.slice(0, 80)}`).join("\n")
-      relatedMsg = `\n\n🔗 Entradas relacionadas:\n${items}`
+      relatedMsg = `\n\n🔗 Related entries:\n${items}`
     }
 
     return {
@@ -124,103 +125,41 @@ server.registerTool(
   "memory_recall",
   {
     title: "Search Memory",
-    description: "Busca en la memoria persistente del proyecto. Devuelve entradas relevantes. Usar ANTES de leer archivos.",
+    description: "Search the project's persistent memory. Returns relevant entries. Use BEFORE reading files.",
     inputSchema: {
-      query: z.string().describe("Texto a buscar"),
-      category: z.string().optional().default("").describe("Filtrar por categoría (vacío = todos)"),
-      from_date: z.string().optional().default("").describe("Fecha inicio filtro (YYYY-MM-DD)"),
-      to_date: z.string().optional().default("").describe("Fecha fin filtro (YYYY-MM-DD)"),
-      mode: z.enum(["flat", "graph"]).optional().default("flat").describe("'flat' = búsqueda por palabra clave (default). 'graph' = recall basado en grafo: expande el subgrafo de entradas relacionadas desde las coincidencias (más preciso, menos tokens)."),
-      hops: z.number().optional().default(1).describe("Profundidad del grafo en modo 'graph' (1 o 2). Default 1."),
-      compact: z.boolean().optional().default(false).describe("Salida token-efficient: índices numéricos (1, 2), omite id/fecha/archivo (conserva tags), aristas como '->2', y trunca vecinos del grafo a un snippet. No muta el archivo .toon."),
+      query: z.string().describe("Text to search for"),
+      category: z.string().optional().default("").describe("Filter by category (empty = all)"),
+      from_date: z.string().optional().default("").describe("Start date filter (YYYY-MM-DD)"),
+      to_date: z.string().optional().default("").describe("End date filter (YYYY-MM-DD)"),
+      mode: z.enum(["flat", "graph"]).optional().default("flat").describe("'flat' = keyword search (default). 'graph' = graph-based recall: expands the related-entry subgraph from matches (more precise, fewer tokens)."),
+      hops: z.number().optional().default(1).describe("Graph depth in 'graph' mode (1 or 2). Default 1."),
+      compact: z.boolean().optional().default(false).describe("Token-efficient output: numeric indices (1, 2), omits id/date/file (keeps tags), edges as '->2', truncates graph neighbors to a snippet. Does not mutate .toon file."),
     },
   },
   async ({ query, category, from_date, to_date, mode, hops, compact }) => {
     const data = readMemory()
-    const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
 
-    const queryTokens = normalize(query).split(" ").filter(Boolean)
-
-    const results = lines
-      .map((line) => {
-        const trimmed = line.trim()
-        const parts = trimmed.split("|")
-        if (parts.length < 7) return null
-        const [id, cat, key, content, file, tags, date, ttl, accessedRaw] = parts
-        const qualityRaw = parts[10] || ""
-        const confidenceRaw = parts[11] || ""
-        if (category && cat !== category) return null
-        if (from_date && date < from_date) return null
-        if (to_date && date > to_date) return null
-        if (ttl && isExpired(ttl)) return null
-        const searchStr = normalize(`${id} ${cat} ${key} ${content} ${file} ${tags} ${qualityRaw} ${confidenceRaw}`)
-        if (!queryTokens.every((token) => searchStr.includes(token))) return null
-        const accessed = accessedRaw ? parseInt(accessedRaw) || 0 : 0
-        return { id, cat, key, content, file, tags, date, accessed, qualityRaw, confidenceRaw }
-      })
-      .filter(Boolean) as Array<{ id: string; cat: string; key: string; content: string; file: string; tags: string; date: string; accessed: number; qualityRaw: string; confidenceRaw: string }>
-
-    if (results.length === 0) {
-      return { content: [{ type: "text" as const, text: `No se encontraron resultados para "${query}"` }] }
+    // Delegate to graphRecallDetailed for both flat and graph modes
+    // This avoids duplicating BM25 + ranking logic
+    const detail = graphRecallDetailed(data, query, { category, from_date, to_date, hops })
+    if (detail.entries.length === 0) {
+      return { content: [{ type: "text" as const, text: `No results found for "${query}"` }] }
     }
-
-    if (mode === "graph") {
-      const detail = graphRecallDetailed(data, query, { category, from_date, to_date, hops })
-      if (detail.entries.length === 0) {
-        return { content: [{ type: "text" as const, text: `No se encontraron resultados para "${query}"` }] }
-      }
-      bumpAccessed(detail.entries.map((e) => e.id))
-      if (compact) {
-        const formatted = renderCompact(detail.entries, {
-          adjacency: detail.adjacency,
-          seeds: detail.seeds,
-          snippetLen: 90,
-        })
-        return { content: [{ type: "text" as const, text: formatted }] }
-      }
-      const formatted = detail.entries
-        .map((r) => {
-          const links = r.links.length ? `\n  links: ${r.links.join(", ")}` : ""
-          return `[${r.category}] ${r.key} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}`
-        })
-        .join("\n\n")
-      return { content: [{ type: "text" as const, text: formatted }] }
-    }
-
-    const bm25 = bm25Scores(parseEntries(data), query)
-
-    const ranked = results
-      .map((r) => {
-        const quality = r.qualityRaw ? parseFloat(r.qualityRaw) || 0 : 0
-        const qualityBoost = quality * 0.15
-        const bm25Score = bm25.get(r.key) || 0
-        return { ...r, score: bm25Score + entryScore(r.date, r.accessed) + qualityBoost }
-      })
-      .sort((a, b) => b.score - a.score)
-
-    bumpAccessed(ranked.map((r) => r.id))
-
+    bumpAccessed(detail.entries.map((e) => e.id))
     if (compact) {
-      const entries = ranked.map((r) => ({
-        id: r.id,
-        category: r.cat,
-        key: r.key,
-        content: r.content,
-        file: r.file,
-        tags: r.tags ? r.tags.split(";").filter(Boolean) : [],
-        date: r.date,
-        ttl: "",
-        accessed: r.accessed,
-        links: [] as string[],
-      }))
-      const formatted = renderCompact(entries)
+      const formatted = renderCompact(detail.entries, {
+        adjacency: detail.adjacency,
+        seeds: detail.seeds,
+        snippetLen: 90,
+      })
       return { content: [{ type: "text" as const, text: formatted }] }
     }
-
-    const formatted = ranked
-      .map((r) => `[${r.cat}] ${r.key} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags} | Date: ${r.date}`)
+    const formatted = detail.entries
+      .map((r) => {
+        const links = r.links.length ? `\n  links: ${r.links.join(", ")}` : ""
+        return `[${r.category}] ${r.key} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}`
+      })
       .join("\n\n")
-
     return { content: [{ type: "text" as const, text: formatted }] }
   }
 )
@@ -231,9 +170,9 @@ server.registerTool(
   "memory_forget",
   {
     title: "Delete from Memory",
-    description: "Elimina una entrada de la memoria por su key o id.",
+    description: "Delete a memory entry by its key or id.",
     inputSchema: {
-      key: z.string().describe("Key o id de la entrada a eliminar"),
+      key: z.string().describe("Key or id of the entry to delete"),
     },
   },
   async ({ key }) => {
@@ -242,7 +181,7 @@ server.registerTool(
     const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
 
     if (headerIdx === -1) {
-      return { content: [{ type: "text" as const, text: "No hay entradas en memoria" }] }
+      return { content: [{ type: "text" as const, text: "No entries in memory" }] }
     }
 
     const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
@@ -261,12 +200,12 @@ server.registerTool(
 
     if (removed === 0) {
       return {
-        content: [{ type: "text" as const, text: `No se encontró "${key}" en memoria.` }],
+        content: [{ type: "text" as const, text: `"${key}" not found in memory.` }],
       }
     }
 
     return {
-      content: [{ type: "text" as const, text: `"${key}" eliminado. Quedan ${count - removed} entradas.` }],
+      content: [{ type: "text" as const, text: `"${key}" deleted. ${count - removed} entries remaining.` }],
     }
   }
 )
@@ -277,7 +216,7 @@ server.registerTool(
   "memory_stats",
   {
     title: "Memory Stats",
-    description: "Muestra estadísticas de la memoria del proyecto.",
+    description: "Show project memory statistics.",
     inputSchema: {},
   },
   async () => {
@@ -302,16 +241,16 @@ server.registerTool(
 
     const summaryLines = data.split("\n").filter((l) => l.includes(":") && !l.startsWith("  ") && !l.startsWith("version") && !l.startsWith("entries") && !/^\[\d+\|]/.test(l))
     const stats = [
-      `Entradas totales: ${entries.length}`,
-      `Resúmenes de archivos: ${summaryLines.length}`,
+      `Total entries: ${entries.length}`,
+      `File summaries: ${summaryLines.length}`,
       "",
-      "Por categoría:",
+      "By category:",
       ...Object.entries(byCategory).map(([k, v]) => `  ${k}: ${v}`),
       "",
-      `TTL: ${withTtl} con expiración, ${expired} expiradas`,
-      `Calidad promedio: ${avgQuality} (${withQuality} con score)`,
+      `TTL: ${withTtl} with expiration, ${expired} expired`,
+      `Average quality: ${avgQuality} (${withQuality} with score)`,
       "",
-      `Últimas 5 entradas:`,
+      `Last 5 entries:`,
       ...lines.slice(-5).map((l) => {
         const parts = l.trim().split("|")
         const ttlInfo = parts[7] ? ` | TTL: ${parts[7]}` : ""
@@ -330,10 +269,10 @@ server.registerTool(
   "memory_diff",
   {
     title: "Memory Diff",
-    description: "Muestra qué cambió en la memoria desde una fecha. Útil para saber qué se aprendió desde la última sesión.",
+    description: "Show what changed in memory since a date. Useful for seeing what was learned since the last session.",
     inputSchema: {
-      since: z.string().describe("Desde cuándo mostrar cambios (ej: 24h, 7d, 2026-07-10)"),
-      type: z.enum(["all", "created", "updated"]).optional().default("all").describe("Filtrar por tipo de cambio"),
+      since: z.string().describe("Show changes since (e.g. 24h, 7d, 2026-07-10)"),
+      type: z.enum(["all", "created", "updated"]).optional().default("all").describe("Filter by change type"),
     },
   },
   async ({ since, type }) => {
@@ -356,16 +295,16 @@ server.registerTool(
       .filter(Boolean)
 
     if (results.length === 0) {
-      return { content: [{ type: "text" as const, text: `No hay cambios desde ${sinceDate}` }] }
+      return { content: [{ type: "text" as const, text: `No changes since ${sinceDate}` }] }
     }
 
     const created = results.filter((r) => r!.changeType === "created")
     const updated = results.filter((r) => r!.changeType === "updated")
 
-    const sections: string[] = [`📋 Cambios desde ${sinceDate}:`, ""]
+    const sections: string[] = [`📋 Changes since ${sinceDate}:`, ""]
 
     if (created.length > 0 && (type === "all" || type === "created")) {
-      sections.push(`➕ Nuevas (${created.length}):`)
+      sections.push(`➕ New (${created.length}):`)
       for (const r of created) {
         sections.push(`  [${r!.cat}] ${r!.key} (${r!.id})\n    ${r!.content}`)
       }
@@ -373,7 +312,7 @@ server.registerTool(
     }
 
     if (updated.length > 0 && (type === "all" || type === "updated")) {
-      sections.push(`✏️  Actualizadas (${updated.length}):`)
+      sections.push(`✏️  Updated (${updated.length}):`)
       for (const r of updated) {
         sections.push(`  [${r!.cat}] ${r!.key} (${r!.id}) — ${r!.date}`)
       }
@@ -390,24 +329,24 @@ server.registerTool(
   "memory_suggest",
   {
     title: "Suggest Related Memories",
-    description: "Sugiere entradas de memoria relacionadas con un contexto dado. Útil para obtener contexto antes de una tarea.",
+    description: "Suggest memory entries related to a given context. Useful for gathering context before a task.",
     inputSchema: {
-      context: z.string().describe("Texto o contexto para buscar sugerencias"),
-      limit: z.number().optional().default(5).describe("Máximo de sugerencias"),
+      context: z.string().describe("Text or context to search for suggestions"),
+      limit: z.number().optional().default(5).describe("Maximum suggestions"),
     },
   },
   async ({ context, limit }) => {
     const related = findRelatedEntries(context, "", limit)
 
     if (related.length === 0) {
-      return { content: [{ type: "text" as const, text: `No se encontraron entradas relacionadas con "${context}"` }] }
+      return { content: [{ type: "text" as const, text: `No related entries found for "${context}"` }] }
     }
 
     const formatted = related
       .map((r) => `[${r.cat}] ${r.key} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags} | Date: ${r.date}`)
       .join("\n\n")
 
-    return { content: [{ type: "text" as const, text: `🔍 Sugerencias para "${context}":\n\n${formatted}` }] }
+    return { content: [{ type: "text" as const, text: `🔍 Suggestions for "${context}":\n\n${formatted}` }] }
   }
 )
 
@@ -417,11 +356,11 @@ server.registerTool(
   "memory_smart_recall",
   {
     title: "Smart Recall (Unified)",
-    description: "Recuperación unificada: combina BM25 + grafo + decay + calidad en una sola llamada. Usar al INICIO de cada tarea para obtener todo el contexto relevante de memoria.",
+    description: "Unified retrieval: combines BM25 + graph + decay + quality in a single call. Use at the START of each task to get all relevant memory context.",
     inputSchema: {
-      intent: z.string().describe("Describe qué necesitas saber (ej: 'diseño de base de datos para backend')"),
-      limit: z.number().optional().default(8).describe("Máximo de entradas a devolver"),
-      category: z.string().optional().default("").describe("Filtrar por categoría (vacío = todos)"),
+      intent: z.string().describe("Describe what you need to know (e.g. 'database schema for backend')"),
+      limit: z.number().optional().default(8).describe("Maximum entries to return"),
+      category: z.string().optional().default("").describe("Filter by category (empty = all)"),
     },
   },
   async ({ intent, limit, category }) => {
@@ -437,11 +376,11 @@ server.registerTool(
   "memory_summary",
   {
     title: "File Summary",
-    description: "Guarda o recupera un resumen de un archivo grande para ahorrar tokens.",
+    description: "Save or retrieve a summary of a large file to save tokens.",
     inputSchema: {
-      action: z.enum(["get", "set"]).describe("get para leer, set para guardar"),
-      file: z.string().describe("Ruta del archivo"),
-      summary: z.string().optional().default("").describe("Resumen del archivo (solo para set)"),
+      action: z.enum(["get", "set"]).describe("get to read, set to save"),
+      file: z.string().describe("File path"),
+      summary: z.string().optional().default("").describe("File summary (only for set)"),
     },
   },
   async ({ action, file, summary }) => {
@@ -451,13 +390,13 @@ server.registerTool(
       const lines = data.split("\n")
       const summaryIdx = lines.findIndex((l) => l.trim().startsWith("summaries:"))
       if (summaryIdx === -1) {
-        return { content: [{ type: "text" as const, text: `No hay resúmenes guardados para "${file}"` }] }
+        return { content: [{ type: "text" as const, text: `No summaries saved for "${file}"` }] }
       }
 
       const summaryLines = lines.slice(summaryIdx + 1).filter((l) => l.includes(":"))
       const match = summaryLines.find((l) => l.startsWith(`  ${file}:`))
       if (!match) {
-        return { content: [{ type: "text" as const, text: `No hay resumen para "${file}"` }] }
+        return { content: [{ type: "text" as const, text: `No summary for "${file}"` }] }
       }
 
       const summaryText = match.replace(`  ${file}: `, "")
@@ -484,7 +423,7 @@ server.registerTool(
     lines.splice(summaryIdx + 1, lines.length - summaryIdx - 1, ...summaryLines)
     writeMemory(lines.join("\n"))
     return {
-      content: [{ type: "text" as const, text: `📝 Resumen guardado para ${file}` }],
+      content: [{ type: "text" as const, text: `📝 Summary saved for ${file}` }],
     }
   }
 )
@@ -495,20 +434,20 @@ server.registerTool(
   "memory_archive",
   {
     title: "Archive Old Entries",
-    description: "Mover entradas antiguas (>30 días) a archive.toon para mantener la memoria limpia.",
+    description: "Move old entries (>30 days) to archive.toon to keep memory clean.",
     inputSchema: {},
   },
   async () => {
     const result = archiveOldEntries()
 
     if (result.archived === 0) {
-      return { content: [{ type: "text" as const, text: "No hay entradas antiguas para archivar" }] }
+      return { content: [{ type: "text" as const, text: "No old entries to archive" }] }
     }
 
     return {
       content: [{
         type: "text" as const,
-        text: `📦 Archivadas ${result.archived} entradas antiguas\n📋 Quedan ${result.kept} entradas activas`
+        text: `📦 Archived ${result.archived} old entries\n📋 ${result.kept} active entries remaining`
       }],
     }
   }
@@ -520,19 +459,19 @@ server.registerTool(
   "memory_encrypt",
   {
     title: "Enable Encryption",
-    description: "Habilita encriptación AES-256-GCM para la memoria. Requiere TOON_MEMORY_KEY en el entorno.",
+    description: "Enable AES-256-GCM encryption for memory. Requires TOON_MEMORY_KEY in environment.",
     inputSchema: {},
   },
   async () => {
     const config = loadConfig()
 
     if (config.encrypted) {
-      return { content: [{ type: "text" as const, text: "La encriptación ya está habilitada" }] }
+      return { content: [{ type: "text" as const, text: "Encryption is already enabled" }] }
     }
 
     const key = getKey()
     if (!key) {
-      return { content: [{ type: "text" as const, text: "❌ Define TOON_MEMORY_KEY en el entorno antes de encriptar" }] }
+      return { content: [{ type: "text" as const, text: "❌ Set TOON_MEMORY_KEY in environment before encrypting" }] }
     }
 
     const data = readUnderLock(MEMORY_FILE)
@@ -542,7 +481,7 @@ server.registerTool(
     saveConfig({ encrypted: true })
 
     return {
-      content: [{ type: "text" as const, text: "🔐 Encriptación habilitada" }],
+      content: [{ type: "text" as const, text: "🔐 Encryption enabled" }],
     }
   }
 )
@@ -553,21 +492,21 @@ server.registerTool(
   "memory_decrypt",
   {
     title: "Disable Encryption",
-    description: "Deshabilita la encriptación y decodifica la memoria.",
+    description: "Disable encryption and decode memory.",
     inputSchema: {
-      key: z.string().describe("Clave de encriptación"),
+      key: z.string().describe("Encryption key"),
     },
   },
   async ({ key }) => {
     const config = loadConfig()
 
     if (!config.encrypted) {
-      return { content: [{ type: "text" as const, text: "La encriptación no está habilitada" }] }
+      return { content: [{ type: "text" as const, text: "Encryption is not enabled" }] }
     }
 
     const resolvedKey = key || getKey() || ""
     if (!resolvedKey) {
-      return { content: [{ type: "text" as const, text: "❌ No hay clave. Pásala como argumento o la del archivo .env" }] }
+      return { content: [{ type: "text" as const, text: "❌ No key provided. Pass as argument or set in .env file" }] }
     }
 
     try {
@@ -578,10 +517,10 @@ server.registerTool(
       saveConfig({ encrypted: false })
 
       return {
-        content: [{ type: "text" as const, text: "🔓 Encriptación deshabilitada" }],
+        content: [{ type: "text" as const, text: "🔓 Encryption disabled" }],
       }
     } catch {
-      return { content: [{ type: "text" as const, text: "❌ Clave incorrecta o datos corruptos" }] }
+      return { content: [{ type: "text" as const, text: "❌ Wrong key or corrupted data" }] }
     }
   }
 )
@@ -592,12 +531,12 @@ server.registerTool(
   "memory_captured",
   {
     title: "List Captured Activity",
-    description: "Muestra el log de actividad capturado automáticamente por los hooks (solo si la captura está habilitada). Útil para promover observaciones a memoria con memory_remember.",
+    description: "Show activity log captured automatically by hooks (only if capture is enabled). Useful for promoting observations to memory with memory_remember.",
     inputSchema: {
-      limit: z.number().optional().default(20).describe("Máximo de observaciones a mostrar"),
-      tool: z.string().optional().default("").describe("Filtrar por nombre de herramienta"),
-      file: z.string().optional().default("").describe("Filtrar por archivo"),
-      clear: z.boolean().optional().default(false).describe("Si true, limpia el log de captura"),
+      limit: z.number().optional().default(20).describe("Maximum observations to show"),
+      tool: z.string().optional().default("").describe("Filter by tool name"),
+      file: z.string().optional().default("").describe("Filter by file"),
+      clear: z.boolean().optional().default(false).describe("If true, clears the capture log"),
     },
   },
   async ({ limit, tool, file, clear }) => {
@@ -605,7 +544,7 @@ server.registerTool(
       if (existsSync(OBSERVATIONS_FILE)) {
         writeFileSync(OBSERVATIONS_FILE, "version: 1\nobservations[0|]{ts|session|agent|branch|tool|hash|file|summary}:\n")
       }
-      return { content: [{ type: "text" as const, text: "🧹 Log de captura limpiado" }] }
+        return { content: [{ type: "text" as const, text: "🧹 Capture log cleared" }] }
     }
 
     let obs = readObservations()
@@ -617,7 +556,7 @@ server.registerTool(
       return {
         content: [{
           type: "text" as const,
-          text: "No hay actividad capturada. La captura está desactivada por defecto; actívala con `toon-memory capture on`.",
+          text: "No captured activity. Capture is disabled by default; enable with `toon-memory capture on`.",
         }],
       }
     }
@@ -626,7 +565,7 @@ server.registerTool(
       .map((o) => `[${o.ts}] ${o.agent}@${o.branch}/${o.tool}${o.file ? ` (${o.file})` : ""}\n  ${o.summary}`)
       .join("\n\n")
 
-    return { content: [{ type: "text" as const, text: `🔍 Actividad capturada (${obs.length}):\n\n${formatted}` }] }
+    return { content: [{ type: "text" as const, text: `🔍 Captured activity (${obs.length}):\n\n${formatted}` }] }
   }
 )
 
@@ -636,18 +575,18 @@ server.registerTool(
   "memory_consolidate",
   {
     title: "Consolidate Memory",
-    description: "Consolida la memoria eliminando entradas con contenido idéntico (mantiene la primera). Determinista, sin LLM.",
+    description: "Consolidate memory by removing entries with identical content (keeps the first). Deterministic, no LLM.",
     inputSchema: {},
   },
   async () => {
     const result = consolidateEntries()
     if (result.removed === 0) {
-      return { content: [{ type: "text" as const, text: `✅ Memoria ya consolidada (${result.kept} entradas, 0 duplicados)` }] }
+      return { content: [{ type: "text" as const, text: `✅ Memory already consolidated (${result.kept} entries, 0 duplicates)` }] }
     }
     return {
       content: [{
         type: "text" as const,
-        text: `🧹 Consolidadas ${result.removed} entradas duplicadas.\nQuedan ${result.kept} activas.\nDuplicados: ${result.duplicates.join(", ")}`,
+        text: `🧹 Consolidated ${result.removed} duplicate entries.\n${result.kept} active entries remaining.\nDuplicates: ${result.duplicates.join(", ")}`,
       }],
     }
   }
@@ -659,9 +598,9 @@ server.registerTool(
   "memory_sessions",
   {
     title: "Active Sessions & Conflicts",
-    description: "Muestra las sesiones de agente activas en este proyecto (rama git, archivos tocados, last-seen) y detecta conflictos suaves (archivos tocados por 2+ sesiones). Úsalo al iniciar para no pisar el trabajo de otras sesiones paralelas.",
+    description: "Show active agent sessions in this project (git branch, files touched, last-seen) and detect soft conflicts (files touched by 2+ sessions). Use at startup to avoid overwriting other parallel sessions' work.",
     inputSchema: {
-      conflictsOnly: z.boolean().optional().default(false).describe("Si true, muestra solo conflictos suaves"),
+      conflictsOnly: z.boolean().optional().default(false).describe("If true, only show soft conflicts"),
     },
   },
   async ({ conflictsOnly }) => {
@@ -670,14 +609,14 @@ server.registerTool(
 
     if (conflictsOnly) {
       if (conflicts.length === 0) {
-        return { content: [{ type: "text" as const, text: "✅ No hay conflictos suaves entre sesiones activas." }] }
+        return { content: [{ type: "text" as const, text: "✅ No soft conflicts between active sessions." }] }
       }
       const lines = conflicts.map((c) => {
         const who = c.sessions.map((s) => `${s.agent}@${s.branch} (${s.id})`).join(", ")
         return `⚠️ ${c.file}\n   ↔ ${who}`
       })
       return {
-        content: [{ type: "text" as const, text: `🔥 Conflictos suaves (${conflicts.length}):\n\n${lines.join("\n\n")}` }],
+        content: [{ type: "text" as const, text: `🔥 Soft conflicts (${conflicts.length}):\n\n${lines.join("\n\n")}` }],
       }
     }
 
@@ -685,7 +624,7 @@ server.registerTool(
       return {
         content: [{
           type: "text" as const,
-          text: "🟢 No hay otras sesiones activas en este proyecto.\n(Esta sesión: " + selfId + " @ " + currentBranch() + ")",
+          text: "🟢 No other active sessions in this project.\n(This session: " + selfId + " @ " + currentBranch() + ")",
         }],
       }
     }
@@ -693,27 +632,27 @@ server.registerTool(
     const ttlMin = Math.round(SESSION_TTL_MS / 60000)
     const section = (s: ReturnType<typeof coordinationView>["active"][number]) => {
       const mins = Math.max(0, Math.round(s.ageMs / 60000))
-      const tag = s.id === selfId ? " (tú)" : ""
+      const tag = s.id === selfId ? " (you)" : ""
       const ended = s.ended ? " 🏁" : ""
       const files = Object.keys(s.files).slice(0, 8).map((f) => `      • ${f}`).join("\n")
-      const fileBlock = files ? `\n   Archivos:\n${files}` : ""
-      return `• ${s.agent} @ ${s.branch}${tag}${ended}\n   id: ${s.id}\n   hace ${mins} min${fileBlock}`
+      const fileBlock = files ? `\n   Files:\n${files}` : ""
+      return `• ${s.agent} @ ${s.branch}${tag}${ended}\n   id: ${s.id}\n   ${mins} min ago${fileBlock}`
     }
 
     const parts = [
-      `🧭 Sesiones activas (${active.length}) — ventana ${ttlMin} min:`,
+      `🧭 Active sessions (${active.length}) — window ${ttlMin} min:`,
       "",
       ...active.map(section),
     ]
 
     if (conflicts.length > 0) {
-      parts.push("", `🔥 Conflictos suaves (${conflicts.length}):`)
+      parts.push("", `🔥 Soft conflicts (${conflicts.length}):`)
       for (const c of conflicts) {
         const who = c.sessions.map((s) => `${s.agent}@${s.branch}`).join(", ")
         parts.push(`   ⚠️ ${c.file}  ↔  ${who}`)
       }
     } else {
-      parts.push("", "✅ Sin conflictos suaves detectados.")
+      parts.push("", "✅ No soft conflicts detected.")
     }
 
     return { content: [{ type: "text" as const, text: parts.join("\n") }] }
@@ -726,10 +665,10 @@ server.registerTool(
   "context_brief",
   {
     title: "Context Briefing",
-    description: "Genera un briefing de contexto compacto: memoria relevante + sesiones activas + salud del proyecto. Un solo call en vez de 5-6 llamadas separadas. Cero LLM, pura lógica determinista.",
+    description: "Generate a compact context briefing: relevant memory + active sessions + project health. Single call instead of 5-6 separate calls. Zero LLM, pure deterministic logic.",
     inputSchema: {
-      task: z.string().optional().default("").describe("Tarea actual del agente. Si se provee, las entradas se rankean por relevancia a esta tarea. Si está vacío, muestra las top entradas por importancia."),
-      limit: z.number().optional().default(6).describe("Máximo de entradas relevantes a mostrar"),
+      task: z.string().optional().default("").describe("Current agent task. If provided, entries are ranked by relevance to this task. If empty, shows top entries by importance."),
+      limit: z.number().optional().default(6).describe("Maximum relevant entries to show"),
     },
   },
   async ({ task, limit }) => {
@@ -745,9 +684,9 @@ server.registerTool(
   "context_generate",
   {
     title: "Generate Full Context",
-    description: "Genera un system prompt completo: proyecto (package.json, deps, framework) + git (rama, commits) + memoria (entries relevantes) + sesiones. Un solo call para preparar al agente. Cero LLM.",
+    description: "Generate a full system prompt: project (package.json, deps, framework) + git (branch, commits) + memory (relevant entries) + sessions. Single call to prepare the agent. Zero LLM.",
     inputSchema: {
-      task: z.string().optional().default("").describe("Tarea del agente. Si se provee, rankea entries por relevancia a esta tarea."),
+      task: z.string().optional().default("").describe("Agent task. If provided, ranks entries by relevance to this task."),
     },
   },
   async ({ task }) => {
@@ -764,9 +703,9 @@ server.registerTool(
   "context_diff",
   {
     title: "Context Diff",
-    description: "Qué cambió desde la última sesión: git commits + archivos modificados + entradas de memoria nuevas/actualizadas. Cero LLM.",
+    description: "What changed since the last session: git commits + modified files + new/updated memory entries. Zero LLM.",
     inputSchema: {
-      since: z.string().optional().default("").describe("Fecha desde (YYYY-MM-DD o relativa como '7d'). Vacío = últimos cambios visibles."),
+      since: z.string().optional().default("").describe("Start date (YYYY-MM-DD or relative like '7d'). Empty = last visible changes."),
     },
   },
   async ({ since }) => {
@@ -783,10 +722,10 @@ server.registerTool(
   "context_focus",
   {
     title: "Focus Context for Task",
-    description: "Contexto hiper-enfocado para una tarea específica: entries relevantes + archivos relacionados + código que referencia el símbolo + tests existentes. Cero LLM.",
+    description: "Hyper-focused context for a specific task: relevant entries + related files + code referencing the symbol + existing tests. Zero LLM.",
     inputSchema: {
-      task: z.string().describe("Tarea o símbolo para buscar contexto (ej: 'fix auth bug', 'authenticate')"),
-      limit: z.number().optional().default(6).describe("Máximo de entries de memoria a incluir"),
+      task: z.string().describe("Task or symbol to search context for (e.g. 'fix auth bug', 'authenticate')"),
+      limit: z.number().optional().default(6).describe("Maximum memory entries to include"),
     },
   },
   async ({ task, limit }) => {
@@ -803,7 +742,7 @@ server.registerTool(
   "context_health",
   {
     title: "Memory Health Audit",
-    description: "Auditoría completa de salud de la memoria: links huérfanos, duplicados, refs rotos, TTL expirado, calidad, sesiones stale. Incluye score 0-100. Cero LLM.",
+    description: "Full memory health audit: orphan links, duplicates, broken refs, expired TTL, quality, stale sessions. Includes score 0-100. Zero LLM.",
     inputSchema: {},
   },
   async () => {
@@ -820,15 +759,68 @@ server.registerTool(
   "context_export",
   {
     title: "Export Memory as Markdown",
-    description: "Exporta toda la memoria como markdown inyectable para otros agentes o sesiones. Formato full (detallado) o compacto. Cero LLM.",
+    description: "Export all memory as markdown injectable for other agents or sessions. Full (detailed) or compact format. Zero LLM.",
     inputSchema: {
-      format: z.enum(["full", "compact"]).optional().default("full").describe("full = detallado con graph, compact = resumido sin edges"),
+      format: z.enum(["full", "compact"]).optional().default("full").describe("full = detailed with graph, compact = summarized without edges"),
     },
   },
   async ({ format }) => {
     const data = readMemory()
     const exported = generateContextExport(data, format as "full" | "compact")
     return { content: [{ type: "text" as const, text: exported }] }
+  }
+)
+
+// ── memory_backup ───────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_backup",
+  {
+    title: "Backup Memory",
+    description: "Create a timestamped backup of the memory file. Use before major operations or to preserve state.",
+    inputSchema: {},
+  },
+  async () => {
+    if (!existsSync(MEMORY_FILE)) {
+      return { content: [{ type: "text" as const, text: "No memory file to backup" }] }
+    }
+
+    const backupDir = join(MEMORY_DIR, "backups")
+    if (!existsSync(backupDir)) mkdirSync(backupDir, { recursive: true })
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)
+    const backupFile = join(backupDir, `memory-${timestamp}.toon`)
+
+    copyFileSync(MEMORY_FILE, backupFile)
+
+    // Also backup archive if it exists
+    let archiveBackup = ""
+    if (existsSync(ARCHIVE_FILE)) {
+      const archiveBackupFile = join(backupDir, `archive-${timestamp}.toon`)
+      copyFileSync(ARCHIVE_FILE, archiveBackupFile)
+      archiveBackup = `\n📦 Archive backed up`
+    }
+
+    // Prune old backups (keep last 10)
+    const backups = readdirSync(backupDir)
+      .filter((f) => f.startsWith("memory-") && f.endsWith(".toon"))
+      .sort()
+      .reverse()
+    for (const old of backups.slice(10)) {
+      try {
+        const { unlinkSync } = require("fs")
+        unlinkSync(join(backupDir, old))
+      } catch {
+        // ignore
+      }
+    }
+
+    return {
+      content: [{
+        type: "text" as const,
+        text: `💾 Memory backed up to ${basename(backupFile)}${archiveBackup}\n📦 ${backups.length} backup(s) retained`
+      }],
+    }
   }
 )
 
