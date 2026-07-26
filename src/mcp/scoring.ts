@@ -1,15 +1,12 @@
 import { readMemory, writeMemory } from "./memory-io"
-import { normalize } from "./entries"
+import { normalize, importance } from "../lib/utils"
 
 /**
  * Importance score for an entry: blends recency and access frequency.
- * Deterministic — no LLM. Higher = more worth keeping.
+ * Delegates to shared importance() in lib/utils.
  */
 export function entryScore(dateStr: string, accessed: number): number {
-  const days = (Date.now() - new Date(`${dateStr}T00:00:00`).getTime()) / 86400000
-  const recency = Math.max(0, 30 - days) / 30
-  const freq = Math.min(1, accessed / 5)
-  return recency * 0.6 + freq * 0.4
+  return importance({ date: dateStr, accessed })
 }
 
 export function entryScoreForLine(line: string): number {

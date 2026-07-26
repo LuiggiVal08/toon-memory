@@ -73,7 +73,12 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 	const newTtl = np[7] || ""
 	const ttl = newTtl || existingTtl
 
-	// Take max confidence
+	// Preserve existing accessed count (field 8)
+	const existingAccessed = ep.length > 8 ? parseInt(ep[8]) || 0 : 0
+	const newAccessed = np.length > 8 ? parseInt(np[8]) || 0 : 0
+	const accessed = Math.max(existingAccessed, newAccessed)
+
+	// Take max confidence — handle entries with <12 fields gracefully
 	const existingConf = ep.length > 11 ? parseFloat(ep[11]) || 0 : 0
 	const newConf = np.length > 11 ? parseFloat(np[11]) || 0 : 0
 	const confidence = Math.max(existingConf, newConf)
@@ -85,7 +90,7 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 
 	const quality = qualityScore(mergedTags, mergedLinks, content, date)
 
-	return `${id}|${category}|${key}|${content}|${file}|${mergedTags}|${date}|${ttl}|0|${mergedLinks}|${quality.toFixed(2)}|${confidence}`
+	return `${id}|${category}|${key}|${content}|${file}|${mergedTags}|${date}|${ttl}|${accessed}|${mergedLinks}|${quality.toFixed(2)}|${confidence}`
 }
 
 /**
@@ -98,7 +103,7 @@ export function generateSmartRecall(
 	opts: { limit?: number; category?: string; bumpAccess?: (ids: string[]) => void } = {}
 ): string {
 	const entries = parseEntries(data)
-	if (entries.length === 0) return "Memoria vacía."
+	if (entries.length === 0) return "Empty memory."
 
 	const { adjacency } = buildGraph(entries)
 	const bm25 = bm25Scores(entries, intent)
@@ -135,7 +140,7 @@ export function generateSmartRecall(
 			.filter((e) => !category || e.category === category)
 			.sort((a, b) => importance(b) - importance(a))
 			.slice(0, limit)
-		if (top.length === 0) return "No hay entradas en memoria."
+		if (top.length === 0) return "No entries in memory."
 		return renderCompact(top)
 	}
 
@@ -149,7 +154,7 @@ export function generateSmartRecall(
  */
 export function generateSystemPrimer(data: string): string {
 	const entries = parseEntries(data)
-	if (entries.length === 0) return "Memoria vacía. No hay entradas guardadas."
+	if (entries.length === 0) return "Empty memory. No entries saved."
 
 	const byCategory: Record<string, GraphEntry[]> = {}
 	for (const e of entries) {
@@ -159,7 +164,7 @@ export function generateSystemPrimer(data: string): string {
 
 	const lines: string[] = [
 		"=== System Primer ===",
-		`Entradas: ${entries.length}`,
+		`Entries: ${entries.length}`,
 		"",
 	]
 
@@ -167,7 +172,7 @@ export function generateSystemPrimer(data: string): string {
 	const top = [...entries]
 		.sort((a, b) => importance(b) - importance(a))
 		.slice(0, 5)
-	lines.push("Top memorias:")
+	lines.push("Top memories:")
 	for (const e of top) {
 		const quality = qualityScore(
 			e.tags.join(";"),
@@ -175,15 +180,15 @@ export function generateSystemPrimer(data: string): string {
 			e.content,
 			e.date
 		)
-		const conf = quality >= 0.5 ? "alta" : quality >= 0.3 ? "media" : "baja"
+		const conf = quality >= 0.5 ? "high" : quality >= 0.3 ? "medium" : "low"
 		lines.push(
-			`  [${e.category}] ${e.key} — ${e.content.slice(0, 80)} (calidad: ${conf})`
+			`  [${e.category}] ${e.key} — ${e.content.slice(0, 80)} (quality: ${conf})`
 		)
 	}
 	lines.push("")
 
 	// Categories
-	lines.push("Categorías:")
+	lines.push("Categories:")
 	for (const [cat, items] of Object.entries(byCategory)) {
 		lines.push(`  ${cat}: ${items.length}`)
 	}
@@ -192,7 +197,7 @@ export function generateSystemPrimer(data: string): string {
 	// Rules (mandatory patterns)
 	const patterns = entries.filter((e) => e.category === "pattern")
 	if (patterns.length > 0) {
-		lines.push("Patrones establecidos:")
+		lines.push("Established patterns:")
 		for (const p of patterns.slice(0, 5)) {
 			lines.push(`  • ${p.key}: ${p.content.slice(0, 100)}`)
 		}
