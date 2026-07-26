@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.9.0] - 2026-07-26
+
+### Added
+- **`memory_backup` MCP tool** — creates timestamped backups of memory file with auto-pruning (keeps last 10)
+- **Capture hooks for Gemini, Cursor, and Windsurf** — all three agents now capture activity like Claude and Codex
+- **Observations auto-pruning** — observations.toon capped at 500 entries, prevents unbounded growth
+- **Configurable MAX_ENTRIES** — set `maxEntries` in config.json (default 100)
+- **SEO landing pages** — 6 EN + 6 ES long-tail pages, 3 EN + 3 ES blog posts, sitemap, JSON-LD, meta keywords
+- **Infrastructure tests** — 34 new tests for lock, atomic write, crypto, scoring (238 total)
+
+### Fixed
+- **archive.toon header mismatch** — header now matches full 12-field TOON format
+- **mergeEntries confidence loss** — preserves accessed field and handles malformed entries gracefully
+- **memory_recall flat mode** — delegates to graphRecallDetailed, eliminating ~80 lines of duplicated BM25 logic
+
+### Changed
+- **All UI messages in English** — ~200 Spanish messages translated across source and tests
+- **entryScore consolidated** — delegates to shared importance() in lib/utils.ts
+- **context_focus filename search** — extracts file patterns (auth.ts) and path patterns (src/auth) from task text
+- **context_diff session tracking** — shows per-session file activity and soft conflicts between parallel sessions
+- **npm icon fix** — SiteHeader uses correct SVG path from Starlight docs
+
 ## [2.5.1] - 2026-07-25
 
 ### Fixed
