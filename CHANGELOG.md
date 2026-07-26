@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.9.1] - 2026-07-26
+
+### Fixed
+- Flaky git test: use unique timestamps per commit to avoid CI failures when commits share the same second
+
 ## [2.9.0] - 2026-07-26
 
 ### Added
