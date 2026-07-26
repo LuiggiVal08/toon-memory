@@ -64,21 +64,21 @@ describe("generateContextGenerate", () => {
 	it("includes memory overview", () => {
 		const root = makeProject({ "README.md": "hello" })
 		const result = generateContextGenerate(SAMPLE, root)
-		expect(result).toContain("Memoria (5 entradas)")
+		expect(result).toContain("Memory (5 entries)")
 		rmSync(root, { recursive: true, force: true })
 	})
 
 	it("includes entries relevant to task in task mode", () => {
 		const root = makeProject({ "README.md": "hello" })
 		const result = generateContextGenerate(SAMPLE, root, { task: "redis" })
-		expect(result).toContain("Entradas relevantes")
+		expect(result).toContain("Relevant entries")
 		rmSync(root, { recursive: true, force: true })
 	})
 
 	it("handles empty memory", () => {
 		const root = makeProject({ "README.md": "hello" })
 		const result = generateContextGenerate(EMPTY, root)
-		expect(result).toContain("Memoria: vacía")
+		expect(result).toContain("Memory: empty")
 		rmSync(root, { recursive: true, force: true })
 	})
 })
@@ -96,7 +96,7 @@ describe("generateContextDiff", () => {
 		const root = makeProject({ "README.md": "hello" })
 		const result = generateContextDiff(SAMPLE, root)
 		// All sample entries are from today
-		expect(result).toContain("Memoria")
+		expect(result).toContain("Memory")
 		rmSync(root, { recursive: true, force: true })
 	})
 
@@ -105,7 +105,7 @@ describe("generateContextDiff", () => {
 		try { execSync("git init && git config user.email t@t.com && git config user.name T", { cwd: root, stdio: "ignore" }) } catch {}
 		// Use a date far in the future so nothing matches
 		const result = generateContextDiff(EMPTY, root, "2099-01-01")
-		expect(result).toContain("Sin cambios")
+		expect(result).toContain("No recent changes")
 		rmSync(root, { recursive: true, force: true })
 	})
 })
@@ -135,14 +135,14 @@ describe("generateContextFocus", () => {
 			"src/auth.ts": "export function authenticate() { return true }",
 		})
 		const result = generateContextFocus(SAMPLE, root, "authenticate")
-		expect(result).toContain("Referencias")
+		expect(result).toContain("References")
 		rmSync(root, { recursive: true, force: true })
 	})
 
 	it("handles no results gracefully", () => {
 		const root = makeProject({ "README.md": "hello" })
 		const result = generateContextFocus(EMPTY, root, "zzz_nonexistent_zzz")
-		expect(result).toContain("Sin contexto encontrado")
+		expect(result).toContain("No context found")
 		rmSync(root, { recursive: true, force: true })
 	})
 })
@@ -166,7 +166,7 @@ entries[2|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|co
 `
 		const root = makeProject({ "README.md": "hello" })
 		const { report } = generateContextHealth(data, root)
-		expect(report.warnings.some((w) => w.includes("huérfanos"))).toBe(true)
+		expect(report.warnings.some((w) => w.includes("orphan links"))).toBe(true)
 		expect(report.score).toBeLessThan(100)
 		rmSync(root, { recursive: true, force: true })
 	})
@@ -179,7 +179,7 @@ entries[2|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|co
 `
 		const root = makeProject({ "README.md": "hello" })
 		const { report } = generateContextHealth(data, root)
-		expect(report.warnings.some((w) => w.includes("duplicadas"))).toBe(true)
+		expect(report.warnings.some((w) => w.includes("duplicate entries"))).toBe(true)
 		rmSync(root, { recursive: true, force: true })
 	})
 
@@ -190,7 +190,7 @@ entries[1|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|co
 `
 		const root = makeProject({ "README.md": "hello" })
 		const { report } = generateContextHealth(data, root)
-		expect(report.warnings.some((w) => w.includes("archivos inexistentes"))).toBe(true)
+		expect(report.warnings.some((w) => w.includes("refs to non-existent files"))).toBe(true)
 		rmSync(root, { recursive: true, force: true })
 	})
 
@@ -221,8 +221,8 @@ describe("generateContextExport", () => {
 	it("exports full format with all sections", () => {
 		const result = generateContextExport(SAMPLE, "full")
 		expect(result).toContain("toon-memory export")
-		expect(result).toContain("Decisiones")
-		expect(result).toContain("Patrones")
+		expect(result).toContain("Decisions")
+		expect(result).toContain("Patterns")
 		expect(result).toContain("redis-cache")
 	})
 
@@ -237,13 +237,13 @@ describe("generateContextExport", () => {
 
 	it("handles empty memory", () => {
 		const result = generateContextExport(EMPTY, "full")
-		expect(result).toContain("Memoria vacía")
+		expect(result).toContain("Empty memory")
 	})
 
-	it("includes category labels in Spanish", () => {
+	it("includes category labels in English", () => {
 		const result = generateContextExport(SAMPLE, "full")
-		expect(result).toContain("Decisiones")
+		expect(result).toContain("Decisions")
 		expect(result).toContain("Bugs")
-		expect(result).toContain("Conocimiento")
+		expect(result).toContain("Knowledge")
 	})
 })

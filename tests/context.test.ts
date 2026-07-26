@@ -52,7 +52,7 @@ describe("generateContextBrief", () => {
 
 	it("includes memory overview with entry count", () => {
 		const result = generateContextBrief(SAMPLE)
-		expect(result).toContain("Memoria (5 entradas)")
+		expect(result).toContain("Memory (5 entries)")
 	})
 
 	it("shows category breakdown", () => {
@@ -65,36 +65,36 @@ describe("generateContextBrief", () => {
 
 	it("includes sessions section", () => {
 		const result = generateContextBrief(SAMPLE)
-		expect(result).toContain("Sesiones")
+		expect(result).toContain("Sessions")
 	})
 
 	it("returns empty-ish message for empty memory", () => {
 		const result = generateContextBrief(EMPTY)
-		expect(result).toContain("Memoria: vacía")
+		expect(result).toContain("Memory: empty")
 	})
 
 	it("shows expired TTL count in overview", () => {
 		const result = generateContextBrief(EXPIRED)
-		expect(result).toContain("1 expiradas")
+		expect(result).toContain("1 expired")
 	})
 
 	it("lists patterns in the patterns section", () => {
 		const result = generateContextBrief(SAMPLE)
-		expect(result).toContain("Patrones establecidos")
+		expect(result).toContain("Established patterns")
 		expect(result).toContain("auth-jwt")
 		expect(result).toContain("api-versioning")
 	})
 
 	it("includes top memorias in general mode (no task)", () => {
 		const result = generateContextBrief(SAMPLE)
-		expect(result).toContain("Top memorias")
+		expect(result).toContain("Top memories")
 	})
 })
 
 describe("generateContextBrief — task mode", () => {
 	it("ranks redis entries higher when task mentions redis", () => {
 		const result = generateContextBrief(SAMPLE, { task: "redis cache" })
-		expect(result).toContain("Entradas relevantes")
+		expect(result).toContain("Relevant entries")
 		expect(result).toContain("redis-cache")
 	})
 
@@ -112,7 +112,7 @@ describe("generateContextBrief — task mode", () => {
 
 	it("does not include expired entries in relevant results", () => {
 		const result = generateContextBrief(EXPIRED, { task: "decisión" })
-		// The expired entry should not appear in "Entradas relevantes"
+		// The expired entry should not appear in "Relevant entries"
 		expect(result).not.toContain("old-decision")
 	})
 
@@ -126,7 +126,7 @@ describe("generateContextBrief — task mode", () => {
 describe("generateContextBrief — health section", () => {
 	it("warns about orphan links", () => {
 		const result = generateContextBrief(WITH_LINKS)
-		expect(result).toContain("links huérfanos")
+		expect(result).toContain("orphan links")
 		expect(result).toContain("orphan-link->nonexistent-key")
 	})
 
@@ -137,11 +137,11 @@ describe("generateContextBrief — health section", () => {
 		).join("\n")
 		const data = `version: 1\nentries[85|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:\n${entries}\n`
 		const result = generateContextBrief(data)
-		expect(result).toContain("85 entradas")
+		expect(result).toContain("85 entries")
 	})
 
 	it("does not show health section when no warnings", () => {
 		const result = generateContextBrief(EMPTY)
-		expect(result).not.toContain("Salud")
+		expect(result).not.toContain("Health")
 	})
 })

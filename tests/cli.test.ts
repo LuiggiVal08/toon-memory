@@ -294,7 +294,7 @@ describe("CLI Commands", () => {
       encoding: "utf-8",
       env: { ...process.env, HOME: testDir },
     })
-    expect(output).toContain("instalación interactiva")
+    expect(output).toContain("interactive installation")
     expect(output).toContain("init [--agent")
   })
 
@@ -385,8 +385,8 @@ describe("CLI Commands", () => {
     } catch (e: any) {
       output = e.stdout?.toString() || ""
     }
-    expect(output).toContain("Comando desconocido")
-    expect(output).toContain("Uso:")
+    expect(output).toContain("Unknown command")
+    expect(output).toContain("Usage:")
   })
 
   it("should dump memory as injectable markdown", () => {
@@ -462,7 +462,7 @@ describe("CLI Commands", () => {
       encoding: "utf-8",
       env: { ...process.env, HOME: testDir, TOON_MEMORY_DUMP_NOOP: "1" },
     })
-    expect(output).not.toContain("Comando desconocido")
+    expect(output).not.toContain("Unknown command")
   })
 
   it("should init OpenCode plugin with passive injection hooks", () => {
@@ -494,7 +494,7 @@ describe("CLI Commands", () => {
     })
 
     const content = readFileSync(join(testDir, "AGENTS.md"), "utf-8")
-    expect(content).toContain("auto-inyecta")
+    expect(content).toContain("auto-injects")
     expect(content).toContain("memory-autoload.md")
     expect(content).toContain("memory_recall")
     // Passive, not an active "run memory_recall before reading files" mandate

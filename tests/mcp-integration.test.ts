@@ -140,9 +140,9 @@ describe("MCP Integration", () => {
 
 	// ── Tool listing ──────────────────────────────────────────────
 
-	it("lists all 20 tools", async () => {
+	it("lists all 21 tools", async () => {
 		const tools = await client.listTools()
-		expect(tools.length).toBe(20)
+		expect(tools.length).toBe(21)
 		expect(tools).toContain("memory_remember")
 		expect(tools).toContain("memory_recall")
 		expect(tools).toContain("memory_forget")
@@ -157,6 +157,7 @@ describe("MCP Integration", () => {
 		expect(tools).toContain("memory_captured")
 		expect(tools).toContain("memory_consolidate")
 		expect(tools).toContain("memory_sessions")
+		expect(tools).toContain("memory_backup")
 		expect(tools).toContain("context_brief")
 		expect(tools).toContain("context_generate")
 		expect(tools).toContain("context_diff")
@@ -200,9 +201,9 @@ describe("MCP Integration", () => {
 
 	it("memory_stats returns entry counts", async () => {
 		const result = await client.callTool("memory_stats")
-		expect(result).toContain("Entradas totales:")
+		expect(result).toContain("Total entries:")
 		// Should have at least 2 entries (the seeded one + the one we just added)
-		const match = result.match(/Entradas totales:\s*(\d+)/)
+		const match = result.match(/Total entries:\s*(\d+)/)
 		expect(match).not.toBeNull()
 		expect(parseInt(match![1])).toBeGreaterThanOrEqual(2)
 	})
@@ -234,7 +235,7 @@ describe("MCP Integration", () => {
 
 	it("memory_consolidate runs without error", async () => {
 		const result = await client.callTool("memory_consolidate")
-		expect(result).toContain("consolidad")
+		expect(result).toContain("consolidat")
 	})
 
 	// ── memory_sessions ───────────────────────────────────────────
@@ -249,27 +250,27 @@ describe("MCP Integration", () => {
 
 	it("context_brief returns a compact briefing", async () => {
 		const result = await client.callTool("context_brief", { task: "validation" })
-		expect(result).toContain("Memoria")
-		expect(result).toContain("Sesiones")
+		expect(result).toContain("Memory")
+		expect(result).toContain("Sessions")
 	})
 
 	it("context_brief works without task (general mode)", async () => {
 		const result = await client.callTool("context_brief")
-		expect(result).toContain("Memoria")
-		expect(result).toContain("Top memorias")
+		expect(result).toContain("Memory")
+		expect(result).toContain("Top memories")
 	})
 
 	// ── context_generate ─────────────────────────────────────────
 
 	it("context_generate returns full context briefing", async () => {
 		const result = await client.callTool("context_generate")
-		expect(result).toContain("Memoria")
-		expect(result).toContain("Sesiones")
+		expect(result).toContain("Memory")
+		expect(result).toContain("Sessions")
 	})
 
 	it("context_generate with task ranks entries by relevance", async () => {
 		const result = await client.callTool("context_generate", { task: "validation" })
-		expect(result).toContain("Memoria")
+		expect(result).toContain("Memory")
 	})
 
 	// ── context_diff ─────────────────────────────────────────────
@@ -335,7 +336,7 @@ describe("MCP Integration", () => {
 
 	it("toon://memory/stats resource returns stats", async () => {
 		const stats = await client.readResource("toon://memory/stats")
-		expect(stats).toContain("Entradas totales:")
+		expect(stats).toContain("Total entries:")
 	})
 
 	it("toon://memory/summaries resource returns system primer", async () => {

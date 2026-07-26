@@ -125,7 +125,7 @@ entries[4|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|co
 
   it("returns empty message for empty memory", () => {
     const empty = `version: 1\nentries[0|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:\n`
-    expect(generateSmartRecall(empty, "anything")).toBe("Memoria vacía.")
+    expect(generateSmartRecall(empty, "anything")).toBe("Empty memory.")
   })
 
   it("respects category filter", () => {
@@ -147,7 +147,7 @@ describe("generateSystemPrimer", () => {
 
   it("returns empty message for empty memory", () => {
     const empty = `version: 1\nentries[0|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:\n`
-    expect(generateSystemPrimer(empty)).toBe("Memoria vacía. No hay entradas guardadas.")
+    expect(generateSystemPrimer(empty)).toBe("Empty memory. No entries saved.")
   })
 
   it("includes header and entry count", () => {
@@ -157,7 +157,7 @@ entries[1|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|co
 `
     const primer = generateSystemPrimer(data)
     expect(primer).toContain("=== System Primer ===")
-    expect(primer).toContain("Entradas: 1")
+    expect(primer).toContain("Entries: 1")
   })
 
   it("lists categories with counts", () => {
@@ -179,7 +179,7 @@ entries[2|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|co
   a2|knowledge|minor|Minor note about formatting|f.ts|misc|2025-01-01||0||0.30|0.7
 `
     const primer = generateSystemPrimer(data)
-    expect(primer).toContain("Top memorias:")
+    expect(primer).toContain("Top memories:")
     expect(primer).toContain("important")
   })
 
@@ -189,7 +189,7 @@ entries[1|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|co
   a1|pattern|use-zod|Always use Zod for validation|src/types.ts|types|${today}||0||0.60|1.0
 `
     const primer = generateSystemPrimer(data)
-    expect(primer).toContain("Patrones establecidos:")
+    expect(primer).toContain("Established patterns:")
     expect(primer).toContain("use-zod")
   })
 })
