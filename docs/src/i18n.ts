@@ -7,7 +7,7 @@ export const content = {
 		},
 		hero: {
 			tagline: 'MCP memory server for AI coding agents — recall context across sessions',
-			subtitle: '20 tools, 80% fewer tool calls per session — remember decisions, patterns, and bugs with context_generate, context_diff, context_focus, context_health, and context_export',
+			subtitle: 'Your agent remembers decisions, patterns, and bugs between sessions.',
 			getStarted: 'Get Started',
 			viewGithub: 'View on GitHub',
 			copy: 'Copy',
@@ -210,11 +210,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			title: '22% fewer tokens, by design',
 			subtitle: 'The TOON format is built for LLMs, not for humans',
 			stats: [
-				{ num: '22%', cap: 'fewer tokens than JSON' },
+				{ num: '22.5%', cap: 'fewer tokens than JSON' },
+				{ num: '30.5%', cap: 'on a single entry' },
 				{ num: '1.3x', cap: 'faster to parse' },
-				{ num: '0', cap: 'config needed' },
 			],
-			note: 'TOON encodes memory entries in a compact, token-efficient structure designed for LLM comprehension — so your agent spends tokens on reasoning, not on parsing verbose JSON.',
+			note: 'Measured with <code>gpt-tokenizer</code> (cl100k_base) over 16 representative memory entries, comparing the real on-disk TOON format against compact JSON. Reproducible: <code>npm run bench</code>.',
 		},
 		benchmarks: {
 			title: 'Benchmarks',
@@ -370,7 +370,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		hero: {
 			tagline: 'Servidor de memoria MCP para agentes de IA — recupera contexto entre sesiones',
-			subtitle: '20 herramientas, 80% menos tool calls por sesión — recuerda decisiones, patrones y bugs con context_generate, context_diff, context_focus, context_health y context_export',
+			subtitle: 'Tu agente recuerda decisiones, patrones y bugs entre sesiones.',
 			getStarted: 'Empezar',
 			viewGithub: 'Ver en GitHub',
 			copy: 'Copiar',
@@ -573,11 +573,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			title: '22% menos tokens, por diseño',
 			subtitle: 'El formato TOON está hecho para LLMs, no para humanos',
 			stats: [
-				{ num: '22%', cap: 'menos tokens que JSON' },
+				{ num: '22.5%', cap: 'menos tokens que JSON' },
+				{ num: '30.5%', cap: 'en una sola entrada' },
 				{ num: '1.3x', cap: 'más rápido de parsear' },
-				{ num: '0', cap: 'config necesaria' },
 			],
-			note: 'TOON codifica las entradas de memoria en una estructura compacta y eficiente en tokens diseñada para la comprensión de LLMs — para que tu agente gaste tokens en razonar, no en parsear JSON verboso.',
+			note: 'Medido con <code>gpt-tokenizer</code> (cl100k_base) sobre 16 entradas de memoria representativas, comparando el formato TOON real en disco contra JSON compacto. Reproducible: <code>npm run bench</code>.',
 		},
 		benchmarks: {
 			title: 'Benchmarks',

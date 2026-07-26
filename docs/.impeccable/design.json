@@ -1,0 +1,365 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-25T00:00:00.000Z",
+  "title": "Design System: toon-memory docs",
+  "extensions": {
+    "colorMeta": {
+      "brand": {
+        "role": "primary",
+        "displayName": "Deep Indigo",
+        "canonical": "#6366f1",
+        "tonalRamp": ["#312e81", "#3730a3", "#4338ca", "#4f46e5", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe"]
+      },
+      "brand-light": {
+        "role": "primary-light",
+        "displayName": "Soft Violet",
+        "canonical": "#818cf8",
+        "tonalRamp": ["#4338ca", "#4f46e5", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe", "#e0e7ff", "#eef2ff"]
+      },
+      "brand-dark": {
+        "role": "primary-dark",
+        "displayName": "Deep Violet",
+        "canonical": "#4f46e5",
+        "tonalRamp": ["#1e1b4b", "#312e81", "#3730a3", "#4338ca", "#4f46e5", "#6366f1", "#818cf8", "#a5b4fc"]
+      },
+      "purple": {
+        "role": "secondary",
+        "displayName": "Royal Purple",
+        "canonical": "#8b5cf6",
+        "tonalRamp": ["#4c1d95", "#5b21b6", "#6d28d9", "#7c3aed", "#8b5cf6", "#a78bfa", "#c4b5fd", "#ddd6fe"]
+      },
+      "lavender": {
+        "role": "tertiary",
+        "displayName": "Soft Lavender",
+        "canonical": "#a855f7",
+        "tonalRamp": ["#6b21a8", "#7e22ce", "#9333ea", "#a855f7", "#c084fc", "#d8b4fe", "#e9d5ff", "#f3e8ff"]
+      },
+      "bg": {
+        "role": "neutral-bg",
+        "displayName": "Canvas Black",
+        "canonical": "#0f0f13",
+        "tonalRamp": ["#0a0a0d", "#0f0f13", "#14141a", "#1a1a22", "#1f1f28", "#252530", "#2c2c38", "#333340"]
+      },
+      "bg-card": {
+        "role": "neutral-surface",
+        "displayName": "Card Surface",
+        "canonical": "#1a1a24",
+        "tonalRamp": ["#0f0f13", "#14141c", "#1a1a24", "#20202c", "#262634", "#2d2d3c", "#343444", "#3c3c4c"]
+      },
+      "border": {
+        "role": "neutral-border",
+        "displayName": "Border",
+        "canonical": "#2a2a3a",
+        "tonalRamp": ["#1a1a28", "#202030", "#2a2a3a", "#343444", "#3e3e50", "#4a4a5c", "#565668", "#626274"]
+      },
+      "text": {
+        "role": "neutral-text",
+        "displayName": "Text Primary",
+        "canonical": "#e2e2e8",
+        "tonalRamp": ["#6b6b78", "#8888a0", "#a0a0b8", "#b8b8cc", "#d0d0de", "#e2e2e8", "#ececf2", "#f5f5fa"]
+      },
+      "text-muted": {
+        "role": "neutral-text-muted",
+        "displayName": "Text Muted",
+        "canonical": "#8888a0",
+        "tonalRamp": ["#4a4a5c", "#5c5c74", "#6e6e86", "#808098", "#8888a0", "#9898b0", "#a8a8c0", "#b8b8d0"]
+      },
+      "success": {
+        "role": "semantic-success",
+        "displayName": "Success Green",
+        "canonical": "#22c55e",
+        "tonalRamp": ["#14532d", "#166534", "#16a34a", "#22c55e", "#4ade80", "#86efac", "#bbf7d0", "#dcfce7"]
+      },
+      "warning": {
+        "role": "semantic-warning",
+        "displayName": "Warning Amber",
+        "canonical": "#f59e0b",
+        "tonalRamp": ["#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fbbf24", "#fcd34d", "#fef3c7"]
+      },
+      "error": {
+        "role": "semantic-error",
+        "displayName": "Error Red",
+        "canonical": "#ef4444",
+        "tonalRamp": ["#7f1d1d", "#991b1b", "#dc2626", "#ef4444", "#f87171", "#fca5a5", "#fecaca", "#fef2f2"]
+      },
+      "pink": {
+        "role": "accent",
+        "displayName": "Pink",
+        "canonical": "#ec4899",
+        "tonalRamp": ["#831843", "#9d174d", "#be185d", "#ec4899", "#f472b6", "#f9a8d4", "#fbcfe8", "#fdf2f8"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero titles, section headings in gradient text. The animated gradient is applied as background-clip text on display elements only."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Paragraphs, descriptions, FAQ answers. Text muted for descriptions, text primary for content."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Code, tool names, commands, tags, install prompts. JetBrains Mono — the technical anchor."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Stat labels, small secondary text. System font, 500 weight."
+      }
+    },
+    "shadows": [
+      {
+        "name": "interactive-glow",
+        "value": "0 10px 30px rgba(99, 102, 241, 0.5)",
+        "purpose": "Applied on hover to cards, buttons, agent chips. Brand-colored glow signals interactivity."
+      },
+      {
+        "name": "ambient-glow",
+        "value": "0 0 20px rgba(99, 102, 241, 0.3)",
+        "purpose": "Subtle version on badges and less prominent interactive elements. Present at rest on success/brand badges."
+      },
+      {
+        "name": "text-glow",
+        "value": "0 0 10px rgba(99, 102, 241, 0.5)",
+        "purpose": "Footer links on hover, glow text animation. Draws attention to interactive text."
+      },
+      {
+        "name": "particle-glow",
+        "value": "0 0 20px rgba(99, 102, 241, 0.5)",
+        "purpose": "Each hero particle carries this, creating the ambient neural-network effect."
+      },
+      {
+        "name": "card-hover",
+        "value": "0 20px 50px rgba(99, 102, 241, 0.5)",
+        "purpose": "Feature card hover — combined vertical lift and brand glow."
+      },
+      {
+        "name": "stat-hover",
+        "value": "0 0 40px rgba(99, 102, 241, 0.5)",
+        "purpose": "Stat card hover — centered glow without directional shadow."
+      },
+      {
+        "name": "elevated-card",
+        "value": "0 20px 60px rgba(0, 0, 0, 0.15)",
+        "purpose": "File tree container — the one exception using a dark shadow for depth, because it is a structural container not an interactive element."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default easing for state transitions (card hover, border color)."
+      },
+      {
+        "name": "ease-spring",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Entrance animations (fadeInUp, heroTitleIn, heroTaglineIn). Energetic spring feel."
+      },
+      {
+        "name": "ease-bounce",
+        "value": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "purpose": "Graph node reveal, scale-in animations. Gentle overshoot."
+      },
+      {
+        "name": "duration-fast",
+        "value": "150ms",
+        "purpose": "Micro-interactions: copy button, nav underline, sidebar highlight."
+      },
+      {
+        "name": "duration-normal",
+        "value": "300ms",
+        "purpose": "State transitions: card hover, badge hover, button press."
+      },
+      {
+        "name": "duration-slow",
+        "value": "500ms",
+        "purpose": "Content reveals, code block scan, graph edge draw."
+      },
+      {
+        "name": "duration-entrance",
+        "value": "800ms",
+        "purpose": "Section fade-in-up, hero entrance, staggered list items."
+      },
+      {
+        "name": "duration-hero",
+        "value": "1000ms",
+        "purpose": "Hero title and tagline entrance with blur-to-sharp."
+      },
+      {
+        "name": "particle-float",
+        "value": "12s linear infinite",
+        "purpose": "Hero particles rise from bottom to top continuously."
+      },
+      {
+        "name": "hero-glow",
+        "value": "6s ease-in-out infinite",
+        "purpose": "Background radial gradient pulses and shifts position."
+      },
+      {
+        "name": "hero-gradient",
+        "value": "8s ease-in-out infinite",
+        "purpose": "Multi-stop radial gradient animates through three color positions."
+      },
+      {
+        "name": "gradient-shift",
+        "value": "3s linear infinite",
+        "purpose": "Animated gradient text slides background position from 0% to 200%."
+      },
+      {
+        "name": "code-scan",
+        "value": "4.5s linear infinite",
+        "purpose": "Translucent gradient sweeps vertically across code blocks."
+      },
+      {
+        "name": "pulse",
+        "value": "2s ease-in-out infinite",
+        "purpose": "Step indicator glow, hero logo underline, live status dots."
+      },
+      {
+        "name": "glow-breathe",
+        "value": "2s ease-in-out infinite alternate",
+        "purpose": "Glow animation class — box-shadow intensifies on 'to' state."
+      }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "600px" },
+      { "name": "tablet", "value": "768px" },
+      { "name": "desktop", "value": "1000px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "btn-primary",
+      "description": "Main CTA. Gradient background, white text, pill shape. Appears on hero and CTA section.",
+      "html": "<a class=\"ds-btn-primary\" href=\"#\">Get Started</a>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 12px 24px; background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); background-size: 200% auto; color: #fff; border: none; border-radius: 9999px; font-size: 1rem; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); } .ds-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(99, 102, 241, 0.5); text-decoration: none; } .ds-btn-primary:active { transform: translateY(0); }"
+    },
+    {
+      "name": "Install Button",
+      "kind": "button",
+      "refersTo": "btn-install",
+      "description": "Copy-to-clipboard install command. Mono font, $ prefix, pill shape, card surface background.",
+      "html": "<button class=\"ds-btn-install\"><span style=\"opacity:0.5;font-weight:300\">$</span> npm install -g toon-memory</button>",
+      "css": ".ds-btn-install { display: inline-flex; align-items: center; gap: 0.5rem; padding: 12px 24px; background: #1a1a24; color: #e2e2e8; border: 2px solid #2a2a3a; border-radius: 9999px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.9rem; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-install:hover { border-color: #6366f1; box-shadow: 0 0 20px rgba(99, 102, 241, 0.5); transform: translateY(-2px); } .ds-btn-install:active { transform: translateY(-1px); }"
+    },
+    {
+      "name": "Feature Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Content card with emoji icon, title, description, and optional tags/stats. Hover reveals gradient top-bar.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-icon\">🧠</div><h3>20 MCP Tools</h3><p>Full memory management via Model Context Protocol.</p><div class=\"ds-card-tags\"><span class=\"ds-tag\">remember</span><span class=\"ds-tag\">recall</span></div></div>",
+      "css": ".ds-card { background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 12px; padding: 24px; text-align: left; position: relative; overflow: hidden; transition: transform 0.2s, border-color 0.2s; } .ds-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); opacity: 0; transition: opacity 0.2s; } .ds-card:hover { transform: translateY(-4px); border-color: #6366f1; box-shadow: 0 10px 30px rgba(0,0,0,0.3); } .ds-card:hover::before { opacity: 1; } .ds-card-icon { font-size: 1.75rem; margin-bottom: 12px; } .ds-card h3 { font-size: 1.1rem; margin-bottom: 8px; color: #e2e2e8; } .ds-card p { color: #8888a0; font-size: 0.85rem; line-height: 1.6; }"
+    },
+    {
+      "name": "Tag",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Small mono-font label for tool names, categories, or keywords.",
+      "html": "<span class=\"ds-tag\">memory_remember</span>",
+      "css": ".ds-tag { font-size: 0.7rem; padding: 4px 10px; border-radius: 4px; background: rgba(99, 102, 241, 0.12); color: #818cf8; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-weight: 500; letter-spacing: 0.01em; }"
+    },
+    {
+      "name": "Stat Card",
+      "kind": "card",
+      "refersTo": "stat-card",
+      "description": "Large animated gradient number with muted label below. Hover shows glow.",
+      "html": "<div class=\"ds-stat-card\"><span class=\"ds-stat-number\">80%</span><span class=\"ds-stat-label\">fewer tool calls</span></div>",
+      "css": ".ds-stat-card { background: #1a1a24; border: 2px solid #2a2a3a; border-radius: 16px; padding: 32px; text-align: center; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); } .ds-stat-card:hover { border-color: #6366f1; box-shadow: 0 0 40px rgba(99, 102, 241, 0.5); transform: translateY(-8px); } .ds-stat-number { display: block; font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; } .ds-stat-label { display: block; font-size: 0.8rem; color: #8888a0; font-weight: 500; margin-top: 8px; }"
+    },
+    {
+      "name": "Code Block",
+      "kind": "custom",
+      "refersTo": "code-block",
+      "description": "Dark code container with gradient scan effect and top glow bar.",
+      "html": "<pre class=\"ds-code-block\"><code>npx toon-memory</code></pre>",
+      "css": ".ds-code-block { position: relative; background: #0b0f18; border: 1px solid #2a2a3a; border-radius: 12px; padding: 16px 20px; overflow-x: auto; margin: 0; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; color: #e2e2e8; } .ds-code-block::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); animation: codeGlow 3s ease-in-out infinite; } @keyframes codeGlow { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }"
+    },
+    {
+      "name": "Step Indicator",
+      "kind": "custom",
+      "refersTo": "step-num",
+      "description": "Gradient circle with white number. Always glowing — steps represent the product working.",
+      "html": "<div class=\"ds-step-num\">1</div>",
+      "css": ".ds-step-num { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7); color: #fff; font-weight: 700; font-size: 1rem; box-shadow: 0 0 20px rgba(99, 102, 241, 0.5); margin-bottom: 12px; }"
+    },
+    {
+      "name": "Agent Chip",
+      "kind": "chip",
+      "refersTo": "agent-chip",
+      "description": "Icon + name pill for supported agents. White icon background, 5-column grid.",
+      "html": "<div class=\"ds-agent-chip\"><img class=\"ds-agent-icon\" src=\"icon.svg\" alt=\"OpenCode\" /><span class=\"ds-agent-name\">OpenCode</span></div>",
+      "css": ".ds-agent-chip { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 10px; transition: border-color 0.2s, transform 0.2s; } .ds-agent-chip:hover { border-color: #6366f1; transform: translateY(-2px); } .ds-agent-icon { width: 42px; height: 42px; padding: 5.6px; flex-shrink: 0; object-fit: contain; background: #fff; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.15); } .ds-agent-name { font-size: 0.85rem; font-weight: 500; color: #e2e2e8; }"
+    },
+    {
+      "name": "FAQ Item",
+      "kind": "custom",
+      "refersTo": "faq-item",
+      "description": "Collapsible details/summary. Brand-light +/− indicator on the right.",
+      "html": "<details class=\"ds-faq-item\"><summary>How does memory persist?</summary><p>Memory is stored in .toon-memory/ per project, gitignored by default.</p></details>",
+      "css": ".ds-faq-item { background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 12px; overflow: hidden; } .ds-faq-item summary { cursor: pointer; padding: 16px 20px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; color: #e2e2e8; } .ds-faq-item summary::-webkit-details-marker { display: none; } .ds-faq-item summary::after { content: '+'; color: #818cf8; font-size: 1.25rem; transition: content 0.2s; } .ds-faq-item[open] summary::after { content: '−'; } .ds-faq-item p { padding: 0 20px 20px; color: #8888a0; font-size: 0.9rem; line-height: 1.6; }"
+    },
+    {
+      "name": "Comparison Box",
+      "kind": "card",
+      "refersTo": "compare-box",
+      "description": "Before (red-tinted) or After (green-tinted) comparison container with list markers.",
+      "html": "<div class=\"ds-compare-box ds-compare-before\"><h3>Before toon-memory</h3><ul><li>Re-explain architecture every session</li><li>Lose context between sessions</li></ul></div>",
+      "css": ".ds-compare-box { border-radius: 12px; padding: 24px; border: 1px solid #2a2a3a; transition: transform 0.2s; } .ds-compare-box:hover { transform: translateY(-2px); } .ds-compare-before { background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.25); } .ds-compare-before h3 { color: #ef4444; } .ds-compare-after { background: rgba(34,197,94,0.06); border-color: rgba(34,197,94,0.25); } .ds-compare-after h3 { color: #22c55e; } .ds-compare-box h3 { font-size: 1.1rem; margin-bottom: 12px; } .ds-compare-box ul { list-style: none; padding: 0; margin: 0; } .ds-compare-box li { padding: 5.6px 0; color: #8888a0; font-size: 0.85rem; position: relative; padding-left: 20px; } .ds-compare-before li::before { content: '✗'; position: absolute; left: 0; color: #ef4444; opacity: 0.7; } .ds-compare-after li::before { content: '✓'; position: absolute; left: 0; color: #22c55e; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Neural Canvas",
+    "overview": "The toon-memory docs site is a living document that visualizes the act of memory being formed. The design language treats data persistence as something you can see happening — particles drift upward like neural signals, gradient glows pulse like synaptic connections, and the color palette shifts from deep indigo to vivid violet like a signal propagating through a network. The dark canvas is intentional: it is the blank slate of a fresh session, and memory fills it.\n\nThe aesthetic is modern, developer-native, and unapologetically alive. Motion is not decorative — it is the primary communicator of the product's promise: things persist, connections form, context endures.",
+    "keyCharacteristics": [
+      "Deep dark canvas (#0f0f13) as the base, evoking a fresh terminal session",
+      "Indigo-to-violet gradient as the visual signature — appears on headings, CTAs, step indicators, stat numbers, and particle effects",
+      "Glow-based depth: hover states emit brand-colored light instead of casting traditional shadows",
+      "Rounded and friendly: pill buttons, generous border-radius on cards, accessible feel",
+      "Particle system in the hero as a persistent visual metaphor for memory formation",
+      "Motion is purposeful: fade-in-up for content reveals, gradient shift for animated headings, pulse for live indicators"
+    ],
+    "rules": [
+      {
+        "name": "The Gradient Rule",
+        "body": "The indigo-violet-lavender gradient is the site's visual signature. It appears on at most one element per viewport section (hero title, stat numbers, or step indicators). When multiple gradient elements exist in the same section, only one animates — the others are static.",
+        "section": "colors"
+      },
+      {
+        "name": "The Glow Rule",
+        "body": "Brand glow (rgba(99,102,241,0.5)) is used exclusively on interactive hover states. Static elements never glow. Glow is a signal of interactivity, not decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mono Gate Rule",
+        "body": "Text rendered in JetBrains Mono is always semantically significant — it represents code, tool names, commands, or data values. Never use mono for decorative text or headings that are not machine-relevant.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "All surfaces start flat. Glow appears only as a response to state change (hover, focus, active). The only exception is the hero section, where ambient glow (particles, gradient backgrounds) establishes the mood before any interaction.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use the gradient on one element per section maximum — it is the visual signature, and overuse dilutes it",
+      "Do use glow only on interactive hover states — the flat-by-default rule keeps the canvas clean",
+      "Do use JetBrains Mono for any text that represents code, commands, tool names, or data values",
+      "Do use pill shapes (9999px) for all buttons and primary interactive controls",
+      "Do use the card surface (#1a1a24) on the canvas black (#0f0f13) background — the subtle contrast is intentional",
+      "Do use the responsive breakpoints at 768px and 600px — the grid systems are defined at these exact points",
+      "Do use fadeInUp (0.8s cubic-bezier(0.16,1,0.3,1)) for content reveal animations",
+      "Do use the pulsing dot animation for live/active status indicators"
+    ],
+    "donts": [
+      "Don't use traditional gray box-shadows — depth is communicated through brand-colored glow only",
+      "Don't use sharp corners (0px radius) on any element — the minimum is 4px",
+      "Don't use gradient text on body copy or labels — gradient is reserved for display/headline hierarchy only",
+      "Don't place glow on static (non-interactive) elements — with the exception of step indicators and the hero section",
+      "Don't use mono font for paragraph body text — it is reserved for semantically significant machine-readable content",
+      "Don't use more than one animated gradient element per viewport section — the rest should be static gradient fills",
+      "Don't use emojis as primary visual elements in content sections — they appear in feature cards and problem cards but not as structural design elements"
+    ]
+  }
+}

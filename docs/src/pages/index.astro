@@ -2,23 +2,19 @@
 import logoSrc from '../assets/logo.svg';
 import SiteHeader from '../components/SiteHeader.astro';
 import Hero from '../components/Hero.astro';
+import Problem from '../components/Problem.astro';
 import FeatureGrid from '../components/FeatureGrid.astro';
 import MemoryGraphShowcase from '../components/MemoryGraphShowcase.astro';
 import SmartRecallShowcase from '../components/SmartRecallShowcase.astro';
+import Tools from '../components/Tools.astro';
 import ImpactShowcase from '../components/ImpactShowcase.astro';
-import StatsRow from '../components/StatsRow.astro';
-import Tips from '../components/Tips.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import Agents from '../components/Agents.astro';
 import Comparison from '../components/Comparison.astro';
-import CodeExamples from '../components/CodeExamples.astro';
+import TokenSavings from '../components/TokenSavings.astro';
 import FAQ from '../components/FAQ.astro';
 import CTA from '../components/CTA.astro';
 import SiteFooter from '../components/SiteFooter.astro';
-import Agents from '../components/Agents.astro';
-import Tools from '../components/Tools.astro';
-import Benchmarks from '../components/Benchmarks.astro';
-import Problem from '../components/Problem.astro';
-import HowItWorks from '../components/HowItWorks.astro';
-import TokenSavings from '../components/TokenSavings.astro';
 import '../styles/home.css';
 
 const description =
@@ -60,20 +56,16 @@ const description =
 
     <main>
       <Hero />
-		<Problem />
-		<ImpactShowcase />
-		<FeatureGrid />
-		<MemoryGraphShowcase />
-		<SmartRecallShowcase />
-		<Agents />
-      <StatsRow />
-      <HowItWorks />
-      <Tips />
-      <Comparison />
-      <CodeExamples />
+      <Problem />
+      <ImpactShowcase />
       <TokenSavings />
-      <Benchmarks />
+      <FeatureGrid />
+      <MemoryGraphShowcase />
+      <SmartRecallShowcase />
       <Tools />
+      <HowItWorks />
+      <Agents />
+      <Comparison />
       <FAQ />
       <CTA />
     </main>

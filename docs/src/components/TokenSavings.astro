@@ -6,6 +6,14 @@ interface Props {
 }
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
+
+const jsonTokens = 1097;
+const toonTokens = 850;
+
+const rows = [
+  { format: 'JSON', tokens: jsonTokens, cls: 'bar-json' },
+  { format: 'TOON', tokens: toonTokens, cls: 'bar-toon' },
+];
 ---
 
 <section class="content-section savings-section">
@@ -16,14 +24,13 @@ const c = getContent(lang);
 
   <div class="savings-bars">
     {
-      [
-        { label: 'JSON', pct: 100, cls: 'bar-json' },
-        { label: 'TOON', pct: 78, cls: 'bar-toon' },
-      ].map((b) => (
+      rows.map((r) => (
         <div class="savings-bar">
-          <span class="savings-label">{b.label}</span>
+          <span class="savings-label">{r.format}</span>
           <div class="bar-track">
-            <div class={`bar ${b.cls}`} style={`--pct:${b.pct}%`} data-pct={b.pct}><span>{b.pct}%</span></div>
+            <div class={`bar ${r.cls}`} style={`--pct:${(r.tokens / jsonTokens) * 100}%`} data-pct={(r.tokens / jsonTokens) * 100}>
+              <span>{r.tokens}</span>
+            </div>
           </div>
         </div>
       ))
@@ -41,7 +48,7 @@ const c = getContent(lang);
     }
   </div>
 
-  <p class="savings-note">{c.tokenSavings.note}</p>
+  <p class="savings-note" set:html={c.tokenSavings.note}></p>
 </section>
 
 <script>

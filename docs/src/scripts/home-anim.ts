@@ -89,3 +89,17 @@ export function revealOnView(root: HTMLElement, cls: string) {
 	);
 	io.observe(root);
 }
+
+export function initCopyButtons() {
+	document.querySelectorAll<HTMLElement>('.btn-install[data-cmd]').forEach((btn) => {
+		btn.addEventListener('click', async () => {
+			const cmd = btn.dataset.cmd;
+			if (!cmd) return;
+			try {
+				await navigator.clipboard.writeText(cmd);
+				btn.classList.add('copied');
+				setTimeout(() => btn.classList.remove('copied'), 1500);
+			} catch {}
+		});
+	});
+}

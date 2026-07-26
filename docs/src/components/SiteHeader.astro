@@ -26,7 +26,9 @@ const switchLabel = isEs ? 'English' : 'Español';
       class="lang-switch"
       onclick={`localStorage.setItem('toon-lang', '${switchTarget}')`}
     >{switchLabel}</a>
-    <a href="https://www.npmjs.com/package/toon-memory" target="_blank" rel="noopener noreferrer">{c.nav.npm}</a>
-    <a href="https://github.com/LuiggiVal08/toon-memory" target="_blank" rel="noopener noreferrer">{c.nav.github}</a>
+    <a href="https://www.npmjs.com/package/toon-memory" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align: -3px;"><path fill="currentColor" d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0H1.763zM5.13 5.323l8.527.019v13.16h-3.17V8.42H6.89v10.073H5.13V5.323zm11.225 0v3.17h-3.163v10.06h-1.765V8.493H9.758V5.323h6.6z"/></svg>
+      {c.nav.npm}
+    </a>
   </nav>
 </header>
