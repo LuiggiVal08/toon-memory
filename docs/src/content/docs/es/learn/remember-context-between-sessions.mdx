@@ -1,0 +1,179 @@
+---
+title: "Recordar Contexto entre Sesiones de IA — Memoria Persistente para Coding"
+description: "No pierdas contexto entre sesiones de IA. toon-memory da a Claude, Cursor, OpenCode memoria persistente para decisiones, patrones y bugs. Funciona offline, ahorra 60% tokens."
+---
+
+## El Problema: Los Agentes de IA Olvidan Todo
+
+Estás construyendo una feature con Claude. Le explicas:
+
+- "Elegimos Postgres sobre MongoDB por cumplimiento ACID"
+- "El agotamiento de pool Redis se solucionó con max_connections=20"
+- "Siempre usar prefijo /api/v1/ para endpoints REST"
+
+¿Próxima sesión? Claude **no tiene memoria** de nada de esto. Empiezas desde cero.
+
+Esto desperdicia:
+- **Tokens** — re-explicando el mismo contexto
+- **Tiempo** — reconstruyendo decisiones
+- **Dinero** — pagando por las mismas llamadas API dos veces
+
+## La Solución: Recordar Todo
+
+**toon-memory** le da a tu agente de IA una memoria persistente que:
+
+1. **Sobrevive reinicios** — la memoria persiste entre sesiones
+2. **Funciona offline** — sin nube, sin llamadas API, sin LLM necesario
+3. **Ahorra tokens** — 22% menos tokens que JSON
+4. **Escala** — 80% menos llamadas a herramientas por sesión
+
+## Cómo Funciona
+
+### Paso 1: Guardar Contexto Importante
+
+Al final de una sesión, guarda lo que importa:
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "usar-postgres",
+  content: "Elegir Postgres por cumplimiento ACID y soporte JSON",
+  tags: "base de datos;arquitectura"
+})
+```
+
+### Paso 2: Recordar al Iniciar Sesión
+
+Al inicio de la próxima sesión, obtén contexto al instante:
+
+```bash
+memory_smart_recall({ intent: "en qué estaba trabajando" })
+// Retorna entradas relevantes combinando BM25 + grafo + calidad
+```
+
+### Paso 3: Continuar Construyendo
+
+El agente ahora sabe:
+- Tu elección de base de datos (Postgres)
+- Por qué la elegiste (cumplimiento ACID)
+- Decisiones relacionadas (Redis para caché, Zod para validación)
+
+## Qué Contexto Puedes Recordar
+
+### Decisiones de Arquitectura
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "enfoque-microservicios",
+  content: "Usar microservicios para pago y auth, monolito para lógica de negocio core"
+})
+```
+
+### Bug Fixes
+
+```bash
+memory_remember({
+  category: "bug",
+  key: "timeout-redis",
+  content: "Timeout de conexión Redis en producción — fix fue aumentar pool a 20"
+})
+```
+
+### Patrones de Código
+
+```bash
+memory_remember({
+  category: "pattern",
+  key: "manejo-errores",
+  content: "Siempre usar clase AppError custom, nunca lanzar objetos Error raw"
+})
+```
+
+### Conocimiento del Proyecto
+
+```bash
+memory_remember({
+  category: "knowledge",
+  key: "convenciones-equipo",
+  content: "PR #142 revirtió el cambio de caché — no re-agregar sin aprobación del equipo"
+})
+```
+
+## Características de Memoria que Ayudan
+
+### Inferencia Automática de Tags
+
+Deja `tags` vacío y toon-memory los infiere del contenido:
+
+```bash
+memory_remember({
+  category: "bug",
+  key: "timeout-redis",
+  content: "Timeout de conexión Redis en producción"
+})
+// Tags inferidos: redis
+```
+
+### Sugerencias de Entradas Relacionadas
+
+Cuando guardas, toon-memory encuentra entradas relacionadas:
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "usar-zod",
+  content: "Usar Zod para validación"
+})
+// 🔗 Relacionado: timeout-redis (menciona "validación")
+```
+
+### Puntuación de Calidad
+
+Cada entrada recibe una puntuación de calidad automática (0-1):
+
+| Factor | Peso |
+|--------|------|
+| Tags | 0.3 max |
+| Enlaces | 0.2 max |
+| Longitud del contenido | 0.3 max |
+| Recencia | 0.1 max |
+| Especificidad | 0.1 max |
+
+Las entradas de alta calidad aparecen primero en el recall.
+
+### Merge-Dedup
+
+Guardas con la misma key, los atributos se fusionan automáticamente:
+
+```bash
+// Primera guardada
+memory_remember({ key: "usar-zod", content: "Usar Zod para validación" })
+
+// Guardada posterior — se fusiona automáticamente
+memory_remember({ key: "usar-zod", content: "Usar Zod — también maneja parsing de API" })
+// Tags y enlaces se combinan, no se sobreescriben
+```
+
+## Coordinación Multi-Sesión
+
+¿Ejecutando múltiples sesiones de agente en paralelo? toon-memory coordina:
+
+```bash
+memory_sessions()
+// 🧭 Sesiones activas (2):
+// • claude @ feature/auth (tú)
+// • opencode @ feature/db
+// 🔥 Conflictos suaves: src/types.ts
+```
+
+Mira qué archivos están tocando otras sesiones para evitar conflictos de merge.
+
+## Empieza
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Instalador interactivo
+```
+
+Tu agente recordará todo en la próxima sesión.

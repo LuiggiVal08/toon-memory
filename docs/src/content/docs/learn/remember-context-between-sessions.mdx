@@ -1,0 +1,184 @@
+---
+title: "Remember Context Between AI Sessions — Persistent Memory for Coding"
+description: "Stop losing context between AI coding sessions. toon-memory gives Claude, Cursor, OpenCode persistent memory for decisions, patterns, and bugs. Works offline, saves 60% tokens."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "remember context AI, persistent memory sessions, AI coding memory, context retention, session memory AI"
+---
+
+## The Problem: AI Agents Forget Everything
+
+You're building a feature with Claude. You explain:
+
+- "We chose Postgres over MongoDB for ACID compliance"
+- "Redis pool exhaustion was fixed with max_connections=20"
+- "Always use /api/v1/ prefix for REST endpoints"
+
+Next session? Claude has **no memory** of any of this. You start from scratch.
+
+This wastes:
+- **Tokens** — re-explaining the same context
+- **Time** — reconstructing decisions
+- **Money** — paying for the same API calls twice
+
+## The Solution: Remember Everything
+
+**toon-memory** gives your AI coding agent a persistent memory that:
+
+1. **Survives restarts** — memory persists across sessions
+2. **Works offline** — no cloud, no API calls, no LLM needed
+3. **Saves tokens** — 22% fewer tokens than JSON
+4. **Scales** — 80% fewer tool calls per session
+
+## How It Works
+
+### Step 1: Save Important Context
+
+At the end of a session, save what matters:
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance and JSON support",
+  tags: "database;architecture"
+})
+```
+
+### Step 2: Recall at Session Start
+
+At the start of the next session, get context instantly:
+
+```bash
+memory_smart_recall({ intent: "what I was working on" })
+// Returns relevant entries combining BM25 + graph + quality
+```
+
+### Step 3: Continue Building
+
+The agent now knows:
+- Your database choice (Postgres)
+- Why you chose it (ACID compliance)
+- Related decisions (Redis for caching, Zod for validation)
+
+## What Context Can You Remember?
+
+### Architecture Decisions
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "microservices-approach",
+  content: "Use microservices for payment and auth, monolith for core business logic"
+})
+```
+
+### Bug Fixes
+
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-connection-timeout",
+  content: "Redis connection timeout in production — fix was increasing pool size to 20"
+})
+```
+
+### Code Patterns
+
+```bash
+memory_remember({
+  category: "pattern",
+  key: "error-handling",
+  content: "Always use custom AppError class, never throw raw Error objects"
+})
+```
+
+### Project Knowledge
+
+```bash
+memory_remember({
+  category: "knowledge",
+  key: "team-conventions",
+  content: "PR #142 reverted the caching change — don't re-add it without team approval"
+})
+```
+
+## Memory Features That Help
+
+### Auto-Tag Inference
+
+Leave `tags` empty and toon-memory infers them from content:
+
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-timeout",
+  content: "Redis connection timeout in production"
+})
+// Tags auto-inferred: redis
+```
+
+### Related Entry Suggestions
+
+When you save, toon-memory finds related entries:
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation"
+})
+// 🔗 Related: redis-timeout (mentions "validation")
+```
+
+### Quality Scoring
+
+Every entry gets an automatic quality score (0-1):
+
+| Factor | Weight |
+|--------|--------|
+| Tags | 0.3 max |
+| Links | 0.2 max |
+| Content length | 0.3 max |
+| Recency | 0.1 max |
+| Specificity | 0.1 max |
+
+High-quality entries surface first in recall.
+
+### Merge-Dedup
+
+Save with the same key, attributes merge automatically:
+
+```bash
+// First save
+memory_remember({ key: "use-zod", content: "Use Zod for validation" })
+
+// Later save — merges automatically
+memory_remember({ key: "use-zod", content: "Use Zod — also handles API parsing" })
+// Tags and links are combined, not overwritten
+```
+
+## Multi-Session Coordination
+
+Running multiple agent sessions in parallel? toon-memory coordinates:
+
+```bash
+memory_sessions()
+// 🧭 Active sessions (2):
+// • claude @ feature/auth (you)
+// • opencode @ feature/db
+// 🔥 Soft conflicts: src/types.ts
+```
+
+See which files other sessions are touching to avoid merge conflicts.
+
+## Get Started
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Interactive installer
+```
+
+Your agent will remember everything in the next session.

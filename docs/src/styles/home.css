@@ -47,6 +47,7 @@ a:hover { text-decoration: underline; }
 .site-nav { display: flex; gap: 1.5rem; }
 .site-nav a { color: var(--text-muted); font-size: 0.95rem; }
 .site-nav a:hover { color: var(--text); text-decoration: none; }
+.npm-link { display: inline-flex; align-items: center; gap: 0.35rem; }
 .lang-switch {
   border: 1px solid var(--border);
   border-radius: 9999px;

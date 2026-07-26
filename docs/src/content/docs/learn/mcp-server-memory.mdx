@@ -1,0 +1,137 @@
+---
+title: "MCP Server for Persistent Memory — Model Context Protocol Memory"
+description: "MCP server giving AI coding agents persistent memory. Model Context Protocol memory for Claude, Cursor, OpenCode. Token-efficient, offline, graph-aware recall."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP server, Model Context Protocol, persistent memory server, AI memory MCP, Claude MCP server"
+---
+
+## What is an MCP Server for Memory?
+
+An MCP server for memory is a **local service** that implements the Model Context Protocol to provide AI coding agents with persistent memory. Instead of losing context between sessions, your agent stores decisions, patterns, and bugs in a searchable memory store.
+
+**toon-memory** is an MCP server that provides:
+
+- **Persistent memory** — survives restarts, no cloud required
+- **20 MCP tools** — full memory management via Model Context Protocol
+- **Token-efficient format** — 22% fewer tokens than JSON
+- **Graph-aware recall** — BM25 + centrality + quality scoring
+- **15+ agent support** — works with Claude, Cursor, OpenCode, and more
+
+## How MCP Memory Server Works
+
+### Architecture
+
+```
+Your AI Agent (Claude/Cursor/OpenCode)
+        ↓ MCP Protocol (stdio)
+  toon-memory MCP Server
+        ↓
+  .toon-memory/memory/data.toon (local file)
+```
+
+1. **Agent sends request** — "Remember this decision" or "Search for database patterns"
+2. **MCP server processes** — parses request, manages memory store
+3. **Memory stored locally** — TOON format in `.toon-memory/memory/`
+4. **Response returned** — formatted for the agent to use
+
+### MCP Tools
+
+toon-memory exposes **20 MCP tools** and **3 MCP resources**:
+
+| Tool | Purpose |
+|------|---------|
+| `memory_remember` | Save decisions, patterns, bugs, knowledge |
+| `memory_recall` | Search memory (flat or graph mode) |
+| `memory_smart_recall` | Unified recall: BM25 + graph + quality |
+| `memory_forget` | Remove entries |
+| `memory_stats` | View memory state |
+| `memory_summary` | Save/retrieve file summaries |
+| `memory_archive` | Archive old entries |
+| `memory_diff` | Show changes since date |
+| `memory_suggest` | Find related entries |
+| `memory_sessions` | Multi-session coordination |
+| `context_brief` | One-call context briefing |
+| `context_generate` | Full project briefing |
+| `context_diff` | Incremental briefing |
+| `context_focus` | Hyper-focused briefing |
+| `context_health` | Memory health audit |
+| `context_export` | Export as markdown |
+| `memory_encrypt` | AES-256-GCM encryption |
+| `memory_decrypt` | Disable encryption |
+| `memory_captured` | View hook-captured activity |
+| `memory_consolidate` | Merge duplicates |
+
+## Why MCP for Memory?
+
+### MCP vs Custom Integrations
+
+| Feature | MCP Memory | Custom Integration |
+|---------|-----------|-------------------|
+| **Standard protocol** | Yes (Model Context Protocol) | No — proprietary |
+| **Agent support** | 15+ agents | Usually 1-2 agents |
+| **Setup** | `npx toon-memory` | Manual code changes |
+| **Updates** | `npm update` | Manual maintenance |
+| **Community** | Growing ecosystem | Isolated |
+
+### MCP vs Cloud Memory
+
+| Feature | MCP Memory (toon-memory) | Cloud Memory (mem0) |
+|---------|-------------------------|---------------------|
+| **Data location** | Local machine | Cloud server |
+| **Internet required** | No | Yes |
+| **Cost** | Free | Usage-based |
+| **Latency** | Instant (local) | Network-dependent |
+| **Privacy** | Full control | Third-party |
+
+## Technical Details
+
+### TOON Format
+
+Memory is stored in **TOON format** (Token-Oriented Object Notation):
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0
+  e5f6g7h8|pattern|api-routes|REST endpoints use /api/v1/ prefix|src/routes|api;rest;pattern|2026-07-10||0||0.55|1.0
+  i9j0k1l2|bug|redis-fix|Redis pool exhaustion fix|src/redis.ts|redis;bug|2026-07-10||0||0.70|1.0
+```
+
+### Graph-Aware Recall
+
+Entries are connected via **explicit links** and **implicit references**:
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-redis",
+  content: "Use Redis for session storage (see [[redis-config]])",
+  links: "redis-config"
+})
+```
+
+When you search, recall expands the **ego-subgraph** to find related entries, even if they don't contain the exact search term.
+
+### Quality Scoring
+
+Every entry gets an automatic **quality score** (0-1):
+
+| Factor | Weight | What it measures |
+|--------|--------|------------------|
+| Tags | 0.3 max | More specific tags = higher quality |
+| Links | 0.2 max | Connected entries = higher quality |
+| Content length | 0.3 max | Detailed > vague |
+| Recency | 0.1 max | Recent entries score higher |
+| Specificity | 0.1 max | Unique words vs repeated words |
+
+## Get Started
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Interactive installer
+```
+
+See the [Quick Start](/toon-memory/getting-started/quickstart) for detailed setup instructions.

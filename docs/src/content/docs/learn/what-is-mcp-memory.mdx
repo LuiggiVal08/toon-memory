@@ -1,0 +1,91 @@
+---
+title: "What is MCP Memory? Persistent Memory for AI Coding Agents"
+description: "MCP memory gives AI coding agents like Claude, Cursor, and OpenCode persistent memory that survives between sessions. Learn how Model Context Protocol enables offline, token-efficient memory."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP memory, persistent memory, AI coding agents, Model Context Protocol, Claude memory, Cursor memory"
+---
+
+## What is MCP Memory?
+
+MCP memory is a way for AI coding agents to **remember things between sessions**. Without MCP memory, every time you start a new chat with Claude, Cursor, or OpenCode, the agent starts from scratch — it forgets all the decisions, patterns, and bugs from your previous conversations.
+
+**toon-memory** is an MCP server that solves this problem. It gives your AI coding agent a persistent memory that:
+
+- **Survives restarts** — your agent remembers yesterday's context today
+- **Works offline** — no cloud, no API calls, no LLM needed for storage
+- **Saves tokens** — 22% fewer tokens than JSON, 80% fewer tool calls per session
+- **Works with 15+ agents** — Claude Code, Cursor, OpenCode, Windsurf, VS Code Copilot, and more
+
+## How MCP Memory Works
+
+### The Problem
+
+AI coding agents have **no memory between sessions**. Every new session, the agent:
+
+1. Forgets why you chose Postgres over MongoDB
+2. Doesn't remember the Redis timeout bug you fixed last week
+3. Can't recall the architecture patterns your team established
+4. Has to re-learn your project from scratch
+
+### The Solution: MCP Memory Server
+
+toon-memory runs as a **local MCP server** that your agent connects to via the Model Context Protocol. It stores memory in a **TOON format** (Token-Oriented Object Notation) that is:
+
+- **22% more efficient** than JSON for LLMs
+- **Searchable** with BM25 relevance + graph-aware recall
+- **Quality-scored** automatically (0-1 based on structure)
+- **Graph-connected** with links and references between entries
+
+## MCP Memory vs Other Approaches
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| **MCP Memory (toon-memory)** | Offline, token-efficient, graph-aware, 15+ agents | Requires MCP support |
+| **Markdown files** | Simple, human-readable | Not structured, not searchable, not MCP-compatible |
+| **Cloud memory (mem0)** | Managed, vector search | Requires internet, costs money, data leaves your machine |
+| **Memory banks (shodh-memory)** | Hybrid search | Complex setup, Docker required, sentence-transformers dependency |
+
+## How to Get MCP Memory
+
+### Step 1: Install toon-memory
+
+```bash
+npm install -g toon-memory
+```
+
+### Step 2: Configure your agent
+
+```bash
+# Interactive installer
+npx toon-memory
+
+# Or manual setup — see [Installation Guide](/toon-memory/getting-started/installation)
+```
+
+### Step 3: Start using memory
+
+In your next agent session:
+
+```bash
+# Save important decisions
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance and JSON support"
+})
+
+# Search memory before coding
+memory_recall({ query: "database" })
+
+# Get full context in one call
+memory_smart_recall({ intent: "what I was working on" })
+```
+
+## Learn More
+
+- [Memory for AI Coding Agents](/toon-memory/learn/memory-for-ai-agents) — How persistent memory works
+- [MCP Server for Persistent Memory](/toon-memory/learn/mcp-server-memory) — Technical deep dive
+- [Quick Start](/toon-memory/getting-started/quickstart) — Get started in 3 steps

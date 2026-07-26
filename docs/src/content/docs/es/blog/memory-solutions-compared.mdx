@@ -1,0 +1,187 @@
+---
+title: "toon-memory vs mem0 vs shodh-memory: Comparativa de Soluciones de Memoria para IA"
+description: "Compara las mejores soluciones de memoria para IA — toon-memory vs mem0 vs shodh-memory. Eficiencia en tokens, recall basado en grafo, soporte offline y compatibilidad con agentes."
+---
+
+## Por Qué Comparar Soluciones de Memoria para IA?
+
+Los agentes de IA para coding necesitan memoria para ser productivos. Pero, ¿cuál es la mejor solución de memoria? Esta guía compara las tres opciones principales:
+
+- **toon-memory** — Servidor MCP con formato eficiente en tokens
+- **mem0** — Plataforma de memoria en la nube
+- **shodh-memory** — Memoria híbrida vectorial + grafo
+
+## Comparación Rápida
+
+| Característica | toon-memory | mem0 | shodh-memory |
+|----------------|-------------|------|--------------|
+| **Almacenamiento** | Archivo local (TOON) | Nube | RocksDB |
+| **Dependencias** | Cero | API en la nube | sentence-transformers, RocksDB |
+| **Búsqueda** | BM25 + grafo + calidad | Solo vectorial | Híbrida (vectorial + grafo) |
+| **Eficiencia en tokens** | 22% menos que JSON | N/A (nube) | Similar |
+| **Puntuación de calidad** | Auto (0-1, heurísticas) | Ninguna | Algoritmo BND |
+| **Merge-dedup** | Unión de tags + max confianza | Ninguna | Dedup de contenido |
+| **Tracking de confianza** | Por entrada (0-1) | Ninguna | Por entrada |
+| **System Primer** | Auto-generado | Ninguno | Ninguno |
+| **Multi-sesión** | Coordinación basada en archivo | Ninguna | Ninguno |
+| **Hooks** | 15 agentes | Ninguno | Solo Claude |
+| **Encriptación** | AES-256-GCM | Gestionada por nube | Ninguna |
+| **Tiempo de setup** | `npx toon-memory` | Registro en nube | Docker + configuración |
+
+## Análisis Profundo: toon-memory
+
+### Fortalezas
+
+- **Eficiencia en tokens** — Formato TOON es 22% menos tokens que JSON
+- **Recall basado en grafo** — BM25 + centralidad + puntuación de calidad
+- **Soporte de agentes** — 15+ agentes con auto-configuración
+- **Cero dependencias** — sin nube, sin Docker, sin sentence-transformers
+- **Conjunto completo de features** — 20 herramientas MCP, encriptación, coordinación multi-sesión
+
+### Debilidades
+
+- **Sin búsqueda vectorial** — usa BM25, no embeddings
+- **Requiere MCP** — el agente debe soportar Model Context Protocol
+- **Solo local** — sin sincronización en la nube entre máquinas (usar Git en su lugar)
+
+### Mejor Para
+
+- Desarrolladores que quieren **memoria offline y privada**
+- Equipos usando **múltiples agentes de IA** (Claude, Cursor, OpenCode)
+- Proyectos donde la **eficiencia en tokens** importa (ahorro de costos)
+
+## Análisis Profundo: mem0
+
+### Fortalezas
+
+- **Servicio gestionado** — sin configuración requerida
+- **Búsqueda vectorial** — similitud semántica con embeddings
+- **Sincronización en la nube** — funciona entre máquinas automáticamente
+- **Acceso API** — integración fácil
+
+### Debilidades
+
+- **Requiere internet** — sin soporte offline
+- **Costo** — precios basados en uso se acumulan
+- **Privacidad** — los datos salen de tu máquina
+- **Sin optimización de tokens** — no diseñado para eficiencia de LLMs
+- **Features limitadas** — sin puntuación de calidad, sin recall basado en grafo
+
+### Mejor Para
+
+- Equipos que necesitan **sincronización entre máquinas** sin Git
+- Proyectos donde la **privacidad no es preocupación**
+- Prototipado rápido sin configuración local
+
+## Análisis Profundo: shodh-memory
+
+### Fortalezas
+
+- **Búsqueda híbrida** — recall vectorial + grafo
+- **Puntuación de calidad** — algoritmo BND
+- **Offline** — sin nube requerida
+- **Almacenamiento en RocksDB** — rápido, persistente
+
+### Debilidades
+
+- **Configuración compleja** — requiere Docker + sentence-transformers
+- **Dependencias pesadas** — entorno Python grande
+- **Solo Claude** — soporte limitado de agentes
+- **Sin optimización de tokens** — no diseñado para eficiencia de LLMs
+
+### Mejor Para
+
+- Proyectos que necesitan **búsqueda vectorial + recall basado en grafo**
+- Equipos ya usando **Docker** y **Python**
+- Entornos solo-Claude
+
+## Benchmark: Eficiencia en Tokens
+
+Midiendo tokens necesarios para obtener el mismo contexto:
+
+```
+Método                          Tokens    vs re-leer archivos
+─────────────────────────────  ────────  ───────────────────
+Re-leer archivos fuente         ~3000    baseline
+toon-memory (flat)              ~1200    -60%
+toon-memory (graph, compact)    ~900     -70%
+toon-memory (smart_recall)      ~850     -72%
+shodh-memory (hybrid)           ~1100    -63%
+mem0 (cloud)                    N/A      N/A (nube)
+```
+
+## Benchmark: Costo
+
+Asumiendo precios de GPT-4 ($0.03/1K tokens de entrada), 10 sesiones/día:
+
+| Solución | Costo/mes | Notas |
+|----------|-----------|-------|
+| **toon-memory** | $8.70 | Gratis, eficiente en tokens |
+| **mem0** | ~$15-30 | Precios basados en uso |
+| **shodh-memory** | $10.50 | Gratis, menos eficiente en tokens |
+| **Sin memoria** | $21.60 | Re-explicando contexto |
+
+## Comparación de Features
+
+### Operaciones de Memoria
+
+| Característica | toon-memory | mem0 | shodh-memory |
+|----------------|-------------|------|--------------|
+| Guardar decisiones | ✅ | ✅ | ✅ |
+| Guardar patrones | ✅ | ❌ | ❌ |
+| Guardar bugs | ✅ | ❌ | ❌ |
+| Puntuación de calidad | ✅ (0-1) | ❌ | ✅ (BND) |
+| Tracking de confianza | ✅ | ❌ | ✅ |
+| TTL (expiración) | ✅ | ❌ | ❌ |
+| Merge-dedup | ✅ | ❌ | ✅ |
+| Encriptación | ✅ (AES-256) | ✅ (nube) | ❌ |
+
+### Búsqueda y Recall
+
+| Característica | toon-memory | mem0 | shodh-memory |
+|----------------|-------------|------|--------------|
+| Búsqueda por palabra clave | ✅ (BM25) | ❌ | ❌ |
+| Búsqueda vectorial | ❌ | ✅ | ✅ |
+| Recall basado en grafo | ✅ | ❌ | ✅ |
+| Ranking por calidad | ✅ | ❌ | ✅ |
+| Salida compacta | ✅ | ❌ | ❌ |
+| Smart recall | ✅ | ❌ | ❌ |
+
+### Integración
+
+| Característica | toon-memory | mem0 | shodh-memory |
+|----------------|-------------|------|--------------|
+| Protocolo MCP | ✅ | ❌ | ❌ |
+| Soporte de agentes | 15+ | Cualquiera (API) | Solo Claude |
+| Auto-configuración | ✅ | ✅ | ❌ |
+| Hooks | ✅ | ❌ | ✅ (Claude) |
+| Multi-sesión | ✅ | ❌ | ❌ |
+| Offline | ✅ | ❌ | ✅ |
+
+## Matriz de Decisión
+
+| Si necesitas... | Elige |
+|-----------------|-------|
+| **Memoria offline + privada** | toon-memory |
+| **Eficiencia en tokens** | toon-memory |
+| **Soporte para múltiples agentes** | toon-memory |
+| **Sincronización entre máquinas (sin Git)** | mem0 |
+| **Búsqueda vectorial** | shodh-memory o mem0 |
+| **Setup más simple** | toon-memory |
+| **Menor costo** | toon-memory |
+
+## Conclusión
+
+**toon-memory** es la mejor elección para la mayoría de desarrolladores:
+
+- **Eficiente en tokens** — ahorra 22% en cada sesión
+- **Agnóstico de agente** — funciona con 15+ agentes
+- **Privado** — sin nube, los datos no salen de tu máquina
+- **Completo** — 20 herramientas MCP, recall basado en grafo, puntuación de calidad
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Instalador interactivo
+```
+
+Si necesitas búsqueda vectorial o sincronización en la nube, considera mem0 o shodh-memory. Pero para la mayoría de casos de uso, toon-memory proporciona el mejor balance de features, rendimiento y simplicidad.

@@ -1,0 +1,208 @@
+---
+title: "Memory for Claude Code, Cursor & OpenCode — Persistent AI Agent Memory"
+description: "Give Claude Code, Cursor, and OpenCode persistent memory. toon-memory MCP server works with 15+ AI coding agents. Remember decisions, patterns, and bugs between sessions."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "Claude Code memory, Cursor AI memory, OpenCode memory, AI coding agent memory, persistent memory IDE"
+---
+
+## Memory for Your Favorite AI Agent
+
+**toon-memory** gives persistent memory to the AI coding agents you already use. Whether you prefer Claude Code, Cursor, or OpenCode, your agent will remember everything between sessions.
+
+## Agent-Specific Setup
+
+### Claude Code
+
+Claude Code has full hook support with toon-memory:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+**Hooks:** SessionStart, PostToolUse, Stop — auto-reminders and context loading.
+
+### Cursor
+
+Add MCP configuration to Cursor:
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### OpenCode
+
+Add to `.opencode/opencode.json`:
+
+```json
+{
+  "mcp": {
+    "toon-memory": {
+      "type": "local",
+      "command": ["npx", "-y", "toon-memory", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+**Plugin:** `.opencode/plugins/toon-memory.ts` — SessionStart hooks via plugin.
+
+### Windsurf
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### VS Code / Copilot
+
+Add to `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### Codex CLI
+
+Add to `.codex/config.toml`:
+
+```toml
+[mcpServers.toon-memory]
+command = "npx"
+args = ["-y", "toon-memory", "mcp"]
+```
+
+### Gemini CLI
+
+Add to `.gemini/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### Zed
+
+Add to `~/.config/zed/settings.json`:
+
+```json
+{
+  "mcp_servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Interactive Installer (Easiest)
+
+```bash
+npx toon-memory
+```
+
+The installer will:
+1. Detect which agents you have installed
+2. Ask which ones to configure
+3. Add MCP config automatically
+
+## What Each Agent Gets
+
+All agents get the same **20 MCP tools** and **3 MCP resources**:
+
+- `memory_remember` — Save decisions, patterns, bugs
+- `memory_recall` — Search memory (flat or graph mode)
+- `memory_smart_recall` — Unified recall with BM25 + graph + quality
+- `context_generate` — Full project briefing in one call
+- `context_diff` — What changed since last session
+- And 15 more tools...
+
+## Multi-Agent Support
+
+You can configure toon-memory for **multiple agents simultaneously**:
+
+```bash
+npx toon-memory
+# Select: claude, cursor, opencode
+```
+
+All agents share the same memory file at `.toon-memory/memory/data.toon`.
+
+### Session Coordination
+
+When running multiple agents in parallel:
+
+```bash
+memory_sessions()
+// 🧭 Active sessions (2):
+// • claude @ feature/auth (you)
+// • opencode @ feature/db
+```
+
+See which files other sessions are touching to avoid conflicts.
+
+## Supported Agents (15+)
+
+| Agent | Config Location | Hooks |
+|-------|-----------------|-------|
+| OpenCode | `.opencode/opencode.json` | Plugin-based |
+| Claude Code | `.claude/settings.json` | SessionStart + PostToolUse + Stop |
+| Cursor | `.cursor/mcp.json` | — |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` | — |
+| VS Code | `.vscode/mcp.json` | — |
+| Codex CLI | `.codex/config.toml` | SessionStart + PostToolUse + Stop |
+| Gemini CLI | `.gemini/settings.json` | SessionStart + PostToolUse + Stop |
+| Zed | `~/.config/zed/settings.json` | — |
+| Cline | `.cline/mcp.json` | — |
+| Continue | `.continue/config.json` | — |
+| Antigravity | `.gemini/config/mcp_config.json` | PreInvocation + PostToolUse + Stop |
+| Aider | — | Instructions file |
+| KiloCode | `~/.kilocode/mcp_settings.json` | — |
+| OpenClaw | `.openclaw.json` | — |
+| Kiro | `.kiro/settings/mcp.json` | — |
+
+## Get Started
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Interactive installer
+```
+
+See the [Supported Agents](/toon-memory/configuration/agents) page for detailed configuration.

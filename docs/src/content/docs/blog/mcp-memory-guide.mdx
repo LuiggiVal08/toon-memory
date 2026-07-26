@@ -1,0 +1,248 @@
+---
+title: "MCP Memory Server: Complete Guide to Persistent AI Memory"
+description: "Everything you need to know about MCP memory servers — how Model Context Protocol gives AI coding agents persistent memory. Complete guide with examples, benchmarks, and setup."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP memory server, Model Context Protocol memory, AI persistent memory, MCP server guide"
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: '{"@context":"https://schema.org","@type":"Article","headline":"MCP Memory Server: Complete Guide to Persistent AI Memory","description":"Everything you need to know about MCP memory servers.","author":{"@type":"Person","name":"LuiggiVal"},"publisher":{"@type":"Organization","name":"toon-memory"},"url":"https://luiggival08.github.io/toon-memory/blog/mcp-memory-guide/","mainEntityOfPage":{"@type":"WebPage","@id":"https://luiggival08.github.io/toon-memory/blog/mcp-memory-guide/"}}'
+---
+
+## What is an MCP Memory Server?
+
+An MCP memory server is a **local service** that implements the Model Context Protocol (MCP) to provide AI coding agents with persistent memory. Instead of losing context between sessions, your agent stores decisions, patterns, and bugs in a searchable memory store.
+
+**toon-memory** is the most complete MCP memory server available:
+
+- **20 MCP tools** + 3 resources
+- **15+ agent support** — Claude, Cursor, OpenCode, and more
+- **Token-efficient format** — 22% fewer tokens than JSON
+- **Graph-aware recall** — BM25 + centrality + quality scoring
+- **Zero config** — install and use
+
+## How MCP Memory Servers Work
+
+### The Model Context Protocol
+
+MCP (Model Context Protocol) is a standard for AI agents to communicate with external tools. An MCP memory server:
+
+1. **Receives requests** from the agent via stdio
+2. **Processes memory operations** (save, search, delete)
+3. **Stores data locally** in a structured format
+4. **Returns results** formatted for the agent
+
+### Architecture
+
+```
+Your AI Agent
+    ↓ MCP Protocol (stdio)
+Memory Server (toon-memory)
+    ↓
+Local File (.toon-memory/memory/data.toon)
+```
+
+No cloud. No API calls. No network. Everything stays on your machine.
+
+## Why Use an MCP Memory Server?
+
+### The Problem
+
+AI coding agents have **no memory between sessions**:
+
+- Claude forgets the architecture decisions from yesterday
+- Cursor can't recall the bug fixes you discovered
+- OpenCode doesn't remember the patterns your team established
+
+This wastes tokens, burns time, and leads to frustrating repetition.
+
+### The Solution
+
+An MCP memory server gives your agent **persistent memory**:
+
+| Without MCP Memory | With MCP Memory |
+|-------------------|-----------------|
+| Re-explain context every session | Context persists automatically |
+| 2,411 tokens per session | 972 tokens per session (-60%) |
+| 25 tool calls per session | 5 tool calls per session (-80%) |
+| $0.072 per session (GPT-4) | $0.029 per session (-60%) |
+
+## MCP Memory Server Features
+
+### 20 MCP Tools
+
+toon-memory exposes **20 MCP tools** for full memory management:
+
+**Core Tools:**
+- `memory_remember` — Save decisions, patterns, bugs, knowledge
+- `memory_recall` — Search memory (flat or graph mode)
+- `memory_smart_recall` — Unified recall with BM25 + graph + quality
+- `memory_forget` — Remove entries
+- `memory_stats` — View memory state
+
+**Context Tools:**
+- `context_brief` — One-call context briefing
+- `context_generate` — Full project briefing
+- `context_diff` — What changed since last session
+- `context_focus` — Hyper-focused briefing
+- `context_health` — Memory health audit
+- `context_export` — Export as markdown
+
+**Management Tools:**
+- `memory_summary` — Save/retrieve file summaries
+- `memory_archive` — Archive old entries
+- `memory_diff` — Show changes since date
+- `memory_suggest` — Find related entries
+- `memory_sessions` — Multi-session coordination
+- `memory_captured` — View hook-captured activity
+- `memory_consolidate` — Merge duplicates
+- `memory_encrypt` — AES-256-GCM encryption
+- `memory_decrypt` — Disable encryption
+
+### Token-Efficient Format
+
+Memory is stored in **TOON format** (Token-Oriented Object Notation):
+
+```
+a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10
+```
+
+**22% fewer tokens** than equivalent JSON, designed for LLM comprehension.
+
+### Graph-Aware Recall
+
+Entries are connected via **explicit links** and **implicit references**:
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-redis",
+  content: "Use Redis for session storage (see [[redis-config]])",
+  links: "redis-config"
+})
+```
+
+Recall expands the **ego-subgraph** to find related entries, even if they don't contain the exact search term.
+
+### Quality Scoring
+
+Every entry gets an automatic **quality score** (0-1):
+
+| Factor | Weight |
+|--------|--------|
+| Tags | 0.3 max |
+| Links | 0.2 max |
+| Content length | 0.3 max |
+| Recency | 0.1 max |
+| Specificity | 0.1 max |
+
+High-quality entries surface first in recall.
+
+## Setup Guide
+
+### Step 1: Install
+
+```bash
+npm install -g toon-memory
+```
+
+### Step 2: Configure
+
+```bash
+npx toon-memory  # Interactive installer
+```
+
+Or manually add to your agent's MCP config:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### Step 3: Use
+
+```bash
+# Save important decisions
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance"
+})
+
+# Search memory
+memory_recall({ query: "database" })
+
+# Get full context in one call
+memory_smart_recall({ intent: "what I was working on" })
+```
+
+## Benchmarks
+
+### Token Efficiency
+
+```
+Format          Tokens (16 entries)    vs JSON
+──────────────  ───────────────────    ───────
+JSON            1097                   baseline
+TOON            850                    -22.5%
+```
+
+### Recall Efficiency
+
+```
+Method                          Tokens to get context    vs re-reading files
+─────────────────────────────  ─────────────────────    ───────────────────
+Re-read source files            ~3000                    baseline
+memory_recall (flat)            ~1200                    -60%
+memory_recall (graph, compact)  ~900                     -70%
+memory_smart_recall             ~850                     -72%
+```
+
+### Context Tools Benchmark
+
+```
+Scenario                          Without   With    Saved    Tools
+────────────────────────────────  ────────  ──────  ───────  ──────
+context_generate (full briefing)    5,556     378    93.2%   6 → 1
+context_diff (incremental)            533     152    71.5%   4 → 1
+context_focus (targeted)              413     225    45.5%   4 → 1
+context_health (audit)                322     246    23.6%   5 → 1
+context_export (injectable md)      1,178     218    81.5%   3 → 1
+────────────────────────────────  ────────  ──────  ───────  ──────
+TOTAL                              8,002   1,219    84.8%  22 → 5
+```
+
+## Supported Agents
+
+toon-memory works with **15+ AI coding agents**:
+
+- OpenCode, Claude Code, Cursor, Windsurf, VS Code Copilot
+- Codex CLI, Gemini CLI, Zed, Cline, Continue
+- Antigravity, Aider, KiloCode, OpenClaw, Kiro
+
+See the [Supported Agents](/toon-memory/configuration/agents) page for configuration details.
+
+## Conclusion
+
+An MCP memory server gives your AI coding agent the persistent memory it needs to be truly productive. toon-memory is the most complete solution available:
+
+- **20 MCP tools** for full memory management
+- **Token-efficient format** that saves 22% on every session
+- **Graph-aware recall** that finds related context automatically
+- **15+ agent support** with zero-config setup
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Interactive installer
+```
+
+Your agent will remember everything in the next session.
