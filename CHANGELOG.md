@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.9.2] - 2026-07-26
+
+### Fixed
+- Suppress git init hints in tests with `--initial-branch=main`
+
 ## [2.9.1] - 2026-07-26
 
 ### Fixed
