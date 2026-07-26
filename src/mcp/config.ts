@@ -16,7 +16,13 @@ export const OBSERVATIONS_FILE = join(MEMORY_DIR, "observations.toon")
 /** Configuration file for encryption settings */
 export const CONFIG_FILE = join(MEMORY_DIR, "config.json")
 
-/** Maximum active entries before auto-archive */
+/** Maximum active entries before auto-archive (default 100, configurable via config.json) */
+export function getMaxEntries(): number {
+  const config = loadConfig()
+  return config.maxEntries || 100
+}
+
+/** Legacy constant for backward compatibility */
 export const MAX_ENTRIES = 100
 
 /** Days before entries are archived */
@@ -31,6 +37,8 @@ export interface MemoryConfig {
   encrypted: boolean
   /** Project-specific tag vocabulary discovered from dependencies (Hito 7). */
   vocab?: Record<string, string[]>
+  /** Maximum active entries before auto-archive (default 100). */
+  maxEntries?: number
 }
 
 /**
