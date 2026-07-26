@@ -3,6 +3,7 @@ import { join } from "path"
 import { createHash } from "crypto"
 import { withLockSync, atomicWrite } from "../lib/lock"
 import { heartbeat, endSession, resolveSessionId, currentBranch } from "../lib/sessions"
+import { pruneObservations } from "../mcp/observations"
 
 /**
  * Hook capture script for toon-memory.
@@ -181,6 +182,10 @@ function main(): void {
   if (!isStop && !toolName) process.exit(0)
 
   appendObservation(`${ts}|${sessionId}|${agent}|${branch}|${effectiveTool}|${hash}|${file}|${summary}`)
+
+  // Auto-prune observations log to prevent unbounded growth
+  pruneObservations()
+
   process.exit(0)
 }
 
