@@ -1,11 +1,11 @@
 ---
 title: Herramientas MCP
-description: Las 20 herramientas de memoria y contexto y 3 recursos para tu agente de IA
+description: Las 21 herramientas de memoria y contexto y 3 recursos para tu agente de IA
 ---
 
 ## Resumen
 
-toon-memory proporciona 20 herramientas MCP y 3 recursos MCP para gestionar la memoria persistente:
+toon-memory proporciona 21 herramientas MCP y 3 recursos MCP para gestionar la memoria persistente:
 
 ## Herramientas
 
@@ -23,6 +23,7 @@ toon-memory proporciona 20 herramientas MCP y 3 recursos MCP para gestionar la m
 | `memory_consolidate` | De-duplica entradas con contenido idéntico y merge de atributos (determinístico, sin LLM) |
 | `memory_encrypt` | Habilita encriptación AES-256-GCM |
 | `memory_decrypt` | Deshabilita la encriptación |
+| `memory_backup` | Crea backup con timestamp del archivo de memoria (auto-limpia a los 10 más recientes) |
 | `memory_sessions` | Muestra sesiones activas de agentes, branches, y conflictos suaves de archivos para coordinación multi-sesión |
 | `context_brief` | **Briefing de contexto en una llamada**: memoria + sesiones + salud en markdown compacto. Reemplaza 5-6 llamadas memory_*. Cero LLM |
 | `context_generate` | **Briefing completo del proyecto**: estructura + git + memoria + sesiones en una llamada. Reemplaza 6 llamadas manuales. Ahorra 93% tokens |

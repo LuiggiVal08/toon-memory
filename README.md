@@ -61,7 +61,7 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 
 ## Features
 
-- **20 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall), `memory_sessions` for multi-session coordination, and `context_*` tools for one-call context generation (briefing, diff, focus, health audit, export)
+- **21 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall), `memory_sessions` for multi-session coordination, and `context_*` tools for one-call context generation (briefing, diff, focus, health audit, export)
 - **MCP Resources** — Read memory as context without tool invocations, including a System Primer (auto-generated knowledge map)
 - **15 agents supported** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Interactive installer** — Select which agents to configure from a menu
@@ -1156,7 +1156,7 @@ toon-memory/
 │   │   ├── setup.ts             # CLI commands
 │   │   └── toon-memory.ts       # CLI runner
 │   ├── mcp/
-│   │   └── server.ts            # MCP server (20 tools + 3 resources)
+│   │   └── server.ts            # MCP server (21 tools + 3 resources)
 │   ├── lib/
 │   │   ├── lock.ts              # Advisory file lock + atomic write
 │   │   ├── sessions.ts          # Multi-session coordination

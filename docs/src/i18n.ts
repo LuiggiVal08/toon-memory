@@ -41,7 +41,7 @@ export const content = {
 			cards: [
 				{
 					icon: '🧩',
-					title: '20 MCP Tools + 3 Resources',
+					title: '21 MCP Tools + 3 Resources',
 					body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Plus resources for direct context reading.',
 					tags: ['remember', 'recall', 'context', 'diff'],
 				},
@@ -236,7 +236,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Full session benchmark: session start → debug → implement → review → wrap-up. <code>context_*</code> tools trade ~318 extra tokens for 7 fewer calls — richer context means fewer follow-up reads. Reproducible: <code>npm run bench:full</code>.',
 		},
 		tools: {
-			title: '20 MCP tools, 3 resources',
+			title: '21 MCP tools, 3 resources',
 			subtitle: 'Everything your agent needs to remember, recall, and reason',
 			resourcesLabel: 'Resources:',
 			cards: [
@@ -300,7 +300,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			items: [
 				{
 					q: 'What is toon-memory?',
-					a: 'A persistent memory layer for AI coding agents with 20 MCP tools. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions — with 80% fewer tool calls per session.',
+					a: 'A persistent memory layer for AI coding agents with 21 MCP tools. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions — with 80% fewer tool calls per session.',
 				},
 				{
 					q: 'Which agents are supported?',
@@ -404,7 +404,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			cards: [
 				{
 					icon: '🧩',
-					title: '20 herramientas MCP + 3 recursos',
+					title: '21 herramientas MCP + 3 recursos',
 					body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Más recursos para lectura directa de contexto.',
 					tags: ['remember', 'recall', 'context', 'diff'],
 				},
@@ -599,7 +599,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Benchmark de sesión completa: inicio → debug → implementar → review → cierre. Las herramientas <code>context_*</code> intercambian ~318 tokens extra por 7 llamadas menos — contexto más rico significa menos re-lecturas. Reproducible: <code>npm run bench:full</code>.',
 		},
 		tools: {
-			title: '20 herramientas MCP, 3 recursos',
+			title: '21 herramientas MCP, 3 recursos',
 			subtitle: 'Todo lo que tu agente necesita para recordar, recuperar y razonar',
 			resourcesLabel: 'Recursos:',
 			cards: [
