@@ -15,7 +15,7 @@ function git(...args: string[]): string {
 beforeEach(() => {
   testDir = mkdtempSync(join(tmpdir(), "toon-git-test-"))
   process.chdir(testDir)
-  git("init")
+  git("init --initial-branch=main")
   git("config user.email test@test.com")
   git("config user.name Test")
 })
