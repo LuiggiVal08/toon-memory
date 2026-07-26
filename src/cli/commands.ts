@@ -17,9 +17,9 @@ const CAPTURE_CONFIG = join(MEMORY_DIR, "config.json")
 /** Interactive multi-select for agents using @inquirer/prompts. */
 export async function promptAgentSelection(agents: Agent[]): Promise<Agent[]> {
   return checkbox({
-    message: "¿Qué agentes quieres configurar?",
+    message: "Which agents do you want to configure?",
     choices: agents.map((a) => ({
-      name: `${a.name} (${a.format === "none" ? "instrucciones" : a.global ? "local/global" : "solo local"})`,
+      name: `${a.name} (${a.format === "none" ? "instructions" : a.global ? "local/global" : "local only"})`,
       value: a,
       checked: true
     }))
@@ -75,23 +75,23 @@ export async function init(scope?: string, agentFilter?: string[]): Promise<void
       return
     }
     finalScope = await select({
-      message: "Alcance:",
+      message: "Scope:",
       choices: [
-        { name: "Local (proyecto)", value: "local" },
+        { name: "Local (project)", value: "local" },
         { name: "Global (~home)", value: "global" }
       ],
       default: finalScope as "local" | "global"
     })
-    const ok = await confirm({ message: "¿Proceder?", default: true })
+    const ok = await confirm({ message: "Proceed?", default: true })
     if (!ok) {
-      console.log("\nInstalación cancelada.\n")
+      console.log("\nInstallation cancelled.\n")
       return
     }
   } else {
     selected = agents
   }
 
-  console.log(`\nInstalando (${finalScope}) — ${selected.map((a) => a.name).join(", ")}...\n`)
+  console.log(`\nInstalling (${finalScope}) — ${selected.map((a) => a.name).join(", ")}...\n`)
 
   for (const agent of selected) {
     installForAgent(agent, finalScope)
@@ -485,33 +485,33 @@ export function dumpMemory(): void {
  */
 export async function interactiveInstall(): Promise<void> {
   if (!process.stdin.isTTY) {
-    console.log("\n🧠 toon-memory — la instalación interactiva requiere una terminal.")
-    console.log("Ejecuta 'toon-memory init [--agent <nombre>]' para instalación no interactiva.\n")
+    console.log("\n🧠 toon-memory — interactive installation requires a terminal.")
+    console.log("Run 'toon-memory init [--agent <name>]' for non-interactive installation.\n")
     return
   }
 
   const agents = detectAgents()
   const selected = await promptAgentSelection(agents)
   if (selected.length === 0) {
-    console.log("\nNo se seleccionaron agentes. Nada instalado.\n")
+    console.log("\nNo agents selected. Nothing installed.\n")
     return
   }
 
   const scope = await select({
-    message: "Alcance:",
+    message: "Scope:",
     choices: [
-      { name: "Local (proyecto)", value: "local" },
+      { name: "Local (project)", value: "local" },
       { name: "Global (~home)", value: "global" }
     ]
   })
 
-  const ok = await confirm({ message: "¿Proceder?", default: true })
+  const ok = await confirm({ message: "Proceed?", default: true })
   if (!ok) {
-    console.log("\nInstalación cancelada.\n")
+    console.log("\nInstallation cancelled.\n")
     return
   }
 
-  console.log(`\nInstalando (${scope}) — ${selected.map((a) => a.name).join(", ")}...\n`)
+  console.log(`\nInstalling (${scope}) — ${selected.map((a) => a.name).join(", ")}...\n`)
   installMemoryDir()
 
   const deps = extractProjectDeps(projectRoot)

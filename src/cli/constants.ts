@@ -52,5 +52,5 @@ Persistent memory for this project. Use it to avoid re-investigating things.
  */
 export const OPENCODE_PASSIVE_INSTRUCTION = `# toon-memory
 
-La memoria se auto-inyecta vía .opencode/instructions/memory-autoload.md; usa memory_recall solo como fallback.
+Memory auto-injects via .opencode/instructions/memory-autoload.md; use memory_recall only as fallback.
 `

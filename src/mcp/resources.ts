@@ -35,9 +35,9 @@ export function registerResources(server: McpServer): void {
       const withTtl = entries.filter((e) => e.ttl).length
       const expired = entries.filter((e) => e.ttl && isExpired(e.ttl)).length
       const text = [
-        `Entradas totales: ${entries.length}`,
-        `TTL: ${withTtl} con expiración, ${expired} expiradas`,
-        "Por categoría:",
+        `Total entries: ${entries.length}`,
+        `TTL: ${withTtl} with expiration, ${expired} expired`,
+        "By category:",
         ...Object.entries(byCategory).map(([k, v]) => `  ${k}: ${v}`),
       ].join("\n")
       return { contents: [{ uri: uri.href, text }] }

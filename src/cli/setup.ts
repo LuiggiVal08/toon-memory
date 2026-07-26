@@ -78,17 +78,17 @@ if (args.length === 0) {
   process.exit(0)
 }
 
-console.log(`Comando desconocido: '${args[0]}'\n`)
+console.log(`Unknown command: '${args[0]}'\n`)
 printUsage()
 process.exit(1)
 
 /** Minimal usage string for unknown commands. */
 function printUsage(): void {
-  console.log(`Uso: toon-memory <comando> [opciones]
-Comandos: init, status, stats, export, import, watch, uninstall, capture, upgrade, mcp
-Init: toon-memory init [--agent <nombre> --agent <nombre>...] [--scope local|global]
-  Sin --agent: selector interactivo de agentes y scope.
-  Con --agent: instalación no interactiva (default: scope local).
-Opciones: -v/--version, -h/--help
-Sin argumentos inicia el instalador interactivo.`)
+  console.log(`Usage: toon-memory <command> [options]
+Commands: init, status, stats, export, import, watch, uninstall, capture, upgrade, mcp
+Init: toon-memory init [--agent <name> --agent <name>...] [--scope local|global]
+  Without --agent: interactive agent and scope selector.
+  With --agent: non-interactive installation (default: scope local).
+Options: -v/--version, -h/--help
+No arguments starts the interactive installer.`)
 }

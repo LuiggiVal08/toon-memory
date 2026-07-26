@@ -31,7 +31,7 @@ import { findFilesByPattern, searchCode, findCallers } from "./code-search"
  */
 function formatOverview(data: string): string {
 	const entries = parseEntries(data)
-	if (entries.length === 0) return "Memoria: vacía"
+	if (entries.length === 0) return "Memory: empty"
 
 	const byCategory: Record<string, number> = {}
 	let expired = 0
@@ -43,9 +43,9 @@ function formatOverview(data: string): string {
 	const cats = Object.entries(byCategory)
 		.map(([k, v]) => `${k}:${v}`)
 		.join(" ")
-	const ttlNote = expired > 0 ? ` | ${expired} expiradas` : ""
+	const ttlNote = expired > 0 ? ` | ${expired} expired` : ""
 
-	return `## Memoria (${entries.length} entradas)${ttlNote}\n${cats}`
+	return `## Memory (${entries.length} entries)${ttlNote}\n${cats}`
 }
 
 /**
@@ -95,7 +95,7 @@ function formatRelevantEntries(data: string, task: string, limit: number = 6): s
 		{ adjacency: subAdj, seeds, snippetLen: 80 }
 	)
 
-	return `## Entradas relevantes\n${rendered}`
+	return `## Relevant entries\n${rendered}`
 }
 
 /**
@@ -114,7 +114,7 @@ function formatPatterns(data: string): string {
 	const lines = patterns.map(
 		(e) => `- **${e.key}**: ${e.content.slice(0, 120)}`
 	)
-	return `## Patrones establecidos\n${lines.join("\n")}`
+	return `## Established patterns\n${lines.join("\n")}`
 }
 
 /**
@@ -126,19 +126,19 @@ function formatSessions(): string {
 	const branch = currentBranch()
 
 	if (active.length === 0 && conflicts.length === 0) {
-		return `## Sesiones\nRama: ${branch} | Sin otras sesiones activas`
+		return `## Sessions\nBranch: ${branch} | No other active sessions`
 	}
 
-	const lines: string[] = [`## Sesiones (${active.length} activa${active.length !== 1 ? "s" : ""}) —rama: ${branch}`]
+	const lines: string[] = [`## Sessions (${active.length} active) — branch: ${branch}`]
 
 	for (const s of active.slice(0, 5)) {
 		const mins = Math.max(0, Math.round(s.ageMs / 60000))
 		const files = Object.keys(s.files).length
-		lines.push(`- ${s.agent}@${s.branch} (${mins}min, ${files} archivos)`)
+		lines.push(`- ${s.agent}@${s.branch} (${mins}min, ${files} files)`)
 	}
 
 	if (conflicts.length > 0) {
-		lines.push("", `**Conflictos suaves (${conflicts.length}):**`)
+		lines.push("", `**Soft conflicts (${conflicts.length}):**`)
 		for (const c of conflicts.slice(0, 3)) {
 			const who = c.sessions.map((s) => s.agent).join(" + ")
 			lines.push(`- ${c.file} ↔ ${who}`)
@@ -158,21 +158,21 @@ function formatHealth(data: string): string {
 
 	const expired = entries.filter((e) => e.ttl && isExpiredLocal(e.ttl))
 	if (expired.length > 0) {
-		warnings.push(`${expired.length} entradas con TTL expirado (ejecutar memory_archive)`)
+		warnings.push(`${expired.length} entries with expired TTL (run memory_archive)`)
 	}
 
 	if (entries.length > 80) {
-		warnings.push(`${entries.length} entradas (cerca del límite de 100, auto-archive se activará)`)
+		warnings.push(`${entries.length} entries (near limit of 100, auto-archive will trigger)`)
 	}
 
 	const orphanLinks = findOrphanLinks(entries)
 	if (orphanLinks.length > 0) {
-		warnings.push(`${orphanLinks.length} links huérfanos: ${orphanLinks.slice(0, 3).join(", ")}`)
+		warnings.push(`${orphanLinks.length} orphan links: ${orphanLinks.slice(0, 3).join(", ")}`)
 	}
 
 	if (warnings.length === 0) return ""
 
-	return `## Salud\n⚠️ ${warnings.join("\n⚠️ ")}`
+	return `## Health\n⚠️ ${warnings.join("\n⚠️ ")}`
 }
 
 /**
@@ -252,7 +252,7 @@ function formatTopEntries(data: string, limit: number): string {
 	if (top.length === 0) return ""
 
 	const rendered = renderCompact(top)
-	return `## Top memorias\n${rendered}`
+	return `## Top memories\n${rendered}`
 }
 
 // ── context_generate ─────────────────────────────────────────────────
@@ -272,9 +272,9 @@ export function generateContextGenerate(data: string, root: string, opts: Contex
 	// 1. Project manifest
 	const manifest = readManifest(root)
 	if (manifest) {
-		const deps = manifest.deps.length > 0 ? manifest.deps.slice(0, 15).join(", ") : "ninguna"
+		const deps = manifest.deps.length > 0 ? manifest.deps.slice(0, 15).join(", ") : "none"
 		const version = manifest.version ? ` v${manifest.version}` : ""
-		sections.push(`## Proyecto\n${manifest.name}${version} (${manifest.language})\nDeps: ${deps}`)
+		sections.push(`## Project\n${manifest.name}${version} (${manifest.language})\nDeps: ${deps}`)
 	}
 
 	// 2. Structure
@@ -287,9 +287,9 @@ export function generateContextGenerate(data: string, root: string, opts: Contex
 			.slice(0, 5)
 			.map(([k, v]) => `${k}:${v}`)
 			.join(" ")
-		const src = `${structure.sourceFileCount} archivos fuente`
+		const src = `${structure.sourceFileCount} source files`
 		const parts = [dirs, files, `${src} ${exts ? `(${exts})` : ""}`].filter(Boolean)
-		if (parts.length > 0) sections.push(`## Estructura\n${parts.join("\n")}`)
+		if (parts.length > 0) sections.push(`## Structure\n${parts.join("\n")}`)
 	}
 
 	// 3. Environment variables
@@ -304,8 +304,8 @@ export function generateContextGenerate(data: string, root: string, opts: Contex
 	if (git.branch !== "unknown") {
 		const recent = git.recentCommits.slice(0, 3)
 		const commitLines = recent.map((c) => `- ${c.shortHash} ${c.subject}`)
-		const parts = [`Rama: ${git.branch}`, `Archivos tracked: ${git.trackedFiles}`]
-		if (commitLines.length > 0) parts.push(`Últimos commits:\n${commitLines.join("\n")}`)
+		const parts = [`Branch: ${git.branch}`, `Tracked files: ${git.trackedFiles}`]
+		if (commitLines.length > 0) parts.push(`Recent commits:\n${commitLines.join("\n")}`)
 		sections.push(`## Git\n${parts.join("\n")}`)
 	}
 
@@ -332,7 +332,7 @@ export function generateContextGenerate(data: string, root: string, opts: Contex
 // ── context_diff ─────────────────────────────────────────────────────
 
 /**
- * What changed since the last session: git commits + memory changes + touched files.
+ * What changed since the last session: git commits + memory changes + touched files + session activity.
  * ~200-400 tokens. Zero LLM.
  */
 export function generateContextDiff(data: string, root: string, since?: string): string {
@@ -354,7 +354,7 @@ export function generateContextDiff(data: string, root: string, since?: string):
 	// 2. Modified files from git index
 	const tracked = readGitIndex(root)
 	if (tracked.length > 0) {
-		sections.push(`## Archivos tracked (${tracked.length})\n${tracked.slice(0, 20).join("\n")}`)
+		sections.push(`## Tracked files (${tracked.length})\n${tracked.slice(0, 20).join("\n")}`)
 	}
 
 	// 3. Memory changes (reuse existing diff logic)
@@ -366,19 +366,33 @@ export function generateContextDiff(data: string, root: string, since?: string):
 		const created = recentEntries.filter((e) => e.date === today)
 		const updated = recentEntries.filter((e) => e.date !== today)
 		const parts: string[] = []
-		if (created.length > 0) parts.push(`Nuevas: ${created.map((e) => e.key).join(", ")}`)
-		if (updated.length > 0) parts.push(`Actualizadas: ${updated.map((e) => e.key).join(", ")}`)
-		if (parts.length > 0) sections.push(`## Memoria (${recentEntries.length} cambios)\n${parts.join("\n")}`)
+		if (created.length > 0) parts.push(`New: ${created.map((e) => e.key).join(", ")}`)
+		if (updated.length > 0) parts.push(`Updated: ${updated.map((e) => e.key).join(", ")}`)
+		if (parts.length > 0) sections.push(`## Memory (${recentEntries.length} changes)\n${parts.join("\n")}`)
 	}
 
-	// 4. Active sessions
-	const sessions = listSessions().filter((s) => s.active)
-	if (sessions.length > 0) {
-		const lines = sessions.slice(0, 5).map((s) => `- ${s.agent}@${s.branch} (${Object.keys(s.files).length} archivos)`)
-		sections.push(`## Sesiones activas (${sessions.length})\n${lines.join("\n")}`)
+	// 4. Session activity with file details
+	const { active, conflicts } = coordinationView()
+	if (active.length > 0) {
+		const lines = active.slice(0, 5).map((s) => {
+			const mins = Math.max(0, Math.round(s.ageMs / 60000))
+			const files = Object.keys(s.files)
+			const fileList = files.length > 0 ? ` — ${files.slice(0, 3).join(", ")}${files.length > 3 ? ` +${files.length - 3}` : ""}` : ""
+			return `- ${s.agent}@${s.branch} (${mins}min ago)${fileList}`
+		})
+		sections.push(`## Active sessions (${active.length})\n${lines.join("\n")}`)
 	}
 
-	if (sections.length === 0) return "Sin cambios recientes."
+	// 5. Soft conflicts between sessions
+	if (conflicts.length > 0) {
+		const lines = conflicts.slice(0, 3).map((c) => {
+			const who = c.sessions.map((s) => s.agent).join(" + ")
+			return `- ${c.file} ↔ ${who}`
+		})
+		sections.push(`## Session conflicts (${conflicts.length})\n${lines.join("\n")}`)
+	}
+
+	if (sections.length === 0) return "No recent changes."
 	return sections.filter(Boolean).join("\n\n")
 }
 
@@ -401,17 +415,23 @@ export function generateContextFocus(data: string, root: string, task: string, o
 	const relevant = formatRelevantEntries(data, task, limit)
 	if (relevant) sections.push(relevant)
 
-	// 2. Extract keywords from task for file/code search
+	// 2. Extract keywords and filenames from task
 	const keywords = task.toLowerCase().split(/\s+/).filter((w) => w.length > 2)
 
-	// 3. Related files
+	// Also extract file-like patterns (e.g. "auth.ts", "src/index.js")
+	const filePatterns = task.toLowerCase().match(/[\w/.-]+\.[a-z]{1,4}/g) || []
+	// Extract path-like patterns (e.g. "src/auth", "lib/utils")
+	const pathPatterns = task.toLowerCase().match(/[\w/.-]+\/[\w/.-]+/g) || []
+
+	// 3. Related files - search by keywords, file patterns, and path patterns
 	const allFiles: string[] = []
-	for (const kw of keywords) {
+	const searchTerms = [...keywords, ...filePatterns, ...pathPatterns]
+	for (const kw of searchTerms) {
 		allFiles.push(...findFilesByPattern(root, kw))
 	}
 	const uniqueFiles = [...new Set(allFiles)].slice(0, 10)
 	if (uniqueFiles.length > 0) {
-		sections.push(`## Archivos relacionados\n${uniqueFiles.join("\n")}`)
+		sections.push(`## Related files\n${uniqueFiles.join("\n")}`)
 	}
 
 	// 4. Code references (callers and matches)
@@ -419,23 +439,24 @@ export function generateContextFocus(data: string, root: string, task: string, o
 		const callers = findCallers(root, kw)
 		if (callers.length > 0) {
 			const lines = callers.slice(0, 5).map((c) => `${c.file}:${c.line} — ${c.content.slice(0, 80)}`)
-			sections.push(`## Referencias: ${kw}\n${lines.join("\n")}`)
+			sections.push(`## References: ${kw}\n${lines.join("\n")}`)
 		}
 	}
 
-	// 5. Related tests
+	// 5. Related tests - search by keywords and file patterns
 	const testFiles: string[] = []
-	for (const kw of keywords.slice(0, 2)) {
+	const testSearchTerms = [...keywords.slice(0, 2), ...filePatterns]
+	for (const kw of testSearchTerms) {
 		const tests = findFilesByPattern(root, ".test.")
 			.filter((f) => f.toLowerCase().includes(kw))
 		testFiles.push(...tests)
 	}
 	const uniqueTests = [...new Set(testFiles)].slice(0, 5)
 	if (uniqueTests.length > 0) {
-		sections.push(`## Tests existentes\n${uniqueTests.join("\n")}`)
+		sections.push(`## Existing tests\n${uniqueTests.join("\n")}`)
 	}
 
-	if (sections.length === 0) return `Sin contexto encontrado para "${task}".`
+	if (sections.length === 0) return `No context found for "${task}".`
 	return sections.filter(Boolean).join("\n\n")
 }
 
@@ -468,7 +489,7 @@ export function generateContextHealth(data: string, root: string): { report: Hea
 		}
 	}
 	if (orphanLinks.length > 0) {
-		warnings.push(`${orphanLinks.length} links huérfanos: ${orphanLinks.slice(0, 5).join(", ")}`)
+		warnings.push(`${orphanLinks.length} orphan links: ${orphanLinks.slice(0, 5).join(", ")}`)
 		score -= 5
 	}
 
@@ -484,7 +505,7 @@ export function generateContextHealth(data: string, root: string): { report: Hea
 		if (keys.length > 1) duplicates.push(keys.join(" = "))
 	}
 	if (duplicates.length > 0) {
-		warnings.push(`${duplicates.length} entradas duplicadas: ${duplicates.slice(0, 3).join("; ")}`)
+		warnings.push(`${duplicates.length} duplicate entries: ${duplicates.slice(0, 3).join("; ")}`)
 		score -= 5
 	}
 
@@ -492,14 +513,14 @@ export function generateContextHealth(data: string, root: string): { report: Hea
 	const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0]
 	const staleNeverAccessed = entries.filter((e) => e.accessed === 0 && e.date < weekAgo)
 	if (staleNeverAccessed.length > 0) {
-		info.push(`${staleNeverAccessed.length} entradas antiguas nunca recuperadas (posiblemente obsoletas)`)
+		info.push(`${staleNeverAccessed.length} old entries never recalled (possibly stale)`)
 		score -= 2
 	}
 
 	// 4. Expired TTL
 	const expired = entries.filter((e) => e.ttl && isExpiredLocal(e.ttl))
 	if (expired.length > 0) {
-		info.push(`${expired.length} entradas con TTL expirado (auto-prune en próximo inicio)`)
+		info.push(`${expired.length} entries with expired TTL (auto-prune on next startup)`)
 		score -= 3
 	}
 
@@ -514,7 +535,7 @@ export function generateContextHealth(data: string, root: string): { report: Hea
 		}
 	}
 	if (brokenFiles.length > 0) {
-		warnings.push(`${brokenFiles.length} refs a archivos inexistentes: ${brokenFiles.slice(0, 3).join("; ")}`)
+		warnings.push(`${brokenFiles.length} refs to non-existent files: ${brokenFiles.slice(0, 3).join("; ")}`)
 		score -= 5
 	}
 
@@ -522,15 +543,15 @@ export function generateContextHealth(data: string, root: string): { report: Hea
 	const sessions = listSessions()
 	const stale = sessions.filter((s) => !s.active && !s.ended)
 	if (stale.length > 0) {
-		info.push(`${stale.length} sesiones stale (serán pruned automáticamente)`)
+		info.push(`${stale.length} stale sessions (will be pruned automatically)`)
 	}
 
 	// 7. Entry count
 	if (entries.length > 80) {
-		warnings.push(`${entries.length} entradas (cerca del límite de 100)`)
+		warnings.push(`${entries.length} entries (near limit of 100)`)
 		score -= 3
 	} else if (entries.length === 0) {
-		info.push("Memoria vacía")
+		info.push("Empty memory")
 	}
 
 	score = Math.max(0, score)
@@ -541,7 +562,7 @@ export function generateContextHealth(data: string, root: string): { report: Hea
 	const parts: string[] = [`## Memory Health: ${score >= 90 ? "✅" : score >= 70 ? "⚠️" : "❌"} ${score}/100`]
 
 	if (critical.length > 0) {
-		parts.push("", "### Crítico", ...critical.map((w) => `- ${w}`))
+		parts.push("", "### Critical", ...critical.map((w) => `- ${w}`))
 	}
 	if (warnings.length > 0) {
 		parts.push("", "### Warnings", ...warnings.map((w) => `- ${w}`))
@@ -567,10 +588,10 @@ export function generateContextExport(data: string, format: ExportFormat = "full
 
 	// Header
 	const today = new Date().toISOString().split("T")[0]
-	sections.push(`# toon-memory export\nFecha: ${today} | Entradas: ${entries.length}\n`)
+	sections.push(`# toon-memory export\nDate: ${today} | Entries: ${entries.length}\n`)
 
 	if (entries.length === 0) {
-		sections.push("Memoria vacía.")
+		sections.push("Empty memory.")
 		return sections.join("\n")
 	}
 
@@ -582,10 +603,10 @@ export function generateContextExport(data: string, format: ExportFormat = "full
 	}
 
 	const categoryLabels: Record<string, string> = {
-		decision: "Decisiones",
-		pattern: "Patrones",
+		decision: "Decisions",
+		pattern: "Patterns",
 		bug: "Bugs",
-		knowledge: "Conocimiento",
+		knowledge: "Knowledge",
 	}
 
 	for (const [cat, items] of Object.entries(byCategory)) {
@@ -615,8 +636,8 @@ export function generateContextExport(data: string, format: ExportFormat = "full
 					if (key < n) edges.push(`${key} -> ${n}`)
 				}
 			}
-			if (edges.length > 0) {
-				sections.push(`## Grafo (${edges.length} edges)`)
+		if (edges.length > 0) {
+			sections.push(`## Graph (${edges.length} edges)`)
 				sections.push(edges.slice(0, 20).join("\n"))
 			}
 		}
@@ -626,7 +647,7 @@ export function generateContextExport(data: string, format: ExportFormat = "full
 	const sessions = listSessions()
 	if (sessions.length > 0) {
 		const active = sessions.filter((s) => s.active)
-		sections.push(`## Sesiones (${active.length} activas / ${sessions.length} total)`)
+		sections.push(`## Sessions (${active.length} active / ${sessions.length} total)`)
 		for (const s of sessions.slice(0, 5)) {
 			const status = s.active ? "🟢" : "⚪"
 			sections.push(`- ${status} ${s.agent}@${s.branch} (${s.id})`)

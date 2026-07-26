@@ -41,28 +41,28 @@ function main(): void {
   const others = view.active.filter((s) => s.id !== sessionId && !s.ended)
   const lines: string[] = []
   lines.push("toon-memory:")
-  lines.push(`  Esta sesión: ${agent} @ ${currentBranch()} (ventana ${Math.round(SESSION_TTL_MS / 60000)} min)`)
+  lines.push(`  This session: ${agent} @ ${currentBranch()} (window ${Math.round(SESSION_TTL_MS / 60000)} min)`)
 
   if (others.length > 0) {
-    lines.push(`  Otras sesiones activas (${others.length}):`)
+    lines.push(`  Other active sessions (${others.length}):`)
     for (const s of others) {
       const files = Object.keys(s.files).slice(0, 5).join(", ") || "—"
       lines.push(`    • ${s.agent} @ ${s.branch} — ${files}`)
     }
   } else {
-    lines.push("  Sin otras sesiones activas.")
+    lines.push("  No other active sessions.")
   }
 
   if (view.conflicts.length > 0) {
-    lines.push(`  ⚠️ Conflictos suaves (${view.conflicts.length}): usa memory_sessions para ver detalle.`)
+    lines.push(`  ⚠️ Soft conflicts (${view.conflicts.length}): use memory_sessions for details.`)
     for (const c of view.conflicts) {
       lines.push(`    • ${c.file}`)
     }
   } else {
-    lines.push("  Sin conflictos de archivos detectados.")
+    lines.push("  No file conflicts detected.")
   }
 
-  lines.push("  Usa memory_recall antes de leer archivos y memory_sessions para coordinar.")
+  lines.push("  Use memory_recall before reading files and memory_sessions to coordinate.")
   console.log(lines.join("\n"))
   process.exit(0)
 }

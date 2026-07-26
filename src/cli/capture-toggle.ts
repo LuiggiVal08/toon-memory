@@ -20,10 +20,10 @@ export function captureToggle(enable: boolean): void {
   writeFileSync(CAPTURE_CONFIG, JSON.stringify(config, null, 2))
 
   if (enable) {
-    console.log("\n🔴 Captura de actividad HABILITADA.")
-    console.log("Los hooks grabarán observaciones en .toon-memory/memory/observations.toon.")
-    console.log("Revisa con `memory_captured` y promuévelas con `memory_remember`.\n")
+    console.log("\n🔴 Activity capture ENABLED.")
+    console.log("Hooks will write observations to .toon-memory/memory/observations.toon.")
+    console.log("Review with `memory_captured` and promote with `memory_remember`.\n")
   } else {
-    console.log("\n⚪ Captura de actividad DESHABILITADA.\n")
+    console.log("\n⚪ Activity capture DISABLED.\n")
   }
 }
