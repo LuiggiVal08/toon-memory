@@ -72,8 +72,9 @@ export function detectAgents(): Agent[] {
     local: join(projectRoot, ".cursor", "mcp.json"),
     mcpKey: "mcpServers",
     format: "json",
-    needsHooks: false,
-    needsInstructions: false
+    needsHooks: true,
+    needsInstructions: false,
+    captureJson: ["PostToolUse", "Stop"]
   })
 
   agents.push({
@@ -81,8 +82,9 @@ export function detectAgents(): Agent[] {
     global: join(HOME, ".codeium", "windsurf", "mcp_config.json"),
     mcpKey: "mcpServers",
     format: "json",
-    needsHooks: false,
-    needsInstructions: false
+    needsHooks: true,
+    needsInstructions: false,
+    captureJson: ["PostToolUse", "Stop"]
   })
 
   agents.push({
@@ -121,7 +123,8 @@ export function detectAgents(): Agent[] {
     format: "json",
     needsHooks: true,
     needsInstructions: true,
-    instructionFile: join(projectRoot, ".gemini", "GEMINI.md")
+    instructionFile: join(projectRoot, ".gemini", "GEMINI.md"),
+    captureJson: ["PostToolUse", "Stop"]
   })
 
   agents.push({
