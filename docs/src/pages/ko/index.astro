@@ -1,0 +1,63 @@
+---
+import logoSrc from '../../assets/logo.svg';
+import SiteHeader from '../../components/SiteHeader.astro';
+import Hero from '../../components/Hero.astro';
+import Problem from '../../components/Problem.astro';
+import FeatureGrid from '../../components/FeatureGrid.astro';
+import MemoryGraphShowcase from '../../components/MemoryGraphShowcase.astro';
+import SmartRecallShowcase from '../../components/SmartRecallShowcase.astro';
+import Tools from '../../components/Tools.astro';
+import ImpactShowcase from '../../components/ImpactShowcase.astro';
+import HowItWorks from '../../components/HowItWorks.astro';
+import Agents from '../../components/Agents.astro';
+import Comparison from '../../components/Comparison.astro';
+import TokenSavings from '../../components/TokenSavings.astro';
+import FAQ from '../../components/FAQ.astro';
+import CTA from '../../components/CTA.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import '../../styles/home.css';
+
+const description =
+  'AI 코딩 에이전트를 위한 MCP 메모리 서버 — 21개 도구, 세션당 도구 호출 80% 절감. 세션 간 의사 결정, 패턴 및 버그를 기억합니다.';
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>toon-memory — AI 코딩 에이전트를 위한 MCP 메모리 서버</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={logoSrc.src} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="toon-memory — AI 코딩 에이전트를 위한 MCP 메모리 서버" />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content="https://luiggival08.github.io/toon-memory/ko/" />
+    <meta property="og:image" content="https://luiggival08.github.io/toon-memory/favicon.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="toon-memory" />
+    <meta name="twitter:description" content={description} />
+    <script is:inline>document.documentElement.classList.add('js');</script>
+  </head>
+  <body>
+    <SiteHeader lang="ko" />
+
+    <main>
+      <Hero lang="ko" />
+      <Problem lang="ko" />
+      <ImpactShowcase lang="ko" />
+      <TokenSavings lang="ko" />
+      <FeatureGrid lang="ko" />
+      <MemoryGraphShowcase lang="ko" />
+      <SmartRecallShowcase lang="ko" />
+      <Tools lang="ko" />
+      <HowItWorks lang="ko" />
+      <Agents lang="ko" />
+      <Comparison lang="ko" />
+      <FAQ lang="ko" />
+      <CTA lang="ko" />
+    </main>
+
+    <SiteFooter lang="ko" />
+  </body>
+</html>

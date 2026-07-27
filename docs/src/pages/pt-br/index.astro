@@ -1,0 +1,63 @@
+---
+import logoSrc from '../../assets/logo.svg';
+import SiteHeader from '../../components/SiteHeader.astro';
+import Hero from '../../components/Hero.astro';
+import Problem from '../../components/Problem.astro';
+import FeatureGrid from '../../components/FeatureGrid.astro';
+import MemoryGraphShowcase from '../../components/MemoryGraphShowcase.astro';
+import SmartRecallShowcase from '../../components/SmartRecallShowcase.astro';
+import Tools from '../../components/Tools.astro';
+import ImpactShowcase from '../../components/ImpactShowcase.astro';
+import HowItWorks from '../../components/HowItWorks.astro';
+import Agents from '../../components/Agents.astro';
+import Comparison from '../../components/Comparison.astro';
+import TokenSavings from '../../components/TokenSavings.astro';
+import FAQ from '../../components/FAQ.astro';
+import CTA from '../../components/CTA.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import '../../styles/home.css';
+
+const description =
+  'Servidor de memória MCP para agentes de programação com IA — 21 ferramentas, 80% menos chamadas de ferramenta por sessão. Lembre-se de decisões, padrões e bugs entre sessões.';
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>toon-memory — Servidor de memória MCP para agentes de IA</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={logoSrc.src} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="toon-memory — Servidor de memória MCP para agentes de IA" />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content="https://luiggival08.github.io/toon-memory/pt-br/" />
+    <meta property="og:image" content="https://luiggival08.github.io/toon-memory/favicon.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="toon-memory" />
+    <meta name="twitter:description" content={description} />
+    <script is:inline>document.documentElement.classList.add('js');</script>
+  </head>
+  <body>
+    <SiteHeader lang="pt-br" />
+
+    <main>
+      <Hero lang="pt-br" />
+      <Problem lang="pt-br" />
+      <ImpactShowcase lang="pt-br" />
+      <TokenSavings lang="pt-br" />
+      <FeatureGrid lang="pt-br" />
+      <MemoryGraphShowcase lang="pt-br" />
+      <SmartRecallShowcase lang="pt-br" />
+      <Tools lang="pt-br" />
+      <HowItWorks lang="pt-br" />
+      <Agents lang="pt-br" />
+      <Comparison lang="pt-br" />
+      <FAQ lang="pt-br" />
+      <CTA lang="pt-br" />
+    </main>
+
+    <SiteFooter lang="pt-br" />
+  </body>
+</html>
