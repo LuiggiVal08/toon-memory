@@ -12,13 +12,14 @@ import HowItWorks from '../components/HowItWorks.astro';
 import Agents from '../components/Agents.astro';
 import Comparison from '../components/Comparison.astro';
 import TokenSavings from '../components/TokenSavings.astro';
+import WhatNew from '../components/WhatNew.astro';
 import FAQ from '../components/FAQ.astro';
 import CTA from '../components/CTA.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import '../styles/home.css';
 
 const description =
-  'MCP memory server giving AI coding agents (Claude, Cursor, OpenCode, Windsurf) offline, token-efficient persistent memory. 21 tools, 80% fewer tool calls. Remember decisions, patterns, and bugs between sessions.';
+  'MCP memory server giving AI coding agents (Claude, Cursor, OpenCode, Windsurf) offline, token-efficient persistent memory. 27 tools, 80% fewer tool calls. Remember decisions, patterns, and bugs between sessions.';
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -91,6 +92,7 @@ const jsonLd = {
       <MemoryGraphShowcase />
       <SmartRecallShowcase />
       <Tools />
+      <WhatNew />
       <HowItWorks />
       <Agents />
       <Comparison />

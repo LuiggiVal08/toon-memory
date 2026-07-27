@@ -977,7 +977,83 @@ pre code {
   border-radius: 4px;
 }
 
+/* Tool group headers */
+.tool-group-header {
+  grid-column: 1 / -1;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--brand-light);
+  padding: 1rem 0 0.25rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.25rem;
+}
+.tool-group-header:first-child {
+  padding-top: 0;
+}
+
+/* What's New section */
+.what-new-section {
+  position: relative;
+}
+.what-new-section .new-badge {
+  display: inline-block;
+  background: var(--gradient);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.25em 0.7em;
+  border-radius: 9999px;
+  margin-bottom: 0.5rem;
+}
+.what-new-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+.what-new-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.what-new-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-2px);
+}
+.what-new-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+.what-new-card h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+.what-new-card p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.what-new-stats {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+.what-new-stats .stat {
+  font-size: 0.75rem;
+  padding: 0.2em 0.5em;
+  border-radius: 4px;
+  background: rgba(99,102,241,0.1);
+  color: var(--brand-light);
+  font-family: var(--font-mono);
+}
+
 @media (max-width: 768px) {
+  .what-new-grid { grid-template-columns: 1fr; }
   .problem-grid { grid-template-columns: 1fr; }
   .steps { grid-template-columns: 1fr; }
   .agents-grid { grid-template-columns: repeat(2, 1fr); }

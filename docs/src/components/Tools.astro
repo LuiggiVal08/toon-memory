@@ -8,6 +8,15 @@ const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 
 const resources = ['memory-entries', 'memory-stats', 'memory-summaries'];
+
+const groupOrder = ['core', 'search', 'context', 'compress', 'sessions', 'sync'];
+const groups = c.tools.groups;
+const cardsByGroup = new Map<string, typeof c.tools.cards>();
+for (const card of c.tools.cards) {
+  const g = card.group || 'core';
+  if (!cardsByGroup.has(g)) cardsByGroup.set(g, []);
+  cardsByGroup.get(g)!.push(card);
+}
 ---
 
 <section class="content-section tools-section">
@@ -18,13 +27,22 @@ const resources = ['memory-entries', 'memory-stats', 'memory-summaries'];
 
   <div class="tools-grid">
     {
-      c.tools.cards.map((t) => (
-        <div class="tool-card">
-          <code class="tool-name">{t.name}</code>
-          <h3 class="tool-title">{t.title}</h3>
-          <p class="tool-desc">{t.desc}</p>
-        </div>
-      ))
+      groupOrder.map((g) => {
+        const cards = cardsByGroup.get(g);
+        if (!cards || cards.length === 0) return null;
+        return (
+          <>
+            <h3 class="tool-group-header">{groups[g] || g}</h3>
+            {cards.map((t) => (
+              <div class="tool-card">
+                <code class="tool-name">{t.name}</code>
+                <h3 class="tool-title">{t.title}</h3>
+                <p class="tool-desc">{t.desc}</p>
+              </div>
+            ))}
+          </>
+        );
+      })
     }
   </div>
 

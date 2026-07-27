@@ -1,0 +1,40 @@
+---
+import { getContent } from '../i18n';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
+
+if (!c.whatNew) return null;
+---
+
+<section class="content-section what-new-section">
+  <div class="section-header">
+    <span class="new-badge">NEW</span>
+    <h2>{c.whatNew.title}</h2>
+    <p>{c.whatNew.subtitle}</p>
+  </div>
+
+  <div class="what-new-grid">
+    {c.whatNew.cards.map((card) => (
+      <div class="what-new-card">
+        <div class="what-new-icon">{card.icon}</div>
+        <h3>{card.title}</h3>
+        <p>{card.body}</p>
+        {card.stats && (
+          <div class="what-new-stats">
+            {card.stats.map((s) => <span class="stat">{s}</span>)}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+</section>
+
+<script>
+  import { revealCards } from '../scripts/home-anim';
+  const root = document.querySelector<HTMLElement>('.what-new-section');
+  if (root) revealCards(root, '.what-new-card');
+</script>
