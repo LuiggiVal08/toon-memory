@@ -16,6 +16,8 @@ import { qualityScore, mergeEntries, generateSmartRecall } from "../lib/quality"
 import { generateContextBrief, generateContextGenerate, generateContextDiff, generateContextFocus, generateContextHealth, generateContextExport } from "../lib/context"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } from "../lib/sessions"
 import { fileMtimes } from "../lib/git"
+import { normalize, isExpiredLocal, tokenize, importance } from "../lib/utils"
+import { expandSynonyms } from "../lib/synonyms"
 
 /**
  * Register all 20 memory tools.
@@ -67,7 +69,9 @@ server.registerTool(
 
     const entryId = existingIdx !== -1 ? existingId : newId
     const resolvedTtl = parseTTL(ttl)
-    const resolvedTags = tags ? tags : inferTags(content, key, loadConfig().vocab)
+    const config = loadConfig()
+    const verbatim = config.verbatim === true
+    const resolvedTags = tags ? tags : (verbatim ? "" : inferTags(content, key, config.vocab))
     const existingParts = existingIdx !== -1 ? lines[existingIdx].trim().split("|") : []
     const resolvedLinks = links
       ? links.split(/[\s;]+/).filter(Boolean).join(" ")
@@ -83,9 +87,11 @@ server.registerTool(
       action = "Updated"
       mergeInfo = "\nMerge: tags combined, date and links updated"
     } else {
-      const quality = qualityScore(resolvedTags, resolvedLinks, content, date)
+      const accessed = 0
+      const lastAccessed = ""
+      const quality = verbatim ? 0.5 : qualityScore(resolvedTags, resolvedLinks, content, date, accessed, lastAccessed)
       const confidence = 1.0
-      newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|0|${resolvedLinks}|${quality.toFixed(2)}|${confidence}`
+      newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|${accessed}|${resolvedLinks}|${quality.toFixed(2)}|${confidence}|${lastAccessed}`
       const match = lines[headerIdx].match(/\[(\d+)\|/)
       const count = match ? parseInt(match[1]) : 0
       lines.splice(headerIdx + 1, 0, `  ${newEntry}`)
@@ -256,8 +262,21 @@ server.registerTool(
         const parts = l.trim().split("|")
         const ttlInfo = parts[7] ? ` | TTL: ${parts[7]}` : ""
         const qualityInfo = parts[10] ? ` | Q: ${parts[10]}` : ""
-        return `  [${parts[1]}] ${parts[2]} (${parts[0]})${ttlInfo}${qualityInfo}`
+        const accessInfo = parts[8] && parseInt(parts[8]) > 0 ? ` | accessed: ${parts[8]}x` : ""
+        return `  [${parts[1]}] ${parts[2]} (${parts[0]})${ttlInfo}${qualityInfo}${accessInfo}`
       }),
+      "",
+      `Most accessed:`,
+      ...lines
+        .filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
+        .map((l) => {
+          const parts = l.trim().split("|")
+          return { key: parts[2], accessed: parts.length > 8 ? parseInt(parts[8]) || 0 : 0, quality: parts[10] || "" }
+        })
+        .filter((e) => e.accessed > 0)
+        .sort((a, b) => b.accessed - a.accessed)
+        .slice(0, 5)
+        .map((e) => `  ${e.key}: ${e.accessed}x (Q: ${e.quality})`),
     ]
 
     return { content: [{ type: "text" as const, text: stats.join("\n") }] }
@@ -826,4 +845,551 @@ server.registerTool(
   }
 )
 
+// ── memory_primer ─────────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_primer",
+  {
+    title: "System Primer",
+    description: "Generate a compact system primer: always-current knowledge map for auto-injection into agent context. Excludes private entries, shows top memories by importance, categories, and patterns. Use at session start or when context feels stale.",
+    inputSchema: {},
+  },
+  async () => {
+    const data = readMemory()
+    const { generateSystemPrimer } = await import("../lib/quality")
+    const primer = generateSystemPrimer(data)
+    return { content: [{ type: "text" as const, text: primer }] }
+  }
+)
+
+// ── memory_compress ────────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_compress",
+  {
+    title: "Compress Memory Entries",
+    description: "LLM-powered compression: select entries to compress into one concise entry. The agent (YOU) reads the entries, writes a compressed summary, then calls memory_remember to save it. Two-step dance: this tool provides context, you provide intelligence.",
+    inputSchema: {
+      query: z.string().optional().default("").describe("Search query to find entries to compress (e.g. 'auth bug fixes'). Empty = show lowest-quality entries."),
+      count: z.number().optional().default(3).describe("Number of entries to compress (2-10). Default: 3."),
+      category: z.string().optional().default("").describe("Filter by category (empty = all)."),
+    },
+  },
+  async ({ query, count, category }) => {
+    const data = readMemory()
+    const entries = parseEntries(data)
+    const clampedCount = Math.max(2, Math.min(10, count))
+
+    let candidates: typeof entries
+
+    if (query) {
+      // Find entries matching the query
+      const qTokens = tokenize(query)
+      const expandedTokens = expandSynonyms(qTokens)
+      candidates = entries
+        .filter((e) => {
+          if (category && e.category !== category) return false
+          if (e.ttl && isExpiredLocal(e.ttl)) return false
+          const text = normalize(`${e.key} ${e.content} ${e.tags.join(" ")}`)
+          return expandedTokens.some((t) => text.includes(t)) || qTokens.some((t) => text.includes(t))
+        })
+        .sort((a, b) => importance(b) - importance(a))
+    } else {
+      // Find lowest-quality entries (candidates for compression)
+      candidates = entries
+        .filter((e) => {
+          if (category && e.category !== category) return false
+          if (e.ttl && isExpiredLocal(e.ttl)) return false
+          return true
+        })
+        .sort((a, b) => importance(a) - importance(b))
+    }
+
+    const toCompress = candidates.slice(0, clampedCount)
+
+    if (toCompress.length < 2) {
+      return {
+        content: [{
+          type: "text" as const,
+          text: `Need at least 2 entries to compress. Found ${toCompress.length} matching entries.`
+        }],
+      }
+    }
+
+    // Build the compression prompt for the agent
+    const entryList = toCompress.map((e, i) =>
+      `${i + 1}. [${e.category}] ${e.key} (${e.id})\n   ${e.content}\n   Tags: ${e.tags.join(";")} | File: ${e.file} | Date: ${e.date}`
+    ).join("\n\n")
+
+    const prompt = [
+      `📦 Compress ${toCompress.length} entries into 1 concise entry.`,
+      "",
+      "Entries to compress:",
+      entryList,
+      "",
+      "Instructions:",
+      "1. Read the entries above",
+      "2. Write a single concise summary that captures the essential information",
+      "3. Call memory_remember with:",
+      `   - category: "${toCompress[0].category}" (or most appropriate)`,
+      "   - key: a short kebab-case title (e.g. 'auth-bug-patterns')",
+      "   - content: your compressed summary (1-3 sentences)",
+      "   - tags: combine the most relevant tags from all entries",
+      `   - file: "${toCompress.find((e) => e.file)?.file || ""}" (if applicable)`,
+      "   - links: combine relevant links",
+      "",
+      "4. After saving, call memory_forget for each original entry ID:",
+      toCompress.map((e) => `   memory_forget(key: "${e.id}")`).join("\n"),
+      "",
+      "The compressed entry should be strictly better than the sum of its parts.",
+    ].join("\n")
+
+    return { content: [{ type: "text" as const, text: prompt }] }
+  }
+)
+
+// ── memory_compress_all ────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_compress_all",
+  {
+    title: "Lazy Batch Compression",
+    description: "Compress all low-quality entries (no tags, low quality score) in one pass. Deterministic, no LLM — merges entries with similar content and removes empty/stale ones. Inspired by MemPalace's lazy compression.",
+    inputSchema: {
+      minQuality: z.number().optional().default(0.3).describe("Entries below this quality score are compression candidates (0-1). Default: 0.3."),
+      dryRun: z.boolean().optional().default(false).describe("If true, show what would be compressed without making changes."),
+    },
+  },
+  async ({ minQuality, dryRun }) => {
+    const data = readMemory()
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+    if (headerIdx === -1) {
+      return { content: [{ type: "text" as const, text: "No entries in memory." }] }
+    }
+
+    const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
+
+    // Find compression candidates: low quality, no tags, or stale
+    const candidates: { idx: number; line: string; quality: number; key: string }[] = []
+    for (let i = 0; i < entryLines.length; i++) {
+      const line = entryLines[i].trim()
+      const parts = line.split("|")
+      if (parts.length < 11) continue
+      const quality = parseFloat(parts[10]) || 0
+      const tags = parts[5] || ""
+      const key = parts[2]
+      const content = parts[3] || ""
+
+      // Candidates: low quality OR no tags OR very short content
+      const isCandidate = quality < minQuality || !tags || content.length < 20
+      if (isCandidate) {
+        candidates.push({ idx: i, line, quality, key })
+      }
+    }
+
+    if (candidates.length === 0) {
+      return {
+        content: [{
+          type: "text" as const,
+          text: `✅ No compression candidates found. All entries have quality >= ${minQuality} or have tags.`
+        }],
+      }
+    }
+
+    // Group candidates by category for potential merging
+    const byCategory = new Map<string, typeof candidates>()
+    for (const c of candidates) {
+      const parts = c.line.split("|")
+      const cat = parts[1] || "unknown"
+      if (!byCategory.has(cat)) byCategory.set(cat, [])
+      byCategory.get(cat)!.push(c)
+    }
+
+    const sections: string[] = [
+      `📦 Compression candidates: ${candidates.length} entries below quality ${minQuality}`,
+      "",
+      "By category:",
+    ]
+
+    for (const [cat, items] of byCategory) {
+      sections.push(`  ${cat}: ${items.length} entries`)
+      for (const item of items.slice(0, 3)) {
+        const parts = item.line.split("|")
+        sections.push(`    - ${item.key} (Q: ${item.quality.toFixed(2)}) — ${(parts[3] || "").slice(0, 60)}`)
+      }
+      if (items.length > 3) {
+        sections.push(`    ... and ${items.length - 3} more`)
+      }
+    }
+
+    if (dryRun) {
+      sections.push("", "🔍 Dry run — no changes made. Use dryRun: false to compress.")
+      return { content: [{ type: "text" as const, text: sections.join("\n") }] }
+    }
+
+    // Remove candidates (conservative: just remove the lowest quality ones)
+    // Don't auto-merge — let the agent decide via memory_compress
+    const removeKeys = new Set(candidates.map((c) => c.key))
+    const kept = entryLines.filter((l) => {
+      const parts = l.trim().split("|")
+      return !removeKeys.has(parts[2])
+    })
+
+    const match = lines[headerIdx].match(/\[(\d+)\|/)
+    const count = match ? parseInt(match[1]) : 0
+    lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${kept.length}|`)
+    lines.splice(headerIdx + 1, entryLines.length, ...kept.map((l) => `  ${l.trim()}`))
+    writeMemory(lines.join("\n"))
+
+    sections.push("", `🗑️ Removed ${candidates.length} low-quality entries. ${kept.length} entries remaining.`)
+    sections.push("💡 Use memory_compress to merge related entries before removing them.")
+
+    return { content: [{ type: "text" as const, text: sections.join("\n") }] }
+  }
+)
+
+// ── memory_export_gist ─────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_export_gist",
+  {
+    title: "Export to GitHub Gist",
+    description: "Export memory to a private GitHub Gist for cloud sync. Requires GITHUB_TOKEN env var. Zero deps — uses Node's built-in fetch().",
+    inputSchema: {
+      description: z.string().optional().default("").describe("Optional description for the Gist."),
+    },
+  },
+  async ({ description }) => {
+    const token = process.env.GITHUB_TOKEN
+    if (!token) {
+      return {
+        content: [{
+          type: "text" as const,
+          text: "❌ GITHUB_TOKEN not set. Add it to your environment:\n  export GITHUB_TOKEN=ghp_your_token_here"
+        }],
+      }
+    }
+
+    if (!existsSync(MEMORY_FILE)) {
+      return { content: [{ type: "text" as const, text: "No memory file to export." }] }
+    }
+
+    const data = readFileSync(MEMORY_FILE, "utf-8")
+    const desc = description || `toon-memory backup ${new Date().toISOString().split("T")[0]}`
+
+    try {
+      const resp = await fetch("https://api.github.com/gists", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/vnd.github.v3+json",
+        },
+        body: JSON.stringify({
+          description: desc,
+          public: false,
+          files: {
+            "data.toon": { content: data },
+          },
+        }),
+      })
+
+      if (!resp.ok) {
+        const err = await resp.text()
+        return { content: [{ type: "text" as const, text: `❌ GitHub API error (${resp.status}): ${err}` }] }
+      }
+
+      const gist = await resp.json() as { id: string; html_url: string; created_at: string }
+      return {
+        content: [{
+          type: "text" as const,
+          text: `📤 Memory exported to Gist\nID: ${gist.id}\nURL: ${gist.html_url}\n\nTo import later: memory_import_gist(gist_id: "${gist.id}")`
+        }],
+      }
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `❌ Failed to export: ${err}` }] }
+    }
+  }
+)
+
+// ── memory_import_gist ─────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_import_gist",
+  {
+    title: "Import from GitHub Gist",
+    description: "Import memory from a GitHub Gist. Merges entries (keeps newer dates, combines tags). Requires GITHUB_TOKEN env var.",
+    inputSchema: {
+      gist_id: z.string().describe("GitHub Gist ID or full URL (https://gist.github.com/user/id)."),
+      merge: z.boolean().optional().default(true).describe("If true, merge with existing memory. If false, replace entirely."),
+    },
+  },
+  async ({ gist_id, merge }) => {
+    const token = process.env.GITHUB_TOKEN
+    if (!token) {
+      return {
+        content: [{
+          type: "text" as const,
+          text: "❌ GITHUB_TOKEN not set. Add it to your environment:\n  export GITHUB_TOKEN=ghp_your_token_here"
+        }],
+      }
+    }
+
+    // Extract gist ID from URL if needed
+    const idMatch = gist_id.match(/\/([a-f0-9]+)$/i) || [null, gist_id]
+    const id = idMatch[1] || gist_id
+
+    try {
+      const resp = await fetch(`https://api.github.com/gists/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+      })
+
+      if (!resp.ok) {
+        const err = await resp.text()
+        return { content: [{ type: "text" as const, text: `❌ GitHub API error (${resp.status}): ${err}` }] }
+      }
+
+      const gist = await resp.json() as { files: Record<string, { content: string }> }
+      const file = gist.files["data.toon"]
+      if (!file) {
+        return { content: [{ type: "text" as const, text: "❌ Gist does not contain data.toon file." }] }
+      }
+
+      const remoteData = file.content
+
+      if (!merge) {
+        // Replace entirely
+        safeWrite(MEMORY_FILE, remoteData)
+        const entries = parseEntries(remoteData)
+        return {
+          content: [{
+            type: "text" as const,
+            text: `📥 Memory replaced from Gist (${entries.length} entries).`
+          }],
+        }
+      }
+
+      // Merge mode: combine entries from both sources
+      const localData = existsSync(MEMORY_FILE) ? readFileSync(MEMORY_FILE, "utf-8") : "version: 1\nentries[0|]\n"
+      const localEntries = parseEntries(localData)
+      const remoteEntries = parseEntries(remoteData)
+
+      const localByKey = new Map(localEntries.map((e) => [e.key, e]))
+      let added = 0
+      let updated = 0
+
+      for (const remote of remoteEntries) {
+        const existing = localByKey.get(remote.key)
+        if (!existing) {
+          // New entry from remote
+          localByKey.set(remote.key, remote)
+          added++
+        } else {
+          // Merge: keep newer date, combine tags, take max quality
+          const mergedTags = [...new Set([...existing.tags, ...remote.tags])].join(";")
+          const mergedLinks = [...new Set([...existing.links, ...remote.links])].join(" ")
+          const newerDate = remote.date > existing.date ? remote.date : existing.date
+          const merged = {
+            ...existing,
+            tags: mergedTags.split(";").filter(Boolean),
+            links: mergedLinks.split(/[\s;]+/).filter(Boolean),
+            date: newerDate,
+            content: remote.content.length > existing.content.length ? remote.content : existing.content,
+          }
+          localByKey.set(remote.key, merged)
+          updated++
+        }
+      }
+
+      // Rebuild the file
+      const entries = [...localByKey.values()]
+      const lines = [
+        "version: 1",
+        `[${entries.length}|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed}:`,
+        ...entries.map((e) => {
+          const tags = e.tags.join(";")
+          const links = e.links.join(" ")
+          const q = qualityScore(tags, links, e.content, e.date, e.accessed, e.lastAccessed)
+          return `  ${e.id}|${e.category}|${e.key}|${e.content}|${e.file}|${tags}|${e.date}|${e.ttl}|${e.accessed}|${links}|${q.toFixed(2)}|1|${e.lastAccessed}`
+        }),
+      ]
+      safeWrite(MEMORY_FILE, lines.join("\n"))
+
+      return {
+        content: [{
+          type: "text" as const,
+          text: `📥 Memory merged from Gist\n  Added: ${added} new entries\n  Updated: ${updated} existing entries\n  Total: ${entries.length} entries`
+        }],
+      }
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `❌ Failed to import: ${err}` }] }
+    }
+  }
+)
+
+// ── memory_merge_sessions ──────────────────────────────────────────────
+
+server.registerTool(
+  "memory_merge_sessions",
+  {
+    title: "Merge Session Observations",
+    description: "Merge observations from multiple sessions/branches into a consolidated view. Deduplicates and suggests entries to promote to memory. Inspired by Hindsight's multi-agent session merging.",
+    inputSchema: {
+      since: z.string().optional().default("24h").describe("Time window to merge (e.g. '24h', '7d', '2026-07-20'). Default: 24h."),
+      promote: z.boolean().optional().default(false).describe("If true, auto-promote unique observations to memory entries."),
+    },
+  },
+  async ({ since, promote }) => {
+    const { listSessions, pruneSessions } = await import("../lib/sessions")
+    pruneSessions()
+    const sessions = listSessions()
+
+    // Filter sessions by time window
+    const sinceMs = parseRelativeMs(since)
+    const cutoff = Date.now() - sinceMs
+    const recentSessions = sessions.filter((s) => new Date(s.lastSeen).getTime() >= cutoff)
+
+    if (recentSessions.length === 0) {
+      return { content: [{ type: "text" as const, text: `No sessions found in the last ${since}.` }] }
+    }
+
+    // Collect all files touched across sessions
+    const allFiles = new Map<string, Array<{ session: string; agent: string; branch: string; touched: string }>>()
+    for (const s of recentSessions) {
+      for (const [file, touched] of Object.entries(s.files)) {
+        if (!allFiles.has(file)) allFiles.set(file, [])
+        allFiles.get(file)!.push({ session: s.id, agent: s.agent, branch: s.branch, touched })
+      }
+    }
+
+    // Find files touched by multiple sessions (potential merge points)
+    const sharedFiles = [...allFiles.entries()]
+      .filter(([_, sessions]) => sessions.length >= 2)
+      .sort((a, b) => b[1].length - a[1].length)
+
+    // Read observations for these sessions
+    let observations: Array<{ ts: string; session: string; agent: string; branch: string; tool: string; file: string; summary: string }> = []
+    if (existsSync(OBSERVATIONS_FILE)) {
+      const data = readFileSync(OBSERVATIONS_FILE, "utf-8")
+      const sessionIds = new Set(recentSessions.map((s) => s.id))
+      observations = data.split("\n")
+        .filter((l) => l.startsWith("  ") && l.includes("|"))
+        .map((l) => {
+          const p = l.trim().split("|")
+          return { ts: p[0] || "", session: p[1] || "", agent: p[2] || "", branch: p[3] || "", tool: p[4] || "", file: p[6] || "", summary: p[7] || "" }
+        })
+        .filter((o) => sessionIds.has(o.session))
+    }
+
+    // Deduplicate observations by tool+summary hash
+    const seen = new Set<string>()
+    const uniqueObs = observations.filter((o) => {
+      const key = `${o.tool}|${o.summary}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+
+    // Build output
+    const sections: string[] = [
+      `🔀 Session Merge Report (${recentSessions.length} sessions, last ${since})`,
+      "",
+      `Sessions:`,
+      ...recentSessions.map((s) => {
+        const mins = Math.max(0, Math.round((Date.now() - new Date(s.lastSeen).getTime()) / 60000))
+        const files = Object.keys(s.files).length
+        return `  ${s.agent}@${s.branch} (${s.id}) — ${mins}min ago, ${files} files`
+      }),
+    ]
+
+    if (sharedFiles.length > 0) {
+      sections.push("", `Shared files (${sharedFiles.length}):`)
+      for (const [file, sess] of sharedFiles.slice(0, 10)) {
+        const who = sess.map((s) => `${s.agent}@${s.branch}`).join(", ")
+        sections.push(`  ${file} ↔ ${who}`)
+      }
+    }
+
+    if (uniqueObs.length > 0) {
+      sections.push("", `Unique observations (${uniqueObs.length} of ${observations.length} total):`)
+      for (const o of uniqueObs.slice(0, 15)) {
+        sections.push(`  [${o.tool}] ${o.agent}@${o.branch}: ${o.summary.slice(0, 100)}`)
+      }
+    }
+
+    // Auto-promote mode
+    if (promote && uniqueObs.length > 0) {
+      const data = readMemory()
+      const entries = parseEntries(data)
+      const existingKeys = new Set(entries.map((e) => e.key))
+      let promoted = 0
+
+      for (const obs of uniqueObs.slice(0, 5)) {
+        // Generate a key from the observation summary
+        const key = obs.summary
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, "")
+          .split(/\s+/)
+          .slice(0, 4)
+          .join("-")
+          .slice(0, 40)
+
+        if (!key || existingKeys.has(key)) continue
+
+        // Use memory_remember logic inline
+        const newId = generateId()
+        const date = new Date().toISOString().split("T")[0]
+        const content = obs.summary.slice(0, 500)
+        const file = obs.file || ""
+        const tags = `session-merge;${obs.agent};${obs.branch}`
+        const quality = qualityScore(tags, "", content, date)
+        const entry = `${newId}|knowledge|${key}|${content}|${file}|${tags}|${date}||0||${quality.toFixed(2)}|1|`
+
+        // Append to memory
+        const lines = data.split("\n")
+        let headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+        if (headerIdx === -1) {
+          lines.push(`[0|]`)
+          headerIdx = lines.length - 1
+        }
+        const match = lines[headerIdx].match(/\[(\d+)\|/)
+        const count = match ? parseInt(match[1]) : 0
+        lines.splice(headerIdx + 1, 0, `  ${entry}`)
+        lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count + 1}|`)
+        writeMemory(lines.join("\n"))
+        existingKeys.add(key)
+        promoted++
+      }
+
+      sections.push("", `📤 Promoted ${promoted} observations to memory.`)
+    } else if (uniqueObs.length > 0) {
+      sections.push("", `💡 Use 'promote: true' to auto-save unique observations as memory entries.`)
+    }
+
+    return { content: [{ type: "text" as const, text: sections.join("\n") }] }
+  }
+)
+
 } // end registerTools
+
+/** Parse relative time string to milliseconds. */
+function parseRelativeMs(s: string): number {
+  const match = s.match(/^(\d+)(h|d|m)$/i)
+  if (!match) {
+    // Try parsing as date
+    const d = new Date(s)
+    if (!isNaN(d.getTime())) return Date.now() - d.getTime()
+    return 24 * 60 * 60 * 1000 // default 24h
+  }
+  const n = parseInt(match[1])
+  switch (match[2].toLowerCase()) {
+    case "m": return n * 60 * 1000
+    case "h": return n * 60 * 60 * 1000
+    case "d": return n * 24 * 60 * 60 * 1000
+    default: return 24 * 60 * 60 * 1000
+  }
+}
