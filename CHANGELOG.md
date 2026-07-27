@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.9.5] - 2026-07-26
+
+### Fixed
+- Handle SIGINT (Ctrl+C) gracefully during interactive prompts — no more unhandled ExitPromptError crash
+
 ## [2.9.4] - 2026-07-26
 
 ### Fixed

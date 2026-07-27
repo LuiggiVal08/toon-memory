@@ -69,23 +69,31 @@ export async function init(scope?: string, agentFilter?: string[]): Promise<void
       process.exit(1)
     }
   } else if (process.stdin.isTTY) {
-    selected = await promptAgentSelection(agents)
-    if (selected.length === 0) {
-      console.log("\nNo se seleccionaron agentes. Nada instalado.\n")
-      return
-    }
-    finalScope = await select({
-      message: "Scope:",
-      choices: [
-        { name: "Local (project)", value: "local" },
-        { name: "Global (~home)", value: "global" }
-      ],
-      default: finalScope as "local" | "global"
-    })
-    const ok = await confirm({ message: "Proceed?", default: true })
-    if (!ok) {
-      console.log("\nInstallation cancelled.\n")
-      return
+    try {
+      selected = await promptAgentSelection(agents)
+      if (selected.length === 0) {
+        console.log("\nNo se seleccionaron agentes. Nada instalado.\n")
+        return
+      }
+      finalScope = await select({
+        message: "Scope:",
+        choices: [
+          { name: "Local (project)", value: "local" },
+          { name: "Global (~home)", value: "global" }
+        ],
+        default: finalScope as "local" | "global"
+      })
+      const ok = await confirm({ message: "Proceed?", default: true })
+      if (!ok) {
+        console.log("\nInstallation cancelled.\n")
+        return
+      }
+    } catch (e: any) {
+      if (e?.name === "ExitPromptError" || e?.message?.includes("SIGINT")) {
+        console.log("\nInstallation cancelled.\n")
+        return
+      }
+      throw e
     }
   } else {
     selected = agents
@@ -490,25 +498,36 @@ export async function interactiveInstall(): Promise<void> {
     return
   }
 
-  const agents = detectAgents()
-  const selected = await promptAgentSelection(agents)
-  if (selected.length === 0) {
-    console.log("\nNo agents selected. Nothing installed.\n")
-    return
-  }
+  let agents: ReturnType<typeof detectAgents>
+  let selected: Awaited<ReturnType<typeof promptAgentSelection>>
+  let scope: string
+  try {
+    agents = detectAgents()
+    selected = await promptAgentSelection(agents)
+    if (selected.length === 0) {
+      console.log("\nNo agents selected. Nothing installed.\n")
+      return
+    }
 
-  const scope = await select({
-    message: "Scope:",
-    choices: [
-      { name: "Local (project)", value: "local" },
-      { name: "Global (~home)", value: "global" }
-    ]
-  })
+    scope = await select({
+      message: "Scope:",
+      choices: [
+        { name: "Local (project)", value: "local" },
+        { name: "Global (~home)", value: "global" }
+      ]
+    })
 
-  const ok = await confirm({ message: "Proceed?", default: true })
-  if (!ok) {
-    console.log("\nInstallation cancelled.\n")
-    return
+    const ok = await confirm({ message: "Proceed?", default: true })
+    if (!ok) {
+      console.log("\nInstallation cancelled.\n")
+      return
+    }
+  } catch (e: any) {
+    if (e?.name === "ExitPromptError" || e?.message?.includes("SIGINT")) {
+      console.log("\nInstallation cancelled.\n")
+      return
+    }
+    throw e
   }
 
   console.log(`\nInstalling (${scope}) — ${selected.map((a) => a.name).join(", ")}...\n`)
