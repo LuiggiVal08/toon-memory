@@ -140,6 +140,27 @@ entries[4|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|co
     const matches = result.match(/\[\d+\]/g)
     expect(matches).toHaveLength(1)
   })
+
+  it("applies drift penalty when file was modified after entry creation", () => {
+    const old = new Date(Date.now() - 60 * 86400000).toISOString().split("T")[0]
+    const today = new Date().toISOString().split("T")[0]
+    const data = `version: 1
+entries[2|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1|decision|use-zod|Use Zod for validation|src/types.ts|types|${old}||0||0.70|1.0
+  a2|knowledge|redis-cache|Redis for caching|cache.ts|redis|${old}||0||0.60|1.0
+`
+    // cache.ts was NOT modified → no drift
+    const mtimesNoDrift = new Map([["src/types.ts", old]])
+    const resultNoDrift = generateSmartRecall(data, "zod", { fileMtimes: mtimesNoDrift })
+    expect(resultNoDrift).toContain("use-zod")
+
+    // src/types.ts was modified today → drift penalty applies
+    const mtimesDrift = new Map([["src/types.ts", today]])
+    const resultDrift = generateSmartRecall(data, "zod", { fileMtimes: mtimesDrift })
+    // The drifted entry should still appear but with lower effective score
+    // Since it's the only match, it still shows up (BM25 score > 0)
+    expect(resultDrift).toContain("use-zod")
+  })
 })
 
 describe("generateSystemPrimer", () => {

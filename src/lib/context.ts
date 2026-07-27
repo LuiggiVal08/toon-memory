@@ -18,8 +18,10 @@ import { join } from "path"
 import { parseEntries, buildGraph, bm25Scores, centrality, renderCompact, type GraphEntry } from "./graph"
 import { qualityScore } from "./quality"
 import { normalize, isExpiredLocal, tokenize, importance } from "./utils"
+import { expandSynonyms } from "./synonyms"
+import { fuzzyMatch } from "./fuzzy"
 import { coordinationView, currentBranch, pruneSessions, listSessions } from "./sessions"
-import { readRecentCommits, gitStatusSummary, readGitIndex } from "./git"
+import { readRecentCommits, gitStatusSummary, readGitIndex, fileMtimes } from "./git"
 import { scanProjectStructure, readManifest, readEnvExample } from "./project-scan"
 import { findFilesByPattern, searchCode, findCallers } from "./code-search"
 
@@ -60,6 +62,7 @@ function formatRelevantEntries(data: string, task: string, limit: number = 6): s
 	const bm25 = bm25Scores(entries, task)
 	const cent = centrality(adjacency)
 	const qTokens = tokenize(task)
+	const expandedTokens = expandSynonyms(qTokens)
 
 	const scored = entries
 		.filter((e) => !(e.ttl && isExpiredLocal(e.ttl)))
@@ -67,7 +70,10 @@ function formatRelevantEntries(data: string, task: string, limit: number = 6): s
 			const text = normalize(
 				`${e.id} ${e.category} ${e.key} ${e.content} ${e.file} ${e.tags.join(" ")}`
 			)
-			const matchesQuery = qTokens.length === 0 || qTokens.some((t) => text.includes(t))
+			const docTokens = text.split(" ")
+			const exactMatch = qTokens.length === 0 || expandedTokens.some((t) => text.includes(t))
+			const fuzzy = !exactMatch && qTokens.length > 0 && fuzzyMatch(qTokens, docTokens)
+			const matchesQuery = exactMatch || fuzzy
 			const bm25Score = bm25.get(e.key) || 0
 			const centScore = cent.get(e.key) || 0
 			const impScore = importance(e)
@@ -539,14 +545,31 @@ export function generateContextHealth(data: string, root: string): { report: Hea
 		score -= 5
 	}
 
-	// 6. Stale sessions
+	// 6. Code drift detection: entries whose linked file changed after creation
+	const mtimes = fileMtimes(root)
+	const driftedEntries: string[] = []
+	for (const e of entries) {
+		if (!e.file) continue
+		const filePath = e.file.split(":")[0]
+		if (!filePath) continue
+		const fileDate = mtimes.get(filePath)
+		if (fileDate && e.date && fileDate > e.date) {
+			driftedEntries.push(`${e.key} (${e.file} modified ${fileDate})`)
+		}
+	}
+	if (driftedEntries.length > 0) {
+		warnings.push(`${driftedEntries.length} entries with stale file refs: ${driftedEntries.slice(0, 3).join("; ")}`)
+		score -= 4
+	}
+
+	// 7. Stale sessions
 	const sessions = listSessions()
 	const stale = sessions.filter((s) => !s.active && !s.ended)
 	if (stale.length > 0) {
 		info.push(`${stale.length} stale sessions (will be pruned automatically)`)
 	}
 
-	// 7. Entry count
+	// 8. Entry count
 	if (entries.length > 80) {
 		warnings.push(`${entries.length} entries (near limit of 100)`)
 		score -= 3

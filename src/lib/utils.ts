@@ -22,4 +22,10 @@ export function importance(e: { date: string; accessed: number }): number {
 	return recency * 0.6 + freq * 0.4
 }
 
-export const tokenize = (s: string): string[] => normalize(s).split(" ").filter(Boolean)
+export const tokenize = (s: string): string[] =>
+	s
+		.replace(/([a-z])([A-Z])/g, "$1 $2")
+		.replace(/[-_]/g, " ")
+		.toLowerCase()
+		.split(/\s+/)
+		.filter(Boolean)

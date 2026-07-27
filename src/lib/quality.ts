@@ -9,6 +9,8 @@
 
 import { parseEntries, buildGraph, bm25Scores, centrality, renderCompact, type GraphEntry } from "./graph"
 import { normalize, isExpiredLocal, tokenize, importance } from "./utils"
+import { expandSynonyms } from "./synonyms"
+import { fuzzyMatch } from "./fuzzy"
 
 /**
  * Quality score for an entry (0..1). Pure heuristics, no LLM.
@@ -100,7 +102,7 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 export function generateSmartRecall(
 	data: string,
 	intent: string,
-	opts: { limit?: number; category?: string; bumpAccess?: (ids: string[]) => void } = {}
+	opts: { limit?: number; category?: string; bumpAccess?: (ids: string[]) => void; fileMtimes?: Map<string, string> } = {}
 ): string {
 	const entries = parseEntries(data)
 	if (entries.length === 0) return "Empty memory."
@@ -110,8 +112,10 @@ export function generateSmartRecall(
 	const cent = centrality(adjacency)
 	const limit = opts.limit ?? 8
 	const category = opts.category || ""
+	const mtimes = opts.fileMtimes
 
 	const qTokens = tokenize(intent)
+	const expandedTokens = expandSynonyms(qTokens)
 
 	const scored = entries
 		.filter((e) => {
@@ -123,12 +127,22 @@ export function generateSmartRecall(
 			const text = normalize(
 				`${e.id} ${e.category} ${e.key} ${e.content} ${e.file} ${e.tags.join(" ")}`
 			)
-			const matchesQuery = qTokens.length === 0 || qTokens.some((t) => text.includes(t))
+			const docTokens = text.split(" ")
+			const exactMatch = qTokens.length === 0 || expandedTokens.some((t) => text.includes(t))
+			const fuzzy = !exactMatch && qTokens.length > 0 && fuzzyMatch(qTokens, docTokens)
+			const matchesQuery = exactMatch || fuzzy
 			const bm25Score = bm25.get(e.key) || 0
 			const centScore = cent.get(e.key) || 0
 			const impScore = importance(e)
+			// Drift penalty: if the linked file was modified after the entry was created
+			let drift = 0
+			if (mtimes && e.file) {
+				const filePath = e.file.split(":")[0]
+				const fileDate = mtimes.get(filePath)
+				if (fileDate && e.date && fileDate > e.date) drift = 0.3
+			}
 			const combined =
-				bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0)
+				bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift
 			return { entry: e, score: combined, matchesQuery }
 		})
 		.filter((x) => x.score > 0 || x.matchesQuery)

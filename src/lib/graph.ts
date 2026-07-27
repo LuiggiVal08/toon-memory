@@ -15,6 +15,8 @@
  */
 
 import { normalize, isExpiredLocal, tokenize, importance } from "./utils"
+import { expandSynonyms } from "./synonyms"
+import { fuzzyMatch } from "./fuzzy"
 
 export interface GraphEntry {
 	id: string
@@ -207,6 +209,7 @@ export function graphRecallDetailed(
 	const to_date = opts.to_date || ""
 
 	const qTokens = tokenize(query)
+	const expandedTokens = expandSynonyms(qTokens)
 	const bm25 = bm25Scores(entries, query)
 	const cent = centrality(adjacency)
 
@@ -219,7 +222,10 @@ export function graphRecallDetailed(
 		const text = normalize(
 			`${e.id} ${e.category} ${e.key} ${e.content} ${e.file} ${e.tags.join(" ")}`
 		)
-		if (qTokens.length > 0 && !qTokens.every((t) => text.includes(t))) continue
+		const docTokens = text.split(" ")
+		const exactMatch = expandedTokens.some((t) => text.includes(t))
+		const fuzzy = !exactMatch && fuzzyMatch(qTokens, docTokens)
+		if (qTokens.length > 0 && !exactMatch && !fuzzy) continue
 		seedKeys.add(e.key)
 	}
 

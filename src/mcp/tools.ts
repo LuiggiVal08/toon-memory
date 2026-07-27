@@ -15,6 +15,7 @@ import { graphRecallDetailed, renderCompact, parseEntries } from "../lib/graph"
 import { qualityScore, mergeEntries, generateSmartRecall } from "../lib/quality"
 import { generateContextBrief, generateContextGenerate, generateContextDiff, generateContextFocus, generateContextHealth, generateContextExport } from "../lib/context"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } from "../lib/sessions"
+import { fileMtimes } from "../lib/git"
 
 /**
  * Register all 20 memory tools.
@@ -27,7 +28,7 @@ server.registerTool(
   "memory_remember",
   {
     title: "Save to Memory",
-    description: "Save a fact to the project's persistent memory (decisions, patterns, bugs, knowledge). Persists between sessions.",
+    description: "Save a fact to the project's persistent memory (decisions, patterns, bugs, knowledge). Persists between sessions. To mark an entry as obsolete, save a new entry with tags containing 'superseded' (e.g. tags: 'superseded;zod').",
     inputSchema: {
       category: z.enum(["decision", "pattern", "bug", "knowledge"]).describe("Category of the fact"),
       key: z.string().describe("Short title in kebab-case (e.g. risk-engine-priority)"),
@@ -365,7 +366,8 @@ server.registerTool(
   },
   async ({ intent, limit, category }) => {
     const data = readMemory()
-    const result = generateSmartRecall(data, intent, { limit, category })
+    const mtimes = fileMtimes()
+    const result = generateSmartRecall(data, intent, { limit, category, fileMtimes: mtimes })
     return { content: [{ type: "text" as const, text: result }] }
   }
 )

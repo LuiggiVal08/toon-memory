@@ -150,6 +150,22 @@ export function readGitIndex(cwd?: string): string[] {
 }
 
 /**
+ * Return a map of file path → last-modified date (YYYY-MM-DD) from the git index.
+ * Used for drift detection: compare entry creation date against file mtime.
+ */
+export function fileMtimes(cwd?: string): Map<string, string> {
+  const dir = gitDir(cwd)
+  if (!dir) return new Map()
+  const entries = parseIndex(dir)
+  const out = new Map<string, string>()
+  for (const e of entries) {
+    const date = new Date(e.mtimeSec * 1000).toISOString().split("T")[0]
+    out.set(e.name, date)
+  }
+  return out
+}
+
+/**
  * Parse a raw git object (decompressed with zlib).
  * Returns the object type and content.
  */
