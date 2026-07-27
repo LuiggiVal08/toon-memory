@@ -140,9 +140,9 @@ describe("MCP Integration", () => {
 
 	// ── Tool listing ──────────────────────────────────────────────
 
-	it("lists all 21 tools", async () => {
+	it("lists all 27 tools", async () => {
 		const tools = await client.listTools()
-		expect(tools.length).toBe(21)
+		expect(tools.length).toBe(27)
 		expect(tools).toContain("memory_remember")
 		expect(tools).toContain("memory_recall")
 		expect(tools).toContain("memory_forget")
@@ -158,6 +158,12 @@ describe("MCP Integration", () => {
 		expect(tools).toContain("memory_consolidate")
 		expect(tools).toContain("memory_sessions")
 		expect(tools).toContain("memory_backup")
+		expect(tools).toContain("memory_compress")
+		expect(tools).toContain("memory_compress_all")
+		expect(tools).toContain("memory_primer")
+		expect(tools).toContain("memory_merge_sessions")
+		expect(tools).toContain("memory_export_gist")
+		expect(tools).toContain("memory_import_gist")
 		expect(tools).toContain("context_brief")
 		expect(tools).toContain("context_generate")
 		expect(tools).toContain("context_diff")
