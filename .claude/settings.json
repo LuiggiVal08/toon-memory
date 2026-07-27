@@ -1,18 +1,19 @@
 {
-  "mcpServers": {
-    "toon-memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "toon-memory",
-        "mcp"
-      ]
-    }
-  },
+  "mcpServers": {},
   "hooks": {
     "SessionStart": [
       {
         "command": "/home/egraterol/projects/toon-memory/.toon-memory/hooks/session-start-claude.sh"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "command": "/home/egraterol/projects/toon-memory/.toon-memory/hooks/capture-claude.sh"
+      }
+    ],
+    "Stop": [
+      {
+        "command": "/home/egraterol/projects/toon-memory/.toon-memory/hooks/capture-claude.sh"
       }
     ]
   }

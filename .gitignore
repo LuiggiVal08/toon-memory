@@ -6,3 +6,5 @@ bin/toon-memory.js
 .opencode/
 .opencode/memory/
 .toon-memory/memory/
+.opencode/instructions/memory-autoload.md
+IDEAS-DEFERRED.md
