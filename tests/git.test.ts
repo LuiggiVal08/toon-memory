@@ -22,7 +22,11 @@ beforeEach(() => {
 
 afterEach(() => {
   process.chdir(cwd)
-  rmSync(testDir, { recursive: true, force: true })
+  try {
+    rmSync(testDir, { recursive: true, force: true })
+  } catch {
+    // Ignore cleanup errors (e.g. locked pack files on some systems)
+  }
 })
 
 describe("readGitIndex", () => {
