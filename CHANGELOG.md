@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.9.4] - 2026-07-26
+
+### Fixed
+- Flaky encrypt/decrypt tamper tests: use Buffer XOR instead of string replace for deterministic failures
+
 ## [2.9.3] - 2026-07-26
 
 ### Fixed

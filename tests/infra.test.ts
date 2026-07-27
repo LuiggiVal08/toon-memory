@@ -173,21 +173,27 @@ describe("encrypt/decrypt", () => {
   it("throws on tampered ciphertext", () => {
     const encrypted = encrypt("secret", key)
     const parts = encrypted.split(":")
-    parts[2] = "ff" + parts[2].slice(2) // tamper ciphertext
+    const ctBuf = Buffer.from(parts[2], "hex")
+    ctBuf[0] ^= 0xff
+    parts[2] = ctBuf.toString("hex")
     expect(() => decrypt(parts.join(":"), key)).toThrow()
   })
 
   it("throws on tampered auth tag", () => {
     const encrypted = encrypt("secret", key)
     const parts = encrypted.split(":")
-    parts[1] = "ff" + parts[1].slice(2) // tamper auth tag
+    const tagBuf = Buffer.from(parts[1], "hex")
+    tagBuf[0] ^= 0xff
+    parts[1] = tagBuf.toString("hex")
     expect(() => decrypt(parts.join(":"), key)).toThrow()
   })
 
   it("throws on tampered IV", () => {
     const encrypted = encrypt("secret", key)
     const parts = encrypted.split(":")
-    parts[0] = "ff" + parts[0].slice(2) // tamper IV
+    const ivBuf = Buffer.from(parts[0], "hex")
+    ivBuf[0] ^= 0xff
+    parts[0] = ivBuf.toString("hex")
     expect(() => decrypt(parts.join(":"), key)).toThrow()
   })
 
