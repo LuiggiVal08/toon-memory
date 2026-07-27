@@ -94,8 +94,12 @@ describe("readRecentCommits", () => {
     for (let i = 0; i < 5; i++) {
       writeFileSync(join(testDir, `f${i}.ts`), `v${i}`)
       git("add .")
-      const ts = Math.floor(Date.now() / 1000) + i
-      git(`commit -m 'commit ${i}' --date="${new Date(ts * 1000).toISOString()}"`)
+      const ts = new Date(Date.now() + i * 60000).toISOString()
+      execSync(`git commit -m 'commit ${i}'`, {
+        cwd: testDir,
+        encoding: "utf-8",
+        env: { ...process.env, GIT_AUTHOR_DATE: ts, GIT_COMMITTER_DATE: ts }
+      })
     }
     expect(readRecentCommits(3)).toHaveLength(3)
     expect(readRecentCommits(10)).toHaveLength(5)

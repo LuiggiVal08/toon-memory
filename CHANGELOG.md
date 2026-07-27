@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.9.8] - 2026-07-27
+
+### Fixed
+- Flaky `readRecentCommits` count test — use `GIT_AUTHOR_DATE`/`GIT_COMMITTER_DATE` env vars for deterministic timestamps
+
 ## [2.9.7] - 2026-07-27
 
 ### Changed
