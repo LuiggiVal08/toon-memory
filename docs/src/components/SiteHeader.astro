@@ -52,3 +52,17 @@ const docsHref = getLocalePath(lang) + 'getting-started/quickstart';
     </a>
   </nav>
 </header>
+<script is:inline>
+  (function () {
+    var btn = document.querySelector('.lang-switch');
+    var menu = document.querySelector('.lang-dropdown-menu');
+    if (!btn || !menu) return;
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      menu.classList.toggle('open');
+    });
+    document.addEventListener('click', function () {
+      menu.classList.remove('open');
+    });
+  })();
+</script>
