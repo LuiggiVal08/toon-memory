@@ -1,7 +1,7 @@
 {
   "name": "toon-memory",
   "version": "3.0.0",
-  "description": "MCP server giving AI coding agents offline, token-efficient persistent memory — 21 tools, 80% fewer tool calls, recall decisions, patterns, and bugs across sessions. No LLM, no server; works with 15+ agents.",
+  "description": "MCP server giving AI coding agents offline, token-efficient persistent memory — 27 tools, 80% fewer tool calls, recall decisions, patterns, and bugs across sessions. No LLM, no server; works with 15+ agents.",
   "type": "module",
   "bin": {
     "toon-memory": "./bin/toon-memory.js"
@@ -27,6 +27,8 @@
     "bench:impact": "node scripts/benchmark-impact.mjs",
     "bench:context": "node scripts/bench-context-tools.mjs",
     "bench:full": "node scripts/bench-full-impact.mjs",
+    "bench:compress-all": "node scripts/bench-compress-all.mjs",
+    "bench:primer": "node scripts/bench-primer.mjs",
     "inspect": "npm run build && npx @modelcontextprotocol/inspector node bin/toon-memory.js mcp",
     "prepublishOnly": "npm run build && npm test"
   },
