@@ -260,6 +260,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'context_export', title: 'Export as Markdown', desc: 'Export memory as injectable markdown for system prompts. Saves 82% tokens.' },
 				{ name: 'memory_encrypt', title: 'Enable Encryption', desc: 'AES-256-GCM encryption with an auto-generated key.' },
 				{ name: 'memory_decrypt', title: 'Disable Encryption', desc: 'Decrypt and disable encryption.' },
+				{ name: 'memory_backup', title: 'Backup Memory', desc: 'Create timestamped backup of memory file. Auto-prunes to 10 most recent.' },
 			],
 		},
 		graphSection: {
@@ -623,6 +624,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'context_export', title: 'Exportar como Markdown', desc: 'Exporta memoria como markdown inyectable para system prompts. Ahorra 82% tokens.' },
 				{ name: 'memory_encrypt', title: 'Habilitar encriptación', desc: 'Encriptación AES-256-GCM con clave autogenerada.' },
 				{ name: 'memory_decrypt', title: 'Deshabilitar encriptación', desc: 'Desencripta y deshabilita la encriptación.' },
+				{ name: 'memory_backup', title: 'Backup de memoria', desc: 'Crea backup con timestamp del archivo de memoria. Auto-limpia a los 10 más recientes.' },
 			],
 		},
 		graphSection: {
