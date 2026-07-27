@@ -1,6 +1,6 @@
 {
   "name": "toon-memory",
-  "version": "2.9.6",
+  "version": "2.9.7",
   "description": "MCP server giving AI coding agents offline, token-efficient persistent memory — 21 tools, 80% fewer tool calls, recall decisions, patterns, and bugs across sessions. No LLM, no server; works with 15+ agents.",
   "type": "module",
   "bin": {
@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^8.5.2",
-    "@modelcontextprotocol/server": "^2.0.0-beta.3",
+    "@modelcontextprotocol/server": "^2.0.0-beta.5",
     "@toon-format/toon": "^2.3.0",
     "zod": "^4.4.3"
   },

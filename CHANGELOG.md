@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.9.7] - 2026-07-27
+
+### Changed
+- Updated `@modelcontextprotocol/server` to `2.0.0-beta.5`
+
 ## [2.9.6] - 2026-07-27
 
 ### Fixed
