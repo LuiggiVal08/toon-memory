@@ -39,6 +39,8 @@ export interface MemoryConfig {
   vocab?: Record<string, string[]>
   /** Maximum active entries before auto-archive (default 100). */
   maxEntries?: number
+  /** Verbatim mode: skip tag inference and quality scoring at write time. */
+  verbatim?: boolean
 }
 
 /**
