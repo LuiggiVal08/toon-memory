@@ -173,6 +173,7 @@ memory_remember   # Save important decisions
 | `memory_suggest` | Find related entries for a given context |
 | `memory_encrypt` | Enable AES-256-GCM encryption |
 | `memory_decrypt` | Disable encryption |
+| `memory_backup` | Create timestamped backup of memory file (auto-prunes to 10 most recent) |
 | `memory_captured` | List activity auto-captured by hooks (opt-in) or clear the log |
 | `memory_consolidate` | Merge-dedup entries: same-key entries are merged (tags union, max confidence, latest date), then exact-content duplicates removed (deterministic, no LLM) |
 | `memory_sessions` | Show active agent sessions (branch, files, last-seen) and soft conflicts for parallel work |

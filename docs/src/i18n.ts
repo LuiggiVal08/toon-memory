@@ -83,7 +83,7 @@ export const content = {
 		},
 		stats: {
 			items: [
-				{ number: '20', label: 'MCP Tools' },
+				{ number: '21', label: 'MCP Tools' },
 				{ number: '15', label: 'Agents' },
 				{ number: '80%', label: 'Fewer Tool Calls / session' },
 				{ number: '0', label: 'Config Needed' },
@@ -446,7 +446,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		stats: {
 			items: [
-				{ number: '20', label: 'Herramientas MCP' },
+				{ number: '21', label: 'Herramientas MCP' },
 				{ number: '15', label: 'Agentes' },
 				{ number: '80%', label: 'Menos tool calls por sesión' },
 				{ number: '0', label: 'Config necesaria' },

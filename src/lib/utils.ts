@@ -17,7 +17,7 @@ export function importance(e: { date: string; accessed: number }): number {
 	const today = new Date().toISOString().split("T")[0]
 	const days =
 		(Date.now() - new Date(`${e.date || today}T00:00:00`).getTime()) / 86400000
-	const recency = Math.max(0, 30 - days) / 30
+	const recency = Math.min(1, Math.max(0, 30 - days) / 30)
 	const freq = Math.min(1, e.accessed / 5)
 	return recency * 0.6 + freq * 0.4
 }
