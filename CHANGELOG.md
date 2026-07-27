@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.10.0] - 2026-07-27
+
+### Added
+- **`memory_compress` MCP tool** — LLM-powered two-step compression: summarize + overwrite. Uses `anthropic` or `openai` CLI if available, otherwise returns prompt for manual compression
+- **`memory_compress_all` MCP tool** — Batch compression: overwrites all entries under 100 tokens with a compressed version (deterministic, no LLM)
+- **`memory_primer` MCP tool** — One-call context primer: top memories + categories + session file changes. Auto-injected at session start via `systemPrimer()`
+- **`memory_merge_sessions` MCP tool** — Merge observations across sessions: finds all sessions for a file, deduplicates, auto-promotes to memory
+- **`memory_export_gist` MCP tool** — Export memory entries to a GitHub Gist (public or private). Uses `GITHUB_TOKEN` or `gh` CLI for auth
+- **`memory_import_gist` MCP tool** — Import entries from a GitHub Gist. Merges with existing entries (union of tags, max confidence)
+- **Verbatim mode** — `config.verbatim` option preserves original entries instead of overwriting on save
+- **Near-duplicate detection** — Consolidation now detects near-duplicate entries via Jaccard similarity (threshold 0.7) and merges them
+- **`lastAccessed` tracking** — `bumpAccessed()` now writes an ISO timestamp so memory_stats can show "Most accessed" entries
+- **Quality scoring v2** — `qualityScore()` enhanced with `accessed` count (more accesses = higher score) and `lastAccessed` recency
+- **Session-start auto-injection** — `systemPrimer()` function in session-start hook automatically injects top 5 memories at session start
+- **6 new documentation pages** — Competitive analysis, alternatives analysis, implementation plan, deferred ideas (gitignored)
+- **278 tests** — up from 238; all MCP tools have unit tests
+
+### Changed
+- Tool count: 21 → 27 MCP tools
+- `GraphEntry` interface extended with `lastAccessed?: string` field
+- `parseEntries()` handles field 12 (`lastAccessed`)
+- `mergeEntries()` preserves `lastAccessed` field
+- Test updated: tool count 21 → 27
+
 ## [2.9.8] - 2026-07-27
 
 ### Fixed

@@ -63,7 +63,7 @@ Leia [Como o toon-memory Torna Seu Agente de IA Mais Inteligente](https://luiggi
 
 ## Funcionalidades
 
-- **21 ferramentas MCP** — Gerenciamento completo de memória via Model Context Protocol, incluindo `memory_smart_recall` (recall unificado), `memory_sessions` para coordenação multi-sessão, e ferramentas `context_*` para geração de contexto em uma única chamada (briefing, diff, foco, auditoria de saúde, exportação)
+- **27 ferramentas MCP** — Gerenciamento completo de memória via Model Context Protocol, incluindo `memory_smart_recall` (recall unificado), `memory_sessions` para coordenação multi-sessão, e ferramentas `context_*` para geração de contexto em uma única chamada (briefing, diff, foco, auditoria de saúde, exportação)
 - **Recursos MCP** — Leia memória como contexto sem invocações de ferramentas, incluindo um System Primer (mapa de conhecimento auto-gerado)
 - **15 agentes suportados** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Instalador interativo** — Selecione quais agentes configurar a partir de um menu
@@ -179,6 +179,12 @@ memory_remember   # Salve decisões importantes
 | `memory_captured` | Liste atividade capturada automaticamente por hooks (opt-in) ou limpe o log |
 | `memory_consolidate` | Merge-dedup de entradas: entradas com a mesma chave são mescladas (união de tags, confiança máxima, data mais recente), depois duplicatas com conteúdo exato são removidas (determinístico, sem LLM) |
 | `memory_sessions` | Mostre sessões ativas do agente (branch, arquivos, último acesso) e conflitos suaves para trabalho paralelo |
+| `memory_compress` | Compressão com LLM em dois passos: resumir + sobrescrever. Usa Anthropic/OpenAI CLI se disponível |
+| `memory_compress_all` | Compressão em lote: sobrescreve entradas abaixo de 100 tokens com versão comprimida. Determinístico, sem LLM |
+| `memory_primer` | Primer de contexto em uma chamada: memórias principais + categorias + mudanças de arquivos. Injetado automaticamente no início da sessão |
+| `memory_merge_sessions` | Mescla observações entre sessões paralelas para um arquivo. Deduplica e promove automaticamente |
+| `memory_export_gist` | Exporta entradas para um GitHub Gist (público ou privado). Usa GITHUB_TOKEN ou gh CLI |
+| `memory_import_gist` | Importa entradas de um GitHub Gist. Mescla com entradas existentes (união de tags, confiança máxima) |
 | `context_brief` | **Briefing de contexto em uma chamada**: memória + sessões + saúde em markdown compacto. Use no lugar de 5-6 chamadas separadas de memory_*. Zero LLM, pura agregação determinística |
 | `context_generate` | **Briefing completo do projeto**: combina estrutura do projeto, estado do git, entradas de memória e sessões ativas em uma chamada. Substitui 5-6 chamadas manuais de ferramentas |
 | `context_diff` | **Briefing incremental**: commits git + arquivos modificados + memória nova/atualizada + sessões ativas desde a última sessão |
@@ -1158,7 +1164,7 @@ toon-memory/
 │   │   ├── setup.ts             # Comandos CLI
 │   │   └── toon-memory.ts       # Runner do CLI
 │   ├── mcp/
-│   │   └── server.ts            # Servidor MCP (21 ferramentas + 3 recursos)
+│   │   └── server.ts            # Servidor MCP (27 ferramentas + 3 recursos)
 │   ├── lib/
 │   │   ├── lock.ts              # Lock de arquivo advisory + escrita atômica
 │   │   ├── sessions.ts          # Coordenação multi-sessão

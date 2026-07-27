@@ -63,7 +63,7 @@ Lee [Cómo toon-memory Hace tu Agente de IA más Inteligente](https://luiggival0
 
 ## Características
 
-- **21 herramientas MCP** — Gestión completa de memoria vía Model Context Protocol, incluyendo `memory_smart_recall` (recall unificado), `memory_sessions` para coordinación multi-sesión, y herramientas `context_*` para generación de contexto en una sola llamada (briefing, diff, focus, health audit, export)
+- **27 herramientas MCP** — Gestión completa de memoria vía Model Context Protocol, incluyendo `memory_smart_recall` (recall unificado), `memory_sessions` para coordinación multi-sesión, herramientas `context_*` para generación de contexto en una sola llamada, `memory_compress` (compresión con LLM), `memory_compress_all` (compresión por lotes), `memory_primer` (contexto auto-inyectado), `memory_merge_sessions` (fusión multi-sesión), y `memory_export_gist`/`memory_import_gist` (sincronización con GitHub Gist)
 - **Recursos MCP** — Lee memoria como contexto sin invocaciones de herramientas, incluyendo un System Primer (mapa de conocimiento auto-generado)
 - **15 agentes soportados** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Instalador interactivo** — Selecciona qué agentes configurar desde un menú
@@ -85,11 +85,16 @@ Lee [Cómo toon-memory Hace tu Agente de IA más Inteligente](https://luiggival0
 - **Ranking BM25 + centralidad** — Re-ranking por relevancia BM25 y centralidad de grafo (los hubs aparecen incluso sin la palabra de búsqueda); decaimiento por mantiene nodos distantes bajos
 - **Auto-tag desde dependencias** — `toon-memory init` escanea `package.json`/`Cargo.toml`/`requirements.txt`/`go.mod` y escribe un vocabulario del proyecto para que entradas que mencionan una dependencia se auto-tagguen con ella
 - **Smart Recall** — `memory_smart_recall` combina BM25 + grafo + decaimiento + calidad en una sola llamada. El LLM usa esto al inicio de cada tarea
-- **Scoring de calidad** — Cada entrada obtiene un puntaje de calidad 0–1 basado en estructura (tags, links, especificidad del contenido, recencia); las entradas de alta calidad aparecen primero
+- **Scoring de calidad v2** — Cada entrada obtiene un puntaje de calidad 0–1 basado en estructura (tags, links, especificidad del contenido, recencia, cantidad de accesos); las entradas de alta calidad aparecen primero
+- **Near-duplicate detection** — La consolidación detecta entradas casi-duplicadas vía similitud Jaccard (umbral 0.7) y las fusiona
 - **Merge-dedup** — Guardar con la misma `key` fusiona atributos (unión de tags, máxima confianza, fecha más reciente, links combinados) en lugar de sobrescribir
 - **Puntaje de confianza** — Cada entrada rastrea confiabilidad: declarada por usuario = 1.0, inferida = 0.65–0.75
+- **Compresión con LLM** — `memory_compress` usa IA para resumir entradas largas; `memory_compress_all` hace compresión por lotes de forma determinista
+- **Fusión multi-sesión** — `memory_merge_sessions` fusiona observaciones entre sesiones paralelas para un archivo
+- **Sincronización con GitHub Gist** — `memory_export_gist` y `memory_import_gist` sincronizan entradas de memoria vía GitHub Gist (sin dependencias externas)
+- **Modo verbatim** — `config.verbatim` preserva las entradas originales en lugar de sobrescribir al guardar
 - **Herramientas de generación de contexto** — `context_generate` (briefing completo), `context_diff` (incremental), `context_focus` (enfocado), `context_health` (auditoría), `context_export` (markdown) — cada una reemplaza 5-6 llamadas manuales de herramientas. Cero LLM, agregación puramente determinística
-- **System Primer** — Mapa de conocimiento auto-generado expuesto como recurso MCP; los agentes lo cargan al inicio de sesión para contexto instantáneo
+- **System Primer** — Auto-inyectado al inicio de sesión vía `systemPrimer()`, mostrando las 5 memorias principales para contexto instantáneo
 
 ---
 
@@ -179,6 +184,12 @@ memory_remember   # Guarda decisiones importantes
 | `memory_captured` | Lista actividad auto-capturada por hooks (opt-in) o limpia el registro |
 | `memory_consolidate` | Fusiona-deduplica entradas: entradas con la misma key se fusionan (unión de tags, máxima confianza, fecha más reciente), luego se eliminan duplicados de contenido exacto (determinístico, sin LLM) |
 | `memory_sessions` | Muestra sesiones activas de agentes (rama, archivos, última vez visto) y conflictos suaves para trabajo paralelo |
+| `memory_compress` | Compresión con LLM en dos pasos: resumir + sobrescribir. Usa `anthropic`/`openai` CLI si están disponibles, sino devuelve prompt para compresión manual |
+| `memory_compress_all` | Compresión por lotes: sobrescribe todas las entradas bajo 100 tokens con una versión comprimida. Determinístico, sin LLM |
+| `memory_primer` | Contexto en una llamada: memorias principales + categorías + cambios de archivos de sesión. Auto-inyectado al inicio de sesión |
+| `memory_merge_sessions` | Fusiona observaciones entre sesiones paralelas para un archivo. Deduplica y opcionalmente auto-promueve a memoria |
+| `memory_export_gist` | Exporta entradas de memoria a un GitHub Gist (público o privado). Usa `GITHUB_TOKEN` o `gh` CLI para autenticación |
+| `memory_import_gist` | Importa entradas desde un GitHub Gist. Fusiona con entradas existentes (unión de tags, máxima confianza) |
 | `context_brief` | **Briefing de contexto en una llamada**: memoria + sesiones + salud en markdown compacto. Usa en lugar de 5-6 llamadas manuales de memory_*. Cero LLM, agregación puramente determinística |
 | `context_generate` | **Briefing completo del proyecto**: combina estructura del proyecto, estado de git, entradas de memoria y sesiones activas en una llamada. Reemplaza 5-6 llamadas manuales de herramientas |
 | `context_diff` | **Briefing incremental**: commits de git + archivos modificados + memoria nueva/actualizada + sesiones activas desde la última sesión |
@@ -1156,7 +1167,7 @@ toon-memory/
 │   │   ├── setup.ts             # Comandos CLI
 │   │   └── toon-memory.ts       # Ejecutor CLI
 │   ├── mcp/
-│   │   └── server.ts            # Servidor MCP (21 herramientas + 3 recursos)
+│   │   └── server.ts            # Servidor MCP (27 herramientas + 3 recursos)
 │   ├── lib/
 │   │   ├── lock.ts              # Lock de archivo Advisory + escritura atómica
 │   │   ├── sessions.ts          # Coordinación multi-sesión

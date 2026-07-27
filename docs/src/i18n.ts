@@ -41,8 +41,8 @@ export const content = {
 			cards: [
 				{
 					icon: '🧩',
-					title: '21 MCP Tools + 3 Resources',
-					body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Plus resources for direct context reading.',
+					title: '27 MCP Tools + 3 Resources',
+					body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Plus resources for direct context reading.',
 					tags: ['remember', 'recall', 'context', 'diff'],
 				},
 				{
@@ -83,7 +83,7 @@ export const content = {
 		},
 		stats: {
 			items: [
-				{ number: '21', label: 'MCP Tools' },
+				{ number: '27', label: 'MCP Tools' },
 				{ number: '15', label: 'Agents' },
 				{ number: '80%', label: 'Fewer Tool Calls / session' },
 				{ number: '0', label: 'Config Needed' },
@@ -236,22 +236,28 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Full session benchmark: session start → debug → implement → review → wrap-up. <code>context_*</code> tools trade ~318 extra tokens for 7 fewer calls — richer context means fewer follow-up reads. Reproducible: <code>npm run bench:full</code>.',
 		},
 		tools: {
-			title: '21 MCP tools, 3 resources',
+			title: '27 MCP tools, 3 resources',
 			subtitle: 'Everything your agent needs to remember, recall, and reason',
 			resourcesLabel: 'Resources:',
 			cards: [
 				{ name: 'memory_remember', title: 'Save to Memory', desc: 'Store decisions, patterns, bugs, or knowledge — persisted across sessions with auto quality scoring.' },
 				{ name: 'memory_recall', title: 'Search Memory', desc: 'Query the knowledge graph before reading files. Quality-weighted results.' },
 				{ name: 'memory_forget', title: 'Delete from Memory', desc: 'Remove an entry by key or id.' },
-				{ name: 'memory_stats', title: 'Memory Stats', desc: 'Show statistics about the project memory, including quality distribution.' },
+				{ name: 'memory_stats', title: 'Memory Stats', desc: 'Show statistics about the project memory, including quality distribution and most accessed entries.' },
 				{ name: 'memory_diff', title: 'Memory Diff', desc: 'See what changed since your last session.' },
 				{ name: 'memory_suggest', title: 'Suggest Related', desc: 'Surface related entries for a given context.' },
 				{ name: 'memory_summary', title: 'File Summary', desc: 'Save or retrieve a file summary to save tokens.' },
 				{ name: 'memory_archive', title: 'Archive Old', desc: 'Move entries older than 30 days to keep memory clean.' },
 				{ name: 'memory_smart_recall', title: 'Smart Recall', desc: 'Unified search combining BM25 + graph centrality + quality score + freshness in one call.' },
 				{ name: 'memory_captured', title: 'Captured Activity', desc: 'View auto-captured hook activity log — promote observations to memory.' },
-				{ name: 'memory_consolidate', title: 'Consolidate', desc: 'Merge duplicate entries with identical content deterministically.' },
+				{ name: 'memory_consolidate', title: 'Consolidate', desc: 'Merge duplicate entries with identical content deterministically. Near-duplicate detection via Jaccard similarity.' },
 				{ name: 'memory_sessions', title: 'Sessions', desc: 'Show active agent sessions and detect soft conflicts.' },
+				{ name: 'memory_compress', title: 'LLM Compress', desc: 'LLM-powered two-step compression: summarize + overwrite. Uses Anthropic/OpenAI CLI if available.' },
+				{ name: 'memory_compress_all', title: 'Batch Compress', desc: 'Batch compression: overwrites all entries under 100 tokens with a compressed version. Deterministic, no LLM.' },
+				{ name: 'memory_primer', title: 'Context Primer', desc: 'One-call context primer: top memories + categories + session file changes. Auto-injected at session start.' },
+				{ name: 'memory_merge_sessions', title: 'Merge Sessions', desc: 'Merge observations across parallel sessions for a file. Deduplicates and auto-promotes.' },
+				{ name: 'memory_export_gist', title: 'Export to Gist', desc: 'Export memory entries to a GitHub Gist (public or private). Uses GITHUB_TOKEN or gh CLI.' },
+				{ name: 'memory_import_gist', title: 'Import from Gist', desc: 'Import entries from a GitHub Gist. Merges with existing entries (union of tags, max confidence).' },
 				{ name: 'context_brief', title: 'Context Briefing', desc: 'One-call context briefing: memory + sessions + health in compact markdown. Zero LLM.' },
 				{ name: 'context_generate', title: 'Full Project Briefing', desc: 'One-call briefing: project structure + git state + memory + sessions. Replaces 6 manual calls. Saves 93% tokens.' },
 				{ name: 'context_diff', title: 'Incremental Briefing', desc: 'Git commits + modified files + new/updated memory since last session. Saves 72% tokens.' },
@@ -301,7 +307,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			items: [
 				{
 					q: 'What is toon-memory?',
-					a: 'A persistent memory layer for AI coding agents with 21 MCP tools. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions — with 80% fewer tool calls per session.',
+					a: 'A persistent memory layer for AI coding agents with 27 MCP tools. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions — with 80% fewer tool calls per session.',
 				},
 				{
 					q: 'Which agents are supported?',
@@ -405,8 +411,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			cards: [
 				{
 					icon: '🧩',
-					title: '21 herramientas MCP + 3 recursos',
-					body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Más recursos para lectura directa de contexto.',
+					title: '27 herramientas MCP + 3 recursos',
+					body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Más recursos para lectura directa de contexto.',
 					tags: ['remember', 'recall', 'context', 'diff'],
 				},
 				{
@@ -447,7 +453,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		stats: {
 			items: [
-				{ number: '21', label: 'Herramientas MCP' },
+				{ number: '27', label: 'Herramientas MCP' },
 				{ number: '15', label: 'Agentes' },
 				{ number: '80%', label: 'Menos tool calls por sesión' },
 				{ number: '0', label: 'Config necesaria' },
@@ -600,22 +606,28 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Benchmark de sesión completa: inicio → debug → implementar → review → cierre. Las herramientas <code>context_*</code> intercambian ~318 tokens extra por 7 llamadas menos — contexto más rico significa menos re-lecturas. Reproducible: <code>npm run bench:full</code>.',
 		},
 		tools: {
-			title: '21 herramientas MCP, 3 recursos',
+			title: '27 herramientas MCP, 3 recursos',
 			subtitle: 'Todo lo que tu agente necesita para recordar, recuperar y razonar',
 			resourcesLabel: 'Recursos:',
 			cards: [
 				{ name: 'memory_remember', title: 'Guardar en memoria', desc: 'Almacena decisiones, patrones, bugs o conocimiento — persistente entre sesiones con puntuación de calidad automática.' },
 				{ name: 'memory_recall', title: 'Buscar en memoria', desc: 'Consulta el grafo de conocimiento antes de leer archivos. Resultados ponderados por calidad.' },
 				{ name: 'memory_forget', title: 'Eliminar de memoria', desc: 'Elimina una entrada por key o id.' },
-				{ name: 'memory_stats', title: 'Estadísticas', desc: 'Muestra estadísticas sobre la memoria del proyecto, incluyendo distribución de calidad.' },
+				{ name: 'memory_stats', title: 'Estadísticas', desc: 'Muestra estadísticas sobre la memoria del proyecto, incluyendo distribución de calidad y entradas más accedidas.' },
 				{ name: 'memory_diff', title: 'Diff de memoria', desc: 'Mira qué cambió desde tu última sesión.' },
 				{ name: 'memory_suggest', title: 'Sugerir relacionados', desc: 'Muestra entradas relacionadas para un contexto dado.' },
 				{ name: 'memory_summary', title: 'Resumen de archivo', desc: 'Guarda o recupera un resumen de archivo para ahorrar tokens.' },
 				{ name: 'memory_archive', title: 'Archivar antiguos', desc: 'Mueve entradas de más de 30 días para mantener la memoria limpia.' },
 				{ name: 'memory_smart_recall', title: 'Recuperación inteligente', desc: 'Búsqueda unificada combinando BM25 + centralidad + calidad + frescura en una sola llamada.' },
 				{ name: 'memory_captured', title: 'Actividad capturada', desc: 'Muestra el log de actividad capturado por hooks — promueve observaciones a memoria.' },
-				{ name: 'memory_consolidate', title: 'Consolidar', desc: 'Combina entradas duplicadas con contenido idéntico de forma determinista.' },
+				{ name: 'memory_consolidate', title: 'Consolidar', desc: 'Combina entradas duplicadas con contenido idéntico de forma determinista. Near-duplicate detection vía similitud Jaccard.' },
 				{ name: 'memory_sessions', title: 'Sesiones', desc: 'Muestra sesiones de agente activas y detecta conflictos suaves.' },
+				{ name: 'memory_compress', title: 'Compresión con LLM', desc: 'Compresión con LLM en dos pasos: resumir + sobrescribir. Usa Anthropic/OpenAI CLI si están disponibles.' },
+				{ name: 'memory_compress_all', title: 'Compresión por lotes', desc: 'Compresión por lotes: sobrescribe entradas bajo 100 tokens con versión comprimida. Determinístico, sin LLM.' },
+				{ name: 'memory_primer', title: 'Primer de contexto', desc: 'Contexto en una llamada: memorias principales + categorías + cambios de archivos. Auto-inyectado al inicio de sesión.' },
+				{ name: 'memory_merge_sessions', title: 'Fusionar sesiones', desc: 'Fusiona observaciones entre sesiones paralelas para un archivo. Deduplica y auto-promueve.' },
+				{ name: 'memory_export_gist', title: 'Exportar a Gist', desc: 'Exporta entradas a un GitHub Gist (público o privado). Usa GITHUB_TOKEN o gh CLI.' },
+				{ name: 'memory_import_gist', title: 'Importar de Gist', desc: 'Importa entradas desde un GitHub Gist. Fusiona con existentes (unión de tags, máxima confianza).' },
 				{ name: 'context_brief', title: 'Briefing de contexto', desc: 'Briefing de contexto en una sola llamada: memoria + sesiones + salud en markdown compacto. Cero LLM.' },
 				{ name: 'context_generate', title: 'Briefing completo', desc: 'Briefing en una llamada: estructura del proyecto + estado git + memoria + sesiones. Reemplaza 6 llamadas manuales. Ahorra 93% tokens.' },
 				{ name: 'context_diff', title: 'Briefing incremental', desc: 'Commits git + archivos modificados + memoria nueva/actualizada desde la última sesión. Ahorra 72% tokens.' },
@@ -754,7 +766,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	features: {
 		cards: [
-			{ icon: '🧩', title: '21 个 MCP 工具 + 3 个资源', body: '通过 MCP 实现完整的记忆管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、context_brief、context_generate、context_diff、context_focus、context_health、context_export。外加直接上下文读取的资源。', tags: ['remember', 'recall', 'context', 'diff'] },
+			{ icon: '🧩', title: '27 个 MCP 工具 + 3 个资源', body: '通过 MCP 实现完整的记忆管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、compress、compress_all、primer、merge_sessions、export_gist、import_gist、context_brief、context_generate、context_diff、context_focus、context_health、context_export。外加直接上下文读取的资源。', tags: ['remember', 'recall', 'context', 'diff'] },
 			{ icon: '⭐', title: '多代理', body: '支持所有主流 AI 编程代理。OpenCode、VS Code、Claude、Cursor、Windsurf、Cline、Continue — 零配置。', tags: ['OpenCode', 'Claude', 'Cursor'] },
 			{ icon: '📄', title: 'TOON 格式', body: '比 JSON 减少 22% 的 token（实测）。自定义编码专为 LLM 理解和 token 效率设计。', stats: ['减少 22% token', '解析速度提升 1.3x'] },
 			{ icon: '🔎', title: '智能召回', body: '基于图的召回按 BM25 相关性和图中心性重新排序（中心节点即使不包含查询词也会浮现）。按跳数衰减保持远距离上下文较低。Token 高效的 `compact` 模式返回数字索引、片段截断的结果。', stats: ['BM25', '中心性', 'compact'] },
@@ -763,7 +775,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '支持 15+ 个 AI 编程代理', subtitle: '零配置 — toon-memory 自动检测并配置每个代理' },
-	stats: { items: [{ number: '21', label: 'MCP 工具' }, { number: '15', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
+	stats: { items: [{ number: '27', label: 'MCP 工具' }, { number: '15', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
 	howItWorks: {
 		title: '它是如何工作的？',
 		subtitle: '从失忆到记忆的四个步骤',
@@ -810,20 +822,26 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: '完整会话基准测试：会话开始 → 调试 → 实现 → 审查 → 收尾。<code>context_*</code> 工具用约 318 个额外 token 换取 7 次更少的调用 — 更丰富的上下文意味着更少的后续读取。可复现：<code>npm run bench:full</code>。',
 	},
 	tools: {
-		title: '21 个 MCP 工具，3 个资源', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
+		title: '27 个 MCP 工具，3 个资源', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
 		cards: [
 			{ name: 'memory_remember', title: '保存到记忆', desc: '存储决策、模式、bug 或知识 — 跨会话持久化，自动质量评分。' },
 			{ name: 'memory_recall', title: '搜索记忆', desc: '在读取文件之前查询知识图谱。质量加权结果。' },
 			{ name: 'memory_forget', title: '从记忆中删除', desc: '通过键或 id 删除条目。' },
-			{ name: 'memory_stats', title: '记忆统计', desc: '显示项目记忆的统计信息，包括质量分布。' },
+			{ name: 'memory_stats', title: '记忆统计', desc: '显示项目记忆的统计信息，包括质量分布和最常访问的条目。' },
 			{ name: 'memory_diff', title: '记忆差异', desc: '查看自上次会话以来的变化。' },
 			{ name: 'memory_suggest', title: '建议相关条目', desc: '为给定上下文显示相关条目。' },
 			{ name: 'memory_summary', title: '文件摘要', desc: '保存或检索文件摘要以节省 token。' },
 			{ name: 'memory_archive', title: '归档旧条目', desc: '移动超过 30 天的条目以保持记忆整洁。' },
 			{ name: 'memory_smart_recall', title: '智能召回', desc: '统一搜索，在一次调用中结合 BM25 + 图中心性 + 质量评分 + 新鲜度。' },
 			{ name: 'memory_captured', title: '捕获的活动', desc: '查看 hooks 自动捕获的活动日志 — 将观察提升为记忆。' },
-			{ name: 'memory_consolidate', title: '合并去重', desc: '以确定性方式合并内容相同的重复条目。' },
+			{ name: 'memory_consolidate', title: '合并去重', desc: '以确定性方式合并内容相同的重复条目。通过 Jaccard 相似度检测近似重复。' },
 			{ name: 'memory_sessions', title: '会话', desc: '显示活跃的代理会话并检测软冲突。' },
+			{ name: 'memory_compress', title: 'LLM 压缩', desc: 'LLM 驱动的两步压缩：摘要 + 覆盖。如果可用则使用 Anthropic/OpenAI CLI。' },
+			{ name: 'memory_compress_all', title: '批量压缩', desc: '批量压缩：将所有低于 100 token 的条目覆盖为压缩版本。确定性，无 LLM。' },
+			{ name: 'memory_primer', title: '上下文引导', desc: '一次调用的上下文引导：主要记忆 + 分类 + 会话文件变化。会话开始时自动注入。' },
+			{ name: 'memory_merge_sessions', title: '合并会话', desc: '合并文件的并行会话中的观察。去重并自动提升。' },
+			{ name: 'memory_export_gist', title: '导出到 Gist', desc: '将条目导出到 GitHub Gist（公开或私有）。使用 GITHUB_TOKEN 或 gh CLI。' },
+			{ name: 'memory_import_gist', title: '从 Gist 导入', desc: '从 GitHub Gist 导入条目。与现有条目合并（标签联合，最大置信度）。' },
 			{ name: 'context_brief', title: '上下文简报', desc: '一次调用的上下文简报：记忆 + 会话 + 健康状态，紧凑 markdown。零 LLM。' },
 			{ name: 'context_generate', title: '完整项目简报', desc: '一次调用的简报：项目结构 + git 状态 + 记忆 + 会话。替代 6 次手动调用。节省 93% token。' },
 			{ name: 'context_diff', title: '增量简报', desc: 'git 提交 + 修改的文件 + 自上次会话以来的新/更新记忆。节省 72% token。' },
@@ -852,7 +870,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	faq: {
 		title: '常见问题', subtitle: '关于为你的代理提供记忆你需要知道的一切',
 		items: [
-			{ q: '什么是 toon-memory？', a: '面向 AI 编程代理的持久记忆层，包含 21 个 MCP 工具。它以紧凑的 TOON 格式存储决策、模式、bug 和上下文，让你的代理在会话之间记住一切 — 每次会话减少 80% 的工具调用。' },
+			{ q: '什么是 toon-memory？', a: '面向 AI 编程代理的持久记忆层，包含 27 个 MCP 工具。它以紧凑的 TOON 格式存储决策、模式、bug 和上下文，让你的代理在会话之间记住一切 — 每次会话减少 80% 的工具调用。' },
 			{ q: '支持哪些代理？', a: 'OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex、Gemini、Zed、Antigravity、Aider、KiloCode、OpenClaw 和 Kiro — 通过 MCP 服务器零配置支持 15+ 个代理。' },
 			{ q: '我的数据如何存储？', a: '条目写入本地 TOON 文件（一种 token 高效的格式，比 JSON 小约 22%，实测）。你拥有该文件，可以像任何其他源文件一样提交、diff 或备份。' },
 			{ q: '我的记忆是加密的吗？', a: '是的。使用 memory_encrypt 工具启用加密，通过 AES-256-GCM 保护敏感条目。密钥自动生成并保持在本地。' },
@@ -888,7 +906,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	features: {
 		cards: [
-			{ icon: '🧩', title: '21 個の MCP ツール + 3 個のリソース', body: 'MCP 経由で完全なメモリ管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、context_brief、context_generate、context_diff、context_focus、context_health、context_export。加えて直接コンテキスト読み取り用リソース。', tags: ['remember', 'recall', 'context', 'diff'] },
+			{ icon: '🧩', title: '27 個の MCP ツール + 3 個のリソース', body: 'MCP 経由で完全なメモリ管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、compress、compress_all、primer、merge_sessions、export_gist、import_gist、context_brief、context_generate、context_diff、context_focus、context_health、context_export。加えて直接コンテキスト読み取り用リソース。', tags: ['remember', 'recall', 'context', 'diff'] },
 			{ icon: '⭐', title: 'マルチエージェント', body: 'すべての主要 AI コーディングエージェントに対応。OpenCode、VS Code、Claude、Cursor、Windsurf、Cline、Continue — ゼロコンフィグ。', tags: ['OpenCode', 'Claude', 'Cursor'] },
 			{ icon: '📄', title: 'TOON フォーマット', body: 'JSON より 22% トークン削減（実測）。LLM 理解とトークン効率のために設計されたカスタムエンコーディング。', stats: ['トークン 22% 削減', 'パース速度 1.3x 向上'] },
 			{ icon: '🔎', title: 'スマートリコール', body: 'グラフベースのリコールが BM25 関連性とグラフ中心性で再順位付けされます（クエリワードがなくてもハブが浮上）。ホップごとの減衰で遠いコンテキストを低く維持。トークン効率の高い `compact` モードは数字インデックス、スニペット切り詰めの結果を返します。', stats: ['BM25', '中心性', 'compact'] },
@@ -897,7 +915,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '15 以上の AI コーディングエージェントに対応', subtitle: 'ゼロコンフィグ — toon-memory が自動検出し、各エージェントを設定' },
-	stats: { items: [{ number: '21', label: 'MCP ツール' }, { number: '15', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
+	stats: { items: [{ number: '27', label: 'MCP ツール' }, { number: '15', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
 	howItWorks: {
 		title: 'どのように機能するのか？', subtitle: '記憶喪失からメモリへの 4 つのステップ',
 		steps: [
@@ -943,29 +961,26 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: '完全セッションベンチマーク：セッション開始 → デバッグ → 実装 → レビュー → 終了。<code>context_*</code> ツールは約 318 トークンの追加で 7 回の呼び出しを削減 — より豊富なコンテキストはより少ない再読み取りを意味します。再現可能：<code>npm run bench:full</code>。',
 	},
 	tools: {
-		title: '21 個の MCP ツール、3 個のリソース', subtitle: 'エージェントが記憶、リコール、推論するために必要なすべて', resourcesLabel: 'リソース：',
+		title: '27 個の MCP ツール、3 個のリソース', subtitle: 'エージェントが記憶、リコール、推論するために必要なすべて', resourcesLabel: 'リソース：',
 		cards: [
 			{ name: 'memory_remember', title: 'メモリに保存', desc: '意思決定、パターン、バグ、知識を保存 — 自動品質スコアリング付きでセッション間永続化。' },
 			{ name: 'memory_recall', title: 'メモリを検索', desc: 'ファイルを読む前にナレッジグラフをクエリ。品質加重の結果。' },
 			{ name: 'memory_forget', title: 'メモリから削除', desc: 'キーまたは id でエントリを削除。' },
-			{ name: 'memory_stats', title: 'メモリ統計', desc: '品質分布を含むプロジェクトメモリの統計を表示。' },
+			{ name: 'memory_stats', title: 'メモリ統計', desc: '品質分布と最もアクセスされたエントリを含むプロジェクトメモリの統計を表示。' },
 			{ name: 'memory_diff', title: 'メモリ差分', desc: '前回セッション以降の変更を確認。' },
 			{ name: 'memory_suggest', title: '関連を提案', desc: '指定されたコンテキストの関連エントリを表示。' },
 			{ name: 'memory_summary', title: 'ファイル要約', desc: 'トークン節約のためにファイル要約を保存または取得。' },
 			{ name: 'memory_archive', title: '古いものをアーカイブ', desc: 'メモリをきれいに保つために 30 日以上のエントリを移動。' },
 			{ name: 'memory_smart_recall', title: 'スマートリコール', desc: 'BM25 + グラフ中心性 + 品質スコア + 新鮮度を 1 回の呼び出しで統合検索。' },
 			{ name: 'memory_captured', title: 'キャプチャされたアクティビティ', desc: 'フックによって自動キャプチャされたアクティビティログを表示 — オブザベーションをメモリに昇格。' },
-			{ name: 'memory_consolidate', title: '統合', desc: '内容が同一の重複エントリを決定的にマージ。' },
+			{ name: 'memory_consolidate', title: '統合', desc: '内容が同一の重複エントリを決定的にマージ。Jaccard 類似度による近似重複検出。' },
 			{ name: 'memory_sessions', title: 'セッション', desc: 'アクティブなエージェントセッションを表示し、ソフト衝突を検出。' },
-			{ name: 'context_brief', title: 'コンテキストブリーフィング', desc: '1 回呼び出しのコンテキストブリーフィング：メモリ + セッション + ヘルスをコンパクト markdown で。ゼロ LLM。' },
-			{ name: 'context_generate', title: '完全プロジェクトブリーフィング', desc: '1 回呼び出しのブリーフィング：プロジェクト構造 + git 状態 + メモリ + セッション。6 回の手動呼び出しを置換。トークン 93% 節約。' },
-			{ name: 'context_diff', title: 'インクリメンタルブリーフィング', desc: 'git コミット + 変更されたファイル + 前回セッション以降の新規/更新メモリ。トークン 72% 節約。' },
-			{ name: 'context_focus', title: 'ターゲットブリーフィング', desc: '特定のクエリに関する関連メモリ + 関連ファイル + コーラー + テストファイル。' },
-			{ name: 'context_health', title: 'ヘルス監査', desc: '孤立リンク、重複、壊れたファイル参照、期限切れ TTL、古いセッション。スコア 0–100。' },
-			{ name: 'context_export', title: 'Markdown としてエクスポート', desc: 'システムプロンプト用のインジェクタブル markdown としてメモリをエクスポート。トークン 82% 節約。' },
-			{ name: 'memory_encrypt', title: '暗号化を有効化', desc: '自動生成キーによる AES-256-GCM 暗号化。' },
-			{ name: 'memory_decrypt', title: '暗号化を無効化', desc: '復号化して暗号化を無効化。' },
-			{ name: 'memory_backup', title: 'メモリのバックアップ', desc: 'タイムスタンプ付きのメモリファイルバックアップを作成。最新 10 件に自動整理。' },
+			{ name: 'memory_compress', title: 'LLM 圧縮', desc: 'LLM 駆動の2段階圧縮：要約 + 上書き。Anthropic/OpenAI CLI が利用可能な場合は使用。' },
+			{ name: 'memory_compress_all', title: '一括圧縮', desc: '一括圧縮：100 トークン未満のすべてのエントリを圧縮バージョンで上書き。決定的、LLM 不要。' },
+			{ name: 'memory_primer', title: 'コンテキストプライマー', desc: '1 回呼び出しのコンテキストプライマー：主要メモリ + カテゴリ + セッションファイル変更。セッション開始時に自動注入。' },
+			{ name: 'memory_merge_sessions', title: 'セッションマージ', desc: 'ファイルの並列セッション間でオブザベーションをマージ。重複排除し、自動昇格。' },
+			{ name: 'memory_export_gist', title: 'Gist にエクスポート', desc: 'エントリを GitHub Gist（公開/非公開）にエクスポート。GITHUB_TOKEN または gh CLI を使用。' },
+			{ name: 'memory_import_gist', title: 'Gist からインポート', desc: 'GitHub Gist からエントリをインポート。既存エントリとマージ（タグ联合、最大信頼度）。' },
 		],
 	},
 	graphSection: {
@@ -984,7 +999,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	faq: {
 		title: 'よくある質問', subtitle: 'エージェントにメモリを与えるために知っておくべきことすべて',
 		items: [
-			{ q: 'toon-memory とは？', a: '21 個の MCP ツールを備えた AI コーディングエージェント向けの永続メモリレイヤー。意思決定、パターン、バグ、コンテキストをコンパクトな TOON フォーマットで保存し、エージェントがセッション間ですべてを記憶 — セッションあたり 80% ツール呼び出し削減。' },
+			{ q: 'toon-memory とは？', a: '27 個の MCP ツールを備えた AI コーディングエージェント向けの永続メモリレイヤー。意思決定、パターン、バグ、コンテキストをコンパクトな TOON フォーマットで保存し、エージェントがセッション間ですべてを記憶 — セッションあたり 80% ツール呼び出し削減。' },
 			{ q: 'どのエージェントがサポートされているか？', a: 'OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex、Gemini、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro — MCP サーバー経由でゼロコンフィグの 15 以上のエージェント。' },
 			{ q: 'データはどのように保存されるか？', a: 'エントリはローカル TOON ファイル（JSON より約 22% 小さいトークン効率のフォーマット、実測）に書き込まれます。ファイルはあなたのもので、他のソースファイルと同様にコミット、diff、バックアップが可能。' },
 			{ q: 'メモリは暗号化されているか？', a: 'はい。memory_encrypt ツールで暗号化を有効にし、AES-256-GCM で機密エントリを保護。キーは自動生成され、ローカルに保持。' },
@@ -1020,7 +1035,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	features: {
 		cards: [
-			{ icon: '🧩', title: '21개 MCP 도구 + 3개 리소스', body: 'MCP를 통한 완전한 메모리 관리 — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. 직접 컨텍스트 읽기를 위한 리소스 포함.', tags: ['remember', 'recall', 'context', 'diff'] },
+			{ icon: '🧩', title: '27개 MCP 도구 + 3개 리소스', body: 'MCP를 통한 완전한 메모리 관리 — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. 직접 컨텍스트 읽기를 위한 리소스 포함.', tags: ['remember', 'recall', 'context', 'diff'] },
 			{ icon: '⭐', title: '멀티 에이전트', body: '모든 주요 AI 코딩 에이전트와 호환. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue — 제로 구성.', tags: ['OpenCode', 'Claude', 'Cursor'] },
 			{ icon: '📄', title: 'TOON 형식', body: 'JSON보다 22% 적은 토큰 (실측). LLM 이해와 토큰 효율성을 위해 설계된 맞춤 인코딩.', stats: ['토큰 22% 절감', '파싱 속도 1.3x 향상'] },
 			{ icon: '🔎', title: '스마트 리콜', body: '그래프 기반 리콜이 BM25 관련성과 그래프 중심성으로 재순위화됨 (쿼리 단어 없이도 허브가 부상). 홉당 감쇠로 먼 컨텍스트를 낮게 유지. 토큰 효율적인 `compact` 모드는 숫자 인덱스, 스니펫 잘린 결과를 반환.', stats: ['BM25', '중심성', 'compact'] },
@@ -1029,7 +1044,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '15개 이상의 AI 코딩 에이전트 지원', subtitle: '제로 구성 — toon-memory가 각 에이전트를 자동 감지하고 구성' },
-	stats: { items: [{ number: '21', label: 'MCP 도구' }, { number: '15', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
+	stats: { items: [{ number: '27', label: 'MCP 도구' }, { number: '15', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
 	howItWorks: {
 		title: '어떻게 작동하나요?', subtitle: '기억 상실에서 메모리까지 4단계',
 		steps: [
@@ -1075,20 +1090,26 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: '전체 세션 벤치마크: 세션 시작 → 디버그 → 구현 → 리뷰 → 마무리. <code>context_*</code> 도구가 ~318 토큰 추가로 7회 호출 절감 — 더 풍부한 컨텍스트는 더 적은 재읽기를 의미. 재현 가능: <code>npm run bench:full</code>.',
 	},
 	tools: {
-		title: '21개 MCP 도구, 3개 리소스', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
+		title: '27개 MCP 도구, 3개 리소스', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
 		cards: [
 			{ name: 'memory_remember', title: '메모리에 저장', desc: '결정, 패턴, 버그, 지식 저장 — 자동 품질 점수와 함께 세션 간 지속.' },
 			{ name: 'memory_recall', title: '메모리 검색', desc: '파일을 읽기 전에 지식 그래프를 쿼리. 품질 가중 결과.' },
 			{ name: 'memory_forget', title: '메모리에서 삭제', desc: '키 또는 id로 항목 삭제.' },
-			{ name: 'memory_stats', title: '메모리 통계', desc: '품질 분포를 포함한 프로젝트 메모리 통계 표시.' },
+			{ name: 'memory_stats', title: '메모리 통계', desc: '품질 분포와 가장 많이 접근한 항목을 포함한 프로젝트 메모리 통계 표시.' },
 			{ name: 'memory_diff', title: '메모리 차이', desc: '마지막 세션 이후 변경 사항 확인.' },
 			{ name: 'memory_suggest', title: '관련 항목 제안', desc: '지정된 컨텍스트의 관련 항목을 표시.' },
 			{ name: 'memory_summary', title: '파일 요약', desc: '토큰 절약을 위한 파일 요약 저장 또는 검색.' },
 			{ name: 'memory_archive', title: '오래된 항목 아카이브', desc: '메모리를 깨끗하게 유지하기 위해 30일 이상 된 항목 이동.' },
 			{ name: 'memory_smart_recall', title: '스마트 리콜', desc: 'BM25 + 그래프 중심성 + 품질 점수 + 신선도를 하나의 호출로 통합 검색.' },
 			{ name: 'memory_captured', title: '캡처된 활동', desc: '훅에 의해 자동 캡처된 활동 로그 표시 — 관찰을 메모리로 승격.' },
-			{ name: 'memory_consolidate', title: '통합', desc: '동일한 내용의 중복 항목을 결정적으로 병합.' },
+			{ name: 'memory_consolidate', title: '통합', desc: '동일한 내용의 중복 항목을 결정적으로 병합. 자카드 유사도를 통한 근사 중복 감지.' },
 			{ name: 'memory_sessions', title: '세션', desc: '활성 에이전트 세션을 표시하고 소프트 충돌을 감지.' },
+		{ name: 'memory_compress', title: 'LLM 압축', desc: 'LLM 기반 2단계 압축: 요약 + 덮어쓰기. 사용 가능한 경우 Anthropic/OpenAI CLI 사용.' },
+		{ name: 'memory_compress_all', title: '일괄 압축', desc: '일괄 압축: 100 토큰 미만의 모든 항목을 압축 버전으로 덮어쓰기. 결정적, LLM 불필요.' },
+		{ name: 'memory_primer', title: '컨텍스트 프라이머', desc: '한 번의 호출 컨텍스트 프라이머: 상위 메모리 + 카테고리 + 세션 파일 변경 사항. 세션 시작 시 자동 주입.' },
+		{ name: 'memory_merge_sessions', title: '세션 병합', desc: '파일에 걸친 병렬 세션의 관찰을 병합. 중복 제거 및 자동 승격.' },
+		{ name: 'memory_export_gist', title: 'Gist로 내보내기', desc: '메모리 항목을 GitHub Gist(공개 또는 비공개)로 내보내기. GITHUB_TOKEN 또는 gh CLI 사용.' },
+		{ name: 'memory_import_gist', title: 'Gist에서 가져오기', desc: 'GitHub Gist에서 항목 가져오기. 기존 항목과 병합 (태그 합집합, 최대 신뢰도).' },
 			{ name: 'context_brief', title: '컨텍스트 브리핑', desc: '한 번의 호출 컨텍스트 브리핑: 메모리 + 세션 + 헬스를 컴팩트 markdown으로. 제로 LLM.' },
 			{ name: 'context_generate', title: '전체 프로젝트 브리핑', desc: '한 번의 호출 브리핑: 프로젝트 구조 + git 상태 + 메모리 + 세션. 6회 수동 호출 대체. 토큰 93% 절약.' },
 			{ name: 'context_diff', title: '점증 브리핑', desc: 'git 커밋 + 수정된 파일 + 마지막 세션 이후 신규/업데이트 메모리. 토큰 72% 절약.' },
@@ -1116,7 +1137,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	faq: {
 		title: '자주 묻는 질문', subtitle: '에이전트에 메모리를 부여하기 위해 알아야 할 모든 것',
 		items: [
-			{ q: 'toon-memory란?', a: '21개 MCP 도구를 갖춘 AI 코딩 에이전트용 지속적 메모리 레이어. 결정, 패턴, 버그, 컨텍스트를 컴팩트 TOON 형식으로 저장하여 에이전트가 세션 간에 모든 것을 기억 — 세션당 80% 도구 호출 절감.' },
+			{ q: 'toon-memory란?', a: '27개 MCP 도구를 갖춘 AI 코딩 에이전트용 지속적 메모리 레이어. 결정, 패턴, 버그, 컨텍스트를 컴팩트 TOON 형식으로 저장하여 에이전트가 세션 간에 모든 것을 기억 — 세션당 80% 도구 호출 절감.' },
 			{ q: '지원되는 에이전트는?', a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro — MCP 서버를 통한 제로 구성의 15개 이상 에이전트.' },
 			{ q: '데이터는 어떻게 저장되나요?', a: '항목은 로컬 TOON 파일 (JSON보다 ~22% 작은 토큰 효율 형식, 실측)에 기록됩니다. 파일은 귀하의 것이며 다른 소스 파일처럼 커밋, diff, 백업이 가능합니다.' },
 			{ q: '메모리가 암호화되나요?', a: '네. memory_encrypt 도구로 암호화를 활성화하여 AES-256-GCM로 민감한 항목을 보호합니다. 키는 자동 생성되고 로컬에 유지됩니다.' },
@@ -1175,9 +1196,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	features: {
 		cards: [
 			{
-				icon: '🧩',
-				title: '21 ferramentas MCP + 3 recursos',
-				body: 'Gerenciamento completo de memória via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Mais recursos para leitura direta de contexto.',
+			icon: '🧩',
+			title: '27 ferramentas MCP + 3 recursos',
+			body: 'Gerenciamento completo de memória via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Mais recursos para leitura direta de contexto.',
 				tags: ['remember', 'recall', 'context', 'diff'],
 			},
 			{
@@ -1218,7 +1239,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	stats: {
 		items: [
-			{ number: '21', label: 'Ferramentas MCP' },
+			{ number: '27', label: 'Ferramentas MCP' },
 			{ number: '15', label: 'Agentes' },
 			{ number: '80%', label: 'Menos chamadas de ferramenta/sessão' },
 			{ number: '0', label: 'Configuração necessária' },
@@ -1371,22 +1392,28 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: 'Benchmark de sessão completa: início → debug → implementação → review → encerramento. Ferramentas <code>context_*</code> trocam ~318 tokens extras por 7 chamadas a menos — contexto mais rico significa menos re-leituras. Reproduzível: <code>npm run bench:full</code>.',
 	},
 	tools: {
-		title: '21 ferramentas MCP, 3 recursos',
+		title: '27 ferramentas MCP, 3 recursos',
 		subtitle: 'Tudo que seu agente precisa para lembrar, recuperar e raciocinar',
 		resourcesLabel: 'Recursos:',
 		cards: [
 			{ name: 'memory_remember', title: 'Salvar na memória', desc: 'Armazena decisões, padrões, bugs ou conhecimento — persistente entre sessões com pontuação de qualidade automática.' },
 			{ name: 'memory_recall', title: 'Buscar memória', desc: 'Consulta o grafo de conhecimento antes de ler arquivos. Resultados ponderados por qualidade.' },
 			{ name: 'memory_forget', title: 'Excluir da memória', desc: 'Remove uma entrada por key ou id.' },
-			{ name: 'memory_stats', title: 'Estatísticas', desc: 'Mostra estatísticas da memória do projeto, incluindo distribuição de qualidade.' },
+			{ name: 'memory_stats', title: 'Estatísticas', desc: 'Mostra estatísticas da memória do projeto, incluindo distribuição de qualidade e entradas mais acessadas.' },
 			{ name: 'memory_diff', title: 'Diff da memória', desc: 'Veja o que mudou desde sua última sessão.' },
 			{ name: 'memory_suggest', title: 'Sugerir relacionados', desc: 'Mostra entradas relacionadas para um contexto dado.' },
 			{ name: 'memory_summary', title: 'Resumo do arquivo', desc: 'Salva ou recupera um resumo de arquivo para economizar tokens.' },
 			{ name: 'memory_archive', title: 'Arquivar antigos', desc: 'Move entradas com mais de 30 dias para manter a memória limpa.' },
 			{ name: 'memory_smart_recall', title: 'Recall inteligente', desc: 'Busca unificada combinando BM25 + centralidade + qualidade + frescor em uma chamada.' },
 			{ name: 'memory_captured', title: 'Atividade capturada', desc: 'Exibe log de atividade capturado por hooks — promova observações para memória.' },
-			{ name: 'memory_consolidate', title: 'Consolidar', desc: 'Mescla entradas duplicadas com conteúdo idêntico de forma determinística.' },
+			{ name: 'memory_consolidate', title: 'Consolidar', desc: 'Mescla entradas duplicadas com conteúdo idêntico de forma determinística. Detecção de quase-duplicatas via similaridade Jaccard.' },
 			{ name: 'memory_sessions', title: 'Sessões', desc: 'Mostra sessões ativas do agente e detecta conflitos leves.' },
+		{ name: 'memory_compress', title: 'Compressão LLM', desc: 'Compressão em duas etapas com LLM: resumir + sobrescrever. Usa Anthropic/OpenAI CLI se disponível.' },
+		{ name: 'memory_compress_all', title: 'Compressão em lote', desc: 'Compressão em lote: sobrescreve todas as entradas abaixo de 100 tokens com versão comprimida. Determinístico, sem LLM.' },
+		{ name: 'memory_primer', title: 'Primer de contexto', desc: 'Primer de contexto em uma chamada: memórias principais + categorias + alterações de arquivos da sessão. Injetado automaticamente no início da sessão.' },
+		{ name: 'memory_merge_sessions', title: 'Mesclar sessões', desc: 'Mescla observações entre sessões paralelas para um arquivo. Deduplica e promove automaticamente.' },
+		{ name: 'memory_export_gist', title: 'Exportar para Gist', desc: 'Exporta entradas de memória para um GitHub Gist (público ou privado). Usa GITHUB_TOKEN ou gh CLI.' },
+		{ name: 'memory_import_gist', title: 'Importar de Gist', desc: 'Importa entradas de um GitHub Gist. Mescla com entradas existentes (união de tags, confiança máxima).' },
 			{ name: 'context_brief', title: 'Briefing de contexto', desc: 'Briefing de contexto em uma chamada: memória + sessões + saúde em markdown compacto. Zero LLM.' },
 			{ name: 'context_generate', title: 'Briefing completo', desc: 'Briefing em uma chamada: estrutura do projeto + estado git + memória + sessões. Substitui 6 chamadas manuais. Economiza 93% tokens.' },
 			{ name: 'context_diff', title: 'Briefing incremental', desc: 'Commits git + arquivos modificados + memória nova/atualizada desde a última sessão. Economiza 72% tokens.' },
@@ -1436,7 +1463,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		items: [
 			{
 				q: 'O que é toon-memory?',
-				a: 'Uma camada de memória persistente para agentes de IA com 21 ferramentas MCP. Armazena decisões, padrões, bugs e contexto em um formato TOON compacto para que seu agente lembre tudo entre sessões — com 80% menos chamadas de ferramenta por sessão.',
+				a: 'Uma camada de memória persistente para agentes de IA com 27 ferramentas MCP. Armazena decisões, padrões, bugs e contexto em um formato TOON compacto para que seu agente lembre tudo entre sessões — com 80% menos chamadas de ferramenta por sessão.',
 			},
 			{
 				q: 'Quais agentes são suportados?',
@@ -1539,9 +1566,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	features: {
 		cards: [
 			{
-				icon: '🧩',
-				title: '21 MCP-Tools + 3 Ressourcen',
-				body: 'Vollständiges Speicher-Management über MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Plus Ressourcen für direktes Kontext-Lesen.',
+			icon: '🧩',
+			title: '27 MCP-Tools + 3 Ressourcen',
+			body: 'Vollständiges Speicher-Management über MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Plus Ressourcen für direktes Kontext-Lesen.',
 				tags: ['remember', 'recall', 'context', 'diff'],
 			},
 			{
@@ -1582,7 +1609,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	stats: {
 		items: [
-			{ number: '21', label: 'MCP-Tools' },
+			{ number: '27', label: 'MCP-Tools' },
 			{ number: '15', label: 'Agenten' },
 			{ number: '80%', label: 'Weniger Tool-Aufrufe/Sitzung' },
 			{ number: '0', label: 'Benötigte Konfiguration' },
@@ -1735,22 +1762,28 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: 'Vollständiger Sitzungs-Benchmark: Sitzungsstart → Debugging → Implementierung → Review → Abschluss. <code>context_*</code>-Tools tauschen ~318 zusätzliche Token für 7 weniger Aufrufe — reicherer Kontext bedeutet weniger Nachlese. Reproduzierbar: <code>npm run bench:full</code>.',
 	},
 	tools: {
-		title: '21 MCP-Tools, 3 Ressourcen',
+		title: '27 MCP-Tools, 3 Ressourcen',
 		subtitle: 'Alles, was dein Agent zum Merken, Abrufen und Denken braucht',
 		resourcesLabel: 'Ressourcen:',
 		cards: [
 			{ name: 'memory_remember', title: 'Im Speicher speichern', desc: 'Speichere Entscheidungen, Muster, Bugs oder Wissen — persistiert über Sitzungen mit automatischer Qualitätsbewertung.' },
 			{ name: 'memory_recall', title: 'Speicher durchsuchen', desc: 'Befrage den Wissensgraph vor dem Datei-Lesen. Qualitätsgewichtete Ergebnisse.' },
 			{ name: 'memory_forget', title: 'Aus Speicher löschen', desc: 'Entfernt einen Eintrag per Key oder ID.' },
-			{ name: 'memory_stats', title: 'Speicher-Statistiken', desc: 'Zeigt Statistiken über den Projekt-Speicher inklusive Qualitätsverteilung.' },
+			{ name: 'memory_stats', title: 'Speicher-Statistiken', desc: 'Zeigt Statistiken über den Projekt-Speicher inklusive Qualitätsverteilung und meistbesuchte Einträge.' },
 			{ name: 'memory_diff', title: 'Speicher-Diff', desc: 'Sieh, was sich seit deiner letzten Sitzung geändert hat.' },
 			{ name: 'memory_suggest', title: 'Ähnliche vorschlagen', desc: 'Zeigt verwandte Einträge für einen gegebenen Kontext.' },
 			{ name: 'memory_summary', title: 'Datei-Zusammenfassung', desc: 'Speichere oder rufe eine Datei-Zusammenfassung ab, um Token zu sparen.' },
 			{ name: 'memory_archive', title: 'Alte archivieren', desc: 'Verschiebt Einträge älter als 30 Tage, um den Speicher sauber zu halten.' },
 			{ name: 'memory_smart_recall', title: 'Smart Recall', desc: 'Einheitliche Suche kombiniert BM25 + Graph-Zentralität + Qualität + Frische in einem Aufruf.' },
 			{ name: 'memory_captured', title: 'Erfasste Aktivität', desc: 'Zeigt automatisch erfasste Hook-Aktivität an — befördere Beobachtungen zum Speicher.' },
-			{ name: 'memory_consolidate', title: 'Konsolidieren', desc: 'Führt doppelte Einträge mit identischem Inhalt deterministisch zusammen.' },
+			{ name: 'memory_consolidate', title: 'Konsolidieren', desc: 'Führt doppelte Einträge mit identischem Inhalt deterministisch zusammen. Near-Duplicate-Erkennung über Jaccard-Ähnlichkeit.' },
 			{ name: 'memory_sessions', title: 'Sitzungen', desc: 'Zeigt aktive Agenten-Sitzungen und erkennt weiche Konflikte.' },
+		{ name: 'memory_compress', title: 'LLM-Komprimierung', desc: 'LLM-gestützte Zwei-Schritt-Komprimierung: Zusammenfassen + Überschreiben. Verwendet Anthropic/OpenAI CLI wenn verfügbar.' },
+		{ name: 'memory_compress_all', title: 'Batch-Komprimierung', desc: 'Batch-Komprimierung: Überschreibt alle Einträge unter 100 Token mit komprimierter Version. Deterministisch, kein LLM.' },
+		{ name: 'memory_primer', title: 'Kontext-Primer', desc: 'Ein-Aufruf-Kontext-Primer: Top-Speicher + Kategorien + Sitzungsdatei-Änderungen. Wird automatisch zu Sitzungsbeginn injiziert.' },
+		{ name: 'memory_merge_sessions', title: 'Sitzungen zusammenführen', desc: 'Führt Beobachtungen über parallele Sitzungen für eine Datei zusammen. Dedupliziert und befördert automatisch.' },
+		{ name: 'memory_export_gist', title: 'Als Gist exportieren', desc: 'Exportiert Speicher-Einträge in einen GitHub Gist (öffentlich oder privat). Verwendet GITHUB_TOKEN oder gh CLI.' },
+		{ name: 'memory_import_gist', title: 'Vom Gist importieren', desc: 'Importiert Einträge aus einem GitHub Gist. Führt mit bestehenden Einträge zusammen (Tags-Vereinigung, max. Konfidenz).' },
 			{ name: 'context_brief', title: 'Kontext-Briefing', desc: 'Ein-Aufruf-Kontext-Briefing: Speicher + Sitzungen + Gesundheit in kompaktem Markdown. Null LLM.' },
 			{ name: 'context_generate', title: 'Vollständiges Projektbriefing', desc: 'Ein-Aufruf-Briefing: Projektstruktur + Git-Zustand + Speicher + Sitzungen. Ersetzt 6 manuelle Aufrufe. Spart 93% Token.' },
 			{ name: 'context_diff', title: 'Inkrementelles Briefing', desc: 'Git-Commits + geänderte Dateien + neue/aktualisierte Speicher-Einträge seit letzter Sitzung. Spart 72% Token.' },
@@ -1800,7 +1833,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		items: [
 			{
 				q: 'Was ist toon-memory?',
-				a: 'Eine persistente Speicherschicht für KI-Coding-Agenten mit 21 MCP-Tools. Es speichert Entscheidungen, Muster, Bugs und Kontext in einem kompakten TOON-Format, damit dein Agent sich an alles zwischen Sitzungen erinnert — mit 80% weniger Tool-Aufrufen pro Sitzung.',
+				a: 'Eine persistente Speicherschicht für KI-Coding-Agenten mit 27 MCP-Tools. Es speichert Entscheidungen, Muster, Bugs und Kontext in einem kompakten TOON-Format, damit dein Agent sich an alles zwischen Sitzungen erinnert — mit 80% weniger Tool-Aufrufen pro Sitzung.',
 			},
 			{
 				q: 'Welche Agenten werden unterstützt?',
@@ -1903,9 +1936,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	features: {
 		cards: [
 			{
-				icon: '🧩',
-				title: '21 outils MCP + 3 ressources',
-				body: 'Gestion complète de la mémoire via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Plus des ressources pour la lecture directe du contexte.',
+			icon: '🧩',
+			title: '27 outils MCP + 3 ressources',
+			body: 'Gestion complète de la mémoire via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Plus des ressources pour la lecture directe du contexte.',
 				tags: ['remember', 'recall', 'context', 'diff'],
 			},
 			{
@@ -1946,7 +1979,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	stats: {
 		items: [
-			{ number: '21', label: 'Outils MCP' },
+			{ number: '27', label: 'Outils MCP' },
 			{ number: '15', label: 'Agents' },
 			{ number: '80%', label: 'Moins d\'appels d\'outil/session' },
 			{ number: '0', label: 'Configuration requise' },
@@ -2099,22 +2132,28 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: 'Benchmark de session complète : début → debug → implémentation → review → clôture. Les outils <code>context_*</code> échangent ~318 tokens supplémentaires contre 7 appels en moins — plus de contexte signifie moins de relectures. Reproductible : <code>npm run bench:full</code>.',
 	},
 	tools: {
-		title: '21 outils MCP, 3 ressources',
+		title: '27 outils MCP, 3 ressources',
 		subtitle: 'Tout ce dont votre agent a besoin pour mémoriser, rappeler et raisonner',
 		resourcesLabel: 'Ressources :',
 		cards: [
 			{ name: 'memory_remember', title: 'Enregistrer en mémoire', desc: 'Stockez décisions, motifs, bugs ou connaissances — persistant entre les sessions avec notation de qualité automatique.' },
 			{ name: 'memory_recall', title: 'Rechercher en mémoire', desc: 'Interrogez le graphe de connaissances avant de lire les fichiers. Résultats pondérés par la qualité.' },
 			{ name: 'memory_forget', title: 'Supprimer de la mémoire', desc: 'Supprime une entrée par key ou id.' },
-			{ name: 'memory_stats', title: 'Statistiques', desc: 'Affiche les statistiques de la mémoire du projet, incluant la distribution de qualité.' },
+			{ name: 'memory_stats', title: 'Statistiques', desc: 'Affiche les statistiques de la mémoire du projet, incluant la distribution de qualité et les entrées les plus consultées.' },
 			{ name: 'memory_diff', title: 'Diff de mémoire', desc: 'Voyez ce qui a changé depuis votre dernière session.' },
 			{ name: 'memory_suggest', title: 'Suggérer des liés', desc: 'Affiche les entrées liées pour un contexte donné.' },
 			{ name: 'memory_summary', title: 'Résumé de fichier', desc: 'Enregistrez ou récupérez un résumé de fichier pour économiser des tokens.' },
 			{ name: 'memory_archive', title: 'Archiver les anciens', desc: 'Déplace les entrées de plus de 30 jours pour garder la mémoire propre.' },
 			{ name: 'memory_smart_recall', title: 'Rappel intelligent', desc: 'Recherche unifiée combinant BM25 + centralité + qualité + fraîcheur en un seul appel.' },
 			{ name: 'memory_captured', title: 'Activité capturée', desc: 'Affiche le journal d\'activité capturé par les hooks — promouvez les observations en mémoire.' },
-			{ name: 'memory_consolidate', title: 'Consolider', desc: 'Fusionne les entrées en doublon avec un contenu identique de façon déterministe.' },
+			{ name: 'memory_consolidate', title: 'Consolider', desc: 'Fusionne les entrées en doublon avec un contenu identique de façon déterministe. Détection de quasi-doublons via similarité de Jaccard.' },
 			{ name: 'memory_sessions', title: 'Sessions', desc: 'Affiche les sessions agent actives et détecte les conflits doux.' },
+		{ name: 'memory_compress', title: 'Compression LLM', desc: 'Compression en deux étapes par LLM : résumer + écraser. Utilise Anthropic/OpenAI CLI si disponible.' },
+		{ name: 'memory_compress_all', title: 'Compression par lot', desc: 'Compression par lot : écrase toutes les entrées sous 100 tokens avec une version compressée. Déterministe, sans LLM.' },
+		{ name: 'memory_primer', title: 'Amorce de contexte', desc: 'Amorce de contexte en un appel : mémoires principales + catégories + modifications de fichiers de session. Injecté automatiquement au début de la session.' },
+		{ name: 'memory_merge_sessions', title: 'Fusionner les sessions', desc: 'Fusionne les observations entre sessions parallèles pour un fichier. Déduplique et promeut automatiquement.' },
+		{ name: 'memory_export_gist', title: 'Exporter vers Gist', desc: 'Exporte les entrées mémoire vers un GitHub Gist (public ou privé). Utilise GITHUB_TOKEN ou gh CLI.' },
+		{ name: 'memory_import_gist', title: 'Importer depuis Gist', desc: 'Importe les entrées depuis un GitHub Gist. Fusionne avec les entrées existantes (union des tags, confiance maximale).' },
 			{ name: 'context_brief', title: 'Brief de contexte', desc: 'Brief de contexte en un appel : mémoire + sessions + santé en markdown compact. Zéro LLM.' },
 			{ name: 'context_generate', title: 'Brief complet du projet', desc: 'Brief en un appel : structure du projet + état git + mémoire + sessions. Remplace 6 appels manuels. Économise 93% de tokens.' },
 			{ name: 'context_diff', title: 'Brief incrémental', desc: 'Commits git + fichiers modifiés + mémoire nouvelle/mise à jour depuis la dernière session. Économise 72% de tokens.' },
@@ -2164,7 +2203,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		items: [
 			{
 				q: 'Qu\'est-ce que toon-memory ?',
-				a: 'Une couche de mémoire persistante pour les agents de code IA avec 21 outils MCP. Elle stocke les décisions, motifs, bugs et contexte dans un format TOON compact pour que votre agent se souvienne de tout entre les sessions — avec 80% moins d\'appels d\'outil par session.',
+				a: 'Une couche de mémoire persistante pour les agents de code IA avec 27 outils MCP. Elle stocke les décisions, motifs, bugs et contexte dans un format TOON compact pour que votre agent se souvienne de tout entre les sessions — avec 80% moins d\'appels d\'outil par session.',
 			},
 			{
 				q: 'Quels agents sont supportés ?',

@@ -63,7 +63,7 @@
 
 ## 功能特性
 
-- **21 个 MCP 工具** — 通过 Model Context Protocol 实现完整的记忆管理，包括 `memory_smart_recall`（统一召回）、`memory_sessions`（多会话协调）以及 `context_*` 系列工具（一键生成上下文：简报、差异、聚焦、健康审计、导出）
+- **27 个 MCP 工具** — 通过 Model Context Protocol 实现完整的记忆管理，包括 `memory_smart_recall`（统一召回）、`memory_sessions`（多会话协调）以及 `context_*` 系列工具（一键生成上下文：简报、差异、聚焦、健康审计、导出）
 - **MCP 资源** — 无需工具调用即可将记忆作为上下文读取，包括系统知识图谱（自动生成的知识地图）
 - **支持 15 种 Agent** — OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex CLI、Gemini CLI、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro
 - **交互式安装器** — 从菜单中选择要配置的 Agent
@@ -179,6 +179,12 @@ memory_remember   # 保存重要决策
 | `memory_captured` | 列出由钩子自动捕获的活动日志（需启用）或清除日志 |
 | `memory_consolidate` | 合并去重：相同 key 的条目合并（标签取并集、置信度取最大值、日期取最新），然后移除内容完全相同的重复条目（确定性处理，无需 LLM） |
 | `memory_sessions` | 显示活跃的 Agent 会话（分支、文件、最后活跃时间）和并行工作时的软冲突 |
+| `memory_compress` | LLM 驱动的两步压缩：摘要 + 覆盖。如果可用则使用 Anthropic/OpenAI CLI |
+| `memory_compress_all` | 批量压缩：将所有低于 100 token 的条目覆盖为压缩版本。确定性，无 LLM |
+| `memory_primer` | 一次调用的上下文引导：主要记忆 + 分类 + 会话文件变化。会话开始时自动注入 |
+| `memory_merge_sessions` | 合并文件的并行会话中的观察。去重并自动提升 |
+| `memory_export_gist` | 将条目导出到 GitHub Gist（公开或私有）。使用 GITHUB_TOKEN 或 gh CLI |
+| `memory_import_gist` | 从 GitHub Gist 导入条目。与现有条目合并（标签联合，最大置信度） |
 | `context_brief` | **一键上下文简报**：紧凑 markdown 格式的记忆 + 会话 + 健康状态。替代 5-6 次独立 memory_* 调用。零 LLM 开销，纯确定性聚合 |
 | `context_generate` | **完整项目简报**：一次调用整合项目结构、git 状态、记忆条目和活跃会话。替代 5-6 次手动调用 |
 | `context_diff` | **增量简报**：自上次会话以来的 git 提交 + 修改文件 + 新增/更新记忆 + 活跃会话 |
@@ -1156,7 +1162,7 @@ toon-memory/
 │   │   ├── setup.ts             # CLI 命令
 │   │   └── toon-memory.ts       # CLI 运行器
 │   ├── mcp/
-│   │   └── server.ts            # MCP 服务器（21 个工具 + 3 个资源）
+│   │   └── server.ts            # MCP 服务器（27 个工具 + 3 个资源）
 │   ├── lib/
 │   │   ├── lock.ts              # 建议性文件锁 + 原子写入
 │   │   ├── sessions.ts          # 多会话协调

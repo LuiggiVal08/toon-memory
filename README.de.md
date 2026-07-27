@@ -63,7 +63,7 @@ Lies [So macht toon-memory deinen KI-Agenten klüger](https://luiggival08.github
 
 ## Funktionen
 
-- **21 MCP-Werkzeuge** — Vollständige Speicherverwaltung über das Model Context Protocol, inklusive `memory_smart_recall` (einheitlicher Recall), `memory_sessions` zur Mehrzellen-Koordination und `context_*`-Werkzeuge zur Kontextgenerierung mit einem Aufruf (Briefing, Diff, Focus, Gesundheitsprüfung, Export)
+- **27 MCP-Werkzeuge** — Vollständige Speicherverwaltung über das Model Context Protocol, inklusive `memory_smart_recall` (einheitlicher Recall), `memory_sessions` zur Mehrzellen-Koordination und `context_*`-Werkzeuge zur Kontextgenerierung mit einem Aufruf (Briefing, Diff, Focus, Gesundheitsprüfung, Export)
 - **MCP-Ressourcen** — Lese Speicher als Kontext ohne Werkzeugaufrufe, inklusive eines System-Primers (automatisch generierte Wissenskarte)
 - **15 unterstützte Agenten** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Interaktiver Installer** — Wähle aus einem Menü, welche Agenten konfiguriert werden sollen
@@ -179,6 +179,12 @@ memory_remember   # Speichere wichtige Entscheidungen
 | `memory_captured` | Zeige die automatisch durch Hooks erfasste Aktivität an (Opt-in) oder lösche das Protokoll |
 | `memory_consolidate` | Zusammenführung & Deduplizierung: Einträge mit gleichem Key werden zusammengeführt (Tag-Vereinigung, maximaler Confidence-Wert, neuestes Datum), dann werden inhaltlich identische Duplikate entfernt (deterministisch, kein LLM) |
 | `memory_sessions` | Zeige aktive Agenten-Sitzungen (Branch, Dateien, zuletzt gesehen) und weiche Konflikte für parallele Arbeit |
+| `memory_compress` | LLM-gesteuerte Zwei-Schritt-Komprimierung: zusammenfassen + überschreiben. Verwendet Anthropic/OpenAI CLI falls verfügbar |
+| `memory_compress_all` | Batch-Komprimierung: Überschreibt alle Einträge unter 100 Token mit komprimierter Version. Deterministisch, kein LLM |
+| `memory_primer` | Ein-Aufruf-Kontext-Primer: Hauptgedächtnis + Kategorien + Sitzungsdatei-Änderungen. Wird beim Sitzungsstart automatisch injiziert |
+| `memory_merge_sessions` | Fusioniert Beobachtungen aus parallelen Sitzungen für eine Datei. Dedupliziert und befördert automatisch |
+| `memory_export_gist` | Exportiert Einträge zu einem GitHub Gist (öffentlich oder privat). Verwendet GITHUB_TOKEN oder gh CLI |
+| `memory_import_gist` | Importiert Einträge von einem GitHub Gist. Fusioniert mit bestehenden Einträgen (Tag-Vereinigung, max. Vertrauen) |
 | `context_brief` | **Kontext-Briefing mit einem Aufruf**: Speicher + Sitzungen + Gesundheit als kompaktes Markdown. Ersetzt 5–6 separate `memory_*`-Aufrufe. Kein LLM, rein deterministische Aggregation |
 | `context_generate` | **Vollständiges Projekt-Briefing**: Kombiniert Projektstruktur, Git-Zustand, Speichereinträge und aktive Sitzungen in einem Aufruf. Ersetzt 5–6 manuelle Werkzeugaufrufe |
 | `context_diff` | **Inkrementelles Briefing**: Git-Commits + geänderte Dateien + neue/aktualisierte Speichereinträge + aktive Sitzungen seit der letzten Sitzung |

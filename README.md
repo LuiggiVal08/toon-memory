@@ -63,7 +63,7 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 
 ## Features
 
-- **21 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall), `memory_sessions` for multi-session coordination, and `context_*` tools for one-call context generation (briefing, diff, focus, health audit, export)
+- **27 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall), `memory_sessions` for multi-session coordination, `context_*` tools for one-call context generation (briefing, diff, focus, health audit, export), `memory_compress` (LLM-powered compression), `memory_compress_all` (batch compression), `memory_primer` (auto-injected context), `memory_merge_sessions` (cross-session merge), and `memory_export_gist`/`memory_import_gist` (GitHub Gist sync)
 - **MCP Resources** — Read memory as context without tool invocations, including a System Primer (auto-generated knowledge map)
 - **15 agents supported** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Interactive installer** — Select which agents to configure from a menu
@@ -85,11 +85,16 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 - **BM25 + centrality ranking** — Recall re-ranks by BM25 relevance and graph centrality (hubs surface even without the query word); per-hop decay keeps distant nodes low
 - **Auto-tag from dependencies** — `toon-memory init` scans `package.json`/`Cargo.toml`/`requirements.txt`/`go.mod` and writes a project vocabulary so entries mentioning a dependency get auto-tagged with it
 - **Smart Recall** — `memory_smart_recall` combines BM25 + graph + decay + quality in one call; the LLM calls this at the start of every task
-- **Quality scoring** — Every entry gets a 0–1 quality score based on structure (tags, links, content specificity, recency); high-quality entries surface first
+- **Quality scoring** — Every entry gets a 0–1 quality score based on structure (tags, links, content specificity, recency, access count); high-quality entries surface first
 - **Merge-dedup** — Saving with the same `key` merges attributes (union of tags, max confidence, latest date, combined links) instead of overwriting
+- **Near-duplicate detection** — Consolidation detects near-duplicates via Jaccard similarity (threshold 0.7) and merges them
 - **Confidence score** — Each entry tracks reliability: user-asserted = 1.0, inferred = 0.65–0.75
+- **LLM-powered compression** — `memory_compress` uses AI to summarize long entries; `memory_compress_all` does batch compression deterministically
+- **Cross-session merge** — `memory_merge_sessions` merges observations across parallel sessions for a file
+- **GitHub Gist sync** — `memory_export_gist` and `memory_import_gist` sync memory entries via GitHub Gist (zero dependencies)
+- **Verbatim mode** — `config.verbatim` preserves original entries instead of overwriting on save
 - **Context generation tools** — `context_generate` (full briefing), `context_diff` (incremental), `context_focus` (targeted), `context_health` (audit), `context_export` (markdown) — each replaces 5-6 manual tool calls. Zero LLM, pure deterministic aggregation
-- **System Primer** — Auto-generated knowledge map exposed as MCP resource; agents load it at session start for instant context
+- **System Primer** — Auto-injected at session start via `systemPrimer()`, showing top 5 memories for instant context
 
 ---
 
@@ -179,6 +184,12 @@ memory_remember   # Save important decisions
 | `memory_captured` | List activity auto-captured by hooks (opt-in) or clear the log |
 | `memory_consolidate` | Merge-dedup entries: same-key entries are merged (tags union, max confidence, latest date), then exact-content duplicates removed (deterministic, no LLM) |
 | `memory_sessions` | Show active agent sessions (branch, files, last-seen) and soft conflicts for parallel work |
+| `memory_compress` | LLM-powered two-step compression: summarize + overwrite. Uses `anthropic`/`openai` CLI if available, otherwise returns prompt for manual compression |
+| `memory_compress_all` | Batch compression: overwrites all entries under 100 tokens with a compressed version. Deterministic, no LLM |
+| `memory_primer` | One-call context primer: top memories + categories + session file changes. Auto-injected at session start |
+| `memory_merge_sessions` | Merge observations across parallel sessions for a file. Deduplicates and optionally auto-promotes to memory |
+| `memory_export_gist` | Export memory entries to a GitHub Gist (public or private). Uses `GITHUB_TOKEN` or `gh` CLI |
+| `memory_import_gist` | Import entries from a GitHub Gist. Merges with existing entries (union of tags, max confidence) |
 | `context_brief` | **One-call context briefing**: memory + sessions + health in compact markdown. Use instead of 5-6 separate memory_* calls. Zero LLM, pure deterministic aggregation |
 | `context_generate` | **Full project briefing**: combines project structure, git state, memory entries, and active sessions in one call. Replaces 5-6 manual tool calls |
 | `context_diff` | **Incremental briefing**: git commits + modified files + new/updated memory + active sessions since last session |

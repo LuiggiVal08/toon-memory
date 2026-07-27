@@ -63,7 +63,7 @@ AIエージェントが昨日のセッションの内容を全て忘れてしま
 
 ## 主な機能
 
-- **21個のMCPツール** — Model Context Protocolによる完全なメモリ管理。`memory_smart_recall`（統一リコール）、マルチセッション連携用の`memory_sessions`、ワンコールでコンテキストを生成する`context_*`ツール（ブリーフィング、差分、フォーカス、ヘルス監査、エクスポート）を含みます
+- **27個のMCPツール** — Model Context Protocolによる完全なメモリ管理。`memory_smart_recall`（統一リコール）、マルチセッション連携用の`memory_sessions`、ワンコールでコンテキストを生成する`context_*`ツール（ブリーフィング、差分、フォーカス、ヘルス監査、エクスポート）を含みます
 - **MCPリソース** — ツール呼び出しせずにメモリをコンテキストとして読み取れます。システムプライマー（自動生成されたナレッジマップ）を含みます
 - **15のエージェントに対応** — OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex CLI、Gemini CLI、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro
 - **インタラクティブインストーラー** — メニューから設定するエージェントを選択できます
@@ -179,6 +179,12 @@ memory_remember   # 重要な意思決定を保存
 | `memory_captured` | フックで自動キャプチャされたアクティビティを表示（オプトイン）またはログをクリア |
 | `memory_consolidate` | マージ・重複排除：同一キーのエントリをマージ（タグの和集合、最大信頼度、最新日付）、その後コンテンツが完全に一致する重複を削除（決定論的、LLM不使用） |
 | `memory_sessions` | アクティブなエージェントセッションを表示（ブランチ、ファイル、最終確認時刻）並列作業時のソフトコンフリクトを検出 |
+| `memory_compress` | LLM 駆動の2段階圧縮：要約 + 上書き。Anthropic/OpenAI CLI が利用可能な場合は使用 |
+| `memory_compress_all` | 一括圧縮：100 トークン未満のすべてのエントリを圧縮バージョンで上書き。決定的、LLM 不要 |
+| `memory_primer` | 1 回呼び出しのコンテキストプライマー：主要メモリ + カテゴリ + セッションファイル変更。セッション開始時に自動注入 |
+| `memory_merge_sessions` | ファイルの並列セッション間でオブザベーションをマージ。重複排除し、自動昇格 |
+| `memory_export_gist` | エントリを GitHub Gist（公開/非公開）にエクスポート。GITHUB_TOKEN または gh CLI を使用 |
+| `memory_import_gist` | GitHub Gist からエントリをインポート。既存エントリとマージ（タグ联合、最大信頼度） |
 | `context_brief` | **ワンコールコンテキストブリーフィング**：メモリ＋セッション＋ヘルスをコンパクトマークダウンで提供。5〜6回の個別`memory_*`呼び出しの代替。LLM不使用、純粋な決定論的集約 |
 | `context_generate` | **完全プロジェクトブリーフィング**：プロジェクト構造、git状態、メモリエントリ、アクティブセッションを1回の呼び出しで統合。5〜6回の手動ツール呼び出しの代替 |
 | `context_diff` | **インクリメンタルブリーフィング**：gitコミット＋変更ファイル＋新規/更新メモリ＋前回セッション以降のアクティブセッション |
@@ -1156,7 +1162,7 @@ toon-memory/
 │   │   ├── setup.ts             # CLIコマンド
 │   │   └── toon-memory.ts       # CLIランナー
 │   ├── mcp/
-│   │   └── server.ts            # MCPサーバー（21ツール＋3リソース）
+│   │   └── server.ts            # MCPサーバー（27ツール＋3リソース）
 │   ├── lib/
 │   │   ├── lock.ts              # アドバイザリファイルロック＋アトミックライト
 │   │   ├── sessions.ts          # マルチセッション連携
