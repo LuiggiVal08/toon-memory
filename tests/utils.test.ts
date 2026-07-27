@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { tokenize, normalize } from "../src/lib/utils"
+import { tokenize, normalize, isPrivate } from "../src/lib/utils"
 
 describe("tokenize", () => {
 	it("splits camelCase identifiers", () => {
@@ -38,5 +38,24 @@ describe("normalize", () => {
 
 	it("collapses whitespace", () => {
 		expect(normalize("  too   many   spaces  ")).toBe("too many spaces")
+	})
+})
+
+describe("isPrivate", () => {
+	it("returns true when tags contain 'private'", () => {
+		expect(isPrivate({ tags: ["secret", "private"] })).toBe(true)
+	})
+
+	it("returns true for case-insensitive match", () => {
+		expect(isPrivate({ tags: ["PRIVATE"] })).toBe(true)
+		expect(isPrivate({ tags: ["Private"] })).toBe(true)
+	})
+
+	it("returns false when tags do not contain 'private'", () => {
+		expect(isPrivate({ tags: ["redis", "cache"] })).toBe(false)
+	})
+
+	it("returns false for empty tags", () => {
+		expect(isPrivate({ tags: [] })).toBe(false)
 	})
 })

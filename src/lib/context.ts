@@ -17,7 +17,7 @@ import { existsSync, readFileSync } from "fs"
 import { join } from "path"
 import { parseEntries, buildGraph, bm25Scores, centrality, renderCompact, type GraphEntry } from "./graph"
 import { qualityScore } from "./quality"
-import { normalize, isExpiredLocal, tokenize, importance } from "./utils"
+import { normalize, isExpiredLocal, tokenize, importance, isPrivate } from "./utils"
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
 import { coordinationView, currentBranch, pruneSessions, listSessions } from "./sessions"
@@ -65,7 +65,7 @@ function formatRelevantEntries(data: string, task: string, limit: number = 6): s
 	const expandedTokens = expandSynonyms(qTokens)
 
 	const scored = entries
-		.filter((e) => !(e.ttl && isExpiredLocal(e.ttl)))
+		.filter((e) => !(e.ttl && isExpiredLocal(e.ttl)) && !isPrivate(e))
 		.map((e) => {
 			const text = normalize(
 				`${e.id} ${e.category} ${e.key} ${e.content} ${e.file} ${e.tags.join(" ")}`
@@ -111,7 +111,7 @@ function formatRelevantEntries(data: string, task: string, limit: number = 6): s
 function formatPatterns(data: string): string {
 	const entries = parseEntries(data)
 	const patterns = entries
-		.filter((e) => e.category === "pattern")
+		.filter((e) => e.category === "pattern" && !isPrivate(e))
 		.sort((a, b) => importance(b) - importance(a))
 		.slice(0, 5)
 
@@ -251,7 +251,7 @@ function formatTopEntries(data: string, limit: number): string {
 	if (entries.length === 0) return ""
 
 	const top = [...entries]
-		.filter((e) => !(e.ttl && isExpiredLocal(e.ttl)))
+		.filter((e) => !(e.ttl && isExpiredLocal(e.ttl)) && !isPrivate(e))
 		.sort((a, b) => importance(b) - importance(a))
 		.slice(0, limit)
 
@@ -618,9 +618,10 @@ export function generateContextExport(data: string, format: ExportFormat = "full
 		return sections.join("\n")
 	}
 
-	// Group by category
+	// Group by category (exclude private entries)
 	const byCategory: Record<string, GraphEntry[]> = {}
 	for (const e of entries) {
+		if (isPrivate(e)) continue
 		if (!byCategory[e.category]) byCategory[e.category] = []
 		byCategory[e.category].push(e)
 	}

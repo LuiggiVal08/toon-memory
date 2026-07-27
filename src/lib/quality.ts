@@ -8,7 +8,7 @@
  */
 
 import { parseEntries, buildGraph, bm25Scores, centrality, renderCompact, type GraphEntry } from "./graph"
-import { normalize, isExpiredLocal, tokenize, importance } from "./utils"
+import { normalize, isExpiredLocal, tokenize, importance, isPrivate } from "./utils"
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
 
@@ -172,6 +172,7 @@ export function generateSystemPrimer(data: string): string {
 
 	const byCategory: Record<string, GraphEntry[]> = {}
 	for (const e of entries) {
+		if (isPrivate(e)) continue
 		if (!byCategory[e.category]) byCategory[e.category] = []
 		byCategory[e.category].push(e)
 	}
@@ -184,6 +185,7 @@ export function generateSystemPrimer(data: string): string {
 
 	// Top entries by importance (global)
 	const top = [...entries]
+		.filter((e) => !isPrivate(e))
 		.sort((a, b) => importance(b) - importance(a))
 		.slice(0, 5)
 	lines.push("Top memories:")

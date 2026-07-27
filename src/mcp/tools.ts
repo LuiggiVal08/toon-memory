@@ -28,7 +28,7 @@ server.registerTool(
   "memory_remember",
   {
     title: "Save to Memory",
-    description: "Save a fact to the project's persistent memory (decisions, patterns, bugs, knowledge). Persists between sessions. To mark an entry as obsolete, save a new entry with tags containing 'superseded' (e.g. tags: 'superseded;zod').",
+    description: "Save a fact to the project's persistent memory (decisions, patterns, bugs, knowledge). Persists between sessions. Tags: 'private' excludes from context injection; 'superseded' marks as obsolete.",
     inputSchema: {
       category: z.enum(["decision", "pattern", "bug", "knowledge"]).describe("Category of the fact"),
       key: z.string().describe("Short title in kebab-case (e.g. risk-engine-priority)"),
@@ -126,7 +126,7 @@ server.registerTool(
   "memory_recall",
   {
     title: "Search Memory",
-    description: "Search the project's persistent memory. Returns relevant entries. Use BEFORE reading files.",
+    description: "Search the project's persistent memory. Returns relevant entries. Use BEFORE reading files. Pattern: recall → context_diff for recent changes → capture to save observations.",
     inputSchema: {
       query: z.string().describe("Text to search for"),
       category: z.string().optional().default("").describe("Filter by category (empty = all)"),
@@ -357,7 +357,7 @@ server.registerTool(
   "memory_smart_recall",
   {
     title: "Smart Recall (Unified)",
-    description: "Unified retrieval: combines BM25 + graph + decay + quality in a single call. Use at the START of each task to get all relevant memory context.",
+    description: "Unified retrieval: combines BM25 + graph + decay + quality in a single call. Use at the START of each task to get all relevant memory context. Then use context_diff for recent changes, context_focus for deep dives.",
     inputSchema: {
       intent: z.string().describe("Describe what you need to know (e.g. 'database schema for backend')"),
       limit: z.number().optional().default(8).describe("Maximum entries to return"),

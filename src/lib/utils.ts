@@ -29,3 +29,7 @@ export const tokenize = (s: string): string[] =>
 		.toLowerCase()
 		.split(/\s+/)
 		.filter(Boolean)
+
+/** Check if an entry is marked as private (excluded from context injection). */
+export const isPrivate = (e: { tags: string[] }): boolean =>
+	e.tags.some((t) => t.toLowerCase() === "private")

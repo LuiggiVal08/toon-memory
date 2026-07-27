@@ -145,3 +145,33 @@ describe("generateContextBrief — health section", () => {
 		expect(result).not.toContain("Health")
 	})
 })
+
+describe("generateContextBrief — private entries", () => {
+	const PRIVATE = `version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1|decision|use-zod|Usar Zod para validación.|src/types.ts|types|${today}||0||0.70|1.0
+  a2|knowledge|api-key|Clave del servicio de pagos.|config.ts|private;secret|${today}||0||0.60|1.0
+  a3|pattern|auth-jwt|JWT con refresh tokens.|src/auth.ts|auth;jwt|${today}||0||0.65|1.0
+`
+
+	it("excludes private entries from relevant results", () => {
+		const result = generateContextBrief(PRIVATE, { task: "api key" })
+		expect(result).not.toContain("api-key")
+	})
+
+	it("excludes private entries from top memories", () => {
+		const result = generateContextBrief(PRIVATE)
+		expect(result).not.toContain("api-key")
+	})
+
+	it("excludes private patterns from patterns section", () => {
+		const PRIVATE_PATTERN = `version: 1
+entries[2|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1|pattern|use-zod|Usar Zod.|src/types.ts|types|${today}||0||0.70|1.0
+  a2|pattern|secret-pattern|Patrón secreto.|x.ts|private;pattern|${today}||0||0.60|1.0
+`
+		const result = generateContextBrief(PRIVATE_PATTERN)
+		expect(result).toContain("use-zod")
+		expect(result).not.toContain("secret-pattern")
+	})
+})
