@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.9.6] - 2026-07-27
+
+### Fixed
+- `readMemory()` and `writeMemory()` now throw clear errors when encryption is enabled but `TOON_MEMORY_KEY` is not set (previously failed silently)
+
 ## [2.9.5] - 2026-07-26
 
 ### Fixed

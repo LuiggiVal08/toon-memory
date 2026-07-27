@@ -14,6 +14,7 @@ export function safeWrite(file: string, content: string): void {
 /**
  * Read memory file, decrypting if encryption is enabled.
  * Key is read from TOON_MEMORY_KEY env var.
+ * @throws if encryption is enabled but no key is available or decryption fails.
  */
 export function readMemory(): string {
   ensureMemoryFile()
@@ -22,12 +23,8 @@ export function readMemory(): string {
 
   if (config.encrypted) {
     const key = getKey()
-    if (!key) return ""
-    try {
-      return decrypt(data, key)
-    } catch {
-      return ""
-    }
+    if (!key) throw new Error("Encryption enabled but TOON_MEMORY_KEY is not set. Run 'npx toon-memory init' or set the env var.")
+    return decrypt(data, key)
   }
 
   return data
@@ -36,6 +33,7 @@ export function readMemory(): string {
 /**
  * Write content to memory file, encrypting if encryption is enabled.
  * Key is read from TOON_MEMORY_KEY env var.
+ * @throws if encryption is enabled but no key is available.
  */
 export function writeMemory(content: string): void {
   ensureMemoryFile()
@@ -43,7 +41,7 @@ export function writeMemory(content: string): void {
 
   if (config.encrypted) {
     const key = getKey()
-    if (!key) return
+    if (!key) throw new Error("Encryption enabled but TOON_MEMORY_KEY is not set. Run 'npx toon-memory init' or set the env var.")
     const encrypted = encrypt(content, key)
     safeWrite(MEMORY_FILE, encrypted)
     return
