@@ -7,25 +7,45 @@ interface Props {
 }
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
-const isEs = lang === 'es';
-const docsHref = isEs ? '/toon-memory/es/getting-started/quickstart' : '/toon-memory/getting-started/quickstart';
-const homeHref = isEs ? '/toon-memory/' : '/toon-memory/es';
-const switchTarget = isEs ? 'en' : 'es';
-const switchLabel = isEs ? 'English' : 'Español';
+
+const locales = [
+	{ code: 'en', label: 'English' },
+	{ code: 'es', label: 'Español' },
+	{ code: 'zh', label: '中文' },
+	{ code: 'ja', label: '日本語' },
+	{ code: 'ko', label: '한국어' },
+	{ code: 'pt-br', label: 'Português (BR)' },
+	{ code: 'de', label: 'Deutsch' },
+	{ code: 'fr', label: 'Français' },
+];
+
+function getLocalePath(locale: string) {
+	return locale === 'en' ? '/toon-memory/' : `/toon-memory/${locale}/`;
+}
+
+const currentLocale = locales.find(l => l.code === lang) || locales[0];
+const docsHref = getLocalePath(lang) + 'getting-started/quickstart';
 ---
 
 <header class="site-header">
-  <a href={isEs ? '/toon-memory/es' : '/toon-memory/'} class="site-logo">
+  <a href={getLocalePath(lang)} class="site-logo">
     <img src={logoSrc.src} alt="toon-memory" class="logo-icon" />
     <span class="logo-text">toon-memory</span>
   </a>
   <nav class="site-nav">
     <a href={docsHref}>{c.nav.docs}</a>
-    <a
-      href={homeHref}
-      class="lang-switch"
-      onclick={`localStorage.setItem('toon-lang', '${switchTarget}')`}
-    >{switchLabel}</a>
+    <div class="lang-dropdown">
+      <button class="lang-switch" type="button">{currentLocale.label}</button>
+      <div class="lang-dropdown-menu">
+        {locales.map(l => (
+          <a
+            href={getLocalePath(l.code)}
+            class:list={['lang-option', { active: l.code === lang }]}
+            onclick={`localStorage.setItem('toon-lang', '${l.code}')`}
+          >{l.label}</a>
+        ))}
+      </div>
+    </div>
     <a href="https://www.npmjs.com/package/toon-memory" target="_blank" rel="noopener noreferrer" class="npm-link">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M1.76 0h20.48a1.76 1.76 0 0 1 1.76 1.76v20.48a1.76 1.76 0 0 1-1.76 1.76H1.76A1.76 1.76 0 0 1 0 22.24V1.76A1.76 1.76 0 0 1 1.76 0zM5.11 19.16h6.93V8.8h3.47v10.36h3.47V5.34H5.13v13.82z"/></svg>
       <span>npm</span>
