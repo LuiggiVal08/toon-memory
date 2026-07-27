@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.3] - 2026-07-26
+
+### Fixed
+- Clamp importance score to [0,1] to prevent values > 1.0 at timezone boundaries
+- Added `memory_backup` to README tools table
+- Fixed remaining "20 tools" → "21 tools" refs in ES docs and i18n stats
+
 ## [2.9.2] - 2026-07-26
 
 ### Fixed
