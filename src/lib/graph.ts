@@ -30,6 +30,8 @@ export interface GraphEntry {
 	accessed: number
 	/** Explicit outgoing links declared on the entry. */
 	links: string[]
+	/** ISO timestamp of last recall/access. Empty if never accessed. */
+	lastAccessed: string
 }
 
 export interface MemoryGraph {
@@ -49,6 +51,7 @@ const entryLines = (data: string): string[] =>
 /**
  * Parse TOON memory content into structured entries.
  * Tolerant of the trailing `links` field (absent on older entries).
+ * Also handles the `lastAccessed` field (field 12) for access tracking.
  */
 export function parseEntries(data: string): GraphEntry[] {
 	const out: GraphEntry[] = []
@@ -74,6 +77,7 @@ export function parseEntries(data: string): GraphEntry[] {
 				.split(/[\s;]+/)
 				.map((t) => t.trim())
 				.filter(Boolean),
+			lastAccessed: parts.length > 12 ? parts[12] || "" : "",
 		})
 	}
 	return out

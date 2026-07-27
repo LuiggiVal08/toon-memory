@@ -15,8 +15,24 @@ import { fuzzyMatch } from "./fuzzy"
 /**
  * Quality score for an entry (0..1). Pure heuristics, no LLM.
  * Measures how well-structured and useful a memory entry is.
+ *
+ * Factors:
+ *   - Tags (0.3 max): structured categorization
+ *   - Links (0.2 max): graph connectivity
+ *   - Content length (0.3 max): detail level
+ *   - Recency (0.1 max): how recently created
+ *   - Specificity (0.1 max): unique word ratio
+ *   - Access frequency (0.15 max): how often recalled
+ *   - Access recency (0.1 max): how recently accessed
  */
-export function qualityScore(tags: string, links: string, content: string, date: string): number {
+export function qualityScore(
+	tags: string,
+	links: string,
+	content: string,
+	date: string,
+	accessed: number = 0,
+	lastAccessed: string = ""
+): number {
 	let score = 0
 	if (tags) {
 		const count = tags.split(";").filter(Boolean).length
@@ -30,7 +46,7 @@ export function qualityScore(tags: string, links: string, content: string, date:
 	if (len > 20) score += 0.1
 	if (len > 60) score += 0.1
 	if (len > 150) score += 0.1
-	// Recency bonus
+	// Recency bonus (creation date)
 	if (date) {
 		const days = (Date.now() - new Date(`${date}T00:00:00`).getTime()) / 86400000
 		if (days < 7) score += 0.1
@@ -41,6 +57,17 @@ export function qualityScore(tags: string, links: string, content: string, date:
 	const unique = new Set(words)
 	const specificity = words.length > 0 ? unique.size / words.length : 0
 	score += specificity * 0.1
+	// Access frequency: entries recalled more often are more valuable
+	if (accessed > 0) {
+		score += Math.min(0.15, accessed * 0.03)
+	}
+	// Access recency: recently accessed entries are more relevant
+	if (lastAccessed) {
+		const daysSinceAccess = (Date.now() - new Date(lastAccessed).getTime()) / 86400000
+		if (daysSinceAccess < 1) score += 0.1
+		else if (daysSinceAccess < 7) score += 0.07
+		else if (daysSinceAccess < 30) score += 0.03
+	}
 	return Math.min(1, score)
 }
 
@@ -80,19 +107,24 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 	const newAccessed = np.length > 8 ? parseInt(np[8]) || 0 : 0
 	const accessed = Math.max(existingAccessed, newAccessed)
 
-	// Take max confidence — handle entries with <12 fields gracefully
-	const existingConf = ep.length > 11 ? parseFloat(ep[11]) || 0 : 0
-	const newConf = np.length > 11 ? parseFloat(np[11]) || 0 : 0
-	const confidence = Math.max(existingConf, newConf)
-
 	// Merge links (union)
 	const existingLinks = (ep[9] || "").split(/[\s;]+/).filter(Boolean)
 	const newLinks = (np[9] || "").split(/[\s;]+/).filter(Boolean)
 	const mergedLinks = [...new Set([...existingLinks, ...newLinks])].join(" ")
 
-	const quality = qualityScore(mergedTags, mergedLinks, content, date)
+	// Take max confidence — handle entries with <12 fields gracefully
+	const existingConf = ep.length > 11 ? parseFloat(ep[11]) || 0 : 0
+	const newConf = np.length > 11 ? parseFloat(np[11]) || 0 : 0
+	const confidence = Math.max(existingConf, newConf)
 
-	return `${id}|${category}|${key}|${content}|${file}|${mergedTags}|${date}|${ttl}|${accessed}|${mergedLinks}|${quality.toFixed(2)}|${confidence}`
+	// Take most recent lastAccessed (field 12)
+	const existingLastAccessed = ep.length > 12 ? ep[12] || "" : ""
+	const newLastAccessed = np.length > 12 ? np[12] || "" : ""
+	const lastAccessed = newLastAccessed > existingLastAccessed ? newLastAccessed : existingLastAccessed
+
+	const quality = qualityScore(mergedTags, mergedLinks, content, date, accessed, lastAccessed)
+
+	return `${id}|${category}|${key}|${content}|${file}|${mergedTags}|${date}|${ttl}|${accessed}|${mergedLinks}|${quality.toFixed(2)}|${confidence}|${lastAccessed}`
 }
 
 /**
@@ -194,7 +226,9 @@ export function generateSystemPrimer(data: string): string {
 			e.tags.join(";"),
 			e.links.join(" "),
 			e.content,
-			e.date
+			e.date,
+			e.accessed,
+			e.lastAccessed
 		)
 		const conf = quality >= 0.5 ? "high" : quality >= 0.3 ? "medium" : "low"
 		lines.push(

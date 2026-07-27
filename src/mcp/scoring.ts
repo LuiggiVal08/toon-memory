@@ -48,8 +48,9 @@ export function findRelatedEntries(text: string, excludeKey: string = "", limit:
 }
 
 /**
- * Increment the `accessed` counter for the given entry ids.
- * Used by recall/suggest so frequently-used memories rank higher.
+ * Increment the `accessed` counter and update `lastAccessed` timestamp
+ * for the given entry ids. Used by recall/suggest so frequently-used
+ * memories rank higher.
  */
 export function bumpAccessed(ids: string[]): void {
   if (ids.length === 0) return
@@ -59,6 +60,7 @@ export function bumpAccessed(ids: string[]): void {
   const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
   if (headerIdx === -1) return
 
+  const now = new Date().toISOString()
   for (let i = headerIdx + 1; i < lines.length; i++) {
     const line = lines[i]
     if (!line.startsWith("  ") || !line.includes("|")) continue
@@ -67,6 +69,9 @@ export function bumpAccessed(ids: string[]): void {
     if (idSet.has(parts[0])) {
       const accessed = parts.length > 8 ? (parseInt(parts[8]) || 0) + 1 : 1
       parts[8] = String(accessed)
+      // Ensure we have enough fields for lastAccessed (field 12)
+      while (parts.length < 13) parts.push("")
+      parts[12] = now
       lines[i] = `  ${parts.join("|")}`
     }
   }
