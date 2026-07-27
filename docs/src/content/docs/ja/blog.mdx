@@ -1,0 +1,113 @@
+---
+title: "toon-memoryでAIエージェントをより賢くする方法"
+description: "永続メモリがAIコーディングエージェントをどのように変革するか。toon-memoryはClaude、Cursor、OpenCodeにセッション間の決定、パターン、バグの記憶を提供します。"
+---
+
+## 問題点
+---
+
+AIコーディングエージェントはセッションごとに全てを忘れてしまいます。新しいセッションを開始するたびに、エージェントは最初からやり直します：
+
+<ul class="staggered-list">
+  <li>「なぜXではなくYを選んだのか？」</li>
+  <li>「あのバグ修正は何だったっけ？」</li>
+  <li>「このプロジェクトにはどんなパターンがあるんだっけ？」</li>
+</ul>
+
+<div class="comparison-grid">
+  <div class="before-box morph-border fade-in-left">
+    <h3>イライラする</h3>
+    <p>毎セッション同じコンテキストを説明し直す必要がある</p>
+  </div>
+  <div class="before-box morph-border fade-in-right">
+    <h3>無駄が多い</h3>
+    <p>エージェントがコーディングではなく再学習に時間を費やす</p>
+  </div>
+</div>
+
+---
+
+## ソリューション
+
+toon-memoryは再起動しても消えない永続メモリを提供します。決定、パターン、バグ、ナレッジをトークン効率の高いフォーマットで保存します。
+
+<div class="comparison-grid">
+  <div class="after-box morph-border fade-in-left">
+    <h3>効率的</h3>
+    <p>エージェントが全てを自動的に覚えておく</p>
+  </div>
+  <div class="after-box morph-border fade-in-right">
+    <h3>高速</h3>
+    <p>即座に回想でき、再学習は不要</p>
+  </div>
+</div>
+
+---
+
+## デモ: Before & After
+
+### toon-memoryなし
+
+<div class="before-box fade-in-up">
+  <p><strong>セッション1:</strong></p>
+  <div class="terminal">
+    <span class="prompt">User:</span> 「バリデーションにはZodを使う」<br />
+    <span class="prompt">Agent:</span> 「了解！」
+  </div>
+
+  <p><strong>セッション2（新しいセッション）:</strong></p>
+  <div class="terminal">
+    <span class="prompt">User:</span> 「どのバリデーションライブラリを使ってるっけ？」<br />
+    <span class="prompt">Agent:</span> 「分かりません、コードを確認します...」
+  </div>
+</div>
+
+### toon-memoryあり
+
+<div class="after-box fade-in-up">
+  <p><strong>セッション1:</strong></p>
+  <div class="terminal">
+    <span class="prompt">User:</span> 「バリデーションにはZodを使う」<br />
+    <span class="prompt">Agent:</span> <span class="command">memory_remember</span>(category="pattern", key="validation")<br />
+    <span class="output">保存済み: pattern/validation</span>
+  </div>
+
+  <p><strong>セッション2（新しいセッション）:</strong></p>
+  <div class="terminal">
+    <span class="prompt">User:</span> 「どのバリデーションライブラリを使ってるっけ？」<br />
+    <span class="prompt">Agent:</span> <span class="command">memory_recall</span>(query="validation")<br />
+    <span class="output">[pattern] validation — バリデーションにはZodを使う</span>
+  </div>
+</div>
+
+---
+
+## 結果
+
+<div class="stats-grid">
+  <div class="stat-card glow fade-in-left">
+    <div class="stat-card__number counter" data-target="80">0</div>
+    <div class="stat-card__label">% 繰り返し質問の削減</div>
+  </div>
+  <div class="stat-card glow fade-in-right">
+    <div class="stat-card__number counter" data-target="10">0</div>
+    <div class="stat-card__label">x オンボーディング速度向上</div>
+  </div>
+  <div class="stat-card glow fade-in-left">
+    <div class="stat-card__number counter" data-target="100">0</div>
+    <div class="stat-card__label">% パターンの一貫性</div>
+  </div>
+  <div class="stat-card glow fade-in-right">
+    <div class="stat-card__number">0</div>
+    <div class="stat-card__label">lost context</div>
+  </div>
+</div>
+
+---
+
+## 始めましょう
+
+```bash
+npm install -g toon-memory
+npx toon-memory
+```

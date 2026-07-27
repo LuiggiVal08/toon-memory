@@ -1,0 +1,184 @@
+---
+title: "跨 AI 会话记住上下文 — 面向编程的持久化记忆"
+description: "停止在 AI 编程会话之间丢失上下文。toon-memory 为 Claude、Cursor、OpenCode 提供持久化的决策、模式和缺陷记忆。离线工作，节省 60% token。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "记住 AI 上下文, 跨会话持久化记忆, AI 编程记忆, 上下文保留, 会话 AI 记忆"
+---
+
+## 问题：AI 代理忘记一切
+
+你正在用 Claude 构建功能。你解释了：
+
+- "我们选择了 Postgres 而非 MongoDB，因为 ACID 合规性"
+- "Redis 连接池耗尽的修复是 max_connections=20"
+- "REST 端点始终使用 /api/v1/ 前缀"
+
+下一次会话？Claude 对这些**毫无记忆**。你从零开始。
+
+这浪费了：
+- **Token** — 重新解释相同的上下文
+- **时间** — 重建决策
+- **金钱** — 为相同的 API 调用付费两次
+
+## 解决方案：记住一切
+
+**toon-memory** 为你的 AI 编程代理提供持久化记忆，具有以下特点：
+
+1. **跨重启存活** — 记忆跨会话持久保存
+2. **离线工作** — 无云端、无 API 调用、无需 LLM
+3. **节省 token** — 比 JSON 少 22% token
+4. **可扩展** — 每会话减少 80% 工具调用
+
+## 工作原理
+
+### 第 1 步：保存重要上下文
+
+在会话结束时，保存重要的内容：
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance and JSON support",
+  tags: "database;architecture"
+})
+```
+
+### 第 2 步：会话启动时召回
+
+在下一次会话开始时，立即获取上下文：
+
+```bash
+memory_smart_recall({ intent: "what I was working on" })
+// 返回结合 BM25 + 图 + 质量的相关条目
+```
+
+### 第 3 步：继续构建
+
+代理现在知道：
+- 你的数据库选择（Postgres）
+- 选择原因（ACID 合规性）
+- 相关决策（Redis 做缓存、Zod 做校验）
+
+## 你能记住什么上下文？
+
+### 架构决策
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "microservices-approach",
+  content: "Use microservices for payment and auth, monolith for core business logic"
+})
+```
+
+### 缺陷修复
+
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-connection-timeout",
+  content: "Redis connection timeout in production — fix was increasing pool size to 20"
+})
+```
+
+### 代码模式
+
+```bash
+memory_remember({
+  category: "pattern",
+  key: "error-handling",
+  content: "Always use custom AppError class, never throw raw Error objects"
+})
+```
+
+### 项目知识
+
+```bash
+memory_remember({
+  category: "knowledge",
+  key: "team-conventions",
+  content: "PR #142 reverted the caching change — don't re-add it without team approval"
+})
+```
+
+## 实用的记忆功能
+
+### 自动标签推断
+
+留空 `tags`，toon-memory 会从内容中推断：
+
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-timeout",
+  content: "Redis connection timeout in production"
+})
+// 自动推断标签：redis
+```
+
+### 相关条目建议
+
+保存时，toon-memory 会查找相关条目：
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation"
+})
+// 🔗 相关：redis-timeout（提及 "validation"）
+```
+
+### 质量评分
+
+每个条目自动获得质量评分（0-1）：
+
+| 因素 | 权重 |
+|------|------|
+| 标签 | 最高 0.3 |
+| 链接 | 最高 0.2 |
+| 内容长度 | 最高 0.3 |
+| 新近度 | 最高 0.1 |
+| 具体性 | 最高 0.1 |
+
+高质量条目在召回中排在最前面。
+
+### 合并去重
+
+用相同键保存，属性自动合并：
+
+```bash
+// 第一次保存
+memory_remember({ key: "use-zod", content: "Use Zod for validation" })
+
+// 后续保存 — 自动合并
+memory_remember({ key: "use-zod", content: "Use Zod — also handles API parsing" })
+// 标签和链接被合并，而非覆盖
+```
+
+## 多会话协调
+
+并行运行多个代理会话？toon-memory 可以协调：
+
+```bash
+memory_sessions()
+// 🧭 Active sessions (2):
+// • claude @ feature/auth (you)
+// • opencode @ feature/db
+// 🔥 Soft conflicts: src/types.ts
+```
+
+查看其他会话正在操作的文件，以避免合并冲突。
+
+## 开始使用
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # 交互式安装器
+```
+
+你的代理将在下一次会话中记住一切。

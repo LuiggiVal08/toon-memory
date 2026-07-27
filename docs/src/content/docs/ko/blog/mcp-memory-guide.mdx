@@ -1,0 +1,248 @@
+---
+title: "MCP 메모리 서버: 영구 AI 메모리 완전 가이드"
+description: "MCP 메모리 서버에 대해 알아야 할 모든 것 — Model Context Protocol이 AI 코딩 에이전트에게 영구 메모리를 제공하는 방법. 예시, 벤치마크, 설정이 포함된 완전한 가이드."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP 메모리 서버, Model Context Protocol 메모리, AI 영구 메모리, MCP 서버 가이드"
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: '{"@context":"https://schema.org","@type":"Article","headline":"MCP 메모리 서버: 영구 AI 메모리 완전 가이드","description":"MCP 메모리 서버에 대해 알아야 할 모든 것.","author":{"@type":"Person","name":"LuiggiVal"},"publisher":{"@type":"Organization","name":"toon-memory"},"url":"https://luiggival08.github.io/toon-memory/blog/mcp-memory-guide/","mainEntityOfPage":{"@type":"WebPage","@id":"https://luiggival08.github.io/toon-memory/blog/mcp-memory-guide/"}}'
+---
+
+## MCP 메모리 서버란?
+
+MCP 메모리 서버는 Model Context Protocol (MCP)을 구현하여 AI 코딩 에이전트에게 영구 메모리를 제공하는 **로컬 서비스**입니다. 세션 간에 컨텍스트를 잃는 대신, 에이전트가 결정, 패턴, 버그를 검색 가능한 메모리 저장소에 저장합니다.
+
+**toon-memory**는 현재 사용 가능한 가장 완전한 MCP 메모리 서버입니다:
+
+- **21개 MCP 도구** + 3개 리소스
+- **15개 이상 에이전트 지원** — Claude, Cursor, OpenCode 등
+- **토큰 효율적 형식** — JSON보다 22% 적은 토큰
+- **그래프 인식 recall** — BM25 + 중심성 + 품질 점수
+- **제로 설정** — 설치 후 바로 사용
+
+## MCP 메모리 서버 작동 방식
+
+### Model Context Protocol
+
+MCP (Model Context Protocol)는 AI 에이전트가 외부 도구와 통신하는 표준입니다. MCP 메모리 서버는:
+
+1. 에이전트로부터 stdio를 통해 **요청을 수신**합니다
+2. **메모리 작업 처리** (저장, 검색, 삭제)
+3. 구조화된 형식으로 **로컬에 데이터 저장**합니다
+4. 에이전트가 사용할 수 있는 형식으로 **결과를 반환**합니다
+
+### 아키텍처
+
+```
+AI 에이전트
+    ↓ MCP Protocol (stdio)
+메모리 서버 (toon-memory)
+    ↓
+로컬 파일 (.toon-memory/memory/data.toon)
+```
+
+클라우드 없음. API 호출 없음. 네트워크 없음. 모든 것이 기기 안에 머무릅니다.
+
+## 왜 MCP 메모리 서버를 사용하나?
+
+### 문제점
+
+AI 코딩 에이전트는 **세션 간에 기억력이 없습니다**:
+
+- Claude는 어제의 아키텍처 결정을 잊어버립니다
+- Cursor는 발견한 버그 수정을 recall할 수 없습니다
+- OpenCode는 팀이 구축한 패턴을 기억하지 못합니다
+
+이는 토큰을 낭비하고, 시간을 태우며, 답답한 반복을 초래합니다.
+
+### 해결책
+
+MCP 메모리 서버는 에이전트에게 **영구 메모리**를 제공합니다:
+
+| MCP 메모리 없음 | MCP 메모리 사용 |
+|-------------------|-----------------|
+| 매 세션마다 컨텍스트를 다시 설명 | 컨텍스트가 자동으로 지속 |
+| 세션당 2,411 토큰 | 세션당 972 토큰 (-60%) |
+| 세션당 25 도구 호출 | 세션당 5 도구 호출 (-80%) |
+| 세션당 $0.072 (GPT-4) | 세션당 $0.029 (-60%) |
+
+## MCP 메모리 서버 기능
+
+### 21개 MCP 도구
+
+toon-memory는 완전한 메모리 관리를 위해 **21개 MCP 도구**를 제공합니다:
+
+**핵심 도구:**
+- `memory_remember` — 결정, 패턴, 버그, 지식 저장
+- `memory_recall` — 메모리 검색 (플랫 또는 그래프 모드)
+- `memory_smart_recall` — BM25 + 그래프 + 품질이 결합된 통합 recall
+- `memory_forget` — 항목 삭제
+- `memory_stats` — 메모리 상태 확인
+
+**컨텍스트 도구:**
+- `context_brief` — 한 번의 호출로 컨텍스트 브리핑
+- `context_generate` — 전체 프로젝트 브리핑
+- `context_diff` — 마지막 세션 이후 변경 사항
+- `context_focus` — 초점 브리핑
+- `context_health` — 메모리 상태 감사
+- `context_export` — 마크다운으로 내보내기
+
+**관리 도구:**
+- `memory_summary` — 파일 요약 저장/검색
+- `memory_archive` — 오래된 항목 아카이브
+- `memory_diff` — 특정 날짜 이후 변경 사항 표시
+- `memory_suggest` — 관련 항목 찾기
+- `memory_sessions` — 멀티 세션 조율
+- `memory_captured` — 훅으로 캡처한 활동 보기
+- `memory_consolidate` — 중복 항목 병합
+- `memory_encrypt` — AES-256-GCM 암호화
+- `memory_decrypt` — 암호화 비활성화
+
+### 토큰 효율적 형식
+
+메모리는 **TOON 형식**(Token-Oriented Object Notation)으로 저장됩니다:
+
+```
+a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10
+```
+
+동등한 JSON보다 **22% 적은 토큰**으로 LLM 인식을 위해 설계되었습니다.
+
+### 그래프 인식 recall
+
+항목은 **명시적 링크**와 **암묵적 참조**를 통해 연결됩니다:
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-redis",
+  content: "세션 저장소로 Redis 사용 (see [[redis-config]])",
+  links: "redis-config"
+})
+```
+
+recall은 정확한 검색어를 포함하지 않더라도 관련 항목을 찾기 위해 **에고 서브그래프**를 확장합니다.
+
+### 품질 점수
+
+모든 항목은 자동으로 **품질 점수**(0-1)를 부여받습니다:
+
+| 요소 | 가중치 |
+|--------|--------|
+| 태그 | 최대 0.3 |
+| 링크 | 최대 0.2 |
+| 내용 길이 | 최대 0.3 |
+| 최신성 | 최대 0.1 |
+| 구체성 | 최대 0.1 |
+
+고품질 항목이 recall에서 먼저 표시됩니다.
+
+## 설정 가이드
+
+### 1단계: 설치
+
+```bash
+npm install -g toon-memory
+```
+
+### 2단계: 설정
+
+```bash
+npx toon-memory  # 대화형 설치 프로그램
+```
+
+또는 에이전트의 MCP 설정에 수동으로 추가합니다:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### 3단계: 사용
+
+```bash
+# 중요한 결정 저장
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "ACID 준수를 위해 Postgres 선택"
+})
+
+# 메모리 검색
+memory_recall({ query: "database" })
+
+# 한 번의 호출로 전체 컨텍스트 가져오기
+memory_smart_recall({ intent: "작업 중이던 내용" })
+```
+
+## 벤치마크
+
+### 토큰 효율
+
+```
+형식              토큰 (16개 항목)    vs JSON
+──────────────  ───────────────────    ───────
+JSON            1097                   기준
+TOON            850                    -22.5%
+```
+
+### recall 효율
+
+```
+방법                            컨텍스트 확보 토큰    vs 파일 재읽기
+────────────────────────────  ─────────────────────    ───────────────────
+소스 파일 재읽기              ~3000                    기준
+memory_recall (플랫)           ~1200                    -60%
+memory_recall (그래프, 컴팩트)  ~900                     -70%
+memory_smart_recall             ~850                     -72%
+```
+
+### 컨텍스트 도구 벤치마크
+
+```
+시나리오                          미사용      사용     절약율    도구
+───────────────────────────────  ────────  ──────  ───────  ──────
+context_generate (전체 브리핑)     5,556     378    93.2%   6 → 1
+context_diff (증분)                 533     152    71.5%   4 → 1
+context_focus (대상)                 413     225    45.5%   4 → 1
+context_health (감사)               322     246    23.6%   5 → 1
+context_export (주입 가능 md)      1,178     218    81.5%   3 → 1
+───────────────────────────────  ────────  ──────  ───────  ──────
+합계                              8,002   1,219    84.8%  22 → 5
+```
+
+## 지원 에이전트
+
+toon-memory는 **15개 이상의 AI 코딩 에이전트**와 작동합니다:
+
+- OpenCode, Claude Code, Cursor, Windsurf, VS Code Copilot
+- Codex CLI, Gemini CLI, Zed, Cline, Continue
+- Antigravity, Aider, KiloCode, OpenClaw, Kiro
+
+설정 상세 내용은 [지원 에이전트](/toon-memory/ko/configuration/agents) 페이지를 참조하세요.
+
+## 결론
+
+MCP 메모리 서버는 AI 코딩 에이전트에게 진정한 생산성을 위한 영구 메모리를 제공합니다. toon-memory는 현재 사용 가능한 가장 완전한 솔루션입니다:
+
+- 완전한 메모리 관리를 위한 **21개 MCP 도구**
+- 매 세션마다 22%를 절약하는 **토큰 효율적 형식**
+- 관련 컨텍스트를 자동으로 찾는 **그래프 인식 recall**
+- 제로 설정으로 **15개 이상 에이전트 지원**
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # 대화형 설치 프로그램
+```
+
+다음 세션부터 에이전트는 모든 것을 기억하게 됩니다.

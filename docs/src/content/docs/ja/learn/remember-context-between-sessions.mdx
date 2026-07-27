@@ -1,0 +1,184 @@
+---
+title: "AIセッション間のコンテキストを記憶 — コーディング向けの永続メモリ"
+description: "AIコーディングセッション間のコンテキスト喪失を防止。toon-memoryはClaude、Cursor、OpenCodeに決定、パターン、バグの永続メモリを提供。オフラインで動作、60%のトークンを節約。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "コンテキスト記憶 AI, 永続メモリ セッション, AIコーディングメモリ, コンテキスト保持, セッションメモリ AI"
+---
+
+## 問題点：AIエージェントは全てを忘れる
+
+Claudeで機能をビルドしているとします。以下を説明します：
+
+- 「ACID準拠のためにPostgresをMongoDBより選んだ」
+- 「Redisプール枯渇はmax_connections=20で修正した」
+- 「RESTエンドポイントには常に/api/v1/プレフィックスを使う」
+
+次のセッションでは？Claudeはこれらの**記憶がない**。最初からやり直します。
+
+これは以下を無駄にします：
+- **トークン** — 同じコンテキストを再説明
+- **時間** — 決定を再構築
+- **お金** — 同じAPIコールを二重に支払う
+
+## ソリューション：全てを記憶する
+
+**toon-memory**はAIコーディングエージェントに永続メモリを提供します：
+
+1. **再起動後も残る** — メモリはセッション間で持続
+2. **オフラインで動作** — クラウド不要、APIコール不要、LLM不要
+3. **トークンを節約** — JSONより22%少ないトークン
+4. **スケール** — セッションあたり80%少ないツール呼び出し
+
+## 仕組み
+
+### ステップ1: 重要なコンテキストを保存する
+
+セッションの終わりに、重要なものを保存します：
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance and JSON support",
+  tags: "database;architecture"
+})
+```
+
+### ステップ2: セッション開始時にリコールする
+
+次のセッションの開始時に、即座にコンテキストを取得します：
+
+```bash
+memory_smart_recall({ intent: "what I was working on" })
+// BM25+グラフ+品質を組み合わせた関連エントリを返す
+```
+
+### ステップ3: ビルドを続ける
+
+エージェントは以下を知っています：
+- データベースの選択（Postgres）
+- 選んだ理由（ACID準拠）
+- 関連する決定（キャッシュにRedis、バリデーションにZod）
+
+## 什么样的コンテキストを記憶できるか
+
+### アーキテクチャ決定
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "microservices-approach",
+  content: "Use microservices for payment and auth, monolith for core business logic"
+})
+```
+
+### バグ修正
+
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-connection-timeout",
+  content: "Redis connection timeout in production — fix was increasing pool size to 20"
+})
+```
+
+### コードパターン
+
+```bash
+memory_remember({
+  category: "pattern",
+  key: "error-handling",
+  content: "Always use custom AppError class, never throw raw Error objects"
+})
+```
+
+### プロジェクトナレッジ
+
+```bash
+memory_remember({
+  category: "knowledge",
+  key: "team-conventions",
+  content: "PR #142 reverted the caching change — don't re-add it without team approval"
+})
+```
+
+## 役立つメモリ機能
+
+### 自動タグ推論
+
+`tags`を空にすると、toon-memoryはコンテキストから自動推論します：
+
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-timeout",
+  content: "Redis connection timeout in production"
+})
+// タグ自動推論: redis
+```
+
+### 関連エントリの提案
+
+保存すると、toon-memoryが関連エントリを見つけます：
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation"
+})
+// 🔗 Related: redis-timeout (mentions "validation")
+```
+
+### 品質スコアリング
+
+各エントリには自動的に品質スコア（0-1）が付与されます：
+
+| 要因 | 重み |
+|--------|--------|
+| タグ | 最大0.3 |
+| リンク | 最大0.2 |
+| コンテキストの長さ | 最大0.3 |
+| 新しさ | 最大0.1 |
+| 特定性 | 最大0.1 |
+
+高品質なエントリがリコールで優先的に表示されます。
+
+### マージ重複排除
+
+同じキーで保存すると、属性が自動的にマージされます：
+
+```bash
+// 初回保存
+memory_remember({ key: "use-zod", content: "Use Zod for validation" })
+
+// 後の保存 — 自動マージ
+memory_remember({ key: "use-zod", content: "Use Zod — also handles API parsing" })
+// タグとリンクが結合され、上書きされない
+```
+
+## マルチセッション調整
+
+複数のエージェントセッションを並列で実行している？toon-memoryが調整します：
+
+```bash
+memory_sessions()
+// 🧭 Active sessions (2):
+// • claude @ feature/auth (you)
+// • opencode @ feature/db
+// 🔥 Soft conflicts: src/types.ts
+```
+
+他のセッションがどのファイルにアクセスしているかを確認し、マージ競合を回避します。
+
+## 始めましょう
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # インタラクティブインストーラー
+```
+
+次のセッションでエージェントは全てを記憶します。

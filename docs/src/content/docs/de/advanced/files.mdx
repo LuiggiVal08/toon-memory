@@ -1,0 +1,71 @@
+---
+title: "Speicher-Dateistruktur"
+description: "Speicher-Dateistruktur — .toon-memory Verzeichnislayout, data.toon-Format, config.json, Sicherungen. Wie der MCP Memory Server Daten lokal speichert."
+---
+
+## Projektstruktur
+
+```
+.toon-memory/
+├── memory/
+│   ├── data.toon        # Haupt-Speicherdatei
+│   ├── archive.toon     # Archivierte Einträge (>30 Tage oder abgelaufene TTL)
+│   ├── config.json      # Verschlüsselungseinstellungen
+│   └── backups/         # Watch-Modus-Sicherungen
+│       ├── backup-2026-07-11T16-00-00-000Z.toon
+│       └── backup-2026-07-11T16-10-00-000Z.toon
+└── hooks/
+    ├── session-start-claude.sh
+    ├── session-start-codex.sh
+    ├── session-start-gemini.sh
+    └── session-start-antigravity.sh
+```
+
+## Dateibeschreibungen
+
+### data.toon
+
+Die Haupt-Speicherdatei mit allen aktiven Einträgen:
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10|
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10|
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d
+```
+
+### archive.toon
+
+Enthält Einträge älter als 30 Tage oder mit abgelaufener TTL:
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  x1y2z3w4|knowledge|old-knowledge|This was important...|src/old.ts|knowledge|2026-06-01
+```
+
+### config.json
+
+Verschlüsselungskonfiguration (existiert nur, wenn Verschlüsselung aktiviert ist):
+
+```json
+{
+  "encrypted": true
+}
+```
+
+### backups/
+
+Verzeichnis mit zeitgestempelten Sicherungen aus dem Watch-Modus:
+
+```
+backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-10-00-000Z.toon
+└── backup-2026-07-11T16-20-00-00-000Z.toon
+```
+
+## Git Ignore
+
+toon-memory fügt `.toon-memory/memory/` automatisch zur `.gitignore` hinzu, um das Einchecken sensibler Daten zu verhindern.

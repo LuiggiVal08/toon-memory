@@ -1,0 +1,90 @@
+---
+title: "MCPメモリとは？ AIコーディングエージェント向けの永続メモリ"
+description: "MCPメモリは、Claude、Cursor、OpenCodeなどのAIコーディングエージェントにセッション間で残る永続メモリを提供。Model Context Protocolによるオフライン、トークン効率の高いメモリについて学ぶ。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCPメモリ, 永続メモリ, AIコーディングエージェント, Model Context Protocol, Claudeメモリ, Cursorメモリ"
+---
+
+## MCPメモリとは？
+
+MCPメモリは、AIコーディングエージェントが**セッション間で情報を記憶する**方法です。MCPメモリがない場合、Claude、Cursor、OpenCodeとの新しいチャットを開始するたびに、エージェントは最初からやり直します。以前の会話のすべての決定、パターン、バグを忘れてしまいます。
+
+**toon-memory**はこの問題を解決するMCPサーバーです。AIコーディングエージェントに永続メモリを提供します：
+
+- **再起動後も残る** — 昨日のコンテキストを今日も覚えておく
+- **オフラインで動作** — クラウド不要、APIコール不要、保存にLLM不要
+- **トークンを節約** — JSONより22%少ないトークン、セッションあたり80%少ないツール呼び出し
+- **15以上のエージェントに対応** — Claude Code、Cursor、OpenCode、Windsurf、VS Code Copilotなど
+
+## MCPメモリの仕組み
+
+### 問題点
+
+AIコーディングエージェントは**セッション間でメモリがない**。新しいセッションごとにエージェント：
+
+1. PostgresをMongoDBより選んだ理由を忘れる
+2. 先週修正したRedisタイムアウトバグを覚えていない
+3. チームが確立したアーキテクチャパターンを思い出せない
+4. プロジェクトを最初からやり直す必要がある
+
+### ソリューション：MCPメモリサーバー
+
+toon-memoryはエージェントがModel Context Protocol経由で接続する**ローカルMCPサーバー**として動作します。メモリはLLMに対してJSONより**22%効率的**な**TOONフォーマット**（Token-Oriented Object Notation）で保存されます：
+
+- **BM25関連性+グラフ対応リコール**で検索可能
+- 構造に基づいて**品質スコア**が自動付与（0-1）
+- エントリ間のリンクと参照で**グラフ接続**
+
+## MCPメモリ vs 他のアプローチ
+
+| アプローチ | 利点 | 欠点 |
+|----------|------|------|
+| **MCPメモリ（toon-memory）** | オフライン、トークン効率、グラフ対応、15以上のエージェント | MCPサポートが必要 |
+| **Markdownファイル** | シンプル、人間が読める | 構造化されていない、検索不可、MCP非互換 |
+| **クラウドメモリ（mem0）** | マネージド、ベクトル検索 | インターネットが必要、コストがかかる、データがマシンから離れる |
+| **メモリバンク（shodh-memory）** | ハイブリッド検索 | セットアップが複雑、Dockerが必要、sentence-transformers依存 |
+
+## MCPメモリを手に入れる方法
+
+### ステップ1: toon-memoryをインストール
+
+```bash
+npm install -g toon-memory
+```
+
+### ステップ2: エージェントを設定
+
+```bash
+# インタラクティブインストーラー
+npx toon-memory
+
+# または手動セットアップ — [インストールガイド](/toon-memory/ja/getting-started/installation)を参照
+```
+
+### ステップ3: メモリを使い始める
+
+次のエージェントセッションで：
+
+```bash
+# 重要な決定を保存
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance and JSON support"
+})
+
+# コーディング前にメモリを検索
+memory_recall({ query: "database" })
+
+# 1回の呼び出しで完全なコンテキストを取得
+memory_smart_recall({ intent: "what I was working on" })
+```
+
+## 詳細
+
+- [AIコーディングエージェント向けのメモリ](/toon-memory/ja/learn/memory-for-ai-agents) — 永続メモリの仕組み
+- [永続メモリ向けのMCPサーバー](/toon-memory/ja/learn/mcp-server-memory) — 技術的な深掘り
+- [クイックスタート](/toon-memory/ja/getting-started/quickstart) — 3ステップで始めましょう

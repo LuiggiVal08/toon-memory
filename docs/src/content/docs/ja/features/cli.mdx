@@ -1,0 +1,104 @@
+---
+title: "CLIコマンド — ターミナルからAIエージェントメモリを管理"
+description: "toon-memory CLIコマンド — ターミナルから永続AIエージェントメモリを管理。install、init、stats、export、import、watchモード。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "CLIコマンド, toon-memory CLI, AIメモリ ターミナル, メモリ エクスポート インポート"
+---
+
+## コマンド
+
+```bash
+npx toon-memory              # インタラクティブインストーラー（エージェント選択）
+npx toon-memory init         # エージェント選択のインタラクティブセットアップ
+npx toon-memory init --agent opencode       # ノンインタラクティブ: 特定のエージェントを設定
+npx toon-memory init --agent opencode --agent claude  # 複数エージェントを設定
+npx toon-memory init --agent opencode --scope global  # グローバルに設定
+npx toon-memory mcp          # MCPサーバーを直接実行
+npx toon-memory status       # インストール状態を確認
+npx toon-memory stats        # メモリ統計を表示
+npx toon-memory export       # メモリをJSONにエクスポート
+npx toon-memory import <file> # JSONからメモリをインポート
+npx toon-memory watch [opts] # オプション付き自動バックアップ
+npx toon-memory upgrade      # 最新バージョンに更新
+npx toon-memory uninstall    # 全エージェントから削除
+```
+
+## Initオプション
+
+| オプション | 説明 | デフォルト |
+|--------|-------------|---------|
+| `--agent <name>` | ノンインタラクティブ: 特定のエージェントを設定。複数の場合は繰り返す。 | インタラクティブ |
+| `--scope <scope>` | `local`または`global` — エージェント設定の保存先 | インタラクティブ |
+
+## Watchオプション
+
+| オプション | 説明 | デフォルト |
+|--------|-------------|---------|
+| `[interval]` | バックアップ間隔（分） | 5 |
+| `-c, --compress` | gzip圧縮を有効化 | オフ |
+| `-l, --log [path]` | ファイルログを有効化 | オフ |
+| `-m, --max-backups <n>` | 保持する最大バックアップ数（0=無制限） | 10 |
+
+## 例
+
+### 統計
+
+```bash
+$ npx toon-memory stats
+
+🧠 toon-memory stats
+
+📊 Memory Stats
+━━━━━━━━━━━━━━━━━━
+Total entries: 45
+├── decision: 12
+├── pattern: 18
+├── bug: 8
+└── knowledge: 7
+Last updated: 2026-07-10
+File size: 12.4 KB
+```
+
+### エクスポート
+
+```bash
+$ npx toon-memory export
+
+🧠 toon-memory export
+
+Exported 45 entries to:
+  /path/to/project/toon-memory-export.json
+```
+
+### インポート
+
+```bash
+$ npx toon-memory import backup.json
+
+🧠 toon-memory import
+
+Imported 3 new entries
+Skipped 2 duplicates
+```
+
+### ウォッチ
+
+```bash
+$ npx toon-memory watch 15 -c -m 20
+
+🧠 toon-memory watch
+
+Watching memory file every 15 minutes...
+Max backups: 20
+Compression: enabled
+Logging: disabled
+Press Ctrl+C to stop
+
+📦 Backup #1 created: 2026-07-11T16-00-00-000Z
+📦 Backup #2 created: 2026-07-11T16-15-00-00-000Z
+^C
+✅ Watch stopped. 2 backups created.
+```

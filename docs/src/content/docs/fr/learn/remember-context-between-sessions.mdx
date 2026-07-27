@@ -1,0 +1,184 @@
+---
+title: "Se souvenir du contexte entre les sessions IA — Mémoire persistante pour le codage"
+description: "Arrêtez de perdre le contexte entre les sessions de codage IA. toon-memory donne à Claude, Cursor, OpenCode une mémoire persistante pour les décisions, patterns et bugs. Fonctionne hors ligne, économise 60% de tokens."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "se souvenir contexte IA, mémoire persistante sessions, mémoire codage IA, rétention contexte, mémoire session IA"
+---
+
+## Le problème : les agents IA oublient tout
+
+Vous construisez une fonctionnalité avec Claude. Vous expliquez :
+
+- « Nous avons choisi Postgres plutôt que MongoDB pour la conformité ACID »
+- « L'épuisement du pool Redis a été corrigé avec max_connections=20 »
+- « Utilisez toujours le préfixe /api/v1/ pour les endpoints REST »
+
+Session suivante ? Claude **n'a aucune mémoire** de tout cela. Vous repartez de zéro.
+
+Cela gaspille :
+- **Des tokens** — réexpliquer le même contexte
+- **Du temps** — reconstruire les décisions
+- **De l'argent** — payer pour les mêmes appels API deux fois
+
+## La solution : se souvenir de tout
+
+**toon-memory** donne à votre agent de codage IA une mémoire persistante qui :
+
+1. **Survit aux redémarrages** — la mémoire persiste entre les sessions
+2. **Fonctionne hors ligne** — pas de cloud, pas d'appels API, pas de LLM nécessaire
+3. **Économise des tokens** — 22% de tokens en moins que le JSON
+4. **Évolue** — 80% d'appels d'outils en moins par session
+
+## Comment ça marche
+
+### Étape 1 : Sauvegarder le contexte important
+
+À la fin d'une session, enregistrez ce qui compte :
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance and JSON support",
+  tags: "database;architecture"
+})
+```
+
+### Étape 2 : Rappeler au début de la session
+
+Au début de la session suivante, obtenez le contexte instantanément :
+
+```bash
+memory_smart_recall({ intent: "what I was working on" })
+// Returns relevant entries combining BM25 + graph + quality
+```
+
+### Étape 3 : Continuer à construire
+
+L'agent sait maintenant :
+- Votre choix de base de données (Postgres)
+- Pourquoi vous l'avez choisi (conformité ACID)
+- Les décisions liées (Redis pour le cache, Zod pour la validation)
+
+## Quel contexte pouvez-vous retenir ?
+
+### Décisions d'architecture
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "microservices-approach",
+  content: "Use microservices for payment and auth, monolith for core business logic"
+})
+```
+
+### Correctifs de bugs
+
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-connection-timeout",
+  content: "Redis connection timeout in production — fix was increasing pool size to 20"
+})
+```
+
+### Patterns de code
+
+```bash
+memory_remember({
+  category: "pattern",
+  key: "error-handling",
+  content: "Always use custom AppError class, never throw raw Error objects"
+})
+```
+
+### Connaissances du projet
+
+```bash
+memory_remember({
+  category: "knowledge",
+  key: "team-conventions",
+  content: "PR #142 reverted the caching change — don't re-add it without team approval"
+})
+```
+
+## Fonctionnalités mémoire utiles
+
+### Inférence automatique de tags
+
+Laissez `tags` vide et toon-memory les infère du contenu :
+
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-timeout",
+  content: "Redis connection timeout in production"
+})
+// Tags auto-inferred: redis
+```
+
+### Suggestions d'entrées liées
+
+Lorsque vous enregistrez, toon-memory trouve les entrées liées :
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation"
+})
+// 🔗 Related: redis-timeout (mentions "validation")
+```
+
+### Score de qualité
+
+Chaque entrée reçoit un score de qualité automatique (0-1) :
+
+| Facteur | Poids |
+|---------|-------|
+| Tags | 0,3 max |
+| Liens | 0,2 max |
+| Longueur du contenu | 0,3 max |
+| Fraîcheur | 0,1 max |
+| Spécificité | 0,1 max |
+
+Les entrées de haute qualité apparaissent en premier dans le rappel.
+
+### Fusion-dédup
+
+Enregistrez avec la même clé, les attributs fusionnent automatiquement :
+
+```bash
+// Premier enregistrement
+memory_remember({ key: "use-zod", content: "Use Zod for validation" })
+
+// Enregistrement ultérieur — fusion automatique
+memory_remember({ key: "use-zod", content: "Use Zod — also handles API parsing" })
+// Tags and links are combined, not overwritten
+```
+
+## Coordination multi-sessions
+
+Vous exécutez plusieurs sessions d'agent en parallèle ? toon-memory coordonne :
+
+```bash
+memory_sessions()
+// 🧭 Active sessions (2):
+// • claude @ feature/auth (you)
+// • opencode @ feature/db
+// 🔥 Soft conflicts: src/types.ts
+```
+
+Voyez quels fichiers les autres sessions touchent pour éviter les conflits de fusion.
+
+## Commencer
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Installateur interactif
+```
+
+Votre agent se souviendra de tout dans la prochaine session.

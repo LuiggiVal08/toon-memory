@@ -1,0 +1,208 @@
+---
+title: "Claude Code, Cursor 및 OpenCode를 위한 메모리 — 영구 AI 에이전트 메모리"
+description: "Claude Code, Cursor, OpenCode에 영구 메모리를 제공하세요. toon-memory MCP 서버는 15개 이상의 AI 코딩 에이전트와 호환됩니다. 세션 간에 결정, 패턴, 버그를 기억하세요."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "Claude Code 메모리, Cursor AI 메모리, OpenCode 메모리, AI 코딩 에이전트 메모리, 영구 메모리 IDE"
+---
+
+## 좋아하는 AI 에이전트를 위한 메모리
+
+**toon-memory**는 이미 사용하고 있는 AI 코딩 에이전트에게 영구 메모리를 제공합니다. Claude Code, Cursor, 또는 OpenCode를 선호하든 상관없이, 에이전트는 세션 간에 모든 것을 기억합니다.
+
+## 에이전트별 설정
+
+### Claude Code
+
+Claude Code는 toon-memory와 함께 완전한 훅 지원을 제공합니다:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+**훅:** SessionStart, PostToolUse, Stop — 자동 리마인더 및 컨텍스트 로딩.
+
+### Cursor
+
+Cursor에 MCP 설정을 추가하세요:
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### OpenCode
+
+`.opencode/opencode.json`에 추가하세요:
+
+```json
+{
+  "mcp": {
+    "toon-memory": {
+      "type": "local",
+      "command": ["npx", "-y", "toon-memory", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+**플러그인:** `.opencode/plugins/toon-memory.ts` — 플러그인을 통한 SessionStart 훅.
+
+### Windsurf
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### VS Code / Copilot
+
+`.vscode/mcp.json`에 추가하세요:
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### Codex CLI
+
+`.codex/config.toml`에 추가하세요:
+
+```toml
+[mcpServers.toon-memory]
+command = "npx"
+args = ["-y", "toon-memory", "mcp"]
+```
+
+### Gemini CLI
+
+`.gemini/settings.json`에 추가하세요:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### Zed
+
+`~/.config/zed/settings.json`에 추가하세요:
+
+```json
+{
+  "mcp_servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## 대화형 설치 프로그램 (가장 쉬운 방법)
+
+```bash
+npx toon-memory
+```
+
+설치 프로그램은 다음을 수행합니다:
+1. 설치된 에이전트를 감지합니다
+2. 설정할 에이전트를 선택하도록 요청합니다
+3. MCP 설정을 자동으로 추가합니다
+
+## 각 에이전트가 얻는 것
+
+모든 에이전트는 동일한 **21개 MCP 도구**와 **3개 MCP 리소스**를 얻습니다:
+
+- `memory_remember` — 결정, 패턴, 버그 저장
+- `memory_recall` — 메모리 검색 (플랫 또는 그래프 모드)
+- `memory_smart_recall` — BM25 + 그래프 + 품질이 결합된 통합 recall
+- `context_generate` — 한 번의 호출로 전체 프로젝트 브리핑
+- `context_diff` — 마지막 세션 이후 변경 사항
+- 그리고 15개 이상의 도구...
+
+## 멀티 에이전트 지원
+
+**여러 에이전트를 동시에** 설정할 수 있습니다:
+
+```bash
+npx toon-memory
+# 선택: claude, cursor, opencode
+```
+
+모든 에이전트는 `.toon-memory/memory/data.toon`의 동일한 메모리 파일을 공유합니다.
+
+### 세션 조율
+
+여러 에이전트를 병렬로 실행할 때:
+
+```bash
+memory_sessions()
+// 🧭 활성 세션 (2):
+// • claude @ feature/auth (나)
+// • opencode @ feature/db
+```
+
+다른 세션이 작업 중인 파일을 확인하여 충돌을 피할 수 있습니다.
+
+## 지원 에이전트 (15개 이상)
+
+| 에이전트 | 설정 위치 | 훅 |
+|-------|-----------------|-------|
+| OpenCode | `.opencode/opencode.json` | 플러그인 기반 |
+| Claude Code | `.claude/settings.json` | SessionStart + PostToolUse + Stop |
+| Cursor | `.cursor/mcp.json` | — |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` | — |
+| VS Code | `.vscode/mcp.json` | — |
+| Codex CLI | `.codex/config.toml` | SessionStart + PostToolUse + Stop |
+| Gemini CLI | `.gemini/settings.json` | SessionStart + PostToolUse + Stop |
+| Zed | `~/.config/zed/settings.json` | — |
+| Cline | `.cline/mcp.json` | — |
+| Continue | `.continue/config.json` | — |
+| Antigravity | `.gemini/config/mcp_config.json` | PreInvocation + PostToolUse + Stop |
+| Aider | — | 지시 파일 |
+| KiloCode | `~/.kilocode/mcp_settings.json` | — |
+| OpenClaw | `.openclaw.json` | — |
+| Kiro | `.kiro/settings/mcp.json` | — |
+
+## 시작하기
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # 대화형 설치 프로그램
+```
+
+자세한 설정은 [지원 에이전트](/toon-memory/ko/configuration/agents) 페이지를 참조하세요.

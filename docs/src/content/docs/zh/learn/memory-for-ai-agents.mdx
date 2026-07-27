@@ -1,0 +1,111 @@
+---
+title: "AI 编程代理的记忆 — 跨会话存活的持久化记忆"
+description: "AI 编程代理需要记忆。了解如何为 Claude、Cursor、OpenCode 提供持久化的决策、模式和缺陷记忆。无云端、无 LLM、离线 MCP 服务器。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "AI 代理记忆, 持久化记忆 AI, Claude 记忆, Cursor 记忆, OpenCode 记忆, MCP 记忆"
+---
+
+## 为什么 AI 编程代理需要记忆
+
+Claude、Cursor 和 OpenCode 等 AI 编程代理功能强大 — 但有一个关键限制：**在会话之间没有记忆**。
+
+每次开始新会话时，你的代理：
+
+- 忘记昨天的架构决策
+- 不记得你发现的缺陷修复
+- 无法回忆你团队建立的模式
+- 必须从头重新学习你的项目
+
+这浪费了 token、消耗了时间，并导致令人沮丧的重复。
+
+## 解决方案：AI 代理的持久化记忆
+
+**toon-memory** 为你的 AI 编程代理提供持久化记忆，具有以下特点：
+
+1. **跨重启存活** — 记忆跨会话持久保存
+2. **离线工作** — 无云端、无 API 调用、无需 LLM
+3. **节省 token** — 比 JSON 少 22% token
+4. **可扩展** — 每会话减少 80% 工具调用
+5. **通用兼容** — 支持 15+ 代理
+
+## AI 代理能记住什么？
+
+### 决策
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation — simpler than Joi, better TS support"
+})
+```
+
+### 缺陷修复
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-pool-fix",
+  content: "Redis pool exhaustion — fix was max_connections=20"
+})
+```
+
+### 模式
+```bash
+memory_remember({
+  category: "pattern",
+  key: "api-versioning",
+  content: "Always use /api/v1/ prefix for REST endpoints"
+})
+```
+
+### 知识
+```bash
+memory_remember({
+  category: "knowledge",
+  key: "deploy-process",
+  content: "Deploy script lives in scripts/deploy.sh, runs on CI merge to main"
+})
+```
+
+## 记忆如何提升 AI 代理性能
+
+| 指标 | 无记忆 | 使用 toon-memory | 提升 |
+|------|--------|------------------|------|
+| 每会话 token 数 | 2,411 | 972 | -60% |
+| 每会话工具调用数 | 25 | 5 | -80% |
+| 每会话成本 (GPT-4) | $0.072 | $0.029 | -60% |
+| 上下文重建 | 手动 | 自动 | 100% |
+
+## 记忆功能
+
+- **21 个 MCP 工具** — 记住、召回、遗忘、统计、摘要、归档、差异、建议、smart_recall、加密、解密等
+- **图感知召回** — 通过链接和引用连接相关条目
+- **质量评分** — 自动评定条目质量（0-1）
+- **合并去重** — 用相同键保存时自动合并
+- **TTL** — 条目可在 7d、30d 或自定义日期后过期
+- **加密** — 敏感数据使用 AES-256-GCM 加密
+
+## 支持的代理
+
+toon-memory 兼容 **15+ AI 编程代理**：
+
+- **OpenCode** — 基于插件，SessionStart 钩子
+- **Claude Code** — 完整钩子支持（SessionStart、PostToolUse、Stop）
+- **Cursor** — MCP 配置
+- **Windsurf** — MCP 配置
+- **VS Code / Copilot** — MCP 配置
+- **Codex CLI** — TOML 配置 + 钩子
+- **Gemini CLI** — JSON 配置 + 钩子
+- **Zed** — JSONC 配置
+- **以及更多** — Cline、Continue、Antigravity、Aider、KiloCode、OpenClaw、Kiro
+
+## 开始使用
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # 交互式安装器
+```
+
+你的代理将在下一次会话中拥有持久化记忆。

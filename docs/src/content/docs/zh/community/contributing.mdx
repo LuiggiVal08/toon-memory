@@ -1,0 +1,70 @@
+---
+title: 贡献指南
+description: 如何为 toon-memory 做贡献
+---
+
+## 贡献
+
+欢迎贡献！请按以下步骤操作：
+
+## 如何贡献
+
+1. **Fork** 仓库
+2. **创建** 功能分支（`git checkout -b feature/amazing-feature`）
+3. **提交** 更改（`git commit -m 'feat: add amazing feature'`）
+4. **推送到** 分支（`git push origin feature/amazing-feature`）
+5. **创建** Pull Request
+
+## 开发环境设置
+
+```bash
+git clone https://github.com/LuiggiVal08/toon-memory.git
+cd toon-memory
+npm install
+npm run build
+npm test
+```
+
+## 项目结构
+
+```
+toon-memory/
+├── src/
+│   ├── bin/              # 入口点（CLI + MCP 路由器）
+│   ├── cli/              # CLI 命令（setup、capture、session-start）
+│   ├── lib/              # 核心库（graph、quality、sessions、context、vocab、lock）
+│   └── mcp/              # MCP 服务器（21 个工具，3 个资源）
+├── tests/                # 单元测试（vitest）
+├── docs/                 # 文档网站（Astro + Starlight）
+├── bin/                  # 构建输出（入口点）
+├── mcp/                  # 构建输出（MCP 服务器）
+└── package.json
+```
+
+## 脚本
+
+```bash
+npm run build         # 构建全部
+npm run build:cli     # 构建 CLI
+npm run build:mcp     # 构建 MCP 服务器
+npm test              # 运行测试
+npm run test:watch    # 以 watch 模式运行测试
+```
+
+## 代码风格
+
+- TypeScript，严格模式
+- 2 空格缩进
+- 变量/函数使用 camelCase
+- 类使用 PascalCase
+
+## Pull Request 准则
+
+- 编写清晰的提交信息
+- 为新功能添加测试
+- 必要时更新文档
+- 遵循现有代码风格
+
+## 行为准则
+
+贡献前请阅读我们的[行为准则](/toon-memory/zh/community/code-of-conduct)。

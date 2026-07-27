@@ -1,0 +1,104 @@
+---
+title: "Commandes CLI — Gérer la mémoire des agents IA depuis le terminal"
+description: "Commandes CLI pour toon-memory — install, init, stats, export, import, mode watch. Gérez la mémoire persistante des agents IA depuis le terminal."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "commandes CLI, toon-memory CLI, terminal mémoire IA, export import mémoire"
+---
+
+## Commandes
+
+```bash
+npx toon-memory              # Installateur interactif (sélection d'agent)
+npx toon-memory init         # Configuration interactive avec sélection d'agent
+npx toon-memory init --agent opencode       # Non-interactif : configurer un agent spécifique
+npx toon-memory init --agent opencode --agent claude  # Configurer plusieurs agents
+npx toon-memory init --agent opencode --scope global  # Configurer globalement
+npx toon-memory mcp          # Lancer le serveur MCP directement
+npx toon-memory status       # Vérifier l'état de l'installation
+npx toon-memory stats        # Voir les statistiques mémoire
+npx toon-memory export       # Exporter la mémoire en JSON
+npx toon-memory import <file> # Importer la mémoire depuis un JSON
+npx toon-memory watch [opts] # Sauvegarde automatique avec options
+npx toon-memory upgrade      # Mettre à jour vers la dernière version
+npx toon-memory uninstall    # Supprimer de tous les agents
+```
+
+## Options d'init
+
+| Option | Description | Défaut |
+|--------|-------------|--------|
+| `--agent <name>` | Non-interactif : configurer un ou plusieurs agents. Répéter pour plusieurs. | interactif |
+| `--scope <scope>` | `local` ou `global` — où stocker la config de l'agent | interactif |
+
+## Options de watch
+
+| Option | Description | Défaut |
+|--------|-------------|--------|
+| `[interval]` | Intervalle de sauvegarde en minutes | 5 |
+| `-c, --compress` | Activer la compression gzip | désactivé |
+| `-l, --log [path]` | Activer la journalisation fichier | désactivé |
+| `-m, --max-backups <n>` | Nombre max de sauvegardes à conserver (0=illimité) | 10 |
+
+## Exemples
+
+### Stats
+
+```bash
+$ npx toon-memory stats
+
+🧠 toon-memory stats
+
+📊 Memory Stats
+━━━━━━━━━━━━━━━━━━
+Total entries: 45
+├── decision: 12
+├── pattern: 18
+├── bug: 8
+└── knowledge: 7
+Last updated: 2026-07-10
+File size: 12.4 KB
+```
+
+### Export
+
+```bash
+$ npx toon-memory export
+
+🧠 toon-memory export
+
+Exported 45 entries to:
+  /path/to/project/toon-memory-export.json
+```
+
+### Import
+
+```bash
+$ npx toon-memory import backup.json
+
+🧠 toon-memory import
+
+Imported 3 new entries
+Skipped 2 duplicates
+```
+
+### Watch
+
+```bash
+$ npx toon-memory watch 15 -c -m 20
+
+🧠 toon-memory watch
+
+Watching memory file every 15 minutes...
+Max backups: 20
+Compression: enabled
+Logging: disabled
+Press Ctrl+C to stop
+
+📦 Backup #1 created: 2026-07-11T16-00-00-000Z
+📦 Backup #2 created: 2026-07-11T16-15-00-00-000Z
+^C
+✅ Watch stopped. 2 backups created.
+```

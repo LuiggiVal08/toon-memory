@@ -1,0 +1,352 @@
+---
+title: "AI 에이전트 영구 메모리를 위한 21개 MCP 도구"
+description: "AI 에이전트 영구 메모리를 위한 21개 MCP 도구 — memory_remember, memory_recall, memory_smart_recall, context_generate 등. Claude, Cursor, OpenCode를 위한 토큰 효율적이고 그래프 인식 검색."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP 도구, memory_remember, memory_recall, AI 메모리 도구, 영구 메모리 API"
+---
+
+## 개요
+
+toon-memory는 영구 메모리를 관리하기 위한 21개의 MCP 도구와 3개의 MCP 리소스를 제공합니다:
+
+## 도구
+
+| 도구 | 설명 |
+|------|------|
+| `memory_remember` | 결정, 패턴, 버그 또는 지식 저장 (선택적 TTL, 자동 태그 추론, `links`, 자동 품질 점수, 중복 병합, 신뢰도) |
+| `memory_recall` | 메모리 검색 (파일 읽기 전에 사용, 만료된 TTL 필터링). `mode: "graph"`는 더 높은 정확도를 위해 관계 인식 서브그래프를 확장합니다. 품질 가중 순위 |
+| `memory_forget` | 키 또는 id로 항목 삭제 |
+| `memory_stats` | 메모리 상태 확인 (TTL 통계 및 품질 분포 포함) |
+| `memory_summary` | 파일 요약 저장/조회 |
+| `memory_archive` | 오래된 항목 (>30일) 및 만료된 TTL 항목 아카이브 |
+| `memory_diff` | 특정 날짜 이후 변경 사항 표시 (24h, 7d 또는 정확한 날짜) |
+| `memory_suggest` | 주어진 컨텍스트와 관련된 항목 검색 |
+| `memory_captured` | 훅이 자동으로 캡처한 활동 목록 (선택 사항) 또는 로그 지우기 |
+| `memory_consolidate` | 동일한 내용의 항목 중복 제거 및 속성 병합 (결정론적, LLM 없음) |
+| `memory_encrypt` | AES-256-GCM 암호화 활성화 |
+| `memory_decrypt` | 암호화 비활성화 |
+| `memory_backup` | 메모리 파일의 타임스탬프 백업 생성 (최근 10개로 자동 정리) |
+| `memory_sessions` | 활성 에이전트 세션, 브랜치 및 소프트 파일 충돌 표시 (병렬 세션 조정용) |
+| `context_brief` | **원 호출 컨텍스트 브리핑**: 메모리 + 세션 + 상태를 압축된 마크다운으로 제공. 5-6개의 별도 memory_* 호출 대신 사용. LLM 없음 |
+| `context_generate` | **전체 프로젝트 브리핑**: 프로젝트 구조, git 상태, 메모리 항목 및 활성 세션을 하나의 호출로 결합. 5-6개의 수동 도구 호출 대체 |
+| `context_diff` | **증분 브리핑**: git 커밋 + 수정된 파일 + 신규/업데이트된 메모리 + 이전 세션 이후 활성 세션 |
+| `context_focus` | **하이퍼 초점 브리핑**: 쿼리에 관련된 메모리 + 소스 파일 + 호출자 + 테스트 파일만 |
+| `context_health` | **메모리 상태 감사**: 고아 링크, 중복, 깨진 파일 참조, 만료된 TTL, 오래된 세션, 점수 0-100 |
+| `context_export` | **메모리를 마크다운으로 내보내기**: 시스템 프롬프트용 주입 가능한 컨텍스트 (전체 또는 압축) |
+| `memory_smart_recall` | 통합 검색: BM25 + 그래프 + 품질 + 신선도 + 감쇠를 하나의 호출로 결합 |
+
+## MCP 리소스
+
+메모리는 직접적인 컨텍스트 읽기를 위한 MCP 리소스로도 노출됩니다:
+
+| 리소스 | URI | 설명 |
+|--------|-----|------|
+| 메모리 항목 | `toon://memory/entries` | 전체 메모리 덤프 |
+| 메모리 통계 | `toon://memory/stats` | 카테고리별 개수 및 TTL 정보 |
+| 메모리 요약 | `toon://memory/summaries` | 자동 생성 시스템 프라이머: 지식 맵, 최근 메모리 및 주요 결정 사항 |
+
+리소스를 사용하면 에이전트가 도구 호출 없이 컨텍스트로 메모리를 읽을 수 있습니다 — 시스템 프롬프트나 세션 시작 시 유용합니다. 시스템 프라이머는 프로젝트의 지식 상태에 대한 즉각적인 컨텍스트를 제공합니다.
+
+## 예제
+
+### 결정 사항 저장
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts",
+  tags: "validation;types"
+})
+// 🧠 Guardado: decision/use-zod (a1b2c3d4)
+// 🎯 Quality: 0.80 | Confidence: 1.00
+// 🔗 Entradas relacionadas:
+//   [pattern] zod-schemas — Shared Zod schemas for API validation
+```
+
+항목은 태그, 링크, 내용 상세도 및 구체성에 따라 품질(0-1)이 자동으로 점수 매겨집니다. 직접 주장한 메모리는 신뢰도 1.0을 받으며, 추론/수집된 메모리는 0.65-0.75를 받습니다.
+
+### TTL과 함께 저장
+
+```typescript
+memory_remember({
+  category: "knowledge",
+  key: "sprint-deadline",
+  content: "Sprint ends July 18, feature freeze is July 16",
+  ttl: "7d"
+})
+// 🧠 Guardado: knowledge/sprint-deadline (x1y2z3w4)
+// 🎯 Quality: 0.55 | Confidence: 1.00
+// ⏰ TTL: 2026-07-19
+```
+
+마감일이나 스프린트 정보와 같은 임시 컨텍스트에는 `ttl`을 사용합니다. 상대적 (`7d`, `30d`) 또는 정확한 날짜 (`2026-12-31`)를 지원합니다. 만료된 항목은 검색에서 자동으로 필터링됩니다.
+
+### 자동 추론 태그
+
+```typescript
+memory_remember({
+  category: "bug",
+  key: "redis-connection-timeout",
+  content: "Redis connection timeout in production, increased pool size"
+  // tags left empty — auto-inferred from content
+})
+// 🧠 Guardado: bug/redis-connection-timeout (a1b2c3d4)
+// 🏷️ Tags inferidos: redis
+```
+
+`tags`가 비어 있으면 시스템이 20개 이상의 카테고리로 이루어진 어휘를 사용하여 내용에서 태그를 추론합니다: redis, auth, api, db, security, test, deploy, config, performance, refactor, error, logging, types, async, state, ui, storage, email, payment, webhook. 추가로 `toon-memory init`은 의존성(`package.json`, `Cargo.toml`, `requirements.txt`, `pyproject.toml`, `go.mod`)에서 파생된 **프로젝트 어휘**를 작성하여, `redis`와 같은 의존성을 언급한 항목도 자동으로 `redis` 태그가 지정됩니다. 태그가 많을수록 품질 점수가 높아집니다.
+
+### 메모리 검색
+
+```typescript
+memory_recall({ query: "redis" })
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Added max_connections=20
+//   File: redis.ts | Tags: redis;fix | Date: 2026-07-10 | Quality: 0.82
+```
+
+결과는 품질 가중치가 적용됩니다 — 더 많은 상세 내용, 태그 및 링크가 있는 항목이 먼저 표시됩니다.
+
+### 날짜 필터로 검색
+
+```typescript
+memory_recall({
+  query: "redis",
+  from_date: "2026-07-01",
+  to_date: "2026-07-31"
+})
+```
+
+### 이전 세션 이후 변경 사항 표시
+
+```typescript
+memory_diff({ since: "24h" })
+// 📋 Cambios desde 2026-07-11:
+//
+// ➕ Nuevas (2):
+//   [decision] use-zod (a1b2c3d4)
+//     Use Zod for validation
+//   [bug] redis-timeout (e5f6g7h8)
+//     Redis connection timeout fix
+```
+
+`since`로 상대적 (`24h`, `7d`) 또는 정확한 날짜를 지원합니다. `type`으로 필터링: `all`, `created` 또는 `updated`.
+
+### 관련 항목 검색
+
+```typescript
+memory_suggest({ context: "redis cache configuration" })
+// 🔍 Sugerencias para "redis cache configuration":
+//
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+```
+
+### 오래된 항목 아카이브
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+### 암호화 활성화
+
+```typescript
+memory_encrypt()
+// 🔐 Encriptación habilitada
+// ⚠️ Guarda esta clave (no se puede recuperar):
+// a1b2c3d4...
+```
+
+### 활성 세션 및 충돌 목록
+
+```typescript
+memory_sessions({ conflictsOnly: false })
+// 🧭 Sesiones activas (2) — ventana 10 min:
+//
+// • opencode @ feature/foo
+//    id: sess-B
+//    Archivos:
+//      • src/shared.ts
+// • claude @ feature/foo (tú)
+//    id: sess-A
+//
+// 🔥 Conflictos suaves (1):
+//   ⚠️ src/shared.ts  ↔  opencode@feature/foo, claude@feature/foo
+```
+
+충돌에만 관심이 있다면 `memory_sessions({ conflictsOnly: true })`를 사용하세요. 아래의 [멀티 세션 조정](#멀티-세션-조정)을 참조하세요.
+
+## 멀티 세션 조정
+
+**여러 AI 에이전트 세션을 병렬로 실행**하면(예: 동일한 저장소에서 세 개의 OpenCode 세션을 동시에 실행) 서로의 작업을 덮어쓸 수 있습니다. `memory_sessions`는 **파일 기반** 조정 도구입니다 — **서버 없음, 네트워크 없음, LLM 호출 없음** — 각 세션이 다른 세션이 무엇을 하고 있는지 볼 수 있게 해줍니다.
+
+### 작동 방식
+
+- 시작 시 `SessionStart` 훅이 `.toon-memory/memory/sessions/<id>.json`에 세션의 **하트비트 파일**을 작성합니다. 각 프로세스는 *자신의 파일만* 작성하므로 잠금 경쟁이 없습니다.
+- 하트비트는 에이전트 이름, **git 브랜치**, **접근한 파일** 및 **마지막 확인** 타임스탬프를 기록합니다.
+- 이 모든 파일을 읽으면 각 세션이 다른 활성 세션의 공유되고 최종적으로 일관된 뷰를 갖게 됩니다.
+- 하트비트가 TTL 윈도우(10분) 내인 세션은 "활성"입니다. 죽은 세션(프로세스 PID가 더 이상 활성 상태가 **아닌** 경우**와** 오래된 하트비트)은 지연적으로 정리됩니다.
+- 소프트 충돌은 **2개 이상의 활성 세션**이 접근한 파일입니다 — `memory_sessions`가 표시하여 형제 세션의 작업을 피할 수 있게 합니다.
+
+### 병렬 세션 권장 습관
+
+1. 세션 시작 시 `SessionStart` 훅이 다른 활성 세션, 해당 브랜치 및 소프트 충돌을 출력합니다.
+2. 공유 파일을 편집하기 전에 `memory_sessions()`를 실행하여 형제 세션이 접근하고 있지 않은지 확인합니다.
+3. 작업을 마치면 하트비트가 종료로 표시되고 파일이 해제됩니다.
+
+## 메모리 그래프 (그래프 기반 검색)
+
+더 큰 메모리의 경우 단순 키워드 검색은 너무 많은 결과를 반환하거나 관계를 놓칠 수 있습니다. toon-memory는 메모리를 **경량 지식 그래프**로 처리하여 더 적은 토큰으로 *올바른* 항목을 반환합니다. 품질 점수와 결합하면 가장 유용한 항목이 먼저 표시됩니다.
+
+완전히 **결정론적이고 오프라인**입니다 — 임베딩 없음, 벡터 DB 없음, LLM 없음, 서버 없음. 엣지는 다음에서 가져옵니다:
+
+- **명시적 `links`** — 항목 저장 시 선언한 키
+- **암시적 `[[key]]` 참조** — 내용 내의 `[[some-key]]` 언급
+
+### 링크와 함께 저장
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "risk-engine-priority",
+  content: "The engine prioritizes risk over speed (see [[risk-spec]]).",
+  file: "spec.md:10",
+  tags: "risk;spec",
+  links: "engine-arch"   // explicit edge to another entry
+})
+// 🧠 Guardado: decision/risk-engine-priority (a1b2c3d4)
+```
+
+### 그래프 모드로 검색
+
+`memory_recall({ mode: "graph" })`는 키워드 매칭(시드)을 찾고 `hops`(1 또는 2)까지 **이고 서브그래프**를 확장합니다. 관련성은 시드에서 이웃으로 전파되므로 쿼리 단어 없이도 관련 사양이나 결정이 표시됩니다. 결과는 더 작고 정확한 컨텍스트를 위해 상한(`limit`, 기본값 6)이 적용됩니다.
+
+```typescript
+memory_recall({ query: "riesgo", mode: "graph", hops: 2 })
+// [decision] risk-engine-priority (a1b2c3d4)
+//   The engine prioritizes risk over speed (see [[risk-spec]]).
+//   File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01
+//   links: engine-arch
+//
+// [knowledge] risk-spec (a2b3c4d5)
+//   Risk specification for the engine.
+//   links: risk-engine-priority;engine-arch
+//
+// [pattern] engine-arch (e6f7g8h9)
+//   Engine architecture.
+//   links: risk-spec
+```
+
+> 결정이 여러 항목(아키텍처, 사양, 관련 버그)에 영향을 미칠 때 `mode: "graph"`를 사용하세요. 고립된 사실의 경우 기본 `flat` 모드로 충분합니다. 그래프는 읽을 때 생성되므로 유지할 추가 인덱스 파일이 없습니다.
+
+### 토큰 효율적 검색 (`compact: true`)
+
+모든 토큰이 중요할 때 `compact: true`를 전달하여 더 밀도 높은 출력을 얻으세요:
+
+```typescript
+memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
+// [1] decision/risk-engine-priority
+//   The engine prioritizes risk over speed (see [[risk-spec]]).
+//   tags: risk;spec · edges: ->2, ->3
+//
+// [2] knowledge/risk-spec
+//   Risk specification for the engine.
+//   tags: risk · edges: ->1
+//
+// [3] pattern/engine-arch
+//   Engine architecture.
+//   tags: engine · edges: ->1
+```
+
+`compact`가 변경하는 것:
+
+- 각 항목은 점수 순으로 안정적인 숫자 인덱스(`[1]`, `[2]`, …)를 받습니다.
+- `id`, `date` 및 `file`은 제거됩니다 — `tags`만 유지됩니다.
+- `graph` 모드에서 엣지는 `->2`로 렌더링됩니다(숫자, 키 이름이 아님).
+- 그래프를 통해 도달한 이웃(시드가 아닌 경우)은 생략 부호와 함께 짧은 스니펫으로 잘리며, 직접 매칭된 시드는 전체 내용을 유지합니다.
+- 저장된 `.toon` 파일은 **절대** 변경되지 않습니다 — `compact`는 응답만 재구성합니다.
+
+### 검색 결과 순위 매기기
+
+검색은 결정론적이고 오프라인입니다(임베딩 없음, LLM 없음). 각 후보 항목은 다음의 결합 점수를 받습니다:
+
+- **BM25 관련성** — `id` + `category` + `key` + `content` + `file` + `tags`에 대한 확률적 용어 빈도 점수
+- **그래프 중심성** — 차원 정규화 (0..1); 여러 항목에 연결된 허브는 1에 가까운 점수를 받아 쿼리 단어 없이도 표시됨
+- **중요도** — 최신성 + 접근 빈도
+- **품질 부스트** — 더 높은 품질 점수를 가진 항목(더 많은 태그, 링크, 세부 사항)은 순위 부스트를 받음
+- **시드 보너스** — 쿼리와 직접 매칭되는 항목은 고정 부스트를 받음
+- **홉당 감쇠** — 시드에서 `d`홉 떨어진 노드는 `0.5^d`를 곱하여 원격 컨텍스트가 근처 컨텍스트보다 낮게 유지됨
+
+`graph` 모드에서 검색은 키워드 매칭을 시드로 하고, `hops`까지 이고 서브그래프를 확장한 다음 결합 점수 기준 상위 `limit`(기본값 6)을 반환합니다. `memory_smart_recall`은 이 모든 신호를 하나의 호출로 결합합니다.
+
+### 스마트 검색 (`memory_smart_recall`)
+
+BM25, 그래프, 품질, 신선도 및 감쇠를 하나의 호출로 결합하는 통합 검색:
+
+```typescript
+memory_smart_recall({ intent: "redis cache configuration", hops: 2 })
+// Combines BM25 relevance + graph centrality + quality score + freshness decay
+// Returns top results ranked by combined score
+```
+
+이것은 메모리를 검색하는 권장 방법입니다 — 여러 도구를 조정하는 대신 하나의 호출로 모든 것을 처리합니다.
+
+### 품질 점수
+
+모든 항목은 다음을 기반으로 자동으로 품질(0-1) 점수가 매겨집니다:
+
+- **태그 커버리지** (가중치 0.3) — 태그가 많을수록 점수 높음
+- **링크 풍부함** (가중치 0.2) — 링크가 많을수록 더 연결됨
+- **내용 상세도** (가중치 0.2) — 더 길고 상세한 내용은 높은 점수
+- **최신성** (가중치 0.15) — 최근 항목은 약간 더 높은 점수
+- **구체성** (가중치 0.15) — 파일 참조와 구체적인 키가 있는 항목은 높은 점수
+
+고품질 항목이 검색 결과에서 먼저 표시되어 가장 유용한 컨텍스트가 항상 두드러지도록 합니다.
+
+### 병합-중복제거
+
+기존 키로 항목을 저장하면 시스템이 속성을 병합합니다:
+
+- **태그**: 두 태그 세트의 합집합
+- **링크**: 두 링크 세트의 합집합
+- **품질**: 두 점수 중 최대값
+- **신뢰도**: 두 점수 중 최대값
+- **내용**: 그대로 유지 (덮어쓰기 없음)
+- **날짜**: 현재 시간으로 업데이트
+
+이는 항목을 다시 저장하면 교체하는 대신 풍부하게 함을 의미합니다.
+
+### 프로젝트 의존성에서 자동 태그
+
+`toon-memory init` 시 CLI가 의존성 매니페스트를 스캔하고 `.toon-memory/memory/config.json`에 `vocab` 테이블을 작성합니다:
+
+```json
+{
+  "vocab": {
+    "react": ["react"],
+    "zod": ["zod"],
+    "redis": ["redis"]
+  }
+}
+```
+
+`memory_remember`는 새로운 항목을 내장 어휘 외에도 이 어휘와 매칭합니다. 주요 의존성을 추가한 후 `toon-memory init`을 다시 실행하여 새로고침하세요. `vocab` 키는 `config.json`의 `encrypted`/`capture` 플래그와 병합(절대 덮어쓰지 않음)됩니다. 태그가 많을수록 품질 점수가 높아집니다.
+
+## 카테고리
+
+항목은 카테고리별로 정리됩니다:
+
+| 카테고리 | 사용 사례 |
+|----------|-----------|
+| `decision` | 설계 결정 ("왜 X를 Y보다 선택했는가?") |
+| `pattern` | 프로젝트 패턴 ("검증에 Zod 사용") |
+| `bug` | 버그 수정 ("Redis 풀 고갈") |
+| `knowledge` | 일반 지식 ("브로커가 RESP 사용") |

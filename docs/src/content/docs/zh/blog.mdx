@@ -1,0 +1,113 @@
+---
+title: "toon-memory 如何让你的 AI 代理更智能"
+description: "了解持久化记忆如何改变 AI 编程代理。toon-memory 为 Claude、Cursor、OpenCode 提供跨会话的决策、模式和缺陷记忆。"
+---
+
+问题所在
+---
+
+AI 编程代理在每次会话之间都会忘记所有内容。每次开始新会话时，代理都从零开始：
+
+<ul class="staggered-list">
+  <li>"我们为什么选择了 X 而不是 Y？"</li>
+  <li>"之前的 bug 修复是什么来着？"</li>
+  <li>"这个项目用了哪些模式？"</li>
+</ul>
+
+<div class="comparison-grid">
+  <div class="before-box morph-border fade-in-left">
+    <h3>令人沮丧</h3>
+    <p>每次会话都要重新解释相同的上下文</p>
+  </div>
+  <div class="before-box morph-border fade-in-right">
+    <h3>浪费资源</h3>
+    <p>代理把时间花在重新学习上，而不是编写代码</p>
+  </div>
+</div>
+
+---
+
+## 解决方案
+
+toon-memory 提供了跨重启的持久化记忆。它以 token 高效的格式存储你的决策、模式、缺陷和知识。
+
+<div class="comparison-grid">
+  <div class="after-box morph-border fade-in-left">
+    <h3>高效</h3>
+    <p>代理自动记住所有内容</p>
+  </div>
+  <div class="after-box morph-border fade-in-right">
+    <h3>快速</h3>
+    <p>即时召回，无需重新学习</p>
+  </div>
+</div>
+
+---
+
+## 演示：前后对比
+
+### 不使用 toon-memory
+
+<div class="before-box fade-in-up">
+  <p><strong>会话 1：</strong></p>
+  <div class="terminal">
+    <span class="prompt">用户：</span>"我们用 Zod 做校验"<br />
+    <span class="prompt">代理：</span>"知道了！"
+  </div>
+
+  <p><strong>会话 2（新会话）：</strong></p>
+  <div class="terminal">
+    <span class="prompt">用户：</span>"我们用什么校验库？"<br />
+    <span class="prompt">代理：</span>"我不记得了，让我检查一下代码……"
+  </div>
+</div>
+
+### 使用 toon-memory
+
+<div class="after-box fade-in-up">
+  <p><strong>会话 1：</strong></p>
+  <div class="terminal">
+    <span class="prompt">用户：</span>"我们用 Zod 做校验"<br />
+    <span class="prompt">代理：</span><span class="command">memory_remember</span>(category="pattern", key="validation")<br />
+    <span class="output">已保存：pattern/validation</span>
+  </div>
+
+  <p><strong>会话 2（新会话）：</strong></p>
+  <div class="terminal">
+    <span class="prompt">用户：</span>"我们用什么校验库？"<br />
+    <span class="prompt">代理：</span><span class="command">memory_recall</span>(query="validation")<br />
+    <span class="output">[pattern] validation — 我们用 Zod 做校验</span>
+  </div>
+</div>
+
+---
+
+## 效果
+
+<div class="stats-grid">
+  <div class="stat-card glow fade-in-left">
+    <div class="stat-card__number counter" data-target="80">0</div>
+    <div class="stat-card__label">% 减少重复提问</div>
+  </div>
+  <div class="stat-card glow fade-in-right">
+    <div class="stat-card__number counter" data-target="10">0</div>
+    <div class="stat-card__label">倍加速上手</div>
+  </div>
+  <div class="stat-card glow fade-in-left">
+    <div class="stat-card__number counter" data-target="100">0</div>
+    <div class="stat-card__label">% 一致的模式</div>
+  </div>
+  <div class="stat-card glow fade-in-right">
+    <div class="stat-card__number">0</div>
+    <div class="stat-card__label">丢失的上下文</div>
+  </div>
+</div>
+
+---
+
+## 开始使用
+
+```bash
+npm install -g toon-memory
+npx toon-memory
+```

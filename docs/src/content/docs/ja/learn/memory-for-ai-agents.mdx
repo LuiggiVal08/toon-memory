@@ -1,0 +1,111 @@
+---
+title: "AIコーディングエージェント向けのメモリ — セッション間で残る永続メモリ"
+description: "AIコーディングエージェントにはメモリが必要。Claude、Cursor、OpenCodeに決定、パターン、バグの永続メモリを与える方法。クラウド不要、LLM不要、オフラインMCPサーバー。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "AIエージェントメモリ, 永続メモリ AI, Claudeメモリ, Cursorメモリ, OpenCodeメモリ, MCPメモリ"
+---
+
+## なぜAIコーディングエージェントにメモリが必要なのか
+
+Claude、Cursor、OpenCodeなどのAIコーディングエージェントは強力ですが、重要な制限があります。**セッション間でメモリがない**ということです。
+
+新しいセッションを開始するたびに、エージェント：
+
+- 昨日のアーキテクチャ決定を忘れる
+- 発見したバグ修正を覚えていない
+- チームが確立したパターンを思い出せない
+- プロジェクトを最初からやり直す必要がある
+
+これはトークンを無駄にし、時間を消耗し、苛立ちの繰り返しにつながります。
+
+## ソリューション：AIエージェント向けの永続メモリ
+
+**toon-memory**はAIコーディングエージェントに永続メモリを提供します：
+
+1. **再起動後も残る** — メモリはセッション間で持続
+2. **オフラインで動作** — クラウド不要、APIコール不要、LLM不要
+3. **トークンを節約** — JSONより22%少ないトークン
+4. **スケール** — セッションあたり80%少ないツール呼び出し
+5. **どこでも動作** — 15以上のエージェントに対応
+
+## AIエージェントは何かを覚えていられるか
+
+### 決定
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation — simpler than Joi, better TS support"
+})
+```
+
+### バグ修正
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-pool-fix",
+  content: "Redis pool exhaustion — fix was max_connections=20"
+})
+```
+
+### パターン
+```bash
+memory_remember({
+  category: "pattern",
+  key: "api-versioning",
+  content: "Always use /api/v1/ prefix for REST endpoints"
+})
+```
+
+### ナレッジ
+```bash
+memory_remember({
+  category: "knowledge",
+  key: "deploy-process",
+  content: "Deploy script lives in scripts/deploy.sh, runs on CI merge to main"
+})
+```
+
+## メモリがAIエージェントのパフォーマンスを向上させる方法
+
+| 指標 | メモリなし | toon-memoryあり | 改善 |
+|--------|---------------|------------------|-------------|
+| セッションあたりトークン数 | 2,411 | 972 | -60% |
+| セッションあたりツール呼び出し | 25 | 5 | -80% |
+| セッションあたりコスト（GPT-4） | $0.072 | $0.029 | -60% |
+| コンテキスト再構築 | 手動 | 自動 | 100% |
+
+## メモリ機能
+
+- **21個のMCPツール** — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decryptなど
+- **グラフ対応リコール** — リンクと参照で関連エントリを接続
+- **品質スコアリング** — エントリの品質を自動評価（0-1）
+- **マージ重複排除** — 同じキーで保存すると自動マージ
+- **TTL** — エントリは7日、30日、またはカスタム日付で期限切れ
+- **暗号化** — 機密データ向けのAES-256-GCM
+
+## 対応エージェント
+
+toon-memoryは**15以上のAIコーディングエージェント**で動作します：
+
+- **OpenCode** — プラグインベース、SessionStartフック
+- **Claude Code** — 完全なフックサポート（SessionStart、PostToolUse、Stop）
+- **Cursor** — MCP設定
+- **Windsurf** — MCP設定
+- **VS Code / Copilot** — MCP設定
+- **Codex CLI** — TOML設定+フック
+- **Gemini CLI** — JSON設定+フック
+- **Zed** — JSONC設定
+- **その他** — Cline、Continue、Antigravity、Aider、KiloCode、OpenClaw、Kiro
+
+## 始めましょう
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # インタラクティブインストーラー
+```
+
+次のセッションでエージェントは永続メモリを持ちます。

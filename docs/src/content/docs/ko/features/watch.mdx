@@ -1,0 +1,88 @@
+---
+title: "AI 에이전트 메모리를 위한 자동 백업 모드"
+description: "AI 에이전트 메모리를 위한 자동 백업 모드 — 압축과 로깅이 포함된 주기적 백업. MCP 메모리 서버 데이터를 안전하게 보관하세요."
+---
+
+## 개요
+
+Watch 모드는 변경 사항이 감지되면 메모리 파일을 자동으로 백업하는 데몬을 실행합니다. 압축, 로깅 및 오래된 백업의 자동 정리를 지원합니다.
+
+## 사용법
+
+```bash
+# 기본값: 5분마다 백업, 10개 유지
+npx toon-memory watch
+
+# 사용자 정의 간격 (분 단위)
+npx toon-memory watch 10
+
+# gzip 압축 활성화
+npx toon-memory watch -c
+
+# 파일 로깅 활성화
+npx toon-memory watch -l
+
+# 최대 20개 백업 유지
+npx toon-memory watch -m 20
+
+# 모든 옵션 결합
+npx toon-memory watch 15 -c -l -m 20
+
+# Ctrl+C로 중지
+```
+
+## 옵션
+
+| 옵션 | 설명 | 기본값 |
+|------|------|--------|
+| `[interval]` | 분 단위 백업 간격 | 5 |
+| `-c, --compress` | gzip 압축 활성화 | 꺼짐 |
+| `-l, --log [path]` | 파일 로깅 활성화 | 꺼짐 |
+| `-m, --max-backups <n>` | 유지할 최대 백업 수 (0=무제한) | 10 |
+
+## 예제 출력
+
+```bash
+$ npx toon-memory watch 15 -c -l -m 20
+
+🧠 toon-memory watch
+
+Watching memory file every 15 minutes...
+Max backups: 20
+Compression: enabled
+Logging: enabled (.toon-memory/memory/watch.log)
+Press Ctrl+C to stop
+
+📦 Backup #1 created: 2026-07-11T16-00-00-000Z
+📦 Backup #2 created: 2026-07-11T16-15-00-00-000Z
+🗑️  Pruned 1 old backup(s)
+^C
+✅ Watch stopped. 2 backups created.
+```
+
+## 작동 방식
+
+1. `.toon-memory/memory/data.toon`의 변경 사항을 감시합니다
+2. 내용이 변경되면 타임스탬프가 포함된 백업을 생성합니다
+3. 백업은 `.toon-memory/memory/backups/`에 저장됩니다
+4. 내용이 실제로 변경될 때만 백업을 생성합니다
+5. 최대 백업 수를 초과하면 가장 오래된 백업이 정리됩니다
+6. 선택적 gzip 압축으로 백업 크기를 약 60-80% 줄입니다
+7. 선택적 로깅으로 이벤트를 파일에 기록합니다
+
+## 백업 파일
+
+```
+.toon-memory/memory/backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-15-00-00-000Z.toon.gz    # 압축됨
+└── backup-2026-07-11T16-30-00-00-000Z.toon
+```
+
+## 사용 사례
+
+- **장시간 코딩 세션** — 작업 중 자동 백업
+- **배포 전** — 중요한 변경 사항 전에 실행
+- **CI/CD** — 자동화된 변경 전 백업
+- **디스크 공간 부족** — `-c`로 압축 사용
+- **디버깅** — `-l`로 백업 이벤트 로깅

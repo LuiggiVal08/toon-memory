@@ -1,0 +1,352 @@
+---
+title: "永続AIメモリ向けの21個のMCPツール"
+description: "永続AIエージェントメモリ向けの21個のMCPツール — memory_remember、memory_recall、memory_smart_recall、context_generateなど。Claude、Cursor、OpenCode向けのトークン効率の高いグラフ対応リコール。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCPツール, memory_remember, memory_recall, AIメモリツール, 永続メモリ API"
+---
+
+## 概要
+
+toon-memoryは永続メモリを管理するための21個のMCPツールと3つのMCPリソースを提供します：
+
+## ツール
+
+| ツール | 説明 |
+|------|-------------|
+| `memory_remember` | 決定、パターン、バグ、ナレッジを保存（任意のTTL、自動タグ推論、`links`、自動品質スコア、マージ重複排除、信頼度） |
+| `memory_recall` | メモリを検索（ファイルを読む前に使用。期限切れTTLをフィルタ）。`mode: "graph"`で関係性を考慮したサブグラフを展開し、より高い精度を実現。品質重み付きランキング |
+| `memory_forget` | キーまたはIDでエントリを削除 |
+| `memory_stats` | メモリの状態を表示（TTL統計と品質分布を含む） |
+| `memory_summary` | ファイルサマリーの保存/取得 |
+| `memory_archive` | 古いエントリ（30日以上）と期限切れTTLエントリをアーカイブ |
+| `memory_diff` | 指定日以降の変更を表示（24h、7d、または正確な日付） |
+| `memory_suggest` | 特定のコンテキストに関連するエントリを検索 |
+| `memory_captured` | フックによって自動キャプチャされたアクティビティを一覧表示（オプトイン）またはログをクリア |
+| `memory_consolidate` | 同一内容のエントリを重複排除して属性をマージ（決定論的、LLM不使用） |
+| `memory_encrypt` | AES-256-GCM暗号化を有効化 |
+| `memory_decrypt` | 暗号化を無効化 |
+| `memory_backup` | メモリファイルのタイムスタンプ付きバックアップを作成（最新10件に自動プルーン） |
+| `memory_sessions` | アクティブなエージェントセッション、ブランチ、並列セッション調整用のソフトファイル競合を表示 |
+| `context_brief` | **1回の呼び出しでコンテキストブリーフィング**: メモリ+セッション+ヘルスをコンパクトなMarkdownで。5-6個の個別memory_*呼び出しの代替。LLM不使用 |
+| `context_generate` | **完全なプロジェクトブリーフィング**: プロジェクト構造、git状態、メモリエントリ、アクティブなセッションを1回の呼び出しで結合。5-6個の手動ツール呼び出しを置き換え |
+| `context_diff` | **インクリメンタルブリーフィング**: 前回セッション以降のgitコミット+変更ファイル+新規/更新メモリ+アクティブセッション |
+| `context_focus` | **ハイパーコンテキストブリーフィング**: クエリにのみ関連するメモリ+関連ソースファイル+呼び出し元+テストファイル |
+| `context_health` | **メモリヘルス監査**: 孤立リンク、重複、壊れたファイル参照、期限切れTTL、古いセッション、スコア0-100 |
+| `context_export` | **メモリをMarkdownとしてエクスポート**: システムプロンプト用のインジェクタブルコンテキスト（完全版またはコンパクト版） |
+| `memory_smart_recall` | 統合検索: BM25+グラフ+品質+新鮮度+減衰を1回の呼び出しで |
+
+## MCPリソース
+
+メモリはコンテキストの直接読み取り用にMCPリソースとしても公開されています：
+
+| リソース | URI | 説明 |
+|----------|-----|-------------|
+| メモリエントリ | `toon://memory/entries` | 完全なメモリダンプ |
+| メモリ統計 | `toon://memory/stats` | カテゴリカウントとTTL情報 |
+| メモリサマリー | `toon://memory/summaries` | 自動生成システムプリマナー: ナレッジマップ、最近のメモリ、重要な決定 |
+
+リソースを使用すると、ツール呼び出しなしでエージェントがメモリをコンテキストとして読み取れます。システムプロンプトやセッション開始時に便利です。システムプリマナーはプロジェクトのナレッジ状態についての即座のコンテキストを提供します。
+
+## 例
+
+### 決定を保存する
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts",
+  tags: "validation;types"
+})
+// 🧠 Guardado: decision/use-zod (a1b2c3d4)
+// 🎯 Quality: 0.80 | Confidence: 1.00
+// 🔗 Entradas relacionadas:
+//   [pattern] zod-schemas — Shared Zod schemas for API validation
+```
+
+エントリはタグ、リンク、コンテンツの詳細度、特定性に基づいて品質（0-1）が自動スコアリングされます。自ら.assertedしたメモリは信頼度1.0、推論/収集されたメモリは0.65-0.75になります。
+
+### TTL付きで保存する
+
+```typescript
+memory_remember({
+  category: "knowledge",
+  key: "sprint-deadline",
+  content: "Sprint ends July 18, feature freeze is July 16",
+  ttl: "7d"
+})
+// 🧠 Guardado: knowledge/sprint-deadline (x1y2z3w4)
+// 🎯 Quality: 0.55 | Confidence: 1.00
+// ⏰ TTL: 2026-07-19
+```
+
+締め切りやスプリント情報など、一時的なコンテキストには`ttl`を使用します。相対日付（`7d`、`30d`）または正確な日付（`2026-12-31`）をサポート。期限切れエントリは検索から自動フィルタされます。
+
+### 自動推論タグ
+
+```typescript
+memory_remember({
+  category: "bug",
+  key: "redis-connection-timeout",
+  content: "Redis connection timeout in production, increased pool size"
+  // tagsは空欄 — コンテキストから自動推論
+})
+// 🧠 Guardado: bug/redis-connection-timeout (a1b2c3d4)
+// 🏷️ Tags inferidos: redis
+```
+
+`tags`が空の場合、システムは20以上のカテゴリの語彙を使用してコンテキストから自動推論します：redis、auth、api、db、security、test、deploy、config、performance、refactor、error、logging、types、async、state、ui、storage、email、payment、webhook。さらに、`toon-memory init`は依存関係（`package.json`、`Cargo.toml`、`requirements.txt`、`pyproject.toml`、`go.mod`）から派生した**プロジェクト語彙**を書き込むため、`redis`のような依存関係を言及したエントリにも自動的に`redis`タグが付きます。タグが多いほど品質スコアが高くなります。
+
+### メモリを検索する
+
+```typescript
+memory_recall({ query: "redis" })
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Added max_connections=20
+//   File: redis.ts | Tags: redis;fix | Date: 2026-07-10 | Quality: 0.82
+```
+
+結果は品質重み付き — 詳細、タグ、リンクが多いエントリが優先的に表示されます。
+
+### 日付フィルタ付きで検索する
+
+```typescript
+memory_recall({
+  query: "redis",
+  from_date: "2026-07-01",
+  to_date: "2026-07-31"
+})
+```
+
+### 前回セッション以降の変更を表示する
+
+```typescript
+memory_diff({ since: "24h" })
+// 📋 Cambios desde 2026-07-11:
+//
+// ➕ Nuevas (2):
+//   [decision] use-zod (a1b2c3d4)
+//     Use Zod for validation
+//   [bug] redis-timeout (e5f6g7h8)
+//     Redis connection timeout fix
+```
+
+`since`は相対日付（`24h`、`7d`）または正確な日付をサポート。`type`でフィルタ可能：`all`、`created`、または`updated`。
+
+### 関連エントリを検索する
+
+```typescript
+memory_suggest({ context: "redis cache configuration" })
+// 🔍 Sugerencias para "redis cache configuration":
+//
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+```
+
+### 古いエントリをアーカイブする
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+### 暗号化を有効化する
+
+```typescript
+memory_encrypt()
+// 🔐 Encriptación habilitada
+// ⚠️ Guarda esta clave (no se puede recuperar):
+// a1b2c3d4...
+```
+
+### アクティブなセッションと競合を一覧表示する
+
+```typescript
+memory_sessions({ conflictsOnly: false })
+// 🧭 Sesiones activas (2) — ventana 10 min:
+//
+// • opencode @ feature/foo
+//    id: sess-B
+//    Archivos:
+//      • src/shared.ts
+// • claude @ feature/foo (tú)
+//    id: sess-A
+//
+// 🔥 Conflictos suaves (1):
+//   ⚠️ src/shared.ts  ↔  opencode@feature/foo, claude@feature/foo
+```
+
+競合のみ关心の場合は`memory_sessions({ conflictsOnly: true })`を使用してください。以下の[マルチセッション調整](#マルチセッション調整)を参照してください。
+
+## マルチセッション調整
+
+**複数のAIエージェントセッションを並列で実行している**場合（例：同じリポジトリで3つのOpenCodeセッションを同時に実行）、お互いの作業を上書きする可能性があります。`memory_sessions`は**ファイルベース**の調整ツールです。**サーバーなし、ネットワークなし、LLM呼び出しなし**で、各セッションが他のセッションの動作を確認できます。
+
+### 仕組み
+
+- 起動時、`SessionStart`フックが`.toon-memory/memory/sessions/<id>.json`にセッションの**ハートビートファイル**を書き込みます。各プロセスは*自らのファイルのみ*を書き込むため、ロック競合はありません。
+- ハートビートはエージェント名、**gitブランチ**、**アクセスしたファイル**、**最終確認**のタイムスタンプを記録します。
+- これらのファイルを読み取ることで、各セッションは誰がアクティブかについての共有の最終整合性ビューを取得します。
+- セッションの最終ハートビートがTTLウィンドウ（10分）内であれば「アクティブ」となります。デッドセッション（プロセスPIDが存在しない**かつ**古いハートビート）は遅延的にプルーンされます。
+- ソフト競合は**2つ以上のアクティブセッション**がアクセスしているファイルです。`memory_sessions`が表示するため、兄弟の作業を踏み台にするのを避けることができます。
+
+### 並列セッションの推奨習慣
+
+1. セッション開始時、`SessionStart`フックが他のアクティブセッション、ブランチ、およびソフト競合を表示します。
+2. 共有ファイルを編集する前に、`memory_sessions()`を実行して兄弟がアクセスしていないことを確認します。
+3. 終了時、ハートビートが終了としてマークされ、ファイルが解放されます。
+
+## メモリグラフ（グラフベースのリコール）
+
+大規模なメモリでは、フラットなキーワード検索では多すぎる結果や関係性の見逃しが発生する可能性があります。toon-memoryはメモリを**軽量なナレッジグラフ**として扱い、リコールでより少ないトークンで*正しい*エントリを返します。品質スコアリングと組み合わせることで、最も有用なエントリが優先的に表示されます。
+
+完全に**決定論的でオフライン**です。エンベッディングなし、ベクトルDBなし、LLMなし、サーバーなし。エッジは以下から取得されます：
+
+- **明示的な`links`** — エントリ保存時に宣言するキー。
+- **暗黙的な`[[key]]`参照** — コンテキスト内の`[[some-key]]`の言及。
+
+### リンク付きで保存する
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "risk-engine-priority",
+  content: "The engine prioritizes risk over speed (see [[risk-spec]]).",
+  file: "spec.md:10",
+  tags: "risk;spec",
+  links: "engine-arch"   // 明示的なエッジ
+})
+// 🧠 Guardado: decision/risk-engine-priority (a1b2c3d4)
+```
+
+### グラフモードでリコールする
+
+`memory_recall({ mode: "graph" })`はキーワードマッチ（シード）を見つけて、`hops`（1または2）まで**エゴサブグラフ**を展開します。関連性はシードから近隣に伝播するため、クエリワードが含まれなくても関連する仕様や決定が表示されます。結果は`limit`（デフォルト6）で上限が設定され、より小さくより正確なコンテキストになります。
+
+```typescript
+memory_recall({ query: "riesgo", mode: "graph", hops: 2 })
+// [decision] risk-engine-priority (a1b2c3d4)
+//   The engine prioritizes risk over speed (see [[risk-spec]]).
+//   File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01
+//   links: engine-arch
+//
+// [knowledge] risk-spec (a2b3c4d5)
+//   Risk specification for the engine.
+//   links: risk-engine-priority;engine-arch
+//
+// [pattern] engine-arch (e6f7g8h9)
+//   Engine architecture.
+//   links: risk-spec
+```
+
+> 決定が複数のエントリ（アーキテクチャ、仕様、関連バグ）に波及する場合は`mode: "graph"`を使用してください。単離した事実には、デフォルトの`flat`モードで十分です。グラフは読み取り時に構築されるため、メンテナンスする追加のインデックスファイルはありません。
+
+### トークン効率の高いリコール（`compact: true`）
+
+各トークンが重要になる場合は、`compact: true`を渡してより密度の高い出力を取得します：
+
+```typescript
+memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
+// [1] decision/risk-engine-priority
+//   The engine prioritizes risk over speed (see [[risk-spec]]).
+//   tags: risk;spec · edges: ->2, ->3
+//
+// [2] knowledge/risk-spec
+//   Risk specification for the engine.
+//   tags: risk · edges: ->1
+//
+// [3] pattern/engine-arch
+//   Engine architecture.
+//   tags: engine · edges: ->1
+```
+
+`compact`で変更されること：
+
+- 各エントリにスコア順の安定した数値インデックス（`[1]`、`[2]`、…）が付与されます。
+- `id`、`date`、`file`は削除され、`tags`のみ保持されます。
+- `graph`モードでは、エッジが数値（キー名ではなく）の`->2`として描画されます。
+- グラフ経由で到達した近隣（非シード）は省略記号付きの短いスニペットに切り詰められ、直接マッチしたシードは完全なコンテンツを保持します。
+- 保存された`.toon`ファイルは**決して**変更されません。`compact`はレスポンスの形状変更のみを行います。
+
+### リコールの結果ランキング方法
+
+リコールは決定論的でオフラインです（エンベッディングなし、LLMなし）。各候補エントリは以下の組み合わせスコアを取得します：
+
+- **BM25関連性** — `id`+`category`+`key`+`content`+`file`+`tags`上の確率的語頻度スコア。
+- **グラフ中心性** — 度数正規化（0..1）。多くのエントリに接続されたハブは1に近いスコアを持ち、クエリワードがなくても表示されます。
+- **重要度** — 新しさ+アクセス頻度。
+- **品質ブースト** — 品質スコアが高いエントリ（タグ、リンク、詳細が多い）はランキングブーストを受けます。
+- **シードボーナス** — クエリに直接マッチしたエントリはフラットブーストを受けます。
+- **ホップごとの減衰** — シードから`d`ホップ離れたノードは`0.5^d`が乗算され、遠いコンテキストは近隣のコンテキストより下に配置されます。
+
+`graph`モードでは、キーワードマッチをシードとして、`hops`までエゴサブグラフを展開し、組み合わせスコアの上位`limit`（デフォルト6）を返します。`memory_smart_recall`はこれらのすべてのシグナルを1回の呼び出しで結合します。
+
+### スマートリコール（`memory_smart_recall`）
+
+BM25、グラフ、品質、新鮮ness、減衰を1回の呼び出しで結合する統合検索です：
+
+```typescript
+memory_smart_recall({ intent: "redis cache configuration", hops: 2 })
+// BM25関連性 + グラフ中心性 + 品質スコア + 新鮮ness減衰を結合
+// 組み合わせスコアで上位結果を返す
+```
+
+これはメモリをリコールする推奨方法です。複数のツールをオーケストレートする必要なく、1回の呼び出しで全てを処理します。
+
+### 品質スコアリング
+
+各エントリは以下の基準に基づいて品質（0-1）が自動スコアリングされます：
+
+- **タグカバレッジ**（重み0.3） — タグが多いほどスコアが高い
+- **リンクの豊富さ**（重み0.2） — リンクが多いほど接続度が高い
+- **コンテンツの詳細度**（重み0.2） — 長く詳細なコンテンツはスコアが高い
+- **新しさ**（重み0.15） — 最近のエントリはスコアがやや高くなる
+- **特定性**（重み0.15） — ファイル参照や具体的なキーを持つエントリはスコアが高い
+
+高品質なエントリがリコール結果で優先的に表示されるため、最も有用なコンテキストが常に目立つようになっています。
+
+### マージ重複排除
+
+既存のキーでエントリを保存すると、システムは属性をマージします：
+
+- **タグ**: 両方のタグセットの和集合
+- **リンク**: 両方のリンクセットの和集合
+- **品質**: 両方のスコアの最大値
+- **信頼度**: 両方のスコアの最大値
+- **コンテンツ**: そのまま保持（上書きなし）
+- **日付**: 現在の時刻に更新
+
+つまり、エントリを再保存すると、置き換えではなく充実化されます。
+
+### プロジェクト依存関係からの自動タグ
+
+`toon-memory init`時、CLIは依存関係マニフェストをスキャンし、`.toon-memory/memory/config.json`に`vocab`テーブルを書き込みます：
+
+```json
+{
+  "vocab": {
+    "react": ["react"],
+    "zod": ["zod"],
+    "redis": ["redis"]
+  }
+}
+```
+
+`memory_remember`は新しいエントリをこの語彙と内蔵の語彙の両方でマッチします。主要な依存関係を追加した後、`toon-memory init`を再実行して更新してください。`vocab`キーは`config.json`の`encrypted`/`capture`フラグとマージ（決して上書きされません）。タグが多いほど品質スコアが高くなります。
+
+## カテゴリ
+
+エントリはカテゴリで整理されています：
+
+| カテゴリ | 使用ケース |
+|----------|----------|
+| `decision` | 設計決定（「なぜXではなくYなのか？」） |
+| `pattern` | プロジェクトパターン（「バリデーションにZodを使用」） |
+| `bug` | バグ修正（「Redisプール枯渇」） |
+| `knowledge` | 一般的なナレッジ（「ブローカはRESPを使用」） |

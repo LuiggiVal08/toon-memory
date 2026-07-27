@@ -1,0 +1,50 @@
+---
+title: "AI 에이전트 메모리를 위한 AES-256-GCM 암호화"
+description: "AI 에이전트 메모리를 위한 AES-256-GCM 암호화 — toon-memory의 민감한 데이터를 보호하세요. 군사급 암호화로 MCP 메모리 서버를 안전하게 보호하세요."
+---
+
+## 개요
+
+toon-memory는 민감한 메모리 데이터를 보호하기 위한 AES-256-GCM 암호화를 지원합니다.
+
+## 암호화 활성화
+
+```typescript
+memory_encrypt()
+// 🔐 Encriptación habilitada
+// ⚠️ Guarda esta clave (no se puede recuperar):
+// a1b2c3d4e5f6...
+```
+
+**중요:** 암호화 키를 저장하세요! 분실 시 복구할 수 없습니다.
+
+## 암호화 비활성화
+
+```typescript
+memory_decrypt({ key: "a1b2c3d4e5f6..." })
+// 🔓 Encriptación deshabilitada
+```
+
+## 작동 방식
+
+1. 활성화되면 무작위 256비트 키가 생성됩니다
+2. 메모리 파일이 AES-256-GCM로 암호화됩니다
+3. 키는 `.toon-memory/memory/config.json`에 저장됩니다
+4. 읽을 때 자동으로 복호화됩니다
+
+## 보안 참고사항
+
+- 암호화는 **프로젝트별**입니다 (각 프로젝트는 자체 키를 보유)
+- 키는 `config.json`에 로컬로 저장됩니다
+- **`config.json`을 git에 커밋하지 마세요**
+- 암호화가 활성화된 경우 백업도 암호화됩니다
+
+## 파일 구조
+
+```
+.toon-memory/memory/
+├── data.toon        # 활성화 시 암호화됨
+├── config.json      # 암호화 키 포함
+└── backups/
+    └── backup-*.toon  # 암호화됨
+```

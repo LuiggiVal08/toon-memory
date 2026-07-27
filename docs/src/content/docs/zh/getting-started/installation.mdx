@@ -1,0 +1,64 @@
+---
+title: 安装 — 如何安装 toon-memory MCP 服务器
+description: "toon-memory 安装指南 — npm、curl 或 PowerShell。零配置 MCP 记忆服务器，适用于 AI 编程代理。支持 macOS、Linux 和 Windows。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "安装 MCP 服务器, toon-memory 安装, npm 安装 AI 记忆, AI 代理记忆设置"
+---
+
+## 系统要求
+
+- Node.js 20 或更高版本
+- npm、yarn 或 pnpm
+
+## 安装方式
+
+### npm（推荐）
+
+```bash
+npm install -g toon-memory
+```
+
+### 独立脚本
+
+#### macOS / Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+```
+
+#### Windows (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex
+```
+
+### 从源码安装
+
+```bash
+git clone https://github.com/LuiggiVal08/toon-memory.git
+cd toon-memory
+npm install
+npm run build
+npm link
+```
+
+## 验证安装
+
+```bash
+toon-memory --version
+# 或
+npx toon-memory status
+```
+
+## 卸载
+
+```bash
+# 从所有代理中移除
+npx toon-memory uninstall
+
+# 或使用全局安装方式
+toon-memory uninstall
+```

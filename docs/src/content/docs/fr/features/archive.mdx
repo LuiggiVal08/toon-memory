@@ -1,0 +1,72 @@
+---
+title: "Archivage automatique des anciennes entrées mémoire"
+description: "Archivage automatique des anciennes entrées mémoire — gardez la mémoire des agents IA propre avec le TTL et le nettoyage des entrées de faible qualité. Gestion MCP mémoire automatique."
+---
+
+## Présentation
+
+toon-memory archive automatiquement les entrées de plus de 30 jours ou avec un TTL expiré pour garder votre mémoire propre.
+
+## Archivage manuel
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+## Comment ça marche
+
+1. Les entrées de plus de 30 jours sont déplacées vers `archive.toon`
+2. Les entrées avec TTL expiré sont également archivées
+3. La mémoire active reste sous 100 entrées
+4. Les entrées archivées sont préservées pour l'historique
+5. Peut être déclenché manuellement ou automatiquement
+
+## Archivage basé sur le TTL
+
+Les entrées avec un champ `ttl` sont archivées lorsque le TTL expire, indépendamment de la règle des 30 jours :
+
+```
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|permanent|This stays forever|file.ts||2026-07-10|
+  e5f6g7h8|knowledge|sprint-info|Sprint ends Friday|file.ts||2026-07-10|7d
+  i9j0k1l2|bug|temp-fix|Temporary workaround|file.ts||2026-07-10|2026-07-15
+```
+
+Dans cet exemple :
+- `permanent` — pas de TTL, n'expire jamais par TTL
+- `sprint-info` — expire 7 jours après la création
+- `temp-fix` — expire à une date spécifique
+
+## Structure des fichiers
+
+```
+.toon-memory/memory/
+├── data.toon        # Mémoire active (< 30 jours, TTL non expiré)
+└── archive.toon     # Entrées archivées (> 30 jours ou TTL expiré)
+```
+
+## Format d'archivage
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  a1b2c3d4|decision|old-decision|This was decided...|src/old.ts|decision|2026-06-01
+  e5f6g7h8|pattern|old-pattern|This pattern was used...|src/pattern.ts|pattern|2026-06-15
+```
+
+## Configuration
+
+| Paramètre | Défaut | Description |
+|-----------|--------|-------------|
+| Max entrées | 100 | Nombre maximum d'entrées actives |
+| Jours d'archivage | 30 | Jours avant archivage |
+| Fichier d'archivage | `archive.toon` | Où vont les entrées archivées |
+
+## Cas d'usage
+
+- **Garder la mémoire propre** — Empêcher une croissance illimitée
+- **Référence historique** — Anciennes décisions toujours accessibles
+- **Performance** — Recherches plus rapides avec moins d'entrées
+- **Contexte temporaire** — Le TTL gère les échéances, sprints et notes sensibles au temps

@@ -1,0 +1,71 @@
+---
+title: "Estrutura de Arquivos da Memória"
+description: "Estrutura de arquivos da memória — layout do diretório .toon-memory, formato data.toon, config.json, backups. Como o servidor MCP de memória armazena dados localmente."
+---
+
+## Estrutura do Projeto
+
+```
+.toon-memory/
+├── memory/
+│   ├── data.toon        # Arquivo principal de memória
+│   ├── archive.toon     # Entradas arquivadas (>30 dias ou TTL expirado)
+│   ├── config.json      # Configurações de criptografia
+│   └── backups/         # Backups do modo watch
+│       ├── backup-2026-07-11T16-00-00-000Z.toon
+│       └── backup-2026-07-11T16-10-00-000Z.toon
+└── hooks/
+    ├── session-start-claude.sh
+    ├── session-start-codex.sh
+    ├── session-start-gemini.sh
+    └── session-start-antigravity.sh
+```
+
+## Descrições dos Arquivos
+
+### data.toon
+
+O arquivo principal de memória contendo todas as entradas ativas:
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10|
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10|
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d
+```
+
+### archive.toon
+
+Contém entradas com mais de 30 dias ou com TTL expirado:
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  x1y2z3w4|knowledge|old-knowledge|This was important...|src/old.ts|knowledge|2026-06-01
+```
+
+### config.json
+
+Configuração de criptografia (só existe quando a criptografia está ativada):
+
+```json
+{
+  "encrypted": true
+}
+```
+
+### backups/
+
+Diretório contendo backups com timestamp do modo watch:
+
+```
+backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-10-00-000Z.toon
+└── backup-2026-07-11T16-20-00-00-000Z.toon
+```
+
+## Git Ignore
+
+O toon-memory adiciona automaticamente `.toon-memory/memory/` ao `.gitignore` para evitar o commit de dados sensíveis.

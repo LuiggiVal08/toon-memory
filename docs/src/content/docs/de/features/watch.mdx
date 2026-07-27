@@ -1,0 +1,88 @@
+---
+title: "Automatischer Sicherungsmodus für AI-Agent-Speicher"
+description: "Automatischer Sicherungsmodus für AI-Agent-Speicher — periodische Sicherungen mit Komprimierung und Protokollierung. Schütze die Daten deines MCP Memory Servers."
+---
+
+## Überblick
+
+Der Watch-Modus führt einen Daemon aus, der deine Speicherdatei automatisch sichert, wenn Änderungen erkannt werden. Unterstützt Komprimierung, Protokollierung und automatisches Bereinigen alter Sicherungen.
+
+## Verwendung
+
+```bash
+# Standard: alle 5 Minuten sichern, 10 Sicherungen behalten
+npx toon-memory watch
+
+# Benutzerdefiniertes Intervall (in Minuten)
+npx toon-memory watch 10
+
+# gzip-Komprimierung aktivieren
+npx toon-memory watch -c
+
+# Dateiprotokollierung aktivieren
+npx toon-memory watch -l
+
+# Max. 20 Sicherungen behalten
+npx toon-memory watch -m 20
+
+# Alle Optionen kombiniert
+npx toon-memory watch 15 -c -l -m 20
+
+# Mit Ctrl+C stoppen
+```
+
+## Optionen
+
+| Option | Beschreibung | Standard |
+|--------|-------------|----------|
+| `[interval]` | Sicherungsintervall in Minuten | 5 |
+| `-c, --compress` | gzip-Komprimierung aktivieren | aus |
+| `-l, --log [path]` | Dateiprotokollierung aktivieren | aus |
+| `-m, --max-backups <n>` | Max. Sicherungen behalten (0=unbegrenzt) | 10 |
+
+## Beispielausgabe
+
+```bash
+$ npx toon-memory watch 15 -c -l -m 20
+
+🧠 toon-memory watch
+
+Watching memory file every 15 minutes...
+Max backups: 20
+Compression: enabled
+Logging: enabled (.toon-memory/memory/watch.log)
+Press Ctrl+C to stop
+
+📦 Backup #1 created: 2026-07-11T16-00-00-000Z
+📦 Backup #2 created: 2026-07-11T16-15-00-00-000Z
+🗑️  Pruned 1 old backup(s)
+^C
+✅ Watch stopped. 2 backups created.
+```
+
+## So funktioniert es
+
+1. Überwacht `.toon-memory/memory/data.toon` auf Änderungen
+2. Bei Inhaltsänderungen wird eine zeitgestempelte Sicherung erstellt
+3. Sicherungen werden in `.toon-memory/memory/backups/` gespeichert
+4. Sicherung erfolgt nur bei tatsächlicher Inhaltsänderung
+5. Wenn max-backups überschritten wird, werden älteste Sicherungen bereinigt
+6. Optionale gzip-Komprimierung reduziert die Sicherungsgröße um ca. 60-80%
+7. Optionale Protokollierung schreibt Ereignisse in eine Datei
+
+## Sicherungsdateien
+
+```
+.toon-memory/memory/backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-15-00-00-000Z.toon.gz    # komprimiert
+└── backup-2026-07-11T16-30-00-00-000Z.toon
+```
+
+## Anwendungsfälle
+
+- **Lange Codingsitzungen** — Automatische Sicherung während du arbeitest
+- **Vor dem Deployment** — Vor wichtigen Änderungen ausführen
+- **CI/CD** — Vor automatisierten Änderungen sichern
+- **Wenig Speicherplatz** — `-c` für Komprimierung verwenden
+- **Debugging** — `-l` zum Protokollieren von Sicherungsereignissen verwenden

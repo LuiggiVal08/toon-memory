@@ -1,0 +1,208 @@
+---
+title: "Claude Code、Cursor、OpenCode向けのメモリ — 永続AIエージェントメモリ"
+description: "Claude Code、Cursor、OpenCodeに永続メモリを与える。toon-memory MCPサーバーは15以上のAIコーディングエージェントで動作。セッション間の決定、パターン、バグを記憶。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "Claude Codeメモリ, Cursor AIメモリ, OpenCodeメモリ, AIコーディングエージェントメモリ, 永続メモリ IDE"
+---
+
+## お気に入りのAIエージェント向けのメモリ
+
+**toon-memory**は、既に使用しているAIコーディングエージェントに永続メモリを提供します。Claude Code、Cursor、OpenCodeのいずれを選んでも、エージェントはセッション間で全てを記憶します。
+
+## エージェント別のセットアップ
+
+### Claude Code
+
+Claude Codeはtoon-memoryの完全なフックサポートを備えています：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+**フック:** SessionStart、PostToolUse、Stop — 自動リマインダーとコンテキスト読み込み。
+
+### Cursor
+
+CursorにMCP設定を追加：
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### OpenCode
+
+`.opencode/opencode.json`に追加：
+
+```json
+{
+  "mcp": {
+    "toon-memory": {
+      "type": "local",
+      "command": ["npx", "-y", "toon-memory", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+**プラグイン:** `.opencode/plugins/toon-memory.ts` — プラグイン経由のSessionStartフック。
+
+### Windsurf
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### VS Code / Copilot
+
+`.vscode/mcp.json`に追加：
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### Codex CLI
+
+`.codex/config.toml`に追加：
+
+```toml
+[mcpServers.toon-memory]
+command = "npx"
+args = ["-y", "toon-memory", "mcp"]
+```
+
+### Gemini CLI
+
+`.gemini/settings.json`に追加：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### Zed
+
+`~/.config/zed/settings.json`に追加：
+
+```json
+{
+  "mcp_servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## インタラクティブインストーラー（最も簡単）
+
+```bash
+npx toon-memory
+```
+
+インストーラーが以下を行います：
+1. インストール済みのエージェントを検出
+2. 設定するエージェントを確認
+3. MCP設定を自動的に追加
+
+## 各エージェントが得るもの
+
+全てのエージェントは同じ**21個のMCPツール**と**3つのMCPリソース**を取得します：
+
+- `memory_remember` — 決定、パターン、バグを保存
+- `memory_recall` — メモリを検索（フラットまたはグラフモード）
+- `memory_smart_recall` — BM25+グラフ+品質による統合リコール
+- `context_generate` — 1回の呼び出しで完全なプロジェクトブリーフィング
+- `context_diff` — 前回セッション以降の変更
+- その他15個のツール...
+
+## マルチエージェントサポート
+
+**複数のエージェント同時に**toon-memoryを設定できます：
+
+```bash
+npx toon-memory
+# 選択: claude, cursor, opencode
+```
+
+全てのエージェントが`.toon-memory/memory/data.toon`の同じメモリファイルを共有します。
+
+### セッション調整
+
+複数のエージェントを並列で実行している場合：
+
+```bash
+memory_sessions()
+// 🧭 Active sessions (2):
+// • claude @ feature/auth (you)
+// • opencode @ feature/db
+```
+
+他のセッションがどのファイルにアクセスしているかを確認し、競合を回避します。
+
+## 対応エージェント（15以上）
+
+| エージェント | 設定場所 | フック |
+|-------|-----------------|-------|
+| OpenCode | `.opencode/opencode.json` | プラグインベース |
+| Claude Code | `.claude/settings.json` | SessionStart + PostToolUse + Stop |
+| Cursor | `.cursor/mcp.json` | — |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` | — |
+| VS Code | `.vscode/mcp.json` | — |
+| Codex CLI | `.codex/config.toml` | SessionStart + PostToolUse + Stop |
+| Gemini CLI | `.gemini/settings.json` | SessionStart + PostToolUse + Stop |
+| Zed | `~/.config/zed/settings.json` | — |
+| Cline | `.cline/mcp.json` | — |
+| Continue | `.continue/config.json` | — |
+| Antigravity | `.gemini/config/mcp_config.json` | PreInvocation + PostToolUse + Stop |
+| Aider | — | Instructionsファイル |
+| KiloCode | `~/.kilocode/mcp_settings.json` | — |
+| OpenClaw | `.openclaw.json` | — |
+| Kiro | `.kiro/settings/mcp.json` | — |
+
+## 始めましょう
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # インタラクティブインストーラー
+```
+
+詳細な設定は[対応エージェント](/toon-memory/ja/configuration/agents)ページを参照してください。

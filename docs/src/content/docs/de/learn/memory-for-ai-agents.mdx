@@ -1,0 +1,111 @@
+---
+title: "Speicher für AI-Coding-Agenten — Persistenter Speicher, der Sitzungen überdauert"
+description: "AI-Coding-Agenten brauchen Speicher. Erfahre, wie du Claude, Cursor, OpenCode einen persistenten Speicher für Entscheidungen, Muster und Bugs gibst. Kein Cloud, kein LLM, offline MCP-Server."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "AI-Agent-Speicher, persistenter Speicher AI, Claude-Speicher, Cursor-Speicher, OpenCode-Speicher, MCP-Speicher"
+---
+
+## Warum AI-Coding-Agenten Speicher brauchen
+
+AI-Coding-Agenten wie Claude, Cursor und OpenCode sind leistungsstark — aber sie haben eine kritische Einschränkung: **kein Speicher zwischen den Sitzungen**.
+
+Jedes Mal, wenn du eine neue Sitzung startest:
+
+- Vergisst der Agent die Architektur-Entscheidungen von gestern
+- Erinnert sich nicht an die Bug-Fixes, die du entdeckt hast
+- Kann sich nicht an die Muster erinnern, die dein Team etabliert hat
+- Muss dein Projekt von vorne lernen
+
+Das verschwendet Tokens, kostet Zeit und führt zu frustrierender Wiederholung.
+
+## Die Lösung: Persistenter Speicher für AI-Agenten
+
+**toon-memory** gibt deinem AI-Coding-Agenten einen persistenten Speicher, der:
+
+1. **Neustarts überlebt** — Speicher bleibt über Sitzungen hinweg erhalten
+2. **Offline funktioniert** — kein Cloud, keine API-Aufrufe, kein LLM nötig
+3. **Tokens spart** — 22% weniger Tokens als JSON
+4. **Skaliert** — 80% weniger Tool-Aufrufe pro Sitzung
+5. **Überall funktioniert** — 15+ unterstützte Agenten
+
+## Was können sich AI-Agenten merken?
+
+### Entscheidungen
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation — simpler than Joi, better TS support"
+})
+```
+
+### Bug-Fixes
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-pool-fix",
+  content: "Redis pool exhaustion — fix was max_connections=20"
+})
+```
+
+### Muster
+```bash
+memory_remember({
+  category: "pattern",
+  key: "api-versioning",
+  content: "Always use /api/v1/ prefix for REST endpoints"
+})
+```
+
+### Wissen
+```bash
+memory_remember({
+  category: "knowledge",
+  key: "deploy-process",
+  content: "Deploy script lives in scripts/deploy.sh, runs on CI merge to main"
+})
+```
+
+## Wie Speicher die AI-Agent-Leistung verbessert
+
+| Metrik | Ohne Speicher | Mit toon-memory | Verbesserung |
+|--------|--------------|-----------------|--------------|
+| Tokens pro Sitzung | 2.411 | 972 | -60% |
+| Tool-Aufrufe pro Sitzung | 25 | 5 | -80% |
+| Kosten pro Sitzung (GPT-4) | $0,072 | $0,029 | -60% |
+| Kontext-Wiederherstellung | Manuell | Automatisch | 100% |
+
+## Speicher-Funktionen
+
+- **21 MCP-Tools** — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt und mehr
+- **Graph-bewusster Abruf** — verbindet verwandte Einträge mit Links und Referenzen
+- **Qualitätsbewertung** — bewertet automatisch die Eintragsqualität (0-1)
+- **Merge-Dedup** — Speichern mit gleichem Schlüssel, automatisches Mergen
+- **TTL** — Einträge können nach 7d, 30d oder benutzerdefinierten Daten ablaufen
+- **Verschlüsselung** — AES-256-GCM für sensible Daten
+
+## Unterstützte Agenten
+
+toon-memory funktioniert mit **15+ AI-Coding-Agenten**:
+
+- **OpenCode** — Plugin-basiert, SessionStart-Hooks
+- **Claude Code** — Vollständige Hook-Unterstützung (SessionStart, PostToolUse, Stop)
+- **Cursor** — MCP-Konfiguration
+- **Windsurf** — MCP-Konfiguration
+- **VS Code / Copilot** — MCP-Konfiguration
+- **Codex CLI** — TOML-Konfiguration + Hooks
+- **Gemini CLI** — JSON-Konfiguration + Hooks
+- **Zed** — JSONC-Konfiguration
+- **Und mehr** — Cline, Continue, Antigravity, Aider, KiloCode, OpenClaw, Kiro
+
+## Loslegen
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Interaktiver Installer
+```
+
+Dein Agent wird in der nächsten Sitzung einen persistenten Speicher haben.

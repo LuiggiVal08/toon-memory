@@ -1,0 +1,70 @@
+---
+title: Contribuindo
+description: Como contribuir para o toon-memory
+---
+
+## Contribuindo
+
+Contribuições são bem-vindas! Por favor, siga estes passos:
+
+## Como Contribuir
+
+1. **Faça fork** do repositório
+2. **Crie** uma branch de feature (`git checkout -b feature/amazing-feature`)
+3. **Faça commit** das suas alterações (`git commit -m 'feat: add amazing feature'`)
+4. **Envie** para a branch (`git push origin feature/amazing-feature`)
+5. **Abra** um Pull Request
+
+## Configuração do Desenvolvimento
+
+```bash
+git clone https://github.com/LuiggiVal08/toon-memory.git
+cd toon-memory
+npm install
+npm run build
+npm test
+```
+
+## Estrutura do Projeto
+
+```
+toon-memory/
+├── src/
+│   ├── bin/              # Ponto de entrada (CLI + roteador MCP)
+│   ├── cli/              # Comandos CLI (setup, capture, session-start)
+│   ├── lib/              # Bibliotecas principais (graph, quality, sessions, context, vocab, lock)
+│   └── mcp/              # Servidor MCP (21 ferramentas, 3 recursos)
+├── tests/                # Testes unitários (vitest)
+├── docs/                 # Site de documentação (Astro + Starlight)
+├── bin/                  # Saída do build (ponto de entrada)
+├── mcp/                  # Saída do build (servidor MCP)
+└── package.json
+```
+
+## Scripts
+
+```bash
+npm run build         # Buildar tudo
+npm run build:cli     # Buildar CLI
+npm run build:mcp     # Buildar servidor MCP
+npm test              # Executar testes
+npm run test:watch    # Executar testes no modo watch
+```
+
+## Estilo de Código
+
+- TypeScript com modo estrito
+- Indentação de 2 espaços
+- camelCase para variáveis/funções
+- PascalCase para classes
+
+## Diretrizes para Pull Requests
+
+- Escreva mensagens de commit claras
+- Adicione testes para novas funcionalidades
+- Atualize a documentação se necessário
+- Siga o estilo de código existente
+
+## Código de Conduta
+
+Por favor, leia nosso [Código de Conduta](/toon-memory/pt-br/community/code-of-conduct) antes de contribuir.

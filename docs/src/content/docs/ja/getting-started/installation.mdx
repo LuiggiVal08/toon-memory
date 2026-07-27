@@ -1,0 +1,64 @@
+---
+title: インストール — toon-memory MCPサーバーのインストール方法
+description: "toon-memoryのインストール方法 — npm、curl、PowerShell。AIコーディングエージェント向けのゼロコンフィグMCPメモリサーバー。macOS、Linux、Windowsで動作。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCPサーバー インストール, toon-memory インストール, npm インストール AIメモリ, AIエージェント メモリセットアップ"
+---
+
+## 動作要件
+
+- Node.js 20以上
+- npm、yarn、またはpnpm
+
+## インストール方法
+
+### npm（推奨）
+
+```bash
+npm install -g toon-memory
+```
+
+### スタンドアロンスクリプト
+
+#### macOS / Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+```
+
+#### Windows (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex
+```
+
+### ソースからインストール
+
+```bash
+git clone https://github.com/LuiggiVal08/toon-memory.git
+cd toon-memory
+npm install
+npm run build
+npm link
+```
+
+## インストールの確認
+
+```bash
+toon-memory --version
+# または
+npx toon-memory status
+```
+
+## アンインストール
+
+```bash
+# 全エージェントから削除
+npx toon-memory uninstall
+
+# またはグローバルインストールの場合
+toon-memory uninstall
+```

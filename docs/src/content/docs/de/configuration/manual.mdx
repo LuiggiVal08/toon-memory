@@ -1,0 +1,228 @@
+---
+title: "Manuelle MCP-Konfiguration"
+description: "Manuelle MCP-Konfiguration — füge toon-memory zu Claude, Cursor, VS Code, Codex, Gemini und Zed Konfigurationsdateien hinzu. Schritt-für-Schritt-Anleitung."
+---
+
+## OpenCode
+
+### Auf Projektebene
+
+Zu `.opencode/opencode.json` hinzufügen:
+
+```json
+{
+  "mcp": {
+    "toon-memory": {
+      "type": "local",
+      "command": ["npx", "-y", "toon-memory", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+### Global
+
+Zu `~/.config/opencode/opencode.json` hinzufügen:
+
+```json
+{
+  "mcp": {
+    "toon-memory": {
+      "type": "local",
+      "command": ["npx", "-y", "toon-memory", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+## VS Code / Copilot
+
+Zu `.vscode/mcp.json` hinzufügen:
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Claude Code
+
+Zu `.claude/settings.json` hinzufügen:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Cursor
+
+Zu `.cursor/mcp.json` hinzufügen:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Windsurf
+
+Zu `~/.codeium/windsurf/mcp_config.json` hinzufügen:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Cline
+
+Zu `.cline/mcp.json` hinzufügen:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Continue
+
+Zu `.continue/config.json` hinzufügen:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Codex
+
+Zu `.codex/config.toml` hinzufügen:
+
+```toml
+[mcpServers.toon-memory]
+command = "npx"
+args = ["-y", "toon-memory", "mcp"]
+```
+
+## Gemini
+
+Zu `.gemini/settings.json` hinzufügen:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Zed
+
+Zu `~/.config/zed/settings.json` hinzufügen:
+
+```json
+{
+  "mcp_servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Antigravity
+
+Zu `.gemini/config/mcp_config.json` hinzufügen:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## KiloCode
+
+Zu `~/.kilocode/mcp_settings.json` hinzufügen:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## OpenClaw
+
+Zu `.openclaw.json` hinzufügen:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Kiro
+
+Zu `.kiro/settings/mcp.json` hinzufügen:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```

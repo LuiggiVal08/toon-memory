@@ -1,0 +1,104 @@
+---
+title: "CLI 명령어 — 터미널에서 AI 에이전트 메모리 관리"
+description: "toon-memory CLI 명령어 — 설치, 초기화, 통계, 내보내기, 가져오기, watch 모드. 터미널에서 AI 에이전트 영구 메모리를 관리하세요."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "CLI 명령어, toon-memory CLI, AI 메모리 터미널, 메모리 내보내기 가져오기"
+---
+
+## 명령어
+
+```bash
+npx toon-memory              # 대화형 설치 프로그램 (에이전트 선택)
+npx toon-memory init         # 에이전트 선택이 포함된 대화형 설정
+npx toon-memory init --agent opencode       # 비대화형: 특정 에이전트 설정
+npx toon-memory init --agent opencode --agent claude  # 여러 에이전트 설정
+npx toon-memory init --agent opencode --scope global  # 전역 설정
+npx toon-memory mcp          # MCP 서버 직접 실행
+npx toon-memory status       # 설치 상태 확인
+npx toon-memory stats        # 메모리 통계 보기
+npx toon-memory export       # 메모리를 JSON으로 내보내기
+npx toon-memory import <file> # JSON에서 메모리 가져오기
+npx toon-memory watch [opts] # 옵션과 함께 자동 백업
+npx toon-memory upgrade      # 최신 버전으로 업데이트
+npx toon-memory uninstall    # 모든 에이전트에서 제거
+```
+
+## Init 옵션
+
+| 옵션 | 설명 | 기본값 |
+|------|------|--------|
+| `--agent <name>` | 비대화형: 특정 에이전트 설정. 여러 개는 반복 지정. | 대화형 |
+| `--scope <scope>` | `local` 또는 `global` — 에이전트 설정 저장 위치 | 대화형 |
+
+## Watch 옵션
+
+| 옵션 | 설명 | 기본값 |
+|------|------|--------|
+| `[interval]` | 분 단위 백업 간격 | 5 |
+| `-c, --compress` | gzip 압축 활성화 | 꺼짐 |
+| `-l, --log [path]` | 파일 로깅 활성화 | 꺼짐 |
+| `-m, --max-backups <n>` | 유지할 최대 백업 수 (0=무제한) | 10 |
+
+## 예제
+
+### 통계
+
+```bash
+$ npx toon-memory stats
+
+🧠 toon-memory stats
+
+📊 Memory Stats
+━━━━━━━━━━━━━━━━━━
+Total entries: 45
+├── decision: 12
+├── pattern: 18
+├── bug: 8
+└── knowledge: 7
+Last updated: 2026-07-10
+File size: 12.4 KB
+```
+
+### 내보내기
+
+```bash
+$ npx toon-memory export
+
+🧠 toon-memory export
+
+Exported 45 entries to:
+  /path/to/project/toon-memory-export.json
+```
+
+### 가져오기
+
+```bash
+$ npx toon-memory import backup.json
+
+🧠 toon-memory import
+
+Imported 3 new entries
+Skipped 2 duplicates
+```
+
+### Watch
+
+```bash
+$ npx toon-memory watch 15 -c -m 20
+
+🧠 toon-memory watch
+
+Watching memory file every 15 minutes...
+Max backups: 20
+Compression: enabled
+Logging: disabled
+Press Ctrl+C to stop
+
+📦 Backup #1 created: 2026-07-11T16-00-00-000Z
+📦 Backup #2 created: 2026-07-11T16-15-00-00-000Z
+^C
+✅ Watch stopped. 2 backups created.
+```

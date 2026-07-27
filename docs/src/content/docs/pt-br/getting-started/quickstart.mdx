@@ -1,0 +1,49 @@
+---
+title: Início Rápido — Configuração do Servidor MCP de Memória em 3 Passos
+description: "Instale o servidor MCP de memória toon-memory em 3 passos. Funciona com Claude, Cursor, OpenCode, Windsurf e mais de 15 agentes de codificação com IA. Memória persistente sem configuração."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "configuração servidor MCP memória, início rápido memória IA, configuração memória Claude, configuração memória Cursor"
+---
+
+## 1. Instalar
+
+```bash
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex
+
+# Ou com npm (qualquer plataforma)
+npm i -g toon-memory
+```
+
+## 2. Configure seus agentes
+
+```bash
+# Instalador interativo — selecione agentes com setas, Espaço, Enter
+npx toon-memory
+
+# Ou não-interativo: especifique o(s) agente(s) e o escopo
+npx toon-memory init --agent opencode --scope global
+```
+
+## 3. Use
+
+```bash
+# Na sua próxima sessão, execute:
+memory_stats      # Veja o que há na memória
+memory_recall     # Busque na memória antes de ler arquivos
+memory_remember   # Salve decisões importantes
+```
+
+## É isso!
+
+Seu agente agora tem memória persistente entre sessões. Saiba mais sobre:
+
+- [Ferramentas MCP](/toon-memory/pt-br/features/tools) — As 15 ferramentas de memória e 3 recursos
+- [Comandos CLI](/toon-memory/pt-br/features/cli) — Gerencie a memória pelo terminal
+- [Configuração](/toon-memory/pt-br/configuration/agents) — Setup específico por agente

@@ -1,0 +1,66 @@
+---
+title: "TOON-Format — 22% weniger Tokens als JSON"
+description: "TOON-Format — 22% weniger Tokens als JSON, entworfen für LLM-Verständnis und AI-Agent-Speichereffizienz. Token-Oriented Object Notation."
+---
+
+## Was ist TOON?
+
+TOON (Token-Oriented Object Notation) ist ein Datenformat, das für LLMs entworfen wurde. Es verwendet ~22,5% weniger Tokens als JSON (gemessen mit gpt-tokenizer über repräsentative Einträge) bei gleichzeitiger verlustfreier Roundtrip-Unterstützung.
+
+## Vergleich
+
+| Format | Token-Anzahl | LLM-Genauigkeit |
+|--------|-------------|-----------------|
+| JSON | 100 | 75% |
+| YAML | 95 | 72% |
+| **TOON** | **60** | **76,4%** |
+
+## Formatstruktur
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0|patterns/zod-schemas|0.80|1.00
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.72|1.00
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d|3||0.68|0.85
+summaries:
+  src/services/redis.ts: Redis connection pool with retry logic
+```
+
+## Komponenten
+
+| Komponente | Beschreibung |
+|-----------|-------------|
+| `version: 1` | Formatversion |
+| `entries[N\|]{fields}:` | Kopfzeile mit Anzahl und Feldnamen |
+| `id\|category\|key\|...` | Pipe-getrennte Werte |
+| `ttl` | Optionale Lebenszeit (leer = kein Ablauf) |
+| `accessed` | Zugriffszähler (für Wichtigkeits-Rangfolge) |
+| `links` | Semikolon-getrennte Eintragsschlüssel (Graph-Kanten) |
+| `quality` | Qualitätsscore 0-1 (automatisch berechnet) |
+| `confidence` | Konfidenzscore 0-1 (1,0=behauptet, <1,0=inferiert) |
+| `summaries:` | Optionale Dateizusammenfassungen |
+
+## Eintragsfelder
+
+| Feld | Erforderlich | Beschreibung | Beispiel |
+|------|-------------|-------------|----------|
+| `id` | Ja | 8-Zeichen Hex-ID | `a1b2c3d4` |
+| `category` | Ja | `decision`, `pattern`, `bug`, `knowledge` | `decision` |
+| `key` | Ja | Kebab-Case-Titel | `use-zod` |
+| `content` | Ja | Detaillierte Beschreibung | `Use Zod for validation` |
+| `file` | Nein | Zugehöriger Dateipfad | `src/types.ts` |
+| `tags` | Nein | Semikolon-getrennte Tags | `validation;types` |
+| `date` | Ja | JJJJ-MM-TT | `2026-07-10` |
+| `ttl` | Nein | Ablauf: `7d`, `30d` oder `2026-12-31` | `7d` |
+| `accessed` | Nein | Zugriffszähler (automatisch bei Abruf incrementiert) | `3` |
+| `links` | Nein | Semikolon-getrennte Eintragsschlüssel (Graph-Kanten) | `patterns/zod-schemas` |
+| `quality` | Nein | Qualitätsscore 0-1 (automatisch berechnet) | `0,80` |
+| `confidence` | Nein | Konfidenzscore 0-1 (1,0=behauptet) | `1,00` |
+
+## Vorteile
+
+1. **Weniger Tokens** — Effizienter für LLM-Kontext
+2. **Bessere Genauigkeit** — LLMs verstehen es besser als JSON
+3. **Verlustfrei** — Kein Datenverlust bei der Konvertierung
+4. **Menschenlesbar** — Einfach zu lesen und manuell zu bearbeiten

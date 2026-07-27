@@ -1,0 +1,66 @@
+---
+title: "TOONフォーマット — JSONより22%少ないトークン"
+description: "TOONフォーマット — LLM理解とAIエージェントメモリ効率のために設計された、JSONより22%少ないトークン。Token-Oriented Object Notation。"
+---
+
+## TOONとは？
+
+TOON（Token-Oriented Object Notation）はLLM向けに設計されたデータフォーマットです。代表的なエントリでgpt-tokenizerを使用して測定した結果、JSONより約22.5%少ないトークンを使用しながら、ロスレスなラウンドトリップを維持します。
+
+## 比較
+
+| フォーマット | トークン数 | LLM精度 |
+|--------|-------------|--------------|
+| JSON | 100 | 75% |
+| YAML | 95 | 72% |
+| **TOON** | **60** | **76.4%** |
+
+## フォーマット構造
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0|patterns/zod-schemas|0.80|1.00
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.72|1.00
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d|3||0.68|0.85
+summaries:
+  src/services/redis.ts: Redis connection pool with retry logic
+```
+
+## コンポーネント
+
+| コンポーネント | 説明 |
+|-----------|-------------|
+| `version: 1` | フォーマットバージョン |
+| `entries[N\|]{fields}:` | カウントとフィールド名のヘッダー |
+| `id\|category\|key\|...` | パイプ区切りの値 |
+| `ttl` | 任意の生存期間（空=期限なし） |
+| `accessed` | アクセス回数（重要度ランキング用） |
+| `links` | セミコロン区切りのエントリキー（グラフエッジ） |
+| `quality` | 品質スコア 0-1（自動計算） |
+| `confidence` | 信頼度スコア 0-1（1.0=自ら.asserted、1.0未満=推論） |
+| `summaries:` | 任意のファイルサマリー |
+
+## エントリフィールド
+
+| フィールド | 必須 | 説明 | 例 |
+|-------|----------|-------------|---------|
+| `id` | はい | 8文字の16進ID | `a1b2c3d4` |
+| `category` | はい | `decision`、`pattern`、`bug`、`knowledge` | `decision` |
+| `key` | はい | ケバブケースのタイトル | `use-zod` |
+| `content` | はい | 詳細な説明 | `Use Zod for validation` |
+| `file` | いいえ | 関連ファイルパス | `src/types.ts` |
+| `tags` | いいえ | セミコロン区切りのタグ | `validation;types` |
+| `date` | はい | YYYY-MM-DD | `2026-07-10` |
+| `ttl` | いいえ | 期限切れ: `7d`、`30d`、または`2026-12-31` | `7d` |
+| `accessed` | いいえ | アクセス回数（リコール時に自動インクリメント） | `3` |
+| `links` | いいえ | セミコロン区切りのエントリキー（グラフエッジ） | `patterns/zod-schemas` |
+| `quality` | いいえ | 品質スコア 0-1（自動計算） | `0.80` |
+| `confidence` | いいえ | 信頼度スコア 0-1（1.0=自ら.asserted） | `1.00` |
+
+## 利点
+
+1. **トークンが少ない** — LLMコンテキストに対してより効率的
+2. **精度が高い** — JSONよりLLMが理解しやすい
+3. **ロスレス** — 変換時のデータ損失なし
+4. **人間が読める** — 手動での読み取りと編集が簡単

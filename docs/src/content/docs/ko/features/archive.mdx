@@ -1,0 +1,72 @@
+---
+title: "오래된 메모리 항목 자동 아카이브"
+description: "오래된 메모리 항목 자동 아카이브 — TTL과 저품질 항목 정리로 AI 에이전트 메모리를 깔끔하게 유지하세요. 자동 MCP 메모리 관리."
+---
+
+## 개요
+
+toon-memory는 메모리를 깔끔하게 유지하기 위해 30일 이상 된 항목이나 만료된 TTL 항목을 자동으로 아카이브합니다.
+
+## 수동 아카이브
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+## 작동 방식
+
+1. 30일 이상 된 항목이 `archive.toon`으로 이동됩니다
+2. 만료된 TTL을 가진 항목도 아카이브됩니다
+3. 활성 메모리는 100개 미만으로 유지됩니다
+4. 아카이브된 항목은 히스토리를 위해 보존됩니다
+5. 수동 또는 자동으로 트리거할 수 있습니다
+
+## TTL 기반 아카이빙
+
+`ttl` 필드를 가진 항목은 30일 규칙과 관계없이 TTL이 만료되면 아카이브됩니다:
+
+```
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|permanent|This stays forever|file.ts||2026-07-10|
+  e5f6g7h8|knowledge|sprint-info|Sprint ends Friday|file.ts||2026-07-10|7d
+  i9j0k1l2|bug|temp-fix|Temporary workaround|file.ts||2026-07-10|2026-07-15
+```
+
+이 예제에서:
+- `permanent` — TTL 없음, TTL로 만료되지 않음
+- `sprint-info` — 생성 후 7일 후 만료
+- `temp-fix` — 특정 날짜에 만료
+
+## 파일 구조
+
+```
+.toon-memory/memory/
+├── data.toon        # 활성 메모리 (< 30일, 만료된 TTL 없음)
+└── archive.toon     # 아카이브된 항목 (> 30일 또는 만료된 TTL)
+```
+
+## 아카이브 형식
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  a1b2c3d4|decision|old-decision|This was decided...|src/old.ts|decision|2026-06-01
+  e5f6g7h8|pattern|old-pattern|This pattern was used...|src/pattern.ts|pattern|2026-06-15
+```
+
+## 설정
+
+| 설정 | 기본값 | 설명 |
+|------|--------|------|
+| 최대 항목 수 | 100 | 최대 활성 항목 수 |
+| 아카이브 기간 | 30 | 아카이브 전 일수 |
+| 아카이브 파일 | `archive.toon` | 아카이브된 항목 저장 위치 |
+
+## 사용 사례
+
+- **메모리 유지 관리** — 무제한 성장 방지
+- **히스토리 참조** — 오래된 결정 사항에 여전히 접근 가능
+- **성능** — 더 적은 항목으로 더 빠른 검색
+- **임시 컨텍스트** — TTL로 마감일, 스프린트, 시간 민감한 메모를 처리

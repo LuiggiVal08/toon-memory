@@ -1,0 +1,104 @@
+---
+title: "CLI 命令 — 从终端管理 AI 代理记忆"
+description: "toon-memory CLI 命令 — install、init、stats、export、import、watch 模式。从终端管理持久化 AI 代理记忆。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "CLI 命令, toon-memory CLI, AI 记忆终端, 记忆导入导出"
+---
+
+## 命令
+
+```bash
+npx toon-memory              # 交互式安装器（代理选择）
+npx toon-memory init         # 交互式设置，带代理选择
+npx toon-memory init --agent opencode       # 非交互式：配置指定代理
+npx toon-memory init --agent opencode --agent claude  # 配置多个代理
+npx toon-memory init --agent opencode --scope global  # 全局配置
+npx toon-memory mcp          # 直接运行 MCP 服务器
+npx toon-memory status       # 检查安装状态
+npx toon-memory stats        # 查看记忆统计
+npx toon-memory export       # 将记忆导出为 JSON
+npx toon-memory import <file> # 从 JSON 导入记忆
+npx toon-memory watch [opts] # 自动备份，支持选项
+npx toon-memory upgrade      # 更新到最新版本
+npx toon-memory uninstall    # 从所有代理中移除
+```
+
+## Init 选项
+
+| 选项 | 描述 | 默认值 |
+|------|------|--------|
+| `--agent <name>` | 非交互式：配置指定代理。多个代理重复使用。 | 交互式 |
+| `--scope <scope>` | `local` 或 `global` — 代理配置的存储位置 | 交互式 |
+
+## Watch 选项
+
+| 选项 | 描述 | 默认值 |
+|------|------|--------|
+| `[interval]` | 备份间隔（分钟） | 5 |
+| `-c, --compress` | 启用 gzip 压缩 | 关闭 |
+| `-l, --log [path]` | 启用文件日志 | 关闭 |
+| `-m, --max-backups <n>` | 保留的最大备份数（0=无限制） | 10 |
+
+## 示例
+
+### 统计
+
+```bash
+$ npx toon-memory stats
+
+🧠 toon-memory stats
+
+📊 Memory Stats
+━━━━━━━━━━━━━━━━━━
+Total entries: 45
+├── decision: 12
+├── pattern: 18
+├── bug: 8
+└── knowledge: 7
+Last updated: 2026-07-10
+File size: 12.4 KB
+```
+
+### 导出
+
+```bash
+$ npx toon-memory export
+
+🧠 toon-memory export
+
+Exported 45 entries to:
+  /path/to/project/toon-memory-export.json
+```
+
+### 导入
+
+```bash
+$ npx toon-memory import backup.json
+
+🧠 toon-memory import
+
+Imported 3 new entries
+Skipped 2 duplicates
+```
+
+### Watch
+
+```bash
+$ npx toon-memory watch 15 -c -m 20
+
+🧠 toon-memory watch
+
+Watching memory file every 15 minutes...
+Max backups: 20
+Compression: enabled
+Logging: disabled
+Press Ctrl+C to stop
+
+📦 Backup #1 created: 2026-07-11T16-00-00-000Z
+📦 Backup #2 created: 2026-07-11T16-15-00-00-000Z
+^C
+✅ Watch stopped. 2 backups created.
+```

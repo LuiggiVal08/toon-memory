@@ -1,0 +1,137 @@
+---
+title: "永続メモリ向けのMCPサーバー — Model Context Protocolメモリ"
+description: "AIコーディングエージェントに永続メモリを提供するMCPサーバー。Claude、Cursor、OpenCode向けのModel Context Protocolメモリ。トークン効率、オフライン、グラフ対応リコール。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCPサーバー, Model Context Protocol, 永続メモリサーバー, AIメモリ MCP, Claude MCPサーバー"
+---
+
+## メモリ向けのMCPサーバーとは？
+
+メモリ向けのMCPサーバーは、Model Context Protocolを実装し、AIコーディングエージェントに永続メモリを提供する**ローカルサービス**です。セッション間でコンテキストを失う代わりに、エージェントは決定、パターン、バグを検索可能なメモリストアに保存します。
+
+**toon-memory**は以下の機能を提供するMCPサーバーです：
+
+- **永続メモリ** — 再起動後も残る、クラウド不要
+- **21個のMCPツール** — Model Context Protocol経由の完全なメモリ管理
+- **トークン効率の高いフォーマット** — JSONより22%少ないトークン
+- **グラフ対応リコール** — BM25+中心性+品質スコアリング
+- **15以上のエージェントサポート** — Claude、Cursor、OpenCodeなどで動作
+
+## MCPメモリサーバーの仕組み
+
+### アーキテクチャ
+
+```
+Your AI Agent (Claude/Cursor/OpenCode)
+        ↓ MCP Protocol (stdio)
+  toon-memory MCP Server
+        ↓
+  .toon-memory/memory/data.toon (local file)
+```
+
+1. **エージェントがリクエストを送信** — 「この決定を覚えて」「データベースパターンを検索して」
+2. **MCPサーバーが処理** — リクエストを解析、メモリストアを管理
+3. **メモリがローカルに保存** — TOONフォーマットで`.toon-memory/memory/`に格納
+4. **レスポンスを返却** — エージェントが使用できるフォーマットで返す
+
+### MCPツール
+
+toon-memoryは**21個のMCPツール**と**3つのMCPリソース**を公開しています：
+
+| ツール | 目的 |
+|------|---------|
+| `memory_remember` | 決定、パターン、バグ、ナレッジを保存 |
+| `memory_recall` | メモリを検索（フラットまたはグラフモード） |
+| `memory_smart_recall` | 統合リコール: BM25+グラフ+品質 |
+| `memory_forget` | エントリを削除 |
+| `memory_stats` | メモリの状態を表示 |
+| `memory_summary` | ファイルサマリーの保存/取得 |
+| `memory_archive` | 古いエントリをアーカイブ |
+| `memory_diff` | 指定日以降の変更を表示 |
+| `memory_suggest` | 関連エントリを検索 |
+| `memory_sessions` | マルチセッション調整 |
+| `context_brief` | 1回呼び出しのコンテキストブリーフィング |
+| `context_generate` | 完全なプロジェクトブリーフィング |
+| `context_diff` | インクリメンタルブリーフィング |
+| `context_focus` | ハイパーコンテキストブリーフィング |
+| `context_health` | メモリヘルス監査 |
+| `context_export` | Markdownとしてエクスポート |
+| `memory_encrypt` | AES-256-GCM暗号化 |
+| `memory_decrypt` | 暗号化を無効化 |
+| `memory_captured` | フックキャプチャアクティビティを表示 |
+| `memory_consolidate` | 重複をマージ |
+
+## なぜメモリにMCPなのか？
+
+### MCP vs カスタム統合
+
+| 機能 | MCPメモリ | カスタム統合 |
+|---------|-----------|-------------------|
+| **標準プロトコル** | はい（Model Context Protocol） | いいえ — プロプライエタリ |
+| **エージェントサポート** | 15以上のエージェント | 通常1-2エージェント |
+| **セットアップ** | `npx toon-memory` | 手動コード変更 |
+| **アップデート** | `npm update` | 手動メンテナンス |
+| **コミュニティ** | 成長中のエコシステム | 孤立 |
+
+### MCP vs クラウドメモリ
+
+| 機能 | MCPメモリ（toon-memory） | クラウドメモリ（mem0） |
+|---------|-------------------------|---------------------|
+| **データの場所** | ローカルマシン | クラウドサーバー |
+| **インターネットが必要** | いいえ | はい |
+| **コスト** | 無料 | 従量課金 |
+| **レイテンシ** | 即時（ローカル） | ネットワーク依存 |
+| **プライバシー** | 完全な制御 | サードパーティ |
+
+## 技術的な詳細
+
+### TOONフォーマット
+
+メモリは**TOONフォーマット**（Token-Oriented Object Notation）で保存されます：
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0
+  e5f6g7h8|pattern|api-routes|REST endpoints use /api/v1/ prefix|src/routes|api;rest;pattern|2026-07-10||0||0.55|1.0
+  i9j0k1l2|bug|redis-fix|Redis pool exhaustion fix|src/redis.ts|redis;bug|2026-07-10||0||0.70|1.0
+```
+
+### グラフ対応リコール
+
+エントリは**明示的なリンク**と**暗黙的な参照**で接続されます：
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-redis",
+  content: "Use Redis for session storage (see [[redis-config]])",
+  links: "redis-config"
+})
+```
+
+検索すると、リコールは**エゴサブグラフ**を展開して関連エントリを検索します。正確な検索語を含んでいても関連エントリが見つかります。
+
+### 品質スコアリング
+
+各エントリには自動的に**品質スコア**（0-1）が付与されます：
+
+| 要因 | 重み | 測定内容 |
+|--------|--------|------------------|
+| タグ | 最大0.3 | タグが具体的なほど品質が高い |
+| リンク | 最大0.2 | 接続されたエントリは品質が高い |
+| コンテキストの長さ | 最大0.3 | 詳細 > 曖昧 |
+| 新しさ | 最大0.1 | 最近のエントリはスコアが高い |
+| 特定性 | 最大0.1 | ユニークな単語 vs 繰り返される単語 |
+
+## 始めましょう
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # インタラクティブインストーラー
+```
+
+詳細なセットアップ手順は[クイックスタート](/toon-memory/ja/getting-started/quickstart)を参照してください。

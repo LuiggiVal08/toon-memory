@@ -1,0 +1,375 @@
+---
+title: "Claude、Cursor、OpenCodeに永続メモリをセットアップする方法"
+description: "Claude Code、Cursor、OpenCodeに永続メモリをセットアップするステップバイステップガイド。AIコーディングエージェントにセッション間で残るメモリを与える。ゼロコンフィグ、オフライン動作。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "永続メモリセットアップ, Claude Codeメモリ, Cursor AIメモリ, OpenCodeメモリ, AIエージェントメモリ"
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: '{"@context":"https://schema.org","@type":"Article","headline":"How to Set Up Persistent Memory for Claude, Cursor & OpenCode","description":"Step-by-step guide to setting up persistent memory.","author":{"@type":"Person","name":"LuiggiVal"},"publisher":{"@type":"Organization","name":"toon-memory"},"url":"https://luiggival08.github.io/toon-memory/blog/setup-persistent-memory/","mainEntityOfPage":{"@type":"WebPage","@id":"https://luiggival08.github.io/toon-memory/blog/setup-persistent-memory/"}}'
+---
+
+## なぜ永続メモリが必要なのか
+
+Claude、Cursor、OpenCodeなどのAIコーディングエージェントは強力ですが、重要な制限があります。**セッション間でメモリがない**ということです。
+
+新しいセッションを開始するたびに、エージェント：
+- 昨日のアーキテクチャ決定を忘れる
+- 発見したバグ修正を覚えていない
+- チームが確立したパターンを思い出せない
+- プロジェクトを最初からやり直す必要がある
+
+これはトークンを無駄にし、時間を消耗し、苛立ちの繰り返しにつながります。
+
+**toon-memory**は再起動後も残る永続メモリをエージェントに与えることで、この問題を解決します。
+
+## クイックセットアップ（2分）
+
+### ステップ1: toon-memoryをインストール
+
+```bash
+npm install -g toon-memory
+```
+
+### ステップ2: インストーラーを実行
+
+```bash
+npx toon-memory
+```
+
+インストーラーが以下を行います：
+1. インストール済みのエージェントを検出
+2. 設定するエージェントを確認
+3. MCP設定を自動的に追加
+
+### ステップ3: メモリを使い始める
+
+次のエージェントセッションで：
+
+```bash
+# 重要な決定を保存
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance"
+})
+
+# メモリを検索
+memory_recall({ query: "database" })
+
+# 1回の呼び出しで完全なコンテキストを取得
+memory_smart_recall({ intent: "what I was working on" })
+```
+
+これで完了です。エージェントは永続メモリを持ちます。
+
+## エージェント別のセットアップ
+
+### Claude Code
+
+Claude Codeはtoon-memoryとの最高の統合を備えており、完全なフックサポートを含みます。
+
+#### 自動セットアップ（推奨）
+
+```bash
+npx toon-memory
+# 選択: claude
+```
+
+#### 手動セットアップ
+
+`.claude/settings.json`に追加：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+**フック:** toon-memoryはClaude Code用にSessionStart、PostToolUse、Stopフックをインストールします。これらは以下を提供します：
+- セッション開始時の自動リマインダー
+- メモリからのコンテキスト読み込み
+- セッション調整
+
+### Cursor
+
+CursorはMCPサーバーをネイティブにサポートしています。
+
+#### 自動セットアップ
+
+```bash
+npx toon-memory
+# 選択: cursor
+```
+
+#### 手動セットアップ
+
+`.cursor/mcp.json`に追加：
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### OpenCode
+
+OpenCodeはプラグインベースのアプローチでフックを実装します。
+
+#### 自動セットアップ
+
+```bash
+npx toon-memory
+# 選択: opencode
+```
+
+これにより以下が作成されます：
+- `.opencode/opencode.json` — MCP設定
+- `.opencode/plugins/toon-memory.ts` — SessionStartフック付きプラグイン
+
+#### 手動セットアップ
+
+`.opencode/opencode.json`に追加：
+
+```json
+{
+  "mcp": {
+    "toon-memory": {
+      "type": "local",
+      "command": ["npx", "-y", "toon-memory", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+**注意:** OpenCode 1.17+は設定内の`"Unrecognized key: hooks"`を拒否します。代わりにプラグインアプローチを使用してください。
+
+### Windsurf
+
+`~/.codeium/windsurf/mcp_config.json`に追加：
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### VS Code / Copilot
+
+`.vscode/mcp.json`に追加：
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### Codex CLI
+
+`.codex/config.toml`に追加：
+
+```toml
+[mcpServers.toon-memory]
+command = "npx"
+args = ["-y", "toon-memory", "mcp"]
+```
+
+Codex CLIは`[[hooks]]`設定でフックもサポートしています。
+
+### Gemini CLI
+
+`.gemini/settings.json`に追加：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+Gemini CLIは`hooks.*`設定でフックをサポートしています。
+
+### Zed
+
+`~/.config/zed/settings.json`に追加：
+
+```json
+{
+  "mcp_servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## マルチエージェントセットアップ
+
+**複数のエージェント同時に**toon-memoryを設定できます：
+
+```bash
+npx toon-memory
+# 選択: claude, cursor, opencode
+```
+
+全てのエージェントが`.toon-memory/memory/data.toon`の同じメモリファイルを共有します。
+
+### セッション調整
+
+複数のエージェントを並列で実行している場合：
+
+```bash
+memory_sessions()
+// 🧭 Active sessions (2):
+// • claude @ feature/auth (you)
+// • opencode @ feature/db
+// 🔥 Soft conflicts: src/types.ts
+```
+
+他のセッションがどのファイルにアクセスしているかを確認し、競合を回避します。
+
+## 基本コマンド
+
+### 重要なコンテキストを保存する
+
+```bash
+# アーキテクチャ決定
+memory_remember({
+  category: "decision",
+  key: "use-microservices",
+  content: "Use microservices for payment and auth, monolith for core"
+})
+
+# バグ修正
+memory_remember({
+  category: "bug",
+  key: "redis-timeout",
+  content: "Redis connection timeout — fix was increasing pool to 20"
+})
+
+# コードパターン
+memory_remember({
+  category: "pattern",
+  key: "error-handling",
+  content: "Always use custom AppError class, never throw raw Error"
+})
+```
+
+### メモリを検索する
+
+```bash
+# シンプルなキーワード検索
+memory_recall({ query: "database" })
+
+# グラフモード（関連エントリを検索）
+memory_recall({ query: "redis", mode: "graph", hops: 2 })
+
+# コンパクトモード（トークン削減）
+memory_recall({ query: "auth", compact: true })
+
+# スマートリコール（推奨）
+memory_smart_recall({ intent: "what I was working on" })
+```
+
+### メモリを管理する
+
+```bash
+# 統計を表示
+memory_stats()
+
+# 前回セッション以降の変更を表示
+memory_diff({ since: "24h" })
+
+# 関連エントリを検索
+memory_suggest({ context: "database configuration" })
+
+# 1回の呼び出しで完全なコンテキストを取得
+context_generate({})
+```
+
+## 効果的なメモリのヒント
+
+### 保存すべきもの
+
+- **アーキテクチャ決定** — 「なぜXではなくYなのか」
+- **バグ修正** — 「何が壊れていてどう直したか」
+- **コードパターン** — 「ここではどうやるか」
+- **プロジェクトナレッジ** — 「チームの慣習、デプロイプロセス」
+
+### 保存すべきでないもの
+
+- 一時的なデバッグメモ
+- シークレットやAPIキー
+- コードを読めば明らかなこと
+- 重複情報（マージ重複排除が同じキーを自動処理）
+
+### セッションの習慣
+
+**セッション開始時：**
+```bash
+memory_smart_recall({ intent: "what I was working on" })
+memory_sessions()
+```
+
+**セッション終了時：**
+```bash
+memory_remember({
+  category: "decision",
+  key: "today's-approach",
+  content: "What I decided and why"
+})
+```
+
+## トラブルシューティング
+
+### インストール後にメモリが見つからない
+
+1. `npx toon-memory status`を実行してインストールを確認
+2. エージェントを完全に再起動
+3. MCP設定ファイルが存在し、有効なJSONであることを確認
+
+### メモリファイルが空
+
+初回インストール時は正常です。`memory_remember`を使用してエントリを保存し始めましょう。
+
+### 重複エントリ
+
+同じキーの`memory_remember`は自動マージされます。既存の重複をクリーンアップするには`memory_consolidate`を使用してください。
+
+## 始めましょう
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # インタラクティブインストーラー
+```
+
+次のセッションでエージェントは永続メモリを持ちます。

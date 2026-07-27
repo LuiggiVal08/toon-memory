@@ -1,0 +1,137 @@
+---
+title: "持久化记忆的 MCP 服务器 — Model Context Protocol 记忆"
+description: "为 AI 编程代理提供持久化记忆的 MCP 服务器。面向 Claude、Cursor、OpenCode 的 Model Context Protocol 记忆。Token 高效、离线、图感知召回。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP 服务器, Model Context Protocol, 持久化记忆服务器, AI 记忆 MCP, Claude MCP 服务器"
+---
+
+## 什么是记忆 MCP 服务器？
+
+记忆 MCP 服务器是一个**本地服务**，它实现了 Model Context Protocol，为 AI 编程代理提供持久化记忆。你的代理不再在会话之间丢失上下文，而是将决策、模式和缺陷存储在可搜索的记忆库中。
+
+**toon-memory** 是一个 MCP 服务器，提供：
+
+- **持久化记忆** — 跨重启存活，无需云端
+- **21 个 MCP 工具** — 通过 Model Context Protocol 进行完整记忆管理
+- **Token 高效格式** — 比 JSON 少 22% token
+- **图感知召回** — BM25 + 中心性 + 质量评分
+- **15+ 代理支持** — 兼容 Claude、Cursor、OpenCode 等
+
+## MCP 记忆服务器的工作原理
+
+### 架构
+
+```
+你的 AI 代理 (Claude/Cursor/OpenCode)
+        ↓ MCP 协议 (stdio)
+  toon-memory MCP 服务器
+        ↓
+  .toon-memory/memory/data.toon (本地文件)
+```
+
+1. **代理发送请求** — "记住这个决策"或"搜索数据库模式"
+2. **MCP 服务器处理** — 解析请求，管理记忆库
+3. **记忆本地存储** — TOON 格式存储在 `.toon-memory/memory/`
+4. **返回响应** — 格式化为代理可使用的格式
+
+### MCP 工具
+
+toon-memory 暴露 **21 个 MCP 工具**和 **3 个 MCP 资源**：
+
+| 工具 | 用途 |
+|------|------|
+| `memory_remember` | 保存决策、模式、缺陷、知识 |
+| `memory_recall` | 搜索记忆（平铺或图模式） |
+| `memory_smart_recall` | 统一召回：BM25 + 图 + 质量 |
+| `memory_forget` | 移除条目 |
+| `memory_stats` | 查看记忆状态 |
+| `memory_summary` | 保存/获取文件摘要 |
+| `memory_archive` | 归档旧条目 |
+| `memory_diff` | 显示自某日期以来的更改 |
+| `memory_suggest` | 查找相关条目 |
+| `memory_sessions` | 多会话协调 |
+| `context_brief` | 单次调用的上下文简报 |
+| `context_generate` | 完整项目简报 |
+| `context_diff` | 增量简报 |
+| `context_focus` | 超聚焦简报 |
+| `context_health` | 记忆健康审计 |
+| `context_export` | 导出为 markdown |
+| `memory_encrypt` | AES-256-GCM 加密 |
+| `memory_decrypt` | 禁用加密 |
+| `memory_captured` | 查看钩子捕获的活动 |
+| `memory_consolidate` | 合并重复项 |
+
+## 为什么选择 MCP 做记忆？
+
+### MCP vs 自定义集成
+
+| 功能 | MCP 记忆 | 自定义集成 |
+|------|----------|------------|
+| **标准协议** | 是（Model Context Protocol） | 否 — 专有 |
+| **代理支持** | 15+ 代理 | 通常 1-2 个代理 |
+| **设置** | `npx toon-memory` | 手动代码修改 |
+| **更新** | `npm update` | 手动维护 |
+| **社区** | 不断增长的生态 | 孤立 |
+
+### MCP vs 云记忆
+
+| 功能 | MCP 记忆 (toon-memory) | 云记忆 (mem0) |
+|------|------------------------|---------------|
+| **数据位置** | 本地设备 | 云服务器 |
+| **需要互联网** | 否 | 是 |
+| **费用** | 免费 | 按使用计费 |
+| **延迟** | 即时（本地） | 依赖网络 |
+| **隐私** | 完全控制 | 第三方 |
+
+## 技术细节
+
+### TOON 格式
+
+记忆以 **TOON 格式**（Token-Oriented Object Notation）存储：
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0
+  e5f6g7h8|pattern|api-routes|REST endpoints use /api/v1/ prefix|src/routes|api;rest;pattern|2026-07-10||0||0.55|1.0
+  i9j0k1l2|bug|redis-fix|Redis pool exhaustion fix|src/redis.ts|redis;bug|2026-07-10||0||0.70|1.0
+```
+
+### 图感知召回
+
+条目通过**显式链接**和**隐式引用**连接：
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-redis",
+  content: "Use Redis for session storage (see [[redis-config]])",
+  links: "redis-config"
+})
+```
+
+搜索时，召回会展开**自我子图**以查找相关条目，即使它们不包含完全相同的搜索词。
+
+### 质量评分
+
+每个条目自动获得**质量评分**（0-1）：
+
+| 因素 | 权重 | 衡量内容 |
+|------|------|----------|
+| 标签 | 最高 0.3 | 更具体的标签 = 更高质量 |
+| 链接 | 最高 0.2 | 已连接的条目 = 更高质量 |
+| 内容长度 | 最高 0.3 | 详细 > 模糊 |
+| 新近度 | 最高 0.1 | 近期条目得分更高 |
+| 具体性 | 最高 0.1 | 唯一词 vs 重复词 |
+
+## 开始使用
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # 交互式安装器
+```
+
+参见[快速入门](/toon-memory/zh/getting-started/quickstart)获取详细设置说明。

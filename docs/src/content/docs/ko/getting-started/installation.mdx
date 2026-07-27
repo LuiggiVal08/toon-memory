@@ -1,0 +1,64 @@
+---
+title: 설치 — toon-memory MCP 서버 설치 방법
+description: "toon-memory 설치 방법 — npm, curl 또는 PowerShell. AI 코딩 에이전트를 위한 설정 없는 MCP 메모리 서버. macOS, Linux, Windows 지원."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP 서버 설치, toon-memory 설치, npm AI 메모리 설치, AI 에이전트 메모리 설정"
+---
+
+## 요구 사항
+
+- Node.js 20 이상
+- npm, yarn 또는 pnpm
+
+## 설치 방법
+
+### npm (권장)
+
+```bash
+npm install -g toon-memory
+```
+
+### 독립 실행형 스크립트
+
+#### macOS / Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+```
+
+#### Windows (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex
+```
+
+### 소스에서 빌드
+
+```bash
+git clone https://github.com/LuiggiVal08/toon-memory.git
+cd toon-memory
+npm install
+npm run build
+npm link
+```
+
+## 설치 확인
+
+```bash
+toon-memory --version
+# 또는
+npx toon-memory status
+```
+
+## 제거
+
+```bash
+# 모든 에이전트에서 제거
+npx toon-memory uninstall
+
+# 또는 전역 설치의 경우
+toon-memory uninstall
+```

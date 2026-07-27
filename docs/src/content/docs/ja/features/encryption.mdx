@@ -1,0 +1,50 @@
+---
+title: "AIエージェントメモリ向けのAES-256-GCM暗号化"
+description: "AIエージェントメモリ向けのAES-256-GCM暗号化 — toon-memoryの機密データを保護。軍事グレードの暗号化でMCPメモリサーバーをセキュアにする。"
+---
+
+## 概要
+
+toon-memoryは機密メモリデータを保護するためのAES-256-GCM暗号化をサポートしています。
+
+## 暗号化を有効にする
+
+```typescript
+memory_encrypt()
+// 🔐 Encriptación habilitada
+// ⚠️ Guarda esta clave (no se puede recuperar):
+// a1b2c3d4e5f6...
+```
+
+**重要:** 暗号化キーを保存してください！紛失した場合、復元できません。
+
+## 暗号化を無効にする
+
+```typescript
+memory_decrypt({ key: "a1b2c3d4e5f6..." })
+// 🔓 Encriptación deshabilitada
+```
+
+## 仕組み
+
+1. 有効化されると、ランダムな256ビットキーが生成される
+2. メモリファイルがAES-256-GCMで暗号化される
+3. キーは`.toon-memory/memory/config.json`に保存される
+4. 読み取り時に復号化が自動的に行われる
+
+## セキュリティに関する注意事項
+
+- 暗号化は**プロジェクトごと**です（各プロジェクトが独自のキーを持つ）
+- キーは`config.json`にローカル保存されます
+- **`config.json`をgitにコミットしないでください**
+- 暗号化有効時、バックアップも暗号化されます
+
+## ファイル構造
+
+```
+.toon-memory/memory/
+├── data.toon        # 有効化時に暗号化
+├── config.json      # 暗号化キーを含む
+└── backups/
+    └── backup-*.toon  # 同時に暗号化
+```

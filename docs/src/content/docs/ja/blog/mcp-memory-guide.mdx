@@ -1,0 +1,248 @@
+---
+title: "MCPメモリサーバー: 永続AIメモリの完全ガイド"
+description: "MCPメモリサーバーについて知っておくべきことすべて — Model Context ProtocolがAIコーディングエージェントに永続メモリを提供する仕組み。例、ベンチマーク、セットアップの完全ガイド。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCPメモリサーバー, Model Context Protocolメモリ, AI永続メモリ, MCPサーバーガイド"
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: '{"@context":"https://schema.org","@type":"Article","headline":"MCP Memory Server: Complete Guide to Persistent AI Memory","description":"Everything you need to know about MCP memory servers.","author":{"@type":"Person","name":"LuiggiVal"},"publisher":{"@type":"Organization","name":"toon-memory"},"url":"https://luiggival08.github.io/toon-memory/blog/mcp-memory-guide/","mainEntityOfPage":{"@type":"WebPage","@id":"https://luiggival08.github.io/toon-memory/blog/mcp-memory-guide/"}}'
+---
+
+## MCPメモリサーバーとは？
+
+MCPメモリサーバーは、Model Context Protocol（MCP）を実装し、AIコーディングエージェントに永続メモリを提供する**ローカルサービス**です。セッション間でコンテキストを失う代わりに、エージェントは決定、パターン、バグを検索可能なメモリストアに保存します。
+
+**toon-memory**は、最も完成度の高いMCPメモリサーバーです：
+
+- **21個のMCPツール** + 3つのリソース
+- **15以上のエージェントサポート** — Claude、Cursor、OpenCodeなど
+- **トークン効率の高いフォーマット** — JSONより22%少ないトークン
+- **グラフ対応リコール** — BM25+中心性+品質スコアリング
+- **ゼロコンフィグ** — インストールしてすぐ使える
+
+## MCPメモリサーバーの仕組み
+
+### Model Context Protocol
+
+MCP（Model Context Protocol）は、AIエージェントが外部ツールと通信するための標準です。MCPメモリサーバー：
+
+1. **エージェントからリクエストを受信** — stdio経由
+2. **メモリ操作を処理** — 保存、検索、削除
+3. **データをローカルに保存** — 構造化フォーマット
+4. **エージェント向けにフォーマットされた結果を返す**
+
+### アーキテクチャ
+
+```
+Your AI Agent
+    ↓ MCP Protocol (stdio)
+Memory Server (toon-memory)
+    ↓
+Local File (.toon-memory/memory/data.toon)
+```
+
+クラウドなし。APIコールなし。ネットワークなし。全てがマシンに残ります。
+
+## なぜMCPメモリサーバーを使うのか？
+
+### 問題点
+
+AIコーディングエージェントは**セッション間でメモリがない**：
+
+- Claudeは昨日のアーキテクチャ決定を忘れる
+- Cursorは発見したバグ修正を思い出せない
+- OpenCodeはチームが確立したパターンを覚えていない
+
+これはトークンを無駄にし、時間を消耗し、苛立ちの繰り返しにつながります。
+
+### ソリューション
+
+MCPメモリサーバーはエージェントに**永続メモリ**を提供します：
+
+| MCPメモリなし | MCPメモリあり |
+|-------------------|-----------------|
+| 毎セッションコンテキストを再説明 | コンテキストが自動的に持続 |
+| セッションあたり2,411トークン | セッションあたり972トークン（-60%） |
+| セッションあたり25回のツール呼び出し | セッションあたり5回のツール呼び出し（-80%） |
+| セッションあたり$0.072（GPT-4） | セッションあたり$0.029（-60%） |
+
+## MCPメモリサーバーの機能
+
+### 21個のMCPツール
+
+toon-memoryは完全なメモリ管理のための**21個のMCPツール**を公開しています：
+
+**コアツール：**
+- `memory_remember` — 決定、パターン、バグ、ナレッジを保存
+- `memory_recall` — メモリを検索（フラットまたはグラフモード）
+- `memory_smart_recall` — BM25+グラフ+品質による統合リコール
+- `memory_forget` — エントリを削除
+- `memory_stats` — メモリの状態を表示
+
+**コンテキストツール：**
+- `context_brief` — 1回呼び出しのコンテキストブリーフィング
+- `context_generate` — 完全なプロジェクトブリーフィング
+- `context_diff` — 前回セッション以降の変更
+- `context_focus` — ハイパーコンテキストブリーフィング
+- `context_health` — メモリヘルス監査
+- `context_export` — Markdownとしてエクスポート
+
+**管理ツール：**
+- `memory_summary` — ファイルサマリーの保存/取得
+- `memory_archive` — 古いエントリをアーカイブ
+- `memory_diff` — 指定日以降の変更を表示
+- `memory_suggest` — 関連エントリを検索
+- `memory_sessions` — マルチセッション調整
+- `memory_captured` — フックキャプチャアクティビティを表示
+- `memory_consolidate` — 重複をマージ
+- `memory_encrypt` — AES-256-GCM暗号化
+- `memory_decrypt` — 暗号化を無効化
+
+### トークン効率の高いフォーマット
+
+メモリは**TOONフォーマット**（Token-Oriented Object Notation）で保存されます：
+
+```
+a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10
+```
+
+同等のJSONより**22%少ないトークン**、LLM理解用に設計されています。
+
+### グラフ対応リコール
+
+エントリは**明示的なリンク**と**暗黙的な参照**で接続されます：
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-redis",
+  content: "Use Redis for session storage (see [[redis-config]])",
+  links: "redis-config"
+})
+```
+
+リコールは**エゴサブグラフ**を展開して関連エントリを検索します。正確な検索語を含んでいても関連エントリが見つかります。
+
+### 品質スコアリング
+
+各エントリには自動的に**品質スコア**（0-1）が付与されます：
+
+| 要因 | 重み |
+|--------|--------|
+| タグ | 最大0.3 |
+| リンク | 最大0.2 |
+| コンテキストの長さ | 最大0.3 |
+| 新しさ | 最大0.1 |
+| 特定性 | 最大0.1 |
+
+高品質なエントリがリコールで優先的に表示されます。
+
+## セットアップガイド
+
+### ステップ1: インストール
+
+```bash
+npm install -g toon-memory
+```
+
+### ステップ2: 設定
+
+```bash
+npx toon-memory  # インタラクティブインストーラー
+```
+
+またはエージェントのMCP設定に手動で追加：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### ステップ3: 使用
+
+```bash
+# 重要な決定を保存
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance"
+})
+
+# メモリを検索
+memory_recall({ query: "database" })
+
+# 1回の呼び出しで完全なコンテキストを取得
+memory_smart_recall({ intent: "what I was working on" })
+```
+
+## ベンチマーク
+
+### トークン効率
+
+```
+Format          Tokens (16 entries)    vs JSON
+──────────────  ───────────────────    ───────
+JSON            1097                   baseline
+TOON            850                    -22.5%
+```
+
+### リコール効率
+
+```
+Method                          Tokens to get context    vs re-reading files
+─────────────────────────────  ─────────────────────    ───────────────────
+Re-read source files            ~3000                    baseline
+memory_recall (flat)            ~1200                    -60%
+memory_recall (graph, compact)  ~900                     -70%
+memory_smart_recall             ~850                     -72%
+```
+
+### コンテキストツールベンチマーク
+
+```
+Scenario                          Without   With    Saved    Tools
+────────────────────────────────  ────────  ──────  ───────  ──────
+context_generate (full briefing)    5,556     378    93.2%   6 → 1
+context_diff (incremental)            533     152    71.5%   4 → 1
+context_focus (targeted)              413     225    45.5%   4 → 1
+context_health (audit)                322     246    23.6%   5 → 1
+context_export (injectable md)      1,178     218    81.5%   3 → 1
+────────────────────────────────  ────────  ──────  ───────  ──────
+TOTAL                              8,002   1,219    84.8%  22 → 5
+```
+
+## 対応エージェント
+
+toon-memoryは**15以上のAIコーディングエージェント**で動作します：
+
+- OpenCode、Claude Code、Cursor、Windsurf、VS Code Copilot
+- Codex CLI、Gemini CLI、Zed、Cline、Continue
+- Antigravity、Aider、KiloCode、OpenClaw、Kiro
+
+設定の詳細は[対応エージェント](/toon-memory/ja/configuration/agents)ページを参照してください。
+
+## まとめ
+
+MCPメモリサーバーは、AIコーディングエージェントが真に生産的であるために必要な永続メモリを提供します。toon-memoryは最も完成度の高いソリューションです：
+
+- 完全なメモリ管理のための**21個のMCPツール**
+- 全セッションで22%を節約する**トークン効率の高いフォーマット**
+- 関連コンテキストを自動的に見つける**グラフ対応リコール**
+- ゼロコンフィグセットアップの**15以上のエージェントサポート**
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # インタラクティブインストーラー
+```
+
+次のセッションでエージェントは全てを記憶します。

@@ -1,0 +1,88 @@
+---
+title: "Modo de Backup Automático para Memória do Agente IA"
+description: "Modo de backup automático para memória do agente IA — backups periódicos com compressão e registro. Mantenha os dados do seu servidor MCP de memória seguros."
+---
+
+## Visão Geral
+
+O modo watch executa um daemon que faz backup automaticamente do seu arquivo de memória quando mudanças são detectadas. Suporta compressão, registro em log e poda automática de backups antigos.
+
+## Uso
+
+```bash
+# Padrão: backup a cada 5 minutos, manter 10 backups
+npx toon-memory watch
+
+# Intervalo personalizado (em minutos)
+npx toon-memory watch 10
+
+# Ativar compressão gzip
+npx toon-memory watch -c
+
+# Ativar registro em arquivo de log
+npx toon-memory watch -l
+
+# Manter no máximo 20 backups
+npx toon-memory watch -m 20
+
+# Todas as opções combinadas
+npx toon-memory watch 15 -c -l -m 20
+
+# Pressione Ctrl+C para parar
+```
+
+## Opções
+
+| Opção | Descrição | Padrão |
+|-------|-----------|--------|
+| `[intervalo]` | Intervalo de backup em minutos | 5 |
+| `-c, --compress` | Ativar compressão gzip | desligado |
+| `-l, --log [caminho]` | Ativar registro em arquivo de log | desligado |
+| `-m, --max-backups <n>` | Máximo de backups para manter (0=ilimitado) | 10 |
+
+## Saída de Exemplo
+
+```bash
+$ npx toon-memory watch 15 -c -l -m 20
+
+🧠 toon-memory watch
+
+Watching memory file every 15 minutes...
+Max backups: 20
+Compression: enabled
+Logging: enabled (.toon-memory/memory/watch.log)
+Press Ctrl+C to stop
+
+📦 Backup #1 created: 2026-07-11T16-00-00-000Z
+📦 Backup #2 created: 2026-07-11T16-15-00-00-000Z
+🗑️  Pruned 1 old backup(s)
+^C
+✅ Watch stopped. 2 backups created.
+```
+
+## Como Funciona
+
+1. Monitora `.toon-memory/memory/data.toon` para mudanças
+2. Quando o conteúdo muda, cria um backup com timestamp
+3. Backups são armazenados em `.toon-memory/memory/backups/`
+4. Só cria backup quando o conteúdo realmente muda
+5. Se o limite de backups for excedido, backups mais antigos são podados
+6. Compressão gzip opcional reduz o tamanho do backup em ~60-80%
+7. Registro opcional escreve eventos em um arquivo
+
+## Arquivos de Backup
+
+```
+.toon-memory/memory/backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-15-00-00-000Z.toon.gz    # comprimido
+└── backup-2026-07-11T16-30-00-00-000Z.toon
+```
+
+## Casos de Uso
+
+- **Sessões longas de programação** — Backup automático enquanto você trabalha
+- **Pré-deploy** — Execute antes de mudanças importantes
+- **CI/CD** — Backup antes de mudanças automatizadas
+- **Pouco espaço em disco** — Use `-c` para compressão
+- **Depuração** — Use `-l` para registrar eventos de backup

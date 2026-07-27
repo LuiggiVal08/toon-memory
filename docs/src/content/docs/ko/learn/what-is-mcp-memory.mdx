@@ -1,0 +1,91 @@
+---
+title: "MCP 메모리란? AI 코딩 에이전트를 위한 영구 메모리"
+description: "MCP 메모리는 Claude, Cursor, OpenCode와 같은 AI 코딩 에이전트에게 세션 간에 지속되는 영구 메모리를 제공합니다. Model Context Protocol이 오프라인, 토큰 효율적인 메모리를 어떻게 구현하는지 알아보세요."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP 메모리, 영구 메모리, AI 코딩 에이전트, Model Context Protocol, Claude 메모리, Cursor 메모리"
+---
+
+## MCP 메모리란?
+
+MCP 메모리는 AI 코딩 에이전트가 **세션 간에 정보를 기억하는** 방법입니다. MCP 메모리 없이는 Claude, Cursor, 또는 OpenCode에서 새 채팅을 시작할 때마다 에이전트가 처음부터 시작합니다 — 이전 대화의 모든 결정, 패턴, 버그를 잊어버립니다.
+
+**toon-memory**는 이 문제를 해결하는 MCP 서버입니다. AI 코딩 에이전트에게 다음과 같은 영구 메모리를 제공합니다:
+
+- **재시작 후에도 유지** — 에이전트가 어제의 컨텍스트를 오늘도 기억합니다
+- **오프라인 작동** — 클라우드, API 호출, 저장에 필요한 LLM이 필요 없습니다
+- **토큰 절약** — JSON보다 22% 적은 토큰, 세션당 80% 적은 도구 호출
+- **15개 이상의 에이전트 지원** — Claude Code, Cursor, OpenCode, Windsurf, VS Code Copilot 등
+
+## MCP 메모리 작동 원리
+
+### 문제점
+
+AI 코딩 에이전트는 **세션 간에 기억력이 없습니다**. 새 세션마다 에이전트는:
+
+1. 왜 Postgres를 MongoDB보다 선택했는지 잊어버립니다
+2. 지난주에 수정한 Redis 타임아웃 버그를 기억하지 못합니다
+3. 팀이 구축한 아키텍처 패턴을_recall할 수 없습니다
+4. 프로젝트를 처음부터 다시 배워야 합니다
+
+### 해결책: MCP 메모리 서버
+
+toon-memory는 에이전트가 Model Context Protocol을 통해 연결하는 **로컬 MCP 서버**로 작동합니다. **TOON 형식**(Token-Oriented Object Notation)으로 메모리를 저장하며:
+
+- LLM 기반으로 JSON보다 **22% 더 효율적**
+- **검색 가능** — BM25 관련성 + 그래프 인식 recall
+- **품질 자동 점수 매기기** — 구조 기반 0-1 자동 평가
+- **그래프 연결** — 항목 간 링크와 참조로 연결
+
+## MCP 메모리 vs 다른 접근 방식
+
+| 접근 방식 | 장점 | 단점 |
+|----------|------|------|
+| **MCP 메모리 (toon-memory)** | 오프라인, 토큰 효율적, 그래프 인식, 15개 이상 에이전트 | MCP 지원 필요 |
+| **Markdown 파일** | 간단, 사람이 읽기 쉬움 | 구조화 안 됨, 검색 불가, MCP 비호환 |
+| **클라우드 메모리 (mem0)** | 관리형, 벡터 검색 | 인터넷 필요, 비용 발생, 데이터가 기기 밖으로 나감 |
+| **메모리 뱅크 (shodh-memory)** | 하이브리드 검색 | 복잡한 설정, Docker 필요, sentence-transformers 의존성 |
+
+## MCP 메모리 사용 방법
+
+### 1단계: toon-memory 설치
+
+```bash
+npm install -g toon-memory
+```
+
+### 2단계: 에이전트 설정
+
+```bash
+# 대화형 설치 프로그램
+npx toon-memory
+
+# 또는 수동 설정 — [설치 가이드](/toon-memory/getting-started/installation) 참조
+```
+
+### 3단계: 메모리 사용 시작
+
+다음 에이전트 세션에서:
+
+```bash
+# 중요한 결정 저장
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "ACID 준수와 JSON 지원을 위해 Postgres 선택"
+})
+
+# 코딩 전 메모리 검색
+memory_recall({ query: "database" })
+
+# 한 번의 호출로 전체 컨텍스트 가져오기
+memory_smart_recall({ intent: "작업 중이던 내용" })
+```
+
+## 더 알아보기
+
+- [AI 코딩 에이전트를 위한 메모리](/toon-memory/ko/learn/memory-for-ai-agents) — 영구 메모리 작동 방식
+- [영구 메모리를 위한 MCP 서버](/toon-memory/ko/learn/mcp-server-memory) — 기술 심화 분석
+- [빠른 시작](/toon-memory/getting-started/quickstart) — 3단계로 시작하기

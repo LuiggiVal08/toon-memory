@@ -1,0 +1,113 @@
+---
+title: "Como o toon-memory Torna Seu Agente IA Mais Inteligente"
+description: "Veja como a memória persistente transforma agentes de codificação com IA. O toon-memory dá ao Claude, Cursor e OpenCode memória para decisões, padrões e bugs entre sessões."
+---
+
+O Problema
+---
+
+Agentes de codificação com IA esquecem tudo entre sessões. Toda vez que você inicia uma nova sessão, o agente começa do zero:
+
+<ul class="staggered-list">
+  <li>"Por que escolhemos X ao invés de Y?"</li>
+  <li>"Qual era aquela correção de bug novamente?"</li>
+  <li>"Quais padrões este projeto usa?"</li>
+</ul>
+
+<div class="comparison-grid">
+  <div class="before-box morph-border fade-in-left">
+    <h3>Frustrante</h3>
+    <p>Você precisa explicar o mesmo contexto toda sessão</p>
+  </div>
+  <div class="before-box morph-border fade-in-right">
+    <h3>Desperdício</h3>
+    <p>O agente perde tempo reaprendendo ao invés de programar</p>
+  </div>
+</div>
+
+---
+
+## A Solução
+
+O toon-memory fornece memória persistente que sobrevive a reinicializações. Ele armazena suas decisões, padrões, bugs e conhecimento em um formato eficiente em tokens.
+
+<div class="comparison-grid">
+  <div class="after-box morph-border fade-in-left">
+    <h3>Eficiente</h3>
+    <p>O agente lembra de tudo automaticamente</p>
+  </div>
+  <div class="after-box morph-border fade-in-right">
+    <h3>Rápido</h3>
+    <p>Lembrete instantâneo, sem necessidade de reaprender</p>
+  </div>
+</div>
+
+---
+
+## Demonstração: Antes & Depois
+
+### Sem toon-memory
+
+<div class="before-box fade-in-up">
+  <p><strong>Sessão 1:</strong></p>
+  <div class="terminal">
+    <span class="prompt">Usuário:</span> "Usamos Zod para validação"<br />
+    <span class="prompt">Agente:</span> "Entendido!"
+  </div>
+
+  <p><strong>Sessão 2 (nova sessão):</strong></p>
+  <div class="terminal">
+    <span class="prompt">Usuário:</span> "Qual biblioteca de validação usamos?"<br />
+    <span class="prompt">Agente:</span> "Não sei, deixe-me verificar o código..."
+  </div>
+</div>
+
+### Com toon-memory
+
+<div class="after-box fade-in-up">
+  <p><strong>Sessão 1:</strong></p>
+  <div class="terminal">
+    <span class="prompt">Usuário:</span> "Usamos Zod para validação"<br />
+    <span class="prompt">Agente:</span> <span class="command">memory_remember</span>(category="pattern", key="validation")<br />
+    <span class="output">Salvo: pattern/validation</span>
+  </div>
+
+  <p><strong>Sessão 2 (nova sessão):</strong></p>
+  <div class="terminal">
+    <span class="prompt">Usuário:</span> "Qual biblioteca de validação usamos?"<br />
+    <span class="prompt">Agente:</span> <span class="command">memory_recall</span>(query="validation")<br />
+    <span class="output">[pattern] validation — Usamos Zod para validação</span>
+  </div>
+</div>
+
+---
+
+## Resultados
+
+<div class="stats-grid">
+  <div class="stat-card glow fade-in-left">
+    <div class="stat-card__number counter" data-target="80">0</div>
+    <div class="stat-card__label">% menos perguntas repetidas</div>
+  </div>
+  <div class="stat-card glow fade-in-right">
+    <div class="stat-card__number counter" data-target="10">0</div>
+    <div class="stat-card__label">x mais rápido na integração</div>
+  </div>
+  <div class="stat-card glow fade-in-left">
+    <div class="stat-card__number counter" data-target="100">0</div>
+    <div class="stat-card__label">% de padrões consistentes</div>
+  </div>
+  <div class="stat-card glow fade-in-right">
+    <div class="stat-card__number">0</div>
+    <div class="stat-card__label">contexto perdido</div>
+  </div>
+</div>
+
+---
+
+## Comece Agora
+
+```bash
+npm install -g toon-memory
+npx toon-memory
+```

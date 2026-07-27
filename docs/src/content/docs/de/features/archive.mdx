@@ -1,0 +1,72 @@
+---
+title: "Automatisches Archivieren alter Speichereinträge"
+description: "Automatisches Archivieren alter Speichereinträge — halte den AI-Agent-Speicher mit TTL und Bereinigung niedrig bewerteter Einträge sauber. Automatisches MCP-Speichermanagement."
+---
+
+## Überblick
+
+toon-memory archiviert automatisch Einträge, die älter als 30 Tage sind oder eine abgelaufene TTL haben, um deinen Speicher sauber zu halten.
+
+## Manuelles Archivieren
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+## So funktioniert es
+
+1. Einträge älter als 30 Tage werden nach `archive.toon` verschoben
+2. Einträge mit abgelaufener TTL werden ebenfalls archiviert
+3. Der aktive Speicher bleibt unter 100 Einträgen
+4. Archivierte Einträge bleiben für die Historie erhalten
+5. Kann manuell oder automatisch ausgelöst werden
+
+## TTL-basiertes Archivieren
+
+Einträge mit einem `ttl`-Feld werden archiviert, wenn die TTL abläuft, unabhängig von der 30-Tage-Regel:
+
+```
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|permanent|This stays forever|file.ts||2026-07-10|
+  e5f6g7h8|knowledge|sprint-info|Sprint ends Friday|file.ts||2026-07-10|7d
+  i9j0k1l2|bug|temp-fix|Temporary workaround|file.ts||2026-07-10|2026-07-15
+```
+
+In diesem Beispiel:
+- `permanent` — keine TTL, läuft nie per TTL ab
+- `sprint-info` — läuft 7 Tage nach der Erstellung ab
+- `temp-fix` — läuft an einem bestimmten Datum ab
+
+## Dateistruktur
+
+```
+.toon-memory/memory/
+├── data.toon        # Aktiver Speicher (< 30 Tage, keine abgelaufene TTL)
+└── archive.toon     # Archivierte Einträge (> 30 Tage oder abgelaufene TTL)
+```
+
+## Archivformat
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  a1b2c3d4|decision|old-decision|This was decided...|src/old.ts|decision|2026-06-01
+  e5f6g7h8|pattern|old-pattern|This pattern was used...|src/pattern.ts|pattern|2026-06-15
+```
+
+## Konfiguration
+
+| Einstellung | Standard | Beschreibung |
+|-------------|----------|-------------|
+| Max. Einträge | 100 | Maximale aktive Einträge |
+| Archivierungstage | 30 | Tage vor der Archivierung |
+| Archivdatei | `archive.toon` | Wohin archivierte Einträge wandern |
+
+## Anwendungsfälle
+
+- **Speicher sauber halten** — Unbegrenztes Wachstum verhindern
+- **Historische Referenz** — Alte Entscheidungen bleiben zugänglich
+- **Performance** — Schnellere Suchen mit weniger Einträgen
+- **Temporärer Kontext** — TTL behandelt Deadlines, Sprints, zeitsensible Notizen

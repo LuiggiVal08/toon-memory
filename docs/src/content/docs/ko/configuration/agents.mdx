@@ -1,0 +1,47 @@
+---
+title: "15개 이상 지원되는 AI 코딩 에이전트"
+description: "15개 이상의 AI 코딩 에이전트 지원 — OpenCode, Claude Code, Cursor, Windsurf, VS Code Copilot, Codex CLI, Gemini CLI, Zed 등. MCP 메모리 서버 자동 설정."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "지원 AI 에이전트, Claude Code, Cursor AI, OpenCode, Windsurf, AI 코딩 에이전트 MCP"
+---
+
+## 지원 에이전트
+
+| 에이전트 | 설정 위치 | 자동 설정 |
+|-------|-----------------|------------|
+| **OpenCode** | `.opencode/opencode.json` | ✅ |
+| **VS Code / Copilot** | `.vscode/mcp.json` | ✅ |
+| **Claude Code** | `.claude/settings.json` | ✅ |
+| **Cursor** | `.cursor/mcp.json` | ✅ |
+| **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | ✅ |
+| **Cline** | `.cline/mcp.json` | ✅ |
+| **Continue** | `.continue/config.json` | ✅ |
+| **Codex** | `.codex/config.toml` | ✅ |
+| **Gemini** | `.gemini/settings.json` | ✅ |
+| **Zed** | `~/.config/zed/settings.json` | ✅ |
+| **Antigravity** | `.gemini/config/mcp_config.json` | ✅ |
+| **Aider** | 지시 파일만 | ⚠️ 수동 |
+| **KiloCode** | `~/.kilocode/mcp_settings.json` | ✅ |
+| **OpenClaw** | `.openclaw.json` | ✅ |
+| **Kiro** | `.kiro/settings/mcp.json` | ✅ |
+
+## 자동 설정
+
+대화형 설치 프로그램을 실행합니다:
+
+```bash
+npx toon-memory
+```
+
+이것은 다음을 수행합니다:
+1. 설치된 에이전트를 감지합니다
+2. 각각의 MCP 서버를 설정합니다
+3. 메모리 디렉토리를 생성합니다
+4. `.gitignore`에 추가합니다
+
+## 수동 설정
+
+에이전트별 지침은 [수동 설정](/toon-memory/ko/configuration/manual)을 참조하세요.

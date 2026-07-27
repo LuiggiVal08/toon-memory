@@ -1,0 +1,70 @@
+---
+title: "Contribuer"
+description: "Comment contribuer à toon-memory"
+---
+
+## Contribuer
+
+Les contributions sont les bienvenues ! Veuillez suivre ces étapes :
+
+## Comment contribuer
+
+1. **Forkez** le dépôt
+2. **Créez** une branche feature (`git checkout -b feature/amazing-feature`)
+3. **Commitez** vos changements (`git commit -m 'feat: add amazing feature'`)
+4. **Poussez** vers la branche (`git push origin feature/amazing-feature`)
+5. **Ouvrez** une Pull Request
+
+## Environnement de développement
+
+```bash
+git clone https://github.com/LuiggiVal08/toon-memory.git
+cd toon-memory
+npm install
+npm run build
+npm test
+```
+
+## Structure du projet
+
+```
+toon-memory/
+├── src/
+│   ├── bin/              # Point d'entrée (CLI + routeur MCP)
+│   ├── cli/              # Commandes CLI (setup, capture, session-start)
+│   ├── lib/              # Bibliothèques principales (graph, quality, sessions, context, vocab, lock)
+│   └── mcp/              # Serveur MCP (21 outils, 3 ressources)
+├── tests/                # Tests unitaires (vitest)
+├── docs/                 # Site de documentation (Astro + Starlight)
+├── bin/                  # Sortie de build (point d'entrée)
+├── mcp/                  # Sortie de build (serveur MCP)
+└── package.json
+```
+
+## Scripts
+
+```bash
+npm run build         # Tout construire
+npm run build:cli     # Construire le CLI
+npm run build:mcp     # Construire le serveur MCP
+npm test              # Lancer les tests
+npm run test:watch    # Lancer les tests en mode watch
+```
+
+## Style de code
+
+- TypeScript avec mode strict
+- 2 espaces d'indentation
+- camelCase pour les variables/fonctions
+- PascalCase pour les classes
+
+## Directives pour les Pull Requests
+
+- Écrivez des messages de commit clairs
+- Ajoutez des tests pour les nouvelles fonctionnalités
+- Mettez à jour la documentation si nécessaire
+- Suivez le style de code existant
+
+## Code de conduite
+
+Veuillez lire notre [Code de conduite](/toon-memory/fr/community/code-of-conduct) avant de contribuer.

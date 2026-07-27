@@ -1,0 +1,184 @@
+---
+title: "AI 세션 간 컨텍스트 기억 — 코딩을 위한 영구 메모리"
+description: "AI 코딩 세션 간 컨텍스트 유실을 멈추세요. toon-memory는 Claude, Cursor, OpenCode에게 결정, 패턴, 버그를 위한 영구 메모리를 제공합니다. 오프라인 작동, 60% 토큰 절약."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "AI 컨텍스트 기억, 영구 메모리 세션, AI 코딩 메모리, 컨텍스트 유지, 세션 메모리 AI"
+---
+
+## 문제: AI 에이전트는 모든 것을 잊어버립니다
+
+Claude와 함께 기능을 구축하고 있다고 가정해 보세요. 당신은 설명합니다:
+
+- "ACID 준수를 위해 Postgres를 MongoDB보다 선택했습니다"
+- "Redis 풀 고갈을 max_connections=20으로 수정했습니다"
+- "REST 엔드포인트에는 항상 /api/v1/ 접두사를 사용합니다"
+
+다음 세션에서는? Claude는 이것들의 **기억이 없습니다**. 처음부터 다시 시작합니다.
+
+이것은 다음을 낭비합니다:
+- **토큰** — 동일한 컨텍스트를 다시 설명
+- **시간** — 결정을 재구성
+- **비용** — 동일한 API 호출에 대해 두 번 비용 지불
+
+## 해결책: 모든 것을 기억하기
+
+**toon-memory**는 AI 코딩 에이전트에게 다음과 같은 영구 메모리를 제공합니다:
+
+1. **재시작 후에도 유지** — 메모리가 세션 간에 지속됩니다
+2. **오프라인 작동** — 클라우드, API 호출, LLM이 필요 없습니다
+3. **토큰 절약** — JSON보다 22% 적은 토큰
+4. **확장성** — 세션당 80% 적은 도구 호출
+
+## 작동 방식
+
+### 1단계: 중요한 컨텍스트 저장
+
+세션 마지막에 중요한 내용을 저장합니다:
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "ACID 준수와 JSON 지원을 위해 Postgres 선택",
+  tags: "database;architecture"
+})
+```
+
+### 2단계: 세션 시작 시 recall
+
+다음 세션 시작 시 즉시 컨텍스트를 가져옵니다:
+
+```bash
+memory_smart_recall({ intent: "작업 중이던 내용" })
+// BM25 + 그래프 + 품질을 결합한 관련 항목 반환
+```
+
+### 3단계: 계속 구축
+
+에이전트는 이제 다음을 알고 있습니다:
+- 데이터베이스 선택 (Postgres)
+- 선택 이유 (ACID 준수)
+- 관련 결정 (캐싱을 위한 Redis, 검증을 위한 Zod)
+
+## 어떤 컨텍스트를 기억할 수 있나?
+
+### 아키텍처 결정
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "microservices-approach",
+  content: "결제와 인증에는 마이크로서비스, 핵심 비즈니스 로직에는 모놀리식 사용"
+})
+```
+
+### 버그 수정
+
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-connection-timeout",
+  content: "프로덕션에서 Redis 연결 타임아웃 — 풀 크기를 20으로 증가시켜 해결"
+})
+```
+
+### 코드 패턴
+
+```bash
+memory_remember({
+  category: "pattern",
+  key: "error-handling",
+  content: "항상 사용자 지정 AppError 클래스 사용, 절대 원시 Error 객체를 throw하지 않음"
+})
+```
+
+### 프로젝트 지식
+
+```bash
+memory_remember({
+  category: "knowledge",
+  key: "team-conventions",
+  content: "PR #142가 캐싱 변경사항을 되돌림 — 팀 승인 없이 다시 추가하지 않기"
+})
+```
+
+## 도움이 되는 메모리 기능
+
+### 자동 태그 추론
+
+`tags`를 비워 두면 toon-memory가 내용에서 태그를 추론합니다:
+
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-timeout",
+  content: "프로덕션에서 Redis 연결 타임아웃"
+})
+// 자동 추론된 태그: redis
+```
+
+### 관련 항목 제안
+
+저장 시 toon-memory가 관련 항목을 찾습니다:
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "검증에 Zod 사용"
+})
+// 🔗 관련: redis-timeout ("검증" 언급)
+```
+
+### 품질 점수
+
+모든 항목은 자동으로 품질 점수(0-1)를 부여받습니다:
+
+| 요소 | 가중치 |
+|--------|--------|
+| 태그 | 최대 0.3 |
+| 링크 | 최대 0.2 |
+| 내용 길이 | 최대 0.3 |
+| 최신성 | 최대 0.1 |
+| 구체성 | 최대 0.1 |
+
+고품질 항목이 recall에서 먼저 표시됩니다.
+
+### 병합-중복제거
+
+동일한 키로 저장하면 속성이 자동으로 병합됩니다:
+
+```bash
+// 첫 번째 저장
+memory_remember({ key: "use-zod", content: "검증에 Zod 사용" })
+
+// 나중 저장 — 자동으로 병합
+memory_remember({ key: "use-zod", content: "Zod 사용 — API 파싱도 처리함" })
+// 태그와 링크는 덮어쓰지 않고 결합됨
+```
+
+## 멀티 세션 조율
+
+여러 에이전트 세션을 병렬로 실행하고 있나요? toon-memory가 조율합니다:
+
+```bash
+memory_sessions()
+// 🧭 활성 세션 (2):
+// • claude @ feature/auth (나)
+// • opencode @ feature/db
+// 🔥 소프트 충돌: src/types.ts
+```
+
+다른 세션이 작업 중인 파일을 확인하여 병합 충돌을 피할 수 있습니다.
+
+## 시작하기
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # 대화형 설치 프로그램
+```
+
+다음 세션부터 에이전트는 모든 것을 기억하게 됩니다.

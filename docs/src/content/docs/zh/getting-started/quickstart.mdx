@@ -1,0 +1,49 @@
+---
+title: 快速入门 — 3 步完成 MCP 记忆服务器设置
+description: "3 步安装 toon-memory MCP 记忆服务器。兼容 Claude、Cursor、OpenCode、Windsurf 及 15+ AI 编程代理。零配置持久化记忆。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP 记忆服务器设置, 快速入门 AI 记忆, Claude 记忆设置, Cursor 记忆设置"
+---
+
+## 1. 安装
+
+```bash
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex
+
+# 或使用 npm（任意平台）
+npm i -g toon-memory
+```
+
+## 2. 配置代理
+
+```bash
+# 交互式安装器 — 使用方向键、空格键、回车键选择代理
+npx toon-memory
+
+# 或非交互式：指定代理和作用域
+npx toon-memory init --agent opencode --scope global
+```
+
+## 3. 开始使用
+
+```bash
+# 在下一次会话中运行：
+memory_stats      # 查看记忆中的内容
+memory_recall     # 在读取文件前搜索记忆
+memory_remember   # 保存重要决策
+```
+
+## 就这样！
+
+你的代理现在拥有了跨会话的持久化记忆。了解更多：
+
+- [MCP 工具](/toon-memory/zh/features/tools) — 15 个记忆工具和 3 个资源
+- [CLI 命令](/toon-memory/zh/features/cli) — 从终端管理记忆
+- [配置](/toon-memory/zh/configuration/agents) — 代理专属设置

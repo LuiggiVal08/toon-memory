@@ -1,0 +1,352 @@
+---
+title: "21 个 MCP 工具实现持久化 AI 记忆"
+description: "21 个 MCP 工具用于 AI 代理持久化记忆 — memory_remember、memory_recall、memory_smart_recall、context_generate 等。面向 Claude、Cursor、OpenCode 的 token 高效、图感知召回。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP 工具, memory_remember, memory_recall, AI 记忆工具, 持久化记忆 API"
+---
+
+## 概述
+
+toon-memory 提供 21 个 MCP 工具和 3 个 MCP 资源，用于管理持久化记忆：
+
+## 工具
+
+| 工具 | 描述 |
+|------|------|
+| `memory_remember` | 保存决策、模式、缺陷或知识（可选 TTL、自动标签推断、`links`、自动质量评分、合并去重、置信度） |
+| `memory_recall` | 搜索记忆（应在读取文件之前使用，自动过滤过期 TTL）。`mode: "graph"` 可展开关系感知子图以获得更高精度。质量加权排序 |
+| `memory_forget` | 按 key 或 id 移除条目 |
+| `memory_stats` | 查看记忆状态（包括 TTL 统计和质量分布） |
+| `memory_summary` | 保存/获取文件摘要 |
+| `memory_archive` | 归档旧条目（>30 天）和过期 TTL 条目 |
+| `memory_diff` | 显示自某日期以来的更改（24h、7d 或具体日期） |
+| `memory_suggest` | 为给定上下文查找相关条目 |
+| `memory_captured` | 列出钩子自动捕获的活动（需启用）或清除日志 |
+| `memory_consolidate` | 合并去重相同内容的条目并合并属性（确定性，无 LLM） |
+| `memory_encrypt` | 启用 AES-256-GCM 加密 |
+| `memory_decrypt` | 禁用加密 |
+| `memory_backup` | 创建带时间戳的记忆文件备份（自动保留最近 10 个） |
+| `memory_sessions` | 显示活跃代理会话、分支和软文件冲突，用于并行会话协调 |
+| `context_brief` | **单次调用的上下文简报**：记忆 + 会话 + 健康状态，紧凑 markdown 格式。可替代 5-6 次独立的 memory_* 调用。零 LLM |
+| `context_generate` | **完整项目简报**：一次调用结合项目结构、git 状态、记忆条目和活跃会话。替代 5-6 次手动工具调用 |
+| `context_diff` | **增量简报**：自上次会话以来的 git 提交 + 已修改文件 + 新增/更新的记忆 |
+| `context_focus` | **超聚焦简报**：仅返回与查询相关的记忆 + 相关源文件 + 调用者 + 测试文件 |
+| `context_health` | **记忆健康审计**：孤儿链接、重复项、损坏的文件引用、过期 TTL、过期会话，评分 0-100 |
+| `context_export` | **导出记忆为 markdown**：可用于系统提示词的注入式上下文（完整或紧凑格式） |
+| `memory_smart_recall` | 统一搜索：BM25 + 图 + 质量 + 新鲜度 + 衰减，一次调用完成 |
+
+## MCP 资源
+
+记忆也作为 MCP 资源暴露，可直接读取上下文：
+
+| 资源 | URI | 描述 |
+|------|-----|------|
+| 记忆条目 | `toon://memory/entries` | 完整记忆转储 |
+| 记忆统计 | `toon://memory/stats` | 分类计数和 TTL 信息 |
+| 记忆摘要 | `toon://memory/summaries` | 自动生成的系统引导：知识图谱、近期记忆和关键决策 |
+
+资源允许代理直接读取记忆作为上下文，无需工具调用 — 适用于系统提示词或会话启动。系统引导提供关于项目知识状态的即时上下文。
+
+## 示例
+
+### 保存决策
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts",
+  tags: "validation;types"
+})
+// 🧠 Guardado: decision/use-zod (a1b2c3d4)
+// 🎯 Quality: 0.80 | Confidence: 1.00
+// 🔗 Entradas relacionadas:
+//   [pattern] zod-schemas — Shared Zod schemas for API validation
+```
+
+条目会根据标签、链接、内容详情和具体性自动进行质量评分（0-1）。你主动断言的记忆置信度为 1.0；推断/收集的记忆为 0.65-0.75。
+
+### 带 TTL 保存
+
+```typescript
+memory_remember({
+  category: "knowledge",
+  key: "sprint-deadline",
+  content: "Sprint ends July 18, feature freeze is July 16",
+  ttl: "7d"
+})
+// 🧠 Guardado: knowledge/sprint-deadline (x1y2z3w4)
+// 🎯 Quality: 0.55 | Confidence: 1.00
+// ⏰ TTL: 2026-07-19
+```
+
+使用 `ttl` 设置临时上下文，如截止日期或冲刺信息。支持相对时间（`7d`、`30d`）或具体日期（`2026-12-31`）。过期条目会自动从搜索中过滤。
+
+### 自动推断标签
+
+```typescript
+memory_remember({
+  category: "bug",
+  key: "redis-connection-timeout",
+  content: "Redis connection timeout in production, increased pool size"
+  // tags 留空 — 从内容自动推断
+})
+// 🧠 Guardado: bug/redis-connection-timeout (a1b2c3d4)
+// 🏷️ Tags inferidos: redis
+```
+
+当 `tags` 为空时，系统会从内容中推断标签，使用包含 20+ 分类的词汇表：redis、auth、api、db、security、test、deploy、config、performance、refactor、error、logging、types、async、state、ui、storage、email、payment、webhook。此外，`toon-memory init` 会根据你的依赖（`package.json`、`Cargo.toml`、`requirements.txt`、`pyproject.toml`、`go.mod`）生成**项目词汇表**，因此提及依赖（如 `redis`）的条目也会自动标记 `redis`。更多标签 = 更高的质量评分。
+
+### 搜索记忆
+
+```typescript
+memory_recall({ query: "redis" })
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Added max_connections=20
+//   File: redis.ts | Tags: redis;fix | Date: 2026-07-10 | Quality: 0.82
+```
+
+结果按质量加权 — 包含更多详情、标签和链接的条目会排在前面。
+
+### 带日期过滤的搜索
+
+```typescript
+memory_recall({
+  query: "redis",
+  from_date: "2026-07-01",
+  to_date: "2026-07-31"
+})
+```
+
+### 显示自上次会话以来的更改
+
+```typescript
+memory_diff({ since: "24h" })
+// 📋 Cambios desde 2026-07-11:
+//
+// ➕ Nuevas (2):
+//   [decision] use-zod (a1b2c3d4)
+//     Use Zod for validation
+//   [bug] redis-timeout (e5f6g7h8)
+//     Redis connection timeout fix
+```
+
+`since` 支持相对时间（`24h`、`7d`）或具体日期。可通过 `type` 过滤：`all`、`created` 或 `updated`。
+
+### 查找相关条目
+
+```typescript
+memory_suggest({ context: "redis cache configuration" })
+// 🔍 Sugerencias para "redis cache configuration":
+//
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+```
+
+### 归档旧条目
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+### 启用加密
+
+```typescript
+memory_encrypt()
+// 🔐 Encriptación habilitada
+// ⚠️ Guarda esta clave (no se puede recuperar):
+// a1b2c3d4...
+```
+
+### 列出活跃会话和冲突
+
+```typescript
+memory_sessions({ conflictsOnly: false })
+// 🧭 Sesiones activas (2) — ventana 10 min:
+//
+// • opencode @ feature/foo
+//    id: sess-B
+//    Archivos:
+//      • src/shared.ts
+// • claude @ feature/foo (tú)
+//    id: sess-A
+//
+// 🔥 Conflictos suaves (1):
+//   ⚠️ src/shared.ts  ↔  opencode@feature/foo, claude@feature/foo
+```
+
+如果只关心冲突，使用 `memory_sessions({ conflictsOnly: true })`。参见下方[多会话协调](#多会话协调)。
+
+## 多会话协调
+
+当你**并行运行多个 AI 代理会话**时（例如同一仓库上同时运行三个 OpenCode 会话），它们可能会互相覆盖彼此的工作。`memory_sessions` 是一个**基于文件**的协调工具 — **无服务器、无网络、无 LLM 调用** — 让每个会话看到其兄弟会话在做什么。
+
+### 工作原理
+
+- 启动时，`SessionStart` 钩子为会话写入一个**心跳文件**到 `.toon-memory/memory/sessions/<id>.json`。每个进程只写*自己的*文件，因此没有锁竞争。
+- 心跳记录代理名称、**git 分支**、**已操作的文件**和**最后活跃**时间戳。
+- 跨所有这些文件进行读取，让每个会话获得一个共享的、最终一致的视图，了解其他活跃会话。
+- 当最后心跳在 TTL 窗口内（10 分钟）时，会话被视为"活跃"。死亡会话（进程 PID 已不存在**且**心跳过期）会被延迟清理。
+- 软冲突是指被**2+ 个活跃会话**操作的文件 — `memory_sessions` 会将其标记出来，以便你避免踩踏兄弟会话的工作。
+
+### 并行会话推荐习惯
+
+1. 会话启动时，`SessionStart` 钩子会打印其他活跃会话、它们的分支和任何软冲突。
+2. 编辑共享文件之前，运行 `memory_sessions()` 确认没有兄弟会话正在操作这些文件。
+3. 完成后，你的心跳会被标记为已结束，文件被释放。
+
+## 记忆图（基于图的召回）
+
+对于较大的记忆，平铺关键词搜索可能返回太多结果或遗漏关系。toon-memory 可以将记忆视为一个**轻量级知识图谱**，让召回以更少的 token 返回*正确的*条目。结合质量评分，最有用的条目会排在前面。
+
+它是完全**确定性和离线的** — 无嵌入、无向量数据库、无 LLM、无服务器。边来自：
+
+- **显式 `links`** — 你在保存条目时声明的键。
+- **隐式 `[[key]]` 引用** — 内容中的任何 `[[some-key]]` 提及。
+
+### 带链接保存
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "risk-engine-priority",
+  content: "The engine prioritizes risk over speed (see [[risk-spec]]).",
+  file: "spec.md:10",
+  tags: "risk;spec",
+  links: "engine-arch"   // explicit edge to another entry
+})
+// 🧠 Guardado: decision/risk-engine-priority (a1b2c3d4)
+```
+
+### 图模式召回
+
+`memory_recall({ mode: "graph" })` 查找关键词匹配（种子），然后展开**自我子图**至 `hops`（1 或 2）层。相关性从种子传播到邻居，因此即使没有搜索词，相关的规格或决策也会浮现。结果被限制（`limit`，默认 6），以获得更小、更精确的上下文。
+
+```typescript
+memory_recall({ query: "riesgo", mode: "graph", hops: 2 })
+// [decision] risk-engine-priority (a1b2c3d4)
+//   The engine prioritizes risk over speed (see [[risk-spec]]).
+//   File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01
+//   links: engine-arch
+//
+// [knowledge] risk-spec (a2b3c4d5)
+//   Risk specification for the engine.
+//   links: risk-engine-priority;engine-arch
+//
+// [pattern] engine-arch (e6f7g8h9)
+//   Engine architecture.
+//   links: risk-spec
+```
+
+> 当一个决策涉及多个条目（架构、规格、相关缺陷）时，使用 `mode: "graph"`。对于孤立的事实，默认的 `flat` 模式就足够了。图在读取时构建，因此无需维护额外的索引文件。
+
+### Token 高效召回（`compact: true`）
+
+当每个 token 都很重要时，传入 `compact: true` 以获得更紧凑的输出：
+
+```typescript
+memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
+// [1] decision/risk-engine-priority
+//   The engine prioritizes risk over speed (see [[risk-spec]]).
+//   tags: risk;spec · edges: ->2, ->3
+//
+// [2] knowledge/risk-spec
+//   Risk specification for the engine.
+//   tags: risk · edges: ->1
+//
+// [3] pattern/engine-arch
+//   Engine architecture.
+//   tags: engine · edges: ->1
+```
+
+`compact` 模式的变化：
+
+- 每个条目获得按分数排序的稳定数字索引（`[1]`、`[2]`、……）。
+- 移除 `id`、`date` 和 `file` — 仅保留 `tags`。
+- 在 `graph` 模式下，边渲染为 `->2`（数字，非键名）。
+- 通过图到达的邻居（非种子）被截断为带省略号的短片段，而直接匹配的种子保留完整内容。
+- 存储的 `.toon` 文件**不会**被修改 — `compact` 仅重塑响应。
+
+### 召回如何排序结果
+
+召回是确定性和离线的（无嵌入、无 LLM）。每个候选项条目获得以下综合分数：
+
+- **BM25 相关性** — 对 `id` + `category` + `key` + `content` + `file` + `tags` 的概率性词频评分。
+- **图中心性** — 度归一化（0..1）；连接多个条目的枢纽接近 1 分，因此即使没有搜索词也会浮现。
+- **重要性** — 新近度 + 访问频率。
+- **质量加成** — 质量评分更高的条目（更多标签、链接、详情）获得排序加成。
+- **种子加分** — 直接匹配查询的条目获得固定加分。
+- **每跳衰减** — 距种子 `d` 跳的节点乘以 `0.5^d`，使远距离上下文低于近距离上下文。
+
+在 `graph` 模式下，召回以关键词匹配为种子，展开自我子图至 `hops` 层，然后按综合分数返回前 `limit`（默认 6）个结果。`memory_smart_recall` 在一次调用中组合所有这些信号。
+
+### 智能召回（`memory_smart_recall`）
+
+一次调用中组合 BM25、图、质量、新鲜度和衰减的统一搜索：
+
+```typescript
+memory_smart_recall({ intent: "redis cache configuration", hops: 2 })
+// Combines BM25 relevance + graph centrality + quality score + freshness decay
+// Returns top results ranked by combined score
+```
+
+这是推荐的召回方式 — 它在一次调用中处理所有内容，无需你编排多个工具。
+
+### 质量评分
+
+每个条目自动进行质量评分（0-1），基于：
+
+- **标签覆盖度**（权重 0.3）— 更多标签 = 更高分数
+- **链接丰富度**（权重 0.2）— 更多链接 = 更高关联度
+- **内容详情**（权重 0.2）— 更长、更详细的内容得分更高
+- **新近度**（权重 0.15）— 近期条目得分略高
+- **具体性**（权重 0.15）— 包含文件引用和具体键的条目得分更高
+
+高质量条目在召回结果中排在最前面，确保最有用的上下文始终突出。
+
+### 合并去重
+
+当你用已存在的键保存条目时，系统会合并属性：
+
+- **标签**：两个标签集的并集
+- **链接**：两个链接集的并集
+- **质量**：两个分数的最大值
+- **置信度**：两个分数的最大值
+- **内容**：保持原样（不覆盖）
+- **日期**：更新为当前时间
+
+这意味着重新保存条目会丰富它，而不是替换它。
+
+### 从项目依赖自动标记
+
+在 `toon-memory init` 时，CLI 扫描你的依赖清单并将 `vocab` 表写入 `.toon-memory/memory/config.json`：
+
+```json
+{
+  "vocab": {
+    "react": ["react"],
+    "zod": ["zod"],
+    "redis": ["redis"]
+  }
+}
+```
+
+`memory_remember` 会将新条目与此词汇表（以及内置词汇表）进行匹配。添加主要依赖后重新运行 `toon-memory init` 以刷新。`vocab` 键会与 `config.json` 中的 `encrypted`/`capture` 标志合并（不会被覆盖）。更多标签 = 更高的质量评分。
+
+## 分类
+
+条目按分类组织：
+
+| 分类 | 用途 |
+|------|------|
+| `decision` | 设计决策（"为什么选择 X 而不是 Y？"） |
+| `pattern` | 项目模式（"使用 Zod 做校验"） |
+| `bug` | 缺陷修复（"Redis 连接池耗尽"） |
+| `knowledge` | 通用知识（"Broker 使用 RESP"） |

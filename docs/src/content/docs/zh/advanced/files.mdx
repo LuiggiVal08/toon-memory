@@ -1,0 +1,71 @@
+---
+title: "记忆文件结构"
+description: "记忆文件结构 — .toon-memory 目录布局、data.toon 格式、config.json、备份。MCP 记忆服务器如何本地存储数据。"
+---
+
+## 项目结构
+
+```
+.toon-memory/
+├── memory/
+│   ├── data.toon        # 主记忆文件
+│   ├── archive.toon     # 归档条目（>30 天或 TTL 过期）
+│   ├── config.json      # 加密设置
+│   └── backups/         # Watch 模式备份
+│       ├── backup-2026-07-11T16-00-00-000Z.toon
+│       └── backup-2026-07-11T16-10-00-000Z.toon
+└── hooks/
+    ├── session-start-claude.sh
+    ├── session-start-codex.sh
+    ├── session-start-gemini.sh
+    └── session-start-antigravity.sh
+```
+
+## 文件说明
+
+### data.toon
+
+包含所有活跃条目的主记忆文件：
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10|
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10|
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d
+```
+
+### archive.toon
+
+包含超过 30 天或 TTL 过期的条目：
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  x1y2z3w4|knowledge|old-knowledge|This was important...|src/old.ts|knowledge|2026-06-01
+```
+
+### config.json
+
+加密配置（仅在启用加密时存在）：
+
+```json
+{
+  "encrypted": true
+}
+```
+
+### backups/
+
+包含来自 watch 模式的带时间戳备份的目录：
+
+```
+backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-10-00-000Z.toon
+└── backup-2026-07-11T16-20-00-000Z.toon
+```
+
+## Git 忽略
+
+toon-memory 自动将 `.toon-memory/memory/` 添加到 `.gitignore`，以防止提交敏感数据。

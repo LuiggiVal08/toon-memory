@@ -1,0 +1,137 @@
+---
+title: "Serveur MCP pour la mémoire persistante — Mémoire Model Context Protocol"
+description: "Serveur MCP donnant aux agents de codage IA une mémoire persistante. Mémoire Model Context Protocol pour Claude, Cursor, OpenCode. Économe en tokens, hors ligne, rappel conscient du graphe."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "serveur MCP, Model Context Protocol, serveur mémoire persistante, mémoire MCP IA, serveur MCP Claude"
+---
+
+## Qu'est-ce qu'un serveur MCP pour la mémoire ?
+
+Un serveur MCP pour la mémoire est un **service local** qui implémente le Model Context Protocol pour fournir aux agents de codage IA une mémoire persistante. Au lieu de perdre le contexte entre les sessions, votre agent stocke les décisions, patterns et bugs dans un magasin de mémoire recherchable.
+
+**toon-memory** est un serveur MCP qui fournit :
+
+- **Mémoire persistante** — survit aux redémarrages, pas de cloud nécessaire
+- **21 outils MCP** — gestion complète de la mémoire via le Model Context Protocol
+- **Format économe en tokens** — 22% de tokens en moins que le JSON
+- **Rappel conscient du graphe** — BM25 + centralité + scoring de qualité
+- **Support de 15+ agents** — compatible avec Claude, Cursor, OpenCode et plus
+
+## Comment le serveur MCP mémoire fonctionne
+
+### Architecture
+
+```
+Votre agent IA (Claude/Cursor/OpenCode)
+        ↓ Protocole MCP (stdio)
+  Serveur MCP toon-memory
+        ↓
+  .toon-memory/memory/data.toon (fichier local)
+```
+
+1. **L'agent envoie une requête** — « Souviens-toi de cette décision » ou « Recherche les patterns de base de données »
+2. **Le serveur MCP traite** — analyse la requête, gère le magasin mémoire
+3. **Mémoire stockée localement** — format TOON dans `.toon-memory/memory/`
+4. **La réponse est renvoyée** — formatée pour que l'agent puisse l'utiliser
+
+### Outils MCP
+
+toon-memory expose **21 outils MCP** et **3 ressources MCP** :
+
+| Outil | Objectif |
+|-------|----------|
+| `memory_remember` | Enregistrer décisions, patterns, bugs, connaissances |
+| `memory_recall` | Rechercher en mémoire (mode plat ou graphe) |
+| `memory_smart_recall` | Rappel unifié : BM25 + graphe + qualité |
+| `memory_forget` | Supprimer des entrées |
+| `memory_stats` | Voir l'état de la mémoire |
+| `memory_summary` | Enregistrer/récupérer des résumés de fichiers |
+| `memory_archive` | Archiver les vieilles entrées |
+| `memory_diff` | Afficher les changements depuis une date |
+| `memory_suggest` | Trouver des entrées liées |
+| `memory_sessions` | Coordination multi-sessions |
+| `context_brief` | Briefing contextuel en un appel |
+| `context_generate` | Briefing projet complet |
+| `context_diff` | Briefing incrémental |
+| `context_focus` | Briefing ciblé |
+| `context_health` | Audit santé mémoire |
+| `context_export` | Exporter en markdown |
+| `memory_encrypt` | Chiffrement AES-256-GCM |
+| `memory_decrypt` | Désactiver le chiffrement |
+| `memory_captured` | Voir l'activité capturée par les hooks |
+| `memory_consolidate` | Fusionner les doublons |
+
+## Pourquoi MCP pour la mémoire ?
+
+### MCP vs intégrations personnalisées
+
+| Fonctionnalité | MCP Memory | Intégration personnalisée |
+|----------------|-----------|--------------------------|
+| **Protocole standard** | Oui (Model Context Protocol) | Non — propriétaire |
+| **Support des agents** | 15+ agents | Généralement 1-2 agents |
+| **Installation** | `npx toon-memory` | Modifications de code manuelles |
+| **Mises à jour** | `npm update` | Maintenance manuelle |
+| **Communauté** | Écosystème croissant | Isolé |
+
+### MCP vs mémoire cloud
+
+| Fonctionnalité | MCP Memory (toon-memory) | Mémoire cloud (mem0) |
+|----------------|-------------------------|---------------------|
+| **Emplacement des données** | Machine locale | Serveur cloud |
+| **Internet requis** | Non | Oui |
+| **Coût** | Gratuit | Basé sur l'usage |
+| **Latence** | Instantanée (locale) | Dépendante du réseau |
+| **Confidentialité** | Contrôle total | Tiers |
+
+## Détails techniques
+
+### Format TOON
+
+La mémoire est stockée en **format TOON** (Token-Oriented Object Notation) :
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0
+  e5f6g7h8|pattern|api-routes|REST endpoints use /api/v1/ prefix|src/routes|api;rest;pattern|2026-07-10||0||0.55|1.0
+  i9j0k1l2|bug|redis-fix|Redis pool exhaustion fix|src/redis.ts|redis;bug|2026-07-10||0||0.70|1.0
+```
+
+### Rappel conscient du graphe
+
+Les entrées sont connectées via des **liens explicites** et des **références implicites** :
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-redis",
+  content: "Use Redis for session storage (see [[redis-config]])",
+  links: "redis-config"
+})
+```
+
+Lorsque vous recherchez, le rappel étend le **sous-graphe égo** pour trouver des entrées liées, même si elles ne contiennent pas le terme exact de la recherche.
+
+### Score de qualité
+
+Chaque entrée reçoit un **score de qualité** automatique (0-1) :
+
+| Facteur | Poids | Ce qu'il mesure |
+|---------|-------|-----------------|
+| Tags | 0,3 max | Tags plus spécifiques = qualité plus élevée |
+| Liens | 0,2 max | Entrées connectées = qualité plus élevée |
+| Longueur du contenu | 0,3 max | Détaillé > vague |
+| Fraîcheur | 0,1 max | Entrées récentes scorent plus haut |
+| Spécificité | 0,1 max | Mots uniques vs mots répétés |
+
+## Commencer
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Installateur interactif
+```
+
+Consultez le [Démarrage rapide](/toon-memory/fr/getting-started/quickstart) pour les instructions détaillées de configuration.

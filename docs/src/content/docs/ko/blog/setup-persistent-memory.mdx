@@ -1,0 +1,375 @@
+---
+title: "Claude, Cursor 및 OpenCode를 위한 영구 메모리 설정 방법"
+description: "Claude Code, Cursor, OpenCode를 위한 영구 메모리 설정 단계별 가이드. 세션 간에 지속되는 메모리를 AI 코딩 에이전트에게 제공하세요. 제로 설정, 오프라인 작동."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "영구 메모리 설정, Claude Code 메모리, Cursor AI 메모리, OpenCode 메모리, AI 에이전트 메모리"
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: '{"@context":"https://schema.org","@type":"Article","headline":"Claude, Cursor 및 OpenCode를 위한 영구 메모리 설정 방법","description":"영구 메모리 설정 단계별 가이드.","author":{"@type":"Person","name":"LuiggiVal"},"publisher":{"@type":"Organization","name":"toon-memory"},"url":"https://luiggival08.github.io/toon-memory/blog/setup-persistent-memory/","mainEntityOfPage":{"@type":"WebPage","@id":"https://luiggival08.github.io/toon-memory/blog/setup-persistent-memory/"}}'
+---
+
+## 왜 영구 메모리가 필요한가
+
+Claude, Cursor, OpenCode와 같은 AI 코딩 에이전트는 강력하지만 결정적인 한계가 있습니다: **세션 간에 기억력이 없습니다**.
+
+새 세션을 시작할 때마다 에이전트는:
+- 어제의 아키텍처 결정을 잊어버립니다
+- 발견한 버그 수정을 기억하지 못합니다
+- 팀이 구축한 패턴을 recall할 수 없습니다
+- 프로젝트를 처음부터 다시 배워야 합니다
+
+이는 토큰을 낭비하고, 시간을 태우며, 답답한 반복을 초래합니다.
+
+**toon-memory**는 재시작 후에도 지속되는 영구 메모리를 에이전트에게 제공하여 이 문제를 해결합니다.
+
+## 빠른 설정 (2분)
+
+### 1단계: toon-memory 설치
+
+```bash
+npm install -g toon-memory
+```
+
+### 2단계: 설치 프로그램 실행
+
+```bash
+npx toon-memory
+```
+
+설치 프로그램은 다음을 수행합니다:
+1. 설치된 에이전트를 감지합니다
+2. 설정할 에이전트를 선택하도록 요청합니다
+3. MCP 설정을 자동으로 추가합니다
+
+### 3단계: 메모리 사용 시작
+
+다음 에이전트 세션에서:
+
+```bash
+# 중요한 결정 저장
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "ACID 준수를 위해 Postgres 선택"
+})
+
+# 메모리 검색
+memory_recall({ query: "database" })
+
+# 한 번의 호출로 전체 컨텍스트 가져오기
+memory_smart_recall({ intent: "작업 중이던 내용" })
+```
+
+이것으로 끝입니다. 에이전트는 이제 영구 메모리를 갖게 됩니다.
+
+## 에이전트별 설정
+
+### Claude Code
+
+Claude Code는 toon-memory와 가장 잘 통합되며, 완전한 훅 지원을 포함합니다.
+
+#### 자동 설정 (권장)
+
+```bash
+npx toon-memory
+# 선택: claude
+```
+
+#### 수동 설정
+
+`.claude/settings.json`에 추가하세요:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+**훅:** toon-memory는 Claude Code를 위해 SessionStart, PostToolUse, Stop 훅을 설치합니다. 이것이 제공하는 것:
+- 세션 시작 시 자동 리마인더
+- 메모리에서 컨텍스트 로딩
+- 세션 조율
+
+### Cursor
+
+Cursor는 MCP 서버를 네이티브로 지원합니다.
+
+#### 자동 설정
+
+```bash
+npx toon-memory
+# 선택: cursor
+```
+
+#### 수동 설정
+
+`.cursor/mcp.json`에 추가하세요:
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### OpenCode
+
+OpenCode는 훅을 위해 플러그인 기반 접근 방식을 사용합니다.
+
+#### 자동 설정
+
+```bash
+npx toon-memory
+# 선택: opencode
+```
+
+이것은 다음을 생성합니다:
+- `.opencode/opencode.json` — MCP 설정
+- `.opencode/plugins/toon-memory.ts` — SessionStart 훅이 포함된 플러그인
+
+#### 수동 설정
+
+`.opencode/opencode.json`에 추가하세요:
+
+```json
+{
+  "mcp": {
+    "toon-memory": {
+      "type": "local",
+      "command": ["npx", "-y", "toon-memory", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+**참고:** OpenCode 1.17+는 설정에서 `"Unrecognized key: hooks"`를 거부합니다. 대신 플러그인 접근 방식을 사용하세요.
+
+### Windsurf
+
+`~/.codeium/windsurf/mcp_config.json`에 추가하세요:
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### VS Code / Copilot
+
+`.vscode/mcp.json`에 추가하세요:
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### Codex CLI
+
+`.codex/config.toml`에 추가하세요:
+
+```toml
+[mcpServers.toon-memory]
+command = "npx"
+args = ["-y", "toon-memory", "mcp"]
+```
+
+Codex CLI는 `[[hooks]]` 설정을 통해 훅도 지원합니다.
+
+### Gemini CLI
+
+`.gemini/settings.json`에 추가하세요:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+Gemini CLI는 `hooks.*` 설정을 통해 훅을 지원합니다.
+
+### Zed
+
+`~/.config/zed/settings.json`에 추가하세요:
+
+```json
+{
+  "mcp_servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## 멀티 에이전트 설정
+
+**여러 에이전트를 동시에** 설정할 수 있습니다:
+
+```bash
+npx toon-memory
+# 선택: claude, cursor, opencode
+```
+
+모든 에이전트는 `.toon-memory/memory/data.toon`의 동일한 메모리 파일을 공유합니다.
+
+### 세션 조율
+
+여러 에이전트를 병렬로 실행할 때:
+
+```bash
+memory_sessions()
+// 🧭 활성 세션 (2):
+// • claude @ feature/auth (나)
+// • opencode @ feature/db
+// 🔥 소프트 충돌: src/types.ts
+```
+
+다른 세션이 작업 중인 파일을 확인하여 충돌을 피할 수 있습니다.
+
+## 필수 명령어
+
+### 중요한 컨텍스트 저장
+
+```bash
+# 아키텍처 결정
+memory_remember({
+  category: "decision",
+  key: "use-microservices",
+  content: "결제와 인증에는 마이크로서비스, 핵심에는 모놀리식 사용"
+})
+
+# 버그 수정
+memory_remember({
+  category: "bug",
+  key: "redis-timeout",
+  content: "Redis 연결 타임아웃 — 풀을 20으로 증가시켜 해결"
+})
+
+# 코드 패턴
+memory_remember({
+  category: "pattern",
+  key: "error-handling",
+  content: "항상 사용자 지정 AppError 클래스 사용, 절대 원시 Error throw하지 않음"
+})
+```
+
+### 메모리 검색
+
+```bash
+# 간단한 키워드 검색
+memory_recall({ query: "database" })
+
+# 그래프 모드 (관련 항목 찾기)
+memory_recall({ query: "redis", mode: "graph", hops: 2 })
+
+# 컴팩트 모드 (적은 토큰)
+memory_recall({ query: "auth", compact: true })
+
+# 스마트 recall (권장)
+memory_smart_recall({ intent: "작업 중이던 내용" })
+```
+
+### 메모리 관리
+
+```bash
+# 통계 보기
+memory_stats()
+
+# 마지막 세션 이후 변경 사항 보기
+memory_diff({ since: "24h" })
+
+# 관련 항목 찾기
+memory_suggest({ context: "데이터베이스 구성" })
+
+# 한 번의 호출로 전체 컨텍스트 가져오기
+context_generate({})
+```
+
+## 효과적인 메모리 사용 팁
+
+### 저장할 것
+
+- **아키텍처 결정** — "왜 X를 Y보다 선택했는지"
+- **버그 수정** — "어떻게 망가졌고 어떻게 수정했는지"
+- **코드 패턴** — "여기서는 어떻게 작업하는지"
+- **프로젝트 지식** — "팀 관례, 배포 프로세스"
+
+### 저장하지 말 것
+
+- 임시 디버깅 노트
+- 비밀 또는 API 키
+- 코드를 읽으면 명백한 것
+- 중복 정보 (병합-중복제거가 동일한 키를 자동 처리)
+
+### 세션 습관
+
+**세션 시작:**
+```bash
+memory_smart_recall({ intent: "작업 중이던 내용" })
+memory_sessions()
+```
+
+**세션 종료:**
+```bash
+memory_remember({
+  category: "decision",
+  key: "오늘의-접근법",
+  content: "오늘 결정한 것과 그 이유"
+})
+```
+
+## 문제 해결
+
+### 설치 후 메모리가 보이지 않음
+
+1. `npx toon-memory status`를 실행하여 설치 확인
+2. 에이전트를 완전히 재시작
+3. MCP 설정 파일이 존재하고 유효한 JSON인지 확인
+
+### 메모리 파일이 비어 있음
+
+첫 설치 시 정상입니다. `memory_remember`를 사용하여 항목을 저장하기 시작하세요.
+
+### 중복 항목
+
+동일한 키의 `memory_remember`는 이제 자동으로 병합됩니다. 기존 중복 항목을 정리하려면 `memory_consolidate`를 사용하세요.
+
+## 시작하기
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # 대화형 설치 프로그램
+```
+
+다음 세션부터 에이전트는 영구 메모리를 갖게 됩니다.

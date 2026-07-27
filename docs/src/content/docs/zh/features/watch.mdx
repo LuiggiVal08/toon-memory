@@ -1,0 +1,88 @@
+---
+title: "AI 代理记忆的自动备份模式"
+description: "AI 代理记忆的自动备份模式 — 支持压缩和日志的定期备份。保护你的 MCP 记忆服务器数据安全。"
+---
+
+## 概述
+
+Watch 模式运行一个守护进程，检测到变更时自动备份你的记忆文件。支持压缩、日志记录和自动清理旧备份。
+
+## 用法
+
+```bash
+# 默认：每 5 分钟备份一次，保留 10 个备份
+npx toon-memory watch
+
+# 自定义间隔（分钟）
+npx toon-memory watch 10
+
+# 启用 gzip 压缩
+npx toon-memory watch -c
+
+# 启用文件日志
+npx toon-memory watch -l
+
+# 保留最多 20 个备份
+npx toon-memory watch -m 20
+
+# 组合使用所有选项
+npx toon-memory watch 15 -c -l -m 20
+
+# 按 Ctrl+C 停止
+```
+
+## 选项
+
+| 选项 | 描述 | 默认值 |
+|------|------|--------|
+| `[interval]` | 备份间隔（分钟） | 5 |
+| `-c, --compress` | 启用 gzip 压缩 | 关闭 |
+| `-l, --log [path]` | 启用文件日志 | 关闭 |
+| `-m, --max-backups <n>` | 保留的最大备份数（0=无限制） | 10 |
+
+## 输出示例
+
+```bash
+$ npx toon-memory watch 15 -c -l -m 20
+
+🧠 toon-memory watch
+
+Watching memory file every 15 minutes...
+Max backups: 20
+Compression: enabled
+Logging: enabled (.toon-memory/memory/watch.log)
+Press Ctrl+C to stop
+
+📦 Backup #1 created: 2026-07-11T16-00-00-000Z
+📦 Backup #2 created: 2026-07-11T16-15-00-00-000Z
+🗑️  Pruned 1 old backup(s)
+^C
+✅ Watch stopped. 2 backups created.
+```
+
+## 工作原理
+
+1. 监视 `.toon-memory/memory/data.toon` 的变更
+2. 内容变更时，创建带时间戳的备份
+3. 备份存储在 `.toon-memory/memory/backups/` 中
+4. 仅在内容实际变更时创建备份
+5. 超过最大备份数时，最旧的备份会被清理
+6. 可选的 gzip 压缩可将备份大小减少约 60-80%
+7. 可选的日志记录将事件写入文件
+
+## 备份文件
+
+```
+.toon-memory/memory/backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-15-00-00-000Z.toon.gz    # 已压缩
+└── backup-2026-07-11T16-30-00-00-000Z.toon
+```
+
+## 使用场景
+
+- **长时间编码会话** — 工作时自动备份
+- **部署前** — 在重要更改前运行
+- **CI/CD** — 自动更改前备份
+- **磁盘空间不足** — 使用 `-c` 压缩
+- **调试** — 使用 `-l` 记录备份事件

@@ -1,0 +1,111 @@
+---
+title: "AI 코딩 에이전트를 위한 메모리 — 세션 간에 지속되는 영구 메모리"
+description: "AI 코딩 에이전트에는 메모리가 필요합니다. Claude, Cursor, OpenCode에 결정, 패턴, 버그를 위한 영구 메모리를 제공하는 방법을 알아보세요. 클라우드 불필요, LLM 불필요, 오프라인 MCP 서버."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "AI 에이전트 메모리, 영구 메모리 AI, Claude 메모리, Cursor 메모리, OpenCode 메모리, MCP 메모리"
+---
+
+## AI 코딩 에이전트에 메모리가 필요한 이유
+
+Claude, Cursor, OpenCode와 같은 AI 코딩 에이전트는 강력하지만 결정적인 한계가 있습니다: **세션 간에 기억력이 없습니다**.
+
+새 세션을 시작할 때마다 에이전트는:
+
+- 어제의 아키텍처 결정을 잊어버립니다
+- 발견한 버그 수정을 기억하지 못합니다
+- 팀이 구축한 패턴을 recall할 수 없습니다
+- 프로젝트를 처음부터 다시 배워야 합니다
+
+이는 토큰을 낭비하고, 시간을 태우며, 답답한 반복을 초래합니다.
+
+## 해결책: AI 에이전트를 위한 영구 메모리
+
+**toon-memory**는 AI 코딩 에이전트에게 다음과 같은 영구 메모리를 제공합니다:
+
+1. **재시작 후에도 유지** — 메모리가 세션 간에 지속됩니다
+2. **오프라인 작동** — 클라우드, API 호출, LLM이 필요 없습니다
+3. **토큰 절약** — JSON보다 22% 적은 토큰
+4. **확장성** — 세션당 80% 적은 도구 호출
+5. **범용 호환** — 15개 이상의 에이전트 지원
+
+## AI 에이전트가 기억할 수 있는 것
+
+### 결정
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "검증에 Zod 사용 — Joi보다 간단하고 TS 지원이 더 좋음"
+})
+```
+
+### 버그 수정
+```bash
+memory_remember({
+  category: "bug",
+  key: "redis-pool-fix",
+  content: "Redis 풀 고갈 — max_connections=20으로 수정"
+})
+```
+
+### 패턴
+```bash
+memory_remember({
+  category: "pattern",
+  key: "api-versioning",
+  content: "REST 엔드포인트에는 항상 /api/v1/ 접두사 사용"
+})
+```
+
+### 지식
+```bash
+memory_remember({
+  category: "knowledge",
+  key: "deploy-process",
+  content: "배포 스크립트는 scripts/deploy.sh에 있으며, CI에서 main으로 병합 시 실행됨"
+})
+```
+
+## 메모리가 AI 에이전트 성능을 개선하는 방식
+
+| 지표 | 메모리 없음 | toon-memory 사용 | 개선 |
+|--------|---------------|------------------|-------------|
+| 세션당 토큰 | 2,411 | 972 | -60% |
+| 세션당 도구 호출 | 25 | 5 | -80% |
+| 세션당 비용 (GPT-4) | $0.072 | $0.029 | -60% |
+| 컨텍스트 재구성 | 수동 | 자동 | 100% |
+
+## 메모리 기능
+
+- **21개 MCP 도구** — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt 등
+- **그래프 인식 recall** — 관련 항목을 링크와 참조로 연결
+- **품질 점수** — 항목 품질 자동 평가 (0-1)
+- **병합-중복제거** — 동일한 키로 저장 시 자동 병합
+- **TTL** — 7일, 30일 또는 사용자 정의 기간 후 만료 가능
+- **암호화** — 민감한 데이터를 위한 AES-256-GCM
+
+## 지원 에이전트
+
+toon-memory는 **15개 이상의 AI 코딩 에이전트**와 작동합니다:
+
+- **OpenCode** — 플러그인 기반, SessionStart 훅
+- **Claude Code** — 완전한 훅 지원 (SessionStart, PostToolUse, Stop)
+- **Cursor** — MCP 설정
+- **Windsurf** — MCP 설정
+- **VS Code / Copilot** — MCP 설정
+- **Codex CLI** — TOML 설정 + 훅
+- **Gemini CLI** — JSON 설정 + 훅
+- **Zed** — JSONC 설정
+- **그 외** — Cline, Continue, Antigravity, Aider, KiloCode, OpenClaw, Kiro
+
+## 시작하기
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # 대화형 설치 프로그램
+```
+
+다음 세션부터 에이전트는 영구 메모리를 갖게 됩니다.

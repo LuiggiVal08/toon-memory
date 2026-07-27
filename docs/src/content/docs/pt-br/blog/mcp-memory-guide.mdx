@@ -1,0 +1,248 @@
+---
+title: "Servidor MCP de Memória: Guia Completo de Memória Persistente de IA"
+description: "Tudo o que você precisa saber sobre servidores MCP de memória — como o Model Context Protocol dá aos agentes de codificação com IA memória persistente. Guia completo com exemplos, benchmarks e configuração."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "servidor MCP memória, memória Model Context Protocol, memória persistente IA, guia servidor MCP"
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: '{"@context":"https://schema.org","@type":"Article","headline":"MCP Memory Server: Complete Guide to Persistent AI Memory","description":"Everything you need to know about MCP memory servers.","author":{"@type":"Person","name":"LuiggiVal"},"publisher":{"@type":"Organization","name":"toon-memory"},"url":"https://luiggival08.github.io/toon-memory/blog/mcp-memory-guide/","mainEntityOfPage":{"@type":"WebPage","@id":"https://luiggival08.github.io/toon-memory/blog/mcp-memory-guide/"}}'
+---
+
+## O que é um Servidor MCP de Memória?
+
+Um servidor MCP de memória é um **serviço local** que implementa o Model Context Protocol (MCP) para fornecer aos agentes de codificação com IA memória persistente. Em vez de perder contexto entre sessões, seu agente armazena decisões, padrões e bugs em um armazenamento de memória pesquisável.
+
+O **toon-memory** é o servidor MCP de memória mais completo disponível:
+
+- **21 ferramentas MCP** + 3 recursos
+- **Suporte a 15+ agentes** — Claude, Cursor, OpenCode e mais
+- **Formato eficiente em tokens** — 22% menos tokens que JSON
+- **Recall consciente de grafo** — BM25 + centralidade + pontuação de qualidade
+- **Zero configuração** — instale e use
+
+## Como Servidores MCP de Memória Funcionam
+
+### O Model Context Protocol
+
+O MCP (Model Context Protocol) é um padrão para agentes de IA se comunicarem com ferramentas externas. Um servidor MCP de memória:
+
+1. **Recebe requisições** do agente via stdio
+2. **Processa operações de memória** (salvar, buscar, deletar)
+3. **Armazena dados localmente** em formato estruturado
+4. **Retorna resultados** formatados para o agente
+
+### Arquitetura
+
+```
+Seu Agente IA
+    ↓ Protocolo MCP (stdio)
+Servidor de Memória (toon-memory)
+    ↓
+Arquivo Local (.toon-memory/memory/data.toon)
+```
+
+Sem nuvem. Sem chamadas de API. Sem rede. Tudo fica na sua máquina.
+
+## Por que Usar um Servidor MCP de Memória?
+
+### O Problema
+
+Agentes de codificação com IA **não têm memória entre sessões**:
+
+- Claude esquece as decisões de arquitetura de ontem
+- Cursor não consegue relembrar as correções de bug que você descobriu
+- OpenCode não lembra dos padrões que sua equipe estabeleceu
+
+Isso desperdiça tokens, gasta tempo e leva a repetições frustrantes.
+
+### A Solução
+
+Um servidor MCP de memória dá ao seu agente **memória persistente**:
+
+| Sem Memória MCP | Com Memória MCP |
+|----------------|-----------------|
+| Re-explicar contexto toda sessão | Contexto persiste automaticamente |
+| 2.411 tokens por sessão | 972 tokens por sessão (-60%) |
+| 25 chamadas de ferramenta por sessão | 5 chamadas de ferramenta por sessão (-80%) |
+| $0,072 por sessão (GPT-4) | $0,029 por sessão (-60%) |
+
+## Funcionalidades do Servidor MCP de Memória
+
+### 21 Ferramentas MCP
+
+O toon-memory expõe **21 ferramentas MCP** para gerenciamento completo de memória:
+
+**Ferramentas Principais:**
+- `memory_remember` — Salvar decisões, padrões, bugs, conhecimento
+- `memory_recall` — Buscar na memória (modo flat ou grafo)
+- `memory_smart_recall` — Recall unificado com BM25 + grafo + qualidade
+- `memory_forget` — Remover entradas
+- `memory_stats` — Visualizar estado da memória
+
+**Ferramentas de Contexto:**
+- `context_brief` — Briefing de contexto em uma chamada
+- `context_generate` — Briefing completo do projeto
+- `context_diff` — O que mudou desde a última sessão
+- `context_focus` — Briefing hiper-focado
+- `context_health` — Auditoria de saúde da memória
+- `context_export` — Exportar como markdown
+
+**Ferramentas de Gerenciamento:**
+- `memory_summary` — Salvar/recuperar resumos de arquivos
+- `memory_archive` — Arquivar entradas antigas
+- `memory_diff` — Mostrar mudanças desde uma data
+- `memory_suggest` — Encontrar entradas relacionadas
+- `memory_sessions` — Coordenação multi-sessão
+- `memory_captured` — Visualizar atividade capturada por hooks
+- `memory_consolidate` — Mesclar duplicatas
+- `memory_encrypt` — Criptografia AES-256-GCM
+- `memory_decrypt` — Desativar criptografia
+
+### Formato Eficiente em Tokens
+
+A memória é armazenada em **formato TOON** (Token-Oriented Object Notation):
+
+```
+a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10
+```
+
+**22% menos tokens** que JSON equivalente, projetado para compreensão de LLM.
+
+### Recall Consciente de Grafo
+
+As entradas são conectadas via **links explícitos** e **referências implícitas**:
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-redis",
+  content: "Use Redis for session storage (see [[redis-config]])",
+  links: "redis-config"
+})
+```
+
+O recall expande o **ego-subgrafo** para encontrar entradas relacionadas, mesmo que não contenham o termo de busca exato.
+
+### Pontuação de Qualidade
+
+Cada entrada recebe uma **pontuação de qualidade** automática (0-1):
+
+| Fator | Peso |
+|-------|------|
+| Tags | 0,3 máx |
+| Links | 0,2 máx |
+| Comprimento do conteúdo | 0,3 máx |
+| Atualidade | 0,1 máx |
+| Especificidade | 0,1 máx |
+
+Entradas de alta qualidade aparecem primeiro no recall.
+
+## Guia de Configuração
+
+### Passo 1: Instalar
+
+```bash
+npm install -g toon-memory
+```
+
+### Passo 2: Configurar
+
+```bash
+npx toon-memory  # Instalador interativo
+```
+
+Ou adicione manualmente à configuração MCP do seu agente:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### Passo 3: Usar
+
+```bash
+# Salve decisões importantes
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance"
+})
+
+# Busque na memória
+memory_recall({ query: "database" })
+
+# Obtenha o contexto completo em uma chamada
+memory_smart_recall({ intent: "what I was working on" })
+```
+
+## Benchmarks
+
+### Eficiência em Tokens
+
+```
+Formato          Tokens (16 entradas)    vs JSON
+──────────────  ───────────────────    ───────
+JSON            1097                   referência
+TOON            850                    -22,5%
+```
+
+### Eficiência do Recall
+
+```
+Método                          Tokens para obter contexto    vs re-ler arquivos
+────────────────────────────  ─────────────────────    ───────────────────
+Re-ler arquivos-fonte            ~3000                    referência
+memory_recall (flat)            ~1200                    -60%
+memory_recall (graph, compact)  ~900                     -70%
+memory_smart_recall             ~850                     -72%
+```
+
+### Benchmark das Ferramentas de Contexto
+
+```
+Cenário                            Sem     Com     Economia    Ferramentas
+───────────────────────────────  ────────  ──────  ───────  ──────
+context_generate (briefing completo)    5.556     378    93,2%   6 → 1
+context_diff (incremental)            533     152    71,5%   4 → 1
+context_focus (direcionado)              413     225    45,5%   4 → 1
+context_health (auditoria)                322     246    23,6%   5 → 1
+context_export (md injetável)      1.178     218    81,5%   3 → 1
+───────────────────────────────  ────────  ──────  ───────  ──────
+TOTAL                              8.002   1.219    84,8%  22 → 5
+```
+
+## Agentes Suportados
+
+O toon-memory funciona com **mais de 15 agentes de codificação com IA**:
+
+- OpenCode, Claude Code, Cursor, Windsurf, VS Code Copilot
+- Codex CLI, Gemini CLI, Zed, Cline, Continue
+- Antigravity, Aider, KiloCode, OpenClaw, Kiro
+
+Veja a página de [Agentes Suportados](/toon-memory/pt-br/configuration/agents) para detalhes de configuração.
+
+## Conclusão
+
+Um servidor MCP de memória dá ao seu agente de codificação com IA a memória persistente de que ele precisa para ser verdadeiramente produtivo. O toon-memory é a solução mais completa disponível:
+
+- **21 ferramentas MCP** para gerenciamento completo de memória
+- **Formato eficiente em tokens** que economiza 22% em cada sessão
+- **Recall consciente de grafo** que encontra contexto relacionado automaticamente
+- **Suporte a 15+ agentes** com configuração zero
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Instalador interativo
+```
+
+Seu agente vai lembrar de tudo na próxima sessão.

@@ -1,0 +1,70 @@
+---
+title: Mitwirken
+description: Wie man zu toon-memory beiträgt
+---
+
+## Mitwirken
+
+Beiträge sind willkommen! Bitte folge diesen Schritten:
+
+## Wie man beiträgt
+
+1. **Forke** das Repository
+2. **Erstelle** einen Feature-Branch (`git checkout -b feature/amazing-feature`)
+3. **Committed** deine Änderungen (`git commit -m 'feat: add amazing feature'`)
+4. **Pushe** zum Branch (`git push origin feature/amazing-feature`)
+5. **Öffne** einen Pull Request
+
+## Entwicklungsumrichtung
+
+```bash
+git clone https://github.com/LuiggiVal08/toon-memory.git
+cd toon-memory
+npm install
+npm run build
+npm test
+```
+
+## Projektstruktur
+
+```
+toon-memory/
+├── src/
+│   ├── bin/              # Einstiegspunkt (CLI + MCP-Router)
+│   ├── cli/              # CLI-Befehle (setup, capture, session-start)
+│   ├── lib/              # Kernbibliotheken (graph, quality, sessions, context, vocab, lock)
+│   └── mcp/              # MCP-Server (21 Tools, 3 Ressourcen)
+├── tests/                # Unit-Tests (vitest)
+├── docs/                 # Dokumentationsseite (Astro + Starlight)
+├── bin/                  # Build-Ausgabe (Einstiegspunkt)
+├── mcp/                  # Build-Ausgabe (MCP-Server)
+└── package.json
+```
+
+## Skripte
+
+```bash
+npm run build         # Alles bauen
+npm run build:cli     # CLI bauen
+npm run build:mcp     # MCP-Server bauen
+npm test              # Tests ausführen
+npm run test:watch    # Tests im Watch-Modus ausführen
+```
+
+## Code-Stil
+
+- TypeScript mit striktem Modus
+2 Leerzeichen Einrückung
+- camelCase für Variablen/Funktionen
+- PascalCase für Klassen
+
+## Pull-Richtlinien
+
+- Schreibe klare Commit-Nachrichten
+- Füge Tests für neue Features hinzu
+- Aktualisiere die Dokumentation bei Bedarf
+- Halte den bestehenden Code-Stil ein
+
+## Verhaltenskodex
+
+Bitte lies unseren [Verhaltenskodex](/toon-memory/de/community/code-of-conduct) bevor du mitwirkst.

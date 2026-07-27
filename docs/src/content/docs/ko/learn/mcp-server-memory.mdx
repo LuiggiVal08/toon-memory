@@ -1,0 +1,137 @@
+---
+title: "영구 메모리를 위한 MCP 서버 — Model Context Protocol 메모리"
+description: "AI 코딩 에이전트에게 영구 메모리를 제공하는 MCP 서버. Claude, Cursor, OpenCode를 위한 Model Context Protocol 메모리. 토큰 효율적, 오프라인, 그래프 인식 recall."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP 서버, Model Context Protocol, 영구 메모리 서버, AI 메모리 MCP, Claude MCP 서버"
+---
+
+## 메모리를 위한 MCP 서버란?
+
+메모리를 위한 MCP 서버는 Model Context Protocol을 구현하여 AI 코딩 에이전트에게 영구 메모리를 제공하는 **로컬 서비스**입니다. 세션 간에 컨텍스트를 잃는 대신, 에이전트가 결정, 패턴, 버그를 검색 가능한 메모리 저장소에 저장합니다.
+
+**toon-memory**는 다음과 같은 기능을 제공하는 MCP 서버입니다:
+
+- **영구 메모리** — 재시작 후에도 유지, 클라우드 불필요
+- **21개 MCP 도구** — Model Context Protocol을 통한 완전한 메모리 관리
+- **토큰 효율적 형식** — JSON보다 22% 적은 토큰
+- **그래프 인식 recall** — BM25 + 중심성 + 품질 점수
+- **15개 이상 에이전트 지원** — Claude, Cursor, OpenCode 등과 호환
+
+## MCP 메모리 서버 작동 원리
+
+### 아키텍처
+
+```
+AI 에이전트 (Claude/Cursor/OpenCode)
+        ↓ MCP Protocol (stdio)
+  toon-memory MCP 서버
+        ↓
+  .toon-memory/memory/data.toon (로컬 파일)
+```
+
+1. **에이전트가 요청 전송** — "이 결정을 기억해" 또는 "데이터베이스 패턴 검색해"
+2. **MCP 서버가 처리** — 요청 분석, 메모리 저장소 관리
+3. **로컬에 메모리 저장** — `.toon-memory/memory/` 디렉토리의 TOON 형식
+4. **응답 반환** — 에이전트가 사용할 수 있는 형식으로 반환
+
+### MCP 도구
+
+toon-memory는 **21개 MCP 도구**와 **3개 MCP 리소스**를 제공합니다:
+
+| 도구 | 용도 |
+|------|---------|
+| `memory_remember` | 결정, 패턴, 버그, 지식 저장 |
+| `memory_recall` | 메모리 검색 (플랫 또는 그래프 모드) |
+| `memory_smart_recall` | 통합 recall: BM25 + 그래프 + 품질 |
+| `memory_forget` | 항목 삭제 |
+| `memory_stats` | 메모리 상태 확인 |
+| `memory_summary` | 파일 요약 저장/검색 |
+| `memory_archive` | 오래된 항목 아카이브 |
+| `memory_diff` | 특정 날짜 이후 변경 사항 표시 |
+| `memory_suggest` | 관련 항목 찾기 |
+| `memory_sessions` | 멀티 세션 조율 |
+| `context_brief` | 한 번의 호출로 컨텍스트 브리핑 |
+| `context_generate` | 전체 프로젝트 브리핑 |
+| `context_diff` | 증분 브리핑 |
+| `context_focus` | 초점 브리핑 |
+| `context_health` | 메모리 상태 감사 |
+| `context_export` | 마크다운으로 내보내기 |
+| `memory_encrypt` | AES-256-GCM 암호화 |
+| `memory_decrypt` | 암호화 비활성화 |
+| `memory_captured` | 훅으로 캡처한 활동 보기 |
+| `memory_consolidate` | 중복 항목 병합 |
+
+## 왜 메모리에 MCP를 사용하나?
+
+### MCP vs 사용자 지정 통합
+
+| 기능 | MCP 메모리 | 사용자 지정 통합 |
+|---------|-----------|-------------------|
+| **표준 프로토콜** | 예 (Model Context Protocol) | 아니오 — 독자적 |
+| **에이전트 지원** | 15개 이상 에이전트 | 보통 1-2개 에이전트 |
+| **설정** | `npx toon-memory` | 수동 코드 수정 |
+| **업데이트** | `npm update` | 수동 유지보수 |
+| **커뮤니티** | 성장하는 생태계 | 고립됨 |
+
+### MCP vs 클라우드 메모리
+
+| 기능 | MCP 메모리 (toon-memory) | 클라우드 메모리 (mem0) |
+|---------|-------------------------|---------------------|
+| **데이터 위치** | 로컬 기기 | 클라우드 서버 |
+| **인터넷 필요** | 아니오 | 예 |
+| **비용** | 무료 | 사용량 기반 |
+| **지연 시간** | 즉시 (로컬) | 네트워크 의존적 |
+| **프라이버시** | 완전한 제어 | 제3자 |
+
+## 기술 상세
+
+### TOON 형식
+
+메모리는 **TOON 형식**(Token-Oriented Object Notation)으로 저장됩니다:
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0
+  e5f6g7h8|pattern|api-routes|REST endpoints use /api/v1/ prefix|src/routes|api;rest;pattern|2026-07-10||0||0.55|1.0
+  i9j0k1l2|bug|redis-fix|Redis pool exhaustion fix|src/redis.ts|redis;bug|2026-07-10||0||0.70|1.0
+```
+
+### 그래프 인식 recall
+
+항목은 **명시적 링크**와 **암묵적 참조**를 통해 연결됩니다:
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-redis",
+  content: "세션 저장소로 Redis 사용 (see [[redis-config]])",
+  links: "redis-config"
+})
+```
+
+검색 시 recall은 정확한 검색어를 포함하지 않더라도 관련 항목을 찾기 위해 **에고 서브그래프**를 확장합니다.
+
+### 품질 점수
+
+모든 항목은 자동으로 **품질 점수**(0-1)를 부여받습니다:
+
+| 요소 | 가중치 | 측정 내용 |
+|--------|--------|------------------|
+| 태그 | 최대 0.3 | 더 구체적인 태그 = 더 높은 품질 |
+| 링크 | 최대 0.2 | 연결된 항목 = 더 높은 품질 |
+| 내용 길이 | 최대 0.3 | 상세함 > 모호함 |
+| 최신성 | 최대 0.1 | 최신 항목이 더 높은 점수 |
+| 구체성 | 최대 0.1 | 고유 단어 vs 반복 단어 |
+
+## 시작하기
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # 대화형 설치 프로그램
+```
+
+자세한 설정 지침은 [빠른 시작](/toon-memory/getting-started/quickstart)을 참조하세요.

@@ -1,0 +1,91 @@
+---
+title: "Qu'est-ce que la mémoire MCP ? Mémoire persistante pour les agents de codage IA"
+description: "La mémoire MCP donne aux agents de codage IA comme Claude, Cursor et OpenCode une mémoire persistante qui survit entre les sessions. Découvrez comment le Model Context Protocol permet une mémoire hors ligne et économe en tokens."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "mémoire MCP, mémoire persistante, agents de codage IA, Model Context Protocol, mémoire Claude, mémoire Cursor"
+---
+
+## Qu'est-ce que la mémoire MCP ?
+
+La mémoire MCP est un moyen pour les agents de codage IA de **se souvenir des choses entre les sessions**. Sans mémoire MCP, chaque fois que vous démarrez un nouveau chat avec Claude, Cursor ou OpenCode, l'agent repart de zéro — il oublie toutes les décisions, patterns et bugs de vos conversations précédentes.
+
+**toon-memory** est un serveur MCP qui résout ce problème. Il donne à votre agent de codage IA une mémoire persistante qui :
+
+- **Survit aux redémarrages** — votre agent se souvient du contexte d'hier aujourd'hui
+- **Fonctionne hors ligne** — pas de cloud, pas d'appels API, pas de LLM nécessaire pour le stockage
+- **Économise des tokens** — 22% de tokens en moins que le JSON, 80% d'appels d'outils en moins par session
+- **Fonctionne avec 15+ agents** — Claude Code, Cursor, OpenCode, Windsurf, VS Code Copilot et plus
+
+## Comment la mémoire MCP fonctionne
+
+### Le problème
+
+Les agents de codage IA **n'ont pas de mémoire entre les sessions**. Chaque nouvelle session, l'agent :
+
+1. Oublie pourquoi vous avez choisi Postgres plutôt que MongoDB
+2. Ne se souvient pas du bug Redis timeout que vous avez corrigé la semaine dernière
+3. Ne peut pas rappeler les patterns d'architecture que votre équipe a établis
+4. Doit réapprendre votre projet depuis zéro
+
+### La solution : serveur MCP mémoire
+
+toon-memory fonctionne comme un **serveur MCP local** auquel votre agent se connecte via le Model Context Protocol. Il stocke la mémoire dans un **format TOON** (Token-Oriented Object Notation) qui est :
+
+- **22% plus efficace** que le JSON pour les LLMs
+- **Recherchable** avec pertinence BM25 + rappel conscient du graphe
+- **Noté en qualité** automatiquement (0-1 selon la structure)
+- **Connecté en graphe** avec des liens et références entre entrées
+
+## Mémoire MCP vs autres approches
+
+| Approche | Avantages | Inconvénients |
+|----------|-----------|---------------|
+| **MCP Memory (toon-memory)** | Hors ligne, économe en tokens, conscient du graphe, 15+ agents | Nécessite le support MCP |
+| **Fichiers Markdown** | Simple, lisible par les humains | Non structuré, non recherchable, incompatible MCP |
+| **Mémoire cloud (mem0)** | Géré, recherche vectorielle | Nécessite Internet, coûte de l'argent, les données quittent votre machine |
+| **Banques de mémoire (shodh-memory)** | Recherche hybride | Configuration complexe, Docker requis, dépendance sentence-transformers |
+
+## Comment obtenir la mémoire MCP
+
+### Étape 1 : Installer toon-memory
+
+```bash
+npm install -g toon-memory
+```
+
+### Étape 2 : Configurer votre agent
+
+```bash
+# Installateur interactif
+npx toon-memory
+
+# Ou configuration manuelle — voir [Guide d'installation](/toon-memory/fr/getting-started/installation)
+```
+
+### Étape 3 : Commencer à utiliser la mémoire
+
+Dans votre prochaine session d'agent :
+
+```bash
+# Sauvegarder les décisions importantes
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance and JSON support"
+})
+
+# Chercher en mémoire avant de coder
+memory_recall({ query: "database" })
+
+# Obtenir le contexte complet en un appel
+memory_smart_recall({ intent: "what I was working on" })
+```
+
+## En savoir plus
+
+- [Mémoire pour les agents de codage IA](/toon-memory/fr/learn/memory-for-ai-agents) — Comment fonctionne la mémoire persistante
+- [Serveur MCP pour la mémoire persistante](/toon-memory/fr/learn/mcp-server-memory) — Approfondissement technique
+- [Démarrage rapide](/toon-memory/fr/getting-started/quickstart) — Commencez en 3 étapes

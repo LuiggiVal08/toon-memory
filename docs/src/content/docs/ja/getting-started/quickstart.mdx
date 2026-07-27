@@ -1,0 +1,49 @@
+---
+title: クイックスタート — 3ステップでMCPメモリサーバーをセットアップ
+description: "3ステップでtoon-memory MCPメモリサーバーをインストール。Claude、Cursor、OpenCode、Windsurf、15以上のAIコーディングエージェントに対応。ゼロコンフィグの永続メモリ。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCPメモリサーバー セットアップ, クイックスタート AIメモリ, Claudeメモリ セットアップ, Cursorメモリ セットアップ"
+---
+
+## 1. インストール
+
+```bash
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex
+
+# またはnpmで（任意のプラットフォーム）
+npm i -g toon-memory
+```
+
+## 2. エージェントを設定する
+
+```bash
+# インタラクティブインストーラー — 矢印キー、Space、Enterでエージェントを選択
+npx toon-memory
+
+# またはノンインタラクティブ: エージェントとスコープを指定
+npx toon-memory init --agent opencode --scope global
+```
+
+## 3. 使う
+
+```bash
+# 次のセッションで以下を実行:
+memory_stats      # メモリの中身を確認
+memory_recall     # ファイルを読む前にメモリを検索
+memory_remember   # 重要な決定を保存
+```
+
+## これで完了です！
+
+これでエージェントはセッション間で永続的なメモリを持ちます。詳しくは以下のドキュメントをご覧ください：
+
+- [MCPツール](/toon-memory/ja/features/tools) — 15のメモリツールと3つのリソース
+- [CLIコマンド](/toon-memory/ja/features/cli) — ターミナルからメモリを管理
+- [設定](/toon-memory/ja/configuration/agents) — エージェント別のセットアップ

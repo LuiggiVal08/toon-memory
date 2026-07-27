@@ -1,0 +1,208 @@
+---
+title: "Claude Code、Cursor 和 OpenCode 的记忆 — 持久化 AI 代理记忆"
+description: "为 Claude Code、Cursor 和 OpenCode 提供持久化记忆。toon-memory MCP 服务器兼容 15+ AI 编程代理。记住跨会话的决策、模式和缺陷。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "Claude Code 记忆, Cursor AI 记忆, OpenCode 记忆, AI 编程代理记忆, 持久化记忆 IDE"
+---
+
+## 为你喜爱的 AI 代理提供记忆
+
+**toon-memory** 为你已经使用的 AI 编程代理提供持久化记忆。无论你偏好 Claude Code、Cursor 还是 OpenCode，你的代理都会在会话之间记住一切。
+
+## 代理专属设置
+
+### Claude Code
+
+Claude Code 对 toon-memory 有完整的钩子支持：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+**钩子：** SessionStart、PostToolUse、Stop — 自动提醒和上下文加载。
+
+### Cursor
+
+在 Cursor 中添加 MCP 配置：
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### OpenCode
+
+添加到 `.opencode/opencode.json`：
+
+```json
+{
+  "mcp": {
+    "toon-memory": {
+      "type": "local",
+      "command": ["npx", "-y", "toon-memory", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+**插件：** `.opencode/plugins/toon-memory.ts` — 通过插件实现 SessionStart 钩子。
+
+### Windsurf
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### VS Code / Copilot
+
+添加到 `.vscode/mcp.json`：
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### Codex CLI
+
+添加到 `.codex/config.toml`：
+
+```toml
+[mcpServers.toon-memory]
+command = "npx"
+args = ["-y", "toon-memory", "mcp"]
+```
+
+### Gemini CLI
+
+添加到 `.gemini/settings.json`：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### Zed
+
+添加到 `~/.config/zed/settings.json`：
+
+```json
+{
+  "mcp_servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## 交互式安装器（最简单）
+
+```bash
+npx toon-memory
+```
+
+安装器将：
+1. 检测你安装了哪些代理
+2. 询问要配置哪些代理
+3. 自动添加 MCP 配置
+
+## 各代理获得的功能
+
+所有代理都获得相同的 **21 个 MCP 工具**和 **3 个 MCP 资源**：
+
+- `memory_remember` — 保存决策、模式、缺陷
+- `memory_recall` — 搜索记忆（平铺或图模式）
+- `memory_smart_recall` — 统一召回，结合 BM25 + 图 + 质量
+- `context_generate` — 一次调用获取完整项目简报
+- `context_diff` — 自上次会话以来的更改
+- 以及另外 15 个工具……
+
+## 多代理支持
+
+你可以同时为**多个代理**配置 toon-memory：
+
+```bash
+npx toon-memory
+# 选择：claude, cursor, opencode
+```
+
+所有代理共享 `.toon-memory/memory/data.toon` 中的同一记忆文件。
+
+### 会话协调
+
+并行运行多个代理时：
+
+```bash
+memory_sessions()
+// 🧭 Active sessions (2):
+// • claude @ feature/auth (you)
+// • opencode @ feature/db
+```
+
+查看其他会话正在操作的文件以避免冲突。
+
+## 支持的代理（15+）
+
+| 代理 | 配置位置 | 钩子 |
+|------|----------|------|
+| OpenCode | `.opencode/opencode.json` | 基于插件 |
+| Claude Code | `.claude/settings.json` | SessionStart + PostToolUse + Stop |
+| Cursor | `.cursor/mcp.json` | — |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` | — |
+| VS Code | `.vscode/mcp.json` | — |
+| Codex CLI | `.codex/config.toml` | SessionStart + PostToolUse + Stop |
+| Gemini CLI | `.gemini/settings.json` | SessionStart + PostToolUse + Stop |
+| Zed | `~/.config/zed/settings.json` | — |
+| Cline | `.cline/mcp.json` | — |
+| Continue | `.continue/config.json` | — |
+| Antigravity | `.gemini/config/mcp_config.json` | PreInvocation + PostToolUse + Stop |
+| Aider | — | 指令文件 |
+| KiloCode | `~/.kilocode/mcp_settings.json` | — |
+| OpenClaw | `.openclaw.json` | — |
+| Kiro | `.kiro/settings/mcp.json` | — |
+
+## 开始使用
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # 交互式安装器
+```
+
+参见[支持的代理](/toon-memory/zh/configuration/agents)页面获取详细配置。

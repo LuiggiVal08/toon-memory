@@ -1,0 +1,50 @@
+---
+title: "AI 代理记忆的 AES-256-GCM 加密"
+description: "AI 代理记忆的 AES-256-GCM 加密 — 保护 toon-memory 中的敏感数据。使用军事级加密保护你的 MCP 记忆服务器。"
+---
+
+## 概述
+
+toon-memory 支持 AES-256-GCM 加密，用于保护敏感记忆数据。
+
+## 启用加密
+
+```typescript
+memory_encrypt()
+// 🔐 Encriptación habilitada
+// ⚠️ Guarda esta clave (no se puede recuperar):
+// a1b2c3d4e5f6...
+```
+
+**重要提示：** 请保存加密密钥！丢失后无法恢复。
+
+## 禁用加密
+
+```typescript
+memory_decrypt({ key: "a1b2c3d4e5f6..." })
+// 🔓 Encriptación deshabilitada
+```
+
+## 工作原理
+
+1. 启用后，生成一个随机的 256 位密钥
+2. 使用 AES-256-GCM 加密记忆文件
+3. 密钥存储在 `.toon-memory/memory/config.json` 中
+4. 读取时自动解密
+
+## 安全注意事项
+
+- 加密是**按项目**的（每个项目有自己的密钥）
+- 密钥本地存储在 `config.json` 中
+- **切勿将 `config.json` 提交到 git**
+- 启用加密时，备份也会被加密
+
+## 文件结构
+
+```
+.toon-memory/memory/
+├── data.toon        # 启用加密后会被加密
+├── config.json      # 包含加密密钥
+└── backups/
+    └── backup-*.toon  # 同样被加密
+```

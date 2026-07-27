@@ -1,0 +1,157 @@
+---
+title: "Mémoire économe en tokens pour les agents IA — 22% de tokens en moins que le JSON"
+description: "Mémoire économe en tokens pour les agents de codage IA. toon-memory utilise le format TOON — 22% de tokens en moins que le JSON, 80% d'appels d'outils en moins. Économisez de l'argent et améliorez les performances."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "mémoire économe en tokens, optimisation tokens IA, format TOON, économiser tokens IA, réduire utilisation tokens"
+---
+
+## Pourquoi l'efficacité des tokens compte
+
+Chaque token que votre agent IA traite coûte de l'argent et prend du temps. Lorsqu'un agent lit les fichiers mémoire au démarrage d'une session, le format de ces fichiers impacte directement :
+
+- **Coût** — moins de tokens = factures API plus basses
+- **Vitesse** — moins de tokens = réponses plus rapides
+- **Fenêtre de contexte** — moins de tokens = plus de place pour le travail réel
+
+**toon-memory** utilise le **format TOON** (Token-Oriented Object Notation) qui est :
+
+- **22% plus efficace** que le JSON pour les LLMs
+- **Optimisé pour la compréhension IA** — conçu pour la façon dont les LLMs traitent l'information
+- **Sans perte** — aucune perte de données, support d'aller-retour complet
+
+## Benchmarks d'efficacité des tokens
+
+### Efficacité au niveau fichier
+
+```
+Format          Tokens (16 entrées)    vs JSON
+──────────────  ───────────────────    ───────
+JSON            1097                   baseline
+TOON            850                    -22.5%
+```
+
+### Impact au niveau session
+
+```
+Méthode                          Tokens pour obtenir le contexte    vs relire les fichiers
+──────────────────────────────  ──────────────────────────        ──────────────────────
+Relire les fichiers source       ~3000                             baseline
+memory_recall (plat)             ~1200                             -60%
+memory_recall (graphe, compact)  ~900                              -70%
+memory_smart_recall              ~850                              -72%
+```
+
+### Benchmark de session complète
+
+Simule une session d'agent complète en 5 phases :
+
+```
+Phase                                  Sans mémoire       Avec memory_recall      Avec outils context_*
+─────────────────────────────────────  ─────────────────  ─────────────────       ─────────────────────
+Phase 1: Début de session              516 t /  6 c       409 t /  3 c            373 t /  1 c
+Phase 2: Débogage                      176 t /  4 c       182 t /  2 c            252 t /  1 c
+Phase 3: Implémentation                189 t /  6 c       183 t /  3 c            305 t /  1 c
+Phase 4: Revue de code                 316 t /  4 c       130 t /  2 c            243 t /  1 c
+Phase 5: Clôture                     1 214 t /  5 c        68 t /  2 c            117 t /  1 c
+─────────────────────────────────────  ─────────────────  ─────────────────       ─────────────────────
+TOTAL                                2 411 t / 25 c       972 t / 12 c          1 290 t /  5 c
+```
+
+**Résultats :**
+
+| Métrique | Sans mémoire | Avec memory_recall | Avec outils context_* |
+|----------|-------------|-------------------|----------------------|
+| Tokens par session | 2 411 | 972 (-60%) | 1 290 (-47%) |
+| Appels d'outils par session | 25 | 12 (-52%) | **5 (-80%)** |
+| Coût par session (GPT-4) | 0,072 $ | 0,029 $ | 0,039 $ |
+
+## Comment le format TOON fonctionne
+
+### JSON traditionnel
+
+```json
+{
+  "id": "a1b2c3d4",
+  "category": "decision",
+  "key": "use-zod",
+  "content": "Use Zod for validation",
+  "file": "src/types.ts",
+  "tags": "validation;types",
+  "date": "2026-07-10"
+}
+```
+
+### Format TOON
+
+```
+a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10
+```
+
+Le format TOON :
+- Utilise `|` comme délimiteur (moins de tokens que `"` et `:` et `,`)
+- Pas de guillemets autour des chaînes
+- Pas d'accolades
+- Compact mais toujours lisible par les humains
+
+## Modes de rappel économes en tokens
+
+### Mode plat (défaut)
+
+```bash
+memory_recall({ query: "redis" })
+// Returns matching entries with full details
+```
+
+### Mode graphe
+
+```bash
+memory_recall({ query: "redis", mode: "graph", hops: 2 })
+// Expands related entries via graph connections
+```
+
+### Mode compact
+
+```bash
+memory_recall({ query: "redis", compact: true })
+// Returns numeric-indexed entries, drops id/date/file
+// Graph edges render as ->2, ->3
+```
+
+### Rappel intelligent (Recommandé)
+
+```bash
+memory_smart_recall({ intent: "database configuration" })
+// Combines BM25 + graph + quality in one call
+// Use at the START of every task
+```
+
+## Quand utiliser chaque mode
+
+| Mode | Idéal pour | Coût en tokens |
+|------|-----------|----------------|
+| **Plat** | Recherche par mots-clés simple | Moyen |
+| **Graphe** | Décisions interconnectées | Faible (compact) |
+| **Compact** | Contextes à tokens limités | Le plus faible |
+| **Intelligent** | Termes de recherche inconnus | Moyen (complet) |
+
+## Calculatrice d'économies
+
+En supposant la tarification GPT-4 (0,03 $/1K tokens d'entrée) :
+
+| Scénario | Sans mémoire | Avec toon-memory | Économies |
+|----------|-------------|------------------|-----------|
+| 10 sessions/jour | 0,72 $/jour | 0,29 $/jour | 0,43 $/jour |
+| 30 sessions/mois | 21,60 $/mois | 8,70 $/mois | 12,90 $/mois |
+| 365 sessions/an | 262,80 $/an | 105,85 $/an | 156,95 $/an |
+
+## Commencer
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Installateur interactif
+```
+
+Votre agent utilisera une mémoire économe en tokens dans la prochaine session.

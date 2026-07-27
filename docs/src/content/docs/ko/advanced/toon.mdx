@@ -1,0 +1,66 @@
+---
+title: "TOON 형식 — JSON보다 22% 적은 토큰"
+description: "TOON 형식 — JSON보다 22% 적은 토큰, LLM 인식과 AI 에이전트 메모리 효율을 위해 설계. Token-Oriented Object Notation."
+---
+
+## TOON이란?
+
+TOON (Token-Oriented Object Notation)은 LLM을 위해 설계된 데이터 형식입니다. 대표적인 항목들에서 gpt-tokenizer로 측정했을 때 JSON보다 ~22.5% 적은 토큰을 사용하면서 무손실 양방향 변환을 유지합니다.
+
+## 비교
+
+| 형식 | 토큰 수 | LLM 정확도 |
+|--------|-------------|--------------|
+| JSON | 100 | 75% |
+| YAML | 95 | 72% |
+| **TOON** | **60** | **76.4%** |
+
+## 형식 구조
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0|patterns/zod-schemas|0.80|1.00
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.72|1.00
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d|3||0.68|0.85
+summaries:
+  src/services/redis.ts: Redis connection pool with retry logic
+```
+
+## 구성 요소
+
+| 구성 요소 | 설명 |
+|-----------|-------------|
+| `version: 1` | 형식 버전 |
+| `entries[N\|]{fields}:` | 개수와 필드 이름을 포함한 헤더 |
+| `id\|category\|key\|...` | 파이프로 구분된 값 |
+| `ttl` | 선택적 유효 기간 (비어 있음 = 만료 없음) |
+| `accessed` | 접근 횟수 (중요도 순위 매기기용) |
+| `links` | 세미콜론으로 구분된 항목 키 (그래프 엣지) |
+| `quality` | 품질 점수 0-1 (자동 계산) |
+| `confidence` | 신뢰도 점수 0-1 (1.0=단언, &lt;1.0=추론) |
+| `summaries:` | 선택적 파일 요약 |
+
+## 항목 필드
+
+| 필드 | 필수 | 설명 | 예시 |
+|-------|----------|-------------|---------|
+| `id` | 예 | 8자리 16진수 ID | `a1b2c3d4` |
+| `category` | 예 | `decision`, `pattern`, `bug`, `knowledge` | `decision` |
+| `key` | 예 | 케밥 케이스 제목 | `use-zod` |
+| `content` | 예 | 상세 설명 | `Use Zod for validation` |
+| `file` | 아니오 | 관련 파일 경로 | `src/types.ts` |
+| `tags` | 아니오 | 세미콜론으로 구분된 태그 | `validation;types` |
+| `date` | 예 | YYYY-MM-DD | `2026-07-10` |
+| `ttl` | 아니오 | 만료: `7d`, `30d`, 또는 `2026-12-31` | `7d` |
+| `accessed` | 아니오 | 접근 횟수 (recall 시 자동 증가) | `3` |
+| `links` | 아니오 | 세미콜론으로 구분된 항목 키 (그래프 엣지) | `patterns/zod-schemas` |
+| `quality` | 아니오 | 품질 점수 0-1 (자동 계산) | `0.80` |
+| `confidence` | 아니오 | 신뢰도 점수 0-1 (1.0=단언) | `1.00` |
+
+## 장점
+
+1. **적은 토큰** — LLM 컨텍스트에서 더 효율적
+2. **더 나은 정확도** — LLM이 JSON보다 더 잘 이해
+3. **무손실** — 변환 시 데이터 손실 없음
+4. **사람이 읽기 쉬움** — 수동으로 읽고 편집하기 쉬움

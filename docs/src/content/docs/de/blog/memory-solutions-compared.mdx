@@ -1,0 +1,198 @@
+---
+title: "toon-memory vs mem0 vs shodh-memory: AI-Speicherlösungen verglichen"
+description: "Vergleiche die besten AI-Speicherlösungen — toon-memory vs mem0 vs shodh-memory. Token-Effizienz, Graph-Recall, Offline-Unterstützung und Agent-Kompatibilität. Welche ist die beste für deinen AI-Coding-Agenten?"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "AI-Speicherlösungen Vergleich, toon-memory vs mem0, AI-Coding-Speicher, Memory Server Vergleich"
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: '{"@context":"https://schema.org","@type":"Article","headline":"toon-memory vs mem0 vs shodh-memory: AI-Speicherlösungen verglichen","description":"Vergleiche die besten AI-Speicherlösungen.","author":{"@type":"Person","name":"LuiggiVal"},"publisher":{"@type":"Organization","name":"toon-memory"},"url":"https://luiggival08.github.io/toon-memory/blog/memory-solutions-compared/","mainEntityOfPage":{"@type":"WebPage","@id":"https://luiggival08.github.io/toon-memory/blog/memory-solutions-compared/"}}'
+---
+
+## Warum AI-Speicherlösungen vergleichen?
+
+AI-Coding-Agenten brauchen Speicher, um produktiv zu sein. Aber welche Speicherlösung ist die beste? Dieser Leitfaden vergleicht die drei führenden Optionen:
+
+- **toon-memory** — MCP-Server mit token-effizientem Format
+- **mem0** — Cloud-basierte Speicherplattform
+- **shodh-memory** — Hybrider Vektor + Graph-Speicher
+
+## Schnellvergleich
+
+| Funktion | toon-memory | mem0 | shodh-memory |
+|----------|-------------|------|--------------|
+| **Speicherung** | Lokale Datei (TOON) | Cloud | RocksDB |
+| **Abhängigkeiten** | Null | Cloud-API | sentence-transformers, RocksDB |
+| **Suche** | BM25 + Graph + Qualität | Nur Vektor | Hybrid (Vektor + Graph) |
+| **Token-Effizienz** | 22% weniger als JSON | N/A (Cloud) | Ähnlich |
+| **Qualitätsbewertung** | Automatisch (0-1, Heuristiken) | Keine | BND-Algorithmus |
+| **Merge-Dedup** | Tags-Vereinigung + max Konfidenz | Keine | Inhalts-Dedup |
+| **Konfidenzverfolgung** | Pro-Eintrag (0-1) | Keine | Pro-Eintrag |
+| **System-Einführung** | Automatisch generiert | Keine | Keine |
+| **Multi-Sitzung** | Dateibasierte Koordination | Keine | Keine |
+| **Hooks** | 15 Agenten | Keine | Nur Claude |
+| **Verschlüsselung** | AES-256-GCM | Cloud-verwaltet | Keine |
+| **Einrichtungszeit** | `npx toon-memory` | Cloud-Anmeldung | Docker + Konfiguration |
+| **Kosten** | Kostenlos | Nutzungsabhängig | Kostenlos |
+| **Internet erforderlich** | Nein | Ja | Nein |
+
+## Tiefgang: toon-memory
+
+### Stärken
+
+- **Token-Effizienz** — TOON-Format verwendet 22% weniger Tokens als JSON
+- **Graph-bewusster Abruf** — BM25 + Zentralität + Qualitätsbewertung
+- **Agenten-Unterstützung** — 15+ Agenten mit Auto-Setup
+- **Keine Abhängigkeiten** — kein Cloud, kein Docker, keine sentence-transformers
+- **Vollständiger Funktionsumfang** — 21 MCP-Tools, Verschlüsselung, Multi-Sitzungs-Koordination
+
+### Schwächen
+
+- **Keine Vektorsuche** — verwendet BM25, keine Embeddings
+- **MCP erforderlich** — Agent muss Model Context Protocol unterstützen
+- **Nur lokal** — keine Cloud-Synchronisation zwischen Geräten (stattdessen Git verwenden)
+
+### Am besten geeignet für
+
+- Entwickler, die **offline, privaten Speicher** wollen
+- Teams, die **mehrere AI-Agenten** verwenden (Claude, Cursor, OpenCode)
+- Projekte, bei denen **Token-Effizienz** wichtig ist (Kostenersparnis)
+
+## Tiefgang: mem0
+
+### Stärken
+
+- **Verwalteter Dienst** — kein Setup erforderlich
+- **Vektorsuche** — semantische Ähnlichkeit mit Embeddings
+- **Cloud-Synchronisation** — funktioniert automatisch über Geräte hinweg
+- **API-Zugang** — einfache Integration
+
+### Schwächen
+
+- **Internet erforderlich** — keine Offline-Unterstützung
+- **Kosten** — nutzungsabhängige Preise summieren sich
+- **Privatsphäre** — Daten verlassen dein Gerät
+- **Keine Token-Optimierung** — nicht für LLM-Effizienz entworfen
+- **Begrenzte Funktionen** — keine Qualitätsbewertung, kein Graph-Recall
+
+### Am besten geeignet für
+
+- Teams, die **Geräteübergreifende Synchronisation** ohne Git brauchen
+- Projekte, bei denen **Privatsphäre kein Thema ist**
+- Schnelles Prototyping ohne lokales Setup
+
+## Tiefgang: shodh-memory
+
+### Stärken
+
+- **Hybride Suche** — Vektor + Graph-Recall
+- **Qualitätsbewertung** — BND-Algorithmus
+- **Offline** — kein Cloud erforderlich
+- **RocksDB-Speicher** — schnell, persistent
+
+### Schwächen
+
+- **Komplexes Setup** — erfordert Docker + sentence-transformers
+- **Schwere Abhängigkeiten** — großes Python-Umfeld
+- **Nur Claude** — begrenzte Agenten-Unterstützung
+- **Keine Token-Optimierung** — nicht für LLM-Effizienz entworfen
+
+### Am besten geeignet für
+
+- Projekte, die **Vektorsuche + Graph-Recall** brauchen
+- Teams, die bereits **Docker** und **Python** verwenden
+- Nur-Claude-Umgebungen
+
+## Benchmark: Token-Effizienz
+
+Gemessene Tokens für denselben Kontext:
+
+```
+Methode                           Tokens    vs erneutes Lesen von Dateien
+───────────────────────────────  ────────  ─────────────────────────────
+Quelldateien erneut lesen         ~3000    Basiswert
+toon-memory (flach)               ~1200    -60%
+toon-memory (Graph, kompakt)      ~900     -70%
+toon-memory (smart_recall)        ~850     -72%
+shodh-memory (hybrid)             ~1100    -63%
+mem0 (cloud)                      N/A      N/A (Cloud)
+```
+
+## Benchmark: Kosten
+
+Angenommen GPT-4-Preise ($0,03/1K Eingabe-Tokens), 10 Sitzungen/Tag:
+
+| Lösung | Kosten/Monat | Hinweise |
+|--------|-------------|----------|
+| **toon-memory** | $8,70 | Kostenlos, token-effizient |
+| **mem0** | ~$15-30 | Nutzungsabhängige Preise |
+| **shodh-memory** | $10,50 | Kostenlos, weniger token-effizient |
+| **Kein Speicher** | $21,60 | Kontext neu erklären |
+
+## Funktionsvergleich
+
+### Speichervorgänge
+
+| Funktion | toon-memory | mem0 | shodh-memory |
+|----------|-------------|------|--------------|
+| Entscheidungen speichern | ✅ | ✅ | ✅ |
+| Muster speichern | ✅ | ❌ | ❌ |
+| Bugs speichern | ✅ | ❌ | ❌ |
+| Qualitätsbewertung | ✅ (0-1) | ❌ | ✅ (BND) |
+| Konfidenzverfolgung | ✅ | ❌ | ✅ |
+| TTL (Ablauf) | ✅ | ❌ | ❌ |
+| Merge-Dedup | ✅ | ❌ | ✅ |
+| Verschlüsselung | ✅ (AES-256) | ✅ (Cloud) | ❌ |
+
+### Suche & Recall
+
+| Funktion | toon-memory | mem0 | shodh-memory |
+|----------|-------------|------|--------------|
+| Stichwortsuche | ✅ (BM25) | ❌ | ❌ |
+| Vektorsuche | ❌ | ✅ | ✅ |
+| Graph-Recall | ✅ | ❌ | ✅ |
+| Qualitäts-Rangfolge | ✅ | ❌ | ✅ |
+| Kompakte Ausgabe | ✅ | ❌ | ❌ |
+| Smart Recall | ✅ | ❌ | ❌ |
+
+### Integration
+
+| Funktion | toon-memory | mem0 | shodh-memory |
+|----------|-------------|------|--------------|
+| MCP-Protokoll | ✅ | ❌ | ❌ |
+| Agenten-Unterstützung | 15+ | Beliebig (API) | Nur Claude |
+| Auto-Setup | ✅ | ✅ | ❌ |
+| Hooks | ✅ | ❌ | ✅ (Claude) |
+| Multi-Sitzung | ✅ | ❌ | ❌ |
+| Offline | ✅ | ❌ | ✅ |
+
+## Entscheidungsmatrix
+
+| Wenn du brauchst... | Wähle |
+|---------------------|-------|
+| **Offline + privater Speicher** | toon-memory |
+| **Token-Effizienz** | toon-memory |
+| **Mehrere Agenten-Unterstützung** | toon-memory |
+| **Geräteübergreifende Synchronisation (ohne Git)** | mem0 |
+| **Vektorsuche** | shodh-memory oder mem0 |
+| **Einfachstes Setup** | toon-memory |
+| **Niedrigste Kosten** | toon-memory |
+
+## Fazit
+
+**toon-memory** ist die beste Wahl für die meisten Entwickler:
+
+- **Token-effizient** — spart 22% in jeder Sitzung
+- **Agenten-agnostisch** — funktioniert mit 15+ Agenten
+- **Privat** — kein Cloud, keine Daten verlassen dein Gerät
+- **Voll funktionsfähig** — 21 MCP-Tools, Graph-Recall, Qualitätsbewertung
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Interaktiver Installer
+```
+
+Wenn du Vektorsuche oder Cloud-Synchronisation brauchst, erwäge mem0 oder shodh-memory. Aber für die meisten Anwendungsfälle bietet toon-memory die beste Balance aus Funktionen, Leistung und Einfachheit.

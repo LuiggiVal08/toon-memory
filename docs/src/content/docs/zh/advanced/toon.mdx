@@ -1,0 +1,66 @@
+---
+title: "TOON 格式 — 比 JSON 少 22% Token"
+description: "TOON 格式 — 比 JSON 少 22% token，专为 LLM 理解和 AI 代理记忆效率设计。Token-Oriented Object Notation。"
+---
+
+## 什么是 TOON？
+
+TOON（Token-Oriented Object Notation）是一种专为 LLM 设计的数据格式。它比 JSON 少使用约 22.5% token（使用 gpt-tokenizer 对代表性条目进行测量），同时保持无损往返。
+
+## 对比
+
+| 格式 | Token 数 | LLM 准确率 |
+|------|----------|------------|
+| JSON | 100 | 75% |
+| YAML | 95 | 72% |
+| **TOON** | **60** | **76.4%** |
+
+## 格式结构
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0|patterns/zod-schemas|0.80|1.00
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.72|1.00
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d|3||0.68|0.85
+summaries:
+  src/services/redis.ts: Redis connection pool with retry logic
+```
+
+## 组件
+
+| 组件 | 描述 |
+|------|------|
+| `version: 1` | 格式版本 |
+| `entries[N\|]{fields}:` | 包含计数和字段名的头部 |
+| `id\|category\|key\|...` | 管道符分隔的值 |
+| `ttl` | 可选的生存时间（空 = 无过期） |
+| `accessed` | 访问次数（用于重要性排序） |
+| `links` | 分号分隔的条目键（图边） |
+| `quality` | 质量评分 0-1（自动计算） |
+| `confidence` | 置信度评分 0-1（1.0=断言，<1.0=推断） |
+| `summaries:` | 可选的文件摘要 |
+
+## 条目字段
+
+| 字段 | 必填 | 描述 | 示例 |
+|------|------|------|------|
+| `id` | 是 | 8 字符十六进制 ID | `a1b2c3d4` |
+| `category` | 是 | `decision`、`pattern`、`bug`、`knowledge` | `decision` |
+| `key` | 是 | 短横线命名的标题 | `use-zod` |
+| `content` | 是 | 详细描述 | `Use Zod for validation` |
+| `file` | 否 | 相关文件路径 | `src/types.ts` |
+| `tags` | 否 | 分号分隔的标签 | `validation;types` |
+| `date` | 是 | YYYY-MM-DD | `2026-07-10` |
+| `ttl` | 否 | 过期时间：`7d`、`30d` 或 `2026-12-31` | `7d` |
+| `accessed` | 否 | 访问次数（召回时自动递增） | `3` |
+| `links` | 否 | 分号分隔的条目键（图边） | `patterns/zod-schemas` |
+| `quality` | 否 | 质量评分 0-1（自动计算） | `0.80` |
+| `confidence` | 否 | 置信度评分 0-1（1.0=断言） | `1.00` |
+
+## 优势
+
+1. **更少 token** — LLM 上下文更高效
+2. **更高准确率** — LLM 比 JSON 更好地理解它
+3. **无损** — 转换无数据丢失
+4. **人类可读** — 便于手动阅读和编辑

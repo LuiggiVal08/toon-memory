@@ -1,0 +1,50 @@
+---
+title: "Chiffrement AES-256-GCM pour la mémoire des agents IA"
+description: "Chiffrement AES-256-GCM pour la mémoire des agents IA — protégez les données sensibles dans toon-memory. Sécurisez votre serveur MCP memory avec un chiffrement de niveau militaire."
+---
+
+## Présentation
+
+toon-memory supporte le chiffrement AES-256-GCM pour protéger les données mémoire sensibles.
+
+## Activer le chiffrement
+
+```typescript
+memory_encrypt()
+// 🔐 Encriptación habilitada
+// ⚠️ Guarda esta clave (no se puede recuperar):
+// a1b2c3d4e5f6...
+```
+
+**Important :** Sauvegardez la clé de chiffrement ! Elle ne peut pas être récupérée si elle est perdue.
+
+## Désactiver le chiffrement
+
+```typescript
+memory_decrypt({ key: "a1b2c3d4e5f6..." })
+// 🔓 Encriptación deshabilitada
+```
+
+## Comment ça marche
+
+1. Lors de l'activation, une clé aléatoire de 256 bits est générée
+2. Le fichier mémoire est chiffré avec AES-256-GCM
+3. La clé est stockée dans `.toon-memory/memory/config.json`
+4. Le déchiffrement se fait automatiquement lors de la lecture
+
+## Notes de sécurité
+
+- Le chiffrement est **par projet** (chaque projet a sa propre clé)
+- La clé est stockée localement dans `config.json`
+- **Ne commitez jamais `config.json` dans git**
+- Les sauvegardes sont également chiffrées lorsque le chiffrement est activé
+
+## Structure des fichiers
+
+```
+.toon-memory/memory/
+├── data.toon        # Chiffré lorsque activé
+├── config.json      # Contient la clé de chiffrement
+└── backups/
+    └── backup-*.toon  # Également chiffré
+```

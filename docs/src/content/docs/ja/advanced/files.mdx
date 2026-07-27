@@ -1,0 +1,71 @@
+---
+title: "メモリファイル構造"
+description: "メモリファイル構造 — .toon-memoryディレクトリレイアウト、data.toonフォーマット、config.json、バックアップ。MCPメモリサーバーがデータをローカルに保存する方法。"
+---
+
+## プロジェクト構造
+
+```
+.toon-memory/
+├── memory/
+│   ├── data.toon        # メインメモリファイル
+│   ├── archive.toon     # アーカイブされたエントリ（30日以上またはTTL期限切れ）
+│   ├── config.json      # 暗号化設定
+│   └── backups/         # ウォッチモードバックアップ
+│       ├── backup-2026-07-11T16-00-00-000Z.toon
+│       └── backup-2026-07-11T16-10-00-000Z.toon
+└── hooks/
+    ├── session-start-claude.sh
+    ├── session-start-codex.sh
+    ├── session-start-gemini.sh
+    └── session-start-antigravity.sh
+```
+
+## ファイルの説明
+
+### data.toon
+
+全アクティブエントリを含むメインメモリファイル：
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10|
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10|
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d
+```
+
+### archive.toon
+
+30日以上経過したエントリやTTLが期限切れのエントリを含みます：
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  x1y2z3w4|knowledge|old-knowledge|This was important...|src/old.ts|knowledge|2026-06-01
+```
+
+### config.json
+
+暗号化設定（暗号化有効時のみ存在）：
+
+```json
+{
+  "encrypted": true
+}
+```
+
+### backups/
+
+ウォッチモードからのタイムスタンプ付きバックアップを含むディレクトリ：
+
+```
+backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-10-00-000Z.toon
+└── backup-2026-07-11T16-20-00-000Z.toon
+```
+
+## Git Ignore
+
+toon-memoryは機密データのコミットを防ぐため、`.toon-memory/memory/`を自動的に`.gitignore`に追加します。

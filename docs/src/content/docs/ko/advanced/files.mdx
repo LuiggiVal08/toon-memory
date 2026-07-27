@@ -1,0 +1,71 @@
+---
+title: "메모리 파일 구조"
+description: "메모리 파일 구조 — .toon-memory 디렉토리 레이아웃, data.toon 형식, config.json, 백업. MCP 메모리 서버가 로컬에 데이터를 저장하는 방식."
+---
+
+## 프로젝트 구조
+
+```
+.toon-memory/
+├── memory/
+│   ├── data.toon        # 주 메모리 파일
+│   ├── archive.toon     # 아카이브된 항목 (30일 이상 또는 TTL 만료)
+│   ├── config.json      # 암호화 설정
+│   └── backups/         # 워치 모드 백업
+│       ├── backup-2026-07-11T16-00-00-000Z.toon
+│       └── backup-2026-07-11T16-10-00-000Z.toon
+└── hooks/
+    ├── session-start-claude.sh
+    ├── session-start-codex.sh
+    ├── session-start-gemini.sh
+    └── session-start-antigravity.sh
+```
+
+## 파일 설명
+
+### data.toon
+
+모든 활성 항목을 포함하는 주 메모리 파일:
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10|
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10|
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d
+```
+
+### archive.toon
+
+30일 이상 된 항목 또는 TTL이 만료된 항목을 포함:
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  x1y2z3w4|knowledge|old-knowledge|This was important...|src/old.ts|knowledge|2026-06-01
+```
+
+### config.json
+
+암호화 설정 (암호화가 활성화된 경우에만 존재):
+
+```json
+{
+  "encrypted": true
+}
+```
+
+### backups/
+
+워치 모드에서 생성된 타임스탬프가 있는 백업을 포함하는 디렉토리:
+
+```
+backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-10-00-000Z.toon
+└── backup-2026-07-11T16-20-00-000Z.toon
+```
+
+## Git 무시
+
+toon-memory는 민감한 데이터의 커밋을 방지하기 위해 자동으로 `.toon-memory/memory/`를 `.gitignore`에 추가합니다.

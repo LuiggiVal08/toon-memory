@@ -1,0 +1,72 @@
+---
+title: "自动归档旧记忆条目"
+description: "自动归档旧记忆条目 — 通过 TTL 和低质量条目清理，保持 AI 代理记忆整洁。自动 MCP 记忆管理。"
+---
+
+## 概述
+
+toon-memory 自动归档超过 30 天或 TTL 过期的条目，以保持记忆整洁。
+
+## 手动归档
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+## 工作原理
+
+1. 超过 30 天的条目被移至 `archive.toon`
+2. TTL 过期的条目也会被归档
+3. 活跃记忆保持在 100 个条目以内
+4. 归档的条目被保留以供历史参考
+5. 可手动触发或自动触发
+
+## 基于 TTL 的归档
+
+带有 `ttl` 字段的条目在 TTL 过期时会被归档，不受 30 天规则约束：
+
+```
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|permanent|This stays forever|file.ts||2026-07-10|
+  e5f6g7h8|knowledge|sprint-info|Sprint ends Friday|file.ts||2026-07-10|7d
+  i9j0k1l2|bug|temp-fix|Temporary workaround|file.ts||2026-07-10|2026-07-15
+```
+
+在此示例中：
+- `permanent` — 无 TTL，不会因 TTL 过期
+- `sprint-info` — 创建 7 天后过期
+- `temp-fix` — 在指定日期过期
+
+## 文件结构
+
+```
+.toon-memory/memory/
+├── data.toon        # 活跃记忆（< 30 天，无过期 TTL）
+└── archive.toon     # 归档条目（> 30 天或 TTL 过期）
+```
+
+## 归档格式
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  a1b2c3d4|decision|old-decision|This was decided...|src/old.ts|decision|2026-06-01
+  e5f6g7h8|pattern|old-pattern|This pattern was used...|src/pattern.ts|pattern|2026-06-15
+```
+
+## 配置
+
+| 设置 | 默认值 | 描述 |
+|------|--------|------|
+| 最大条目数 | 100 | 最大活跃条目数 |
+| 归档天数 | 30 | 归档前的天数 |
+| 归档文件 | `archive.toon` | 归档条目的存储位置 |
+
+## 使用场景
+
+- **保持记忆整洁** — 防止无限增长
+- **历史参考** — 旧决策仍然可访问
+- **性能** — 更少的条目意味着更快的搜索
+- **临时上下文** — TTL 处理截止日期、冲刺和时间敏感的笔记

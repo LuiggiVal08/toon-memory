@@ -1,0 +1,47 @@
+---
+title: "15+ Agentes de Codificação com IA Suportados"
+description: "Mais de 15 agentes de codificação com IA suportados — OpenCode, Claude Code, Cursor, Windsurf, VS Code Copilot, Codex CLI, Gemini CLI, Zed e mais. Configuração automática do servidor MCP de memória."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "agentes IA suportados, Claude Code, Cursor AI, OpenCode, Windsurf, agentes codificação IA MCP"
+---
+
+## Agentes Suportados
+
+| Agente | Localização da Config | Config Auto |
+|--------|----------------------|-------------|
+| **OpenCode** | `.opencode/opencode.json` | ✅ |
+| **VS Code / Copilot** | `.vscode/mcp.json` | ✅ |
+| **Claude Code** | `.claude/settings.json` | ✅ |
+| **Cursor** | `.cursor/mcp.json` | ✅ |
+| **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | ✅ |
+| **Cline** | `.cline/mcp.json` | ✅ |
+| **Continue** | `.continue/config.json` | ✅ |
+| **Codex** | `.codex/config.toml` | ✅ |
+| **Gemini** | `.gemini/settings.json` | ✅ |
+| **Zed** | `~/.config/zed/settings.json` | ✅ |
+| **Antigravity** | `.gemini/config/mcp_config.json` | ✅ |
+| **Aider** | Apenas instruções | ⚠️ Manual |
+| **KiloCode** | `~/.kilocode/mcp_settings.json` | ✅ |
+| **OpenClaw** | `.openclaw.json` | ✅ |
+| **Kiro** | `.kiro/settings/mcp.json` | ✅ |
+
+## Configuração Automática
+
+Execute o instalador interativo:
+
+```bash
+npx toon-memory
+```
+
+Isso irá:
+1. Detectar agentes instalados
+2. Configurar o servidor MCP para cada um
+3. Criar o diretório de memória
+4. Adicionar ao `.gitignore`
+
+## Configuração Manual
+
+Consulte [Configuração Manual](/toon-memory/pt-br/configuration/manual) para instruções específicas por agente.

@@ -1,0 +1,91 @@
+---
+title: "O que é Memória MCP? Memória Persistente para Agentes de Codificação com IA"
+description: "A memória MCP dá aos agentes de codificação com IA como Claude, Cursor e OpenCode memória persistente que sobrevive entre sessões. Saiba como o Model Context Protocol permite memória offline e eficiente em tokens."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "memória MCP, memória persistente, agentes codificação IA, Model Context Protocol, memória Claude, memória Cursor"
+---
+
+## O que é Memória MCP?
+
+A memória MCP é uma forma de os agentes de codificação com IA **lembrarem coisas entre sessões**. Sem memória MCP, toda vez que você inicia um novo chat com Claude, Cursor ou OpenCode, o agente começa do zero — ele esquece todas as decisões, padrões e bugs das suas conversas anteriores.
+
+O **toon-memory** é um servidor MCP que resolve esse problema. Ele dá ao seu agente de codificação com IA uma memória persistente que:
+
+- **Sobrevive a reinicializações** — seu agente lembra do contexto de ontem hoje
+- **Funciona offline** — sem nuvem, sem chamadas de API, sem LLM necessário para armazenamento
+- **Economiza tokens** — 22% menos tokens que JSON, 80% menos chamadas de ferramenta por sessão
+- **Funciona com mais de 15 agentes** — Claude Code, Cursor, OpenCode, Windsurf, VS Code Copilot e mais
+
+## Como a Memória MCP Funciona
+
+### O Problema
+
+Agentes de codificação com IA **não têm memória entre sessões**. Cada nova sessão, o agente:
+
+1. Esquece por que você escolheu Postgres ao invés de MongoDB
+2. Não lembra do bug de timeout do Redis que você corrigiu na semana passada
+3. Não consegue relembrar os padrões de arquitetura que sua equipe estabeleceu
+4. Precisa reaprender seu projeto do zero
+
+### A Solução: Servidor MCP de Memória
+
+O toon-memory roda como um **servidor MCP local** ao qual seu agente se conecta via Model Context Protocol. Ele armazena a memória em um **formato TOON** (Token-Oriented Object Notation) que é:
+
+- **22% mais eficiente** que JSON para LLMs
+- **Pesquisável** com relevância BM25 e recall consciente de grafo
+- **Pontuado por qualidade** automaticamente (0-1 baseado na estrutura)
+- **Conectado em grafo** com links e referências entre entradas
+
+## Memória MCP vs Outras Abordagens
+
+| Abordagem | Prós | Contras |
+|-----------|------|---------|
+| **Memória MCP (toon-memory)** | Offline, eficiente em tokens, consciente de grafo, 15+ agentes | Requer suporte MCP |
+| **Arquivos Markdown** | Simples, legível por humanos | Não estruturado, não pesquisável, incompatível com MCP |
+| **Memória em nuvem (mem0)** | Gerenciada, busca vetorial | Requer internet, custa dinheiro, dados saem da sua máquina |
+| **Bancos de memória (shodh-memory)** | Busca híbrida | Configuração complexa, requer Docker, dependência de sentence-transformers |
+
+## Como Obter Memória MCP
+
+### Passo 1: Instalar o toon-memory
+
+```bash
+npm install -g toon-memory
+```
+
+### Passo 2: Configurar seu agente
+
+```bash
+# Instalador interativo
+npx toon-memory
+
+# Ou configuração manual — veja [Guia de Instalação](/toon-memory/pt-br/getting-started/installation)
+```
+
+### Passo 3: Começar a usar a memória
+
+Na sua próxima sessão do agente:
+
+```bash
+# Salve decisões importantes
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance and JSON support"
+})
+
+# Busque na memória antes de programar
+memory_recall({ query: "database" })
+
+# Obtenha o contexto completo em uma chamada
+memory_smart_recall({ intent: "what I was working on" })
+```
+
+## Saiba Mais
+
+- [Memória para Agentes de Codificação com IA](/toon-memory/pt-br/learn/memory-for-ai-agents) — Como a memória persistente funciona
+- [Servidor MCP para Memória Persistente](/toon-memory/pt-br/learn/mcp-server-memory) — Aprofundamento técnico
+- [Início Rápido](/toon-memory/pt-br/getting-started/quickstart) — Comece em 3 passos

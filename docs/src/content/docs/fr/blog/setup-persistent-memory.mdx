@@ -1,0 +1,375 @@
+---
+title: "Comment configurer la mémoire persistante pour Claude, Cursor et OpenCode"
+description: "Guide étape par étape pour configurer la mémoire persistante pour Claude Code, Cursor et OpenCode. Donnez à votre agent de codage IA une mémoire qui survit entre les sessions. Zéro configuration, fonctionne hors ligne."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "configuration mémoire persistante, mémoire Claude Code, mémoire Cursor AI, mémoire OpenCode, mémoire agent IA"
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: '{"@context":"https://schema.org","@type":"Article","headline":"How to Set Up Persistent Memory for Claude, Cursor & OpenCode","description":"Step-by-step guide to setting up persistent memory.","author":{"@type":"Person","name":"LuiggiVal"},"publisher":{"@type":"Organization","name":"toon-memory"},"url":"https://luiggival08.github.io/toon-memory/blog/setup-persistent-memory/","mainEntityOfPage":{"@type":"WebPage","@id":"https://luiggival08.github.io/toon-memory/blog/setup-persistent-memory/"}}'
+---
+
+## Pourquoi vous avez besoin de mémoire persistante
+
+Les agents de codage IA comme Claude, Cursor et OpenCode sont puissants — mais ils ont une limitation critique : **pas de mémoire entre les sessions**.
+
+Chaque fois que vous démarrez une nouvelle session, votre agent :
+- Oublie les décisions d'architecture d'hier
+- Ne se souvient pas des correctifs de bugs que vous avez découverts
+- Ne peut pas rappeler les patterns que votre équipe a établis
+- Doit réapprendre votre projet depuis zéro
+
+Cela gaspille des tokens, du temps et mène à une répétition frustrante.
+
+**toon-memory** résout ce problème en donnant à votre agent une mémoire persistante qui survit aux redémarrages.
+
+## Configuration rapide (2 minutes)
+
+### Étape 1 : Installer toon-memory
+
+```bash
+npm install -g toon-memory
+```
+
+### Étape 2 : Lancer l'installateur
+
+```bash
+npx toon-memory
+```
+
+L'installateur va :
+1. Détecter les agents que vous avez installés
+2. Demander lesquels configurer
+3. Ajouter la config MCP automatiquement
+
+### Étape 3 : Commencer à utiliser la mémoire
+
+Dans votre prochaine session d'agent :
+
+```bash
+# Sauvegarder les décisions importantes
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance"
+})
+
+# Rechercher en mémoire
+memory_recall({ query: "database" })
+
+# Obtenir le contexte complet en un appel
+memory_smart_recall({ intent: "what I was working on" })
+```
+
+C'est tout. Votre agent a maintenant une mémoire persistante.
+
+## Configuration spécifique par agent
+
+### Claude Code
+
+Claude Code a la meilleure intégration avec toon-memory, y compris le support complet des hooks.
+
+#### Configuration automatique (Recommandée)
+
+```bash
+npx toon-memory
+# Sélectionner : claude
+```
+
+#### Configuration manuelle
+
+Ajoutez à `.claude/settings.json` :
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+**Hooks :** toon-memory installe les hooks SessionStart, PostToolUse et Stop pour Claude Code. Ceux-ci fournissent :
+- Des rappels automatiques au début de la session
+- Le chargement du contexte depuis la mémoire
+- La coordination de sessions
+
+### Cursor
+
+Cursor supporte nativement les serveurs MCP.
+
+#### Configuration automatique
+
+```bash
+npx toon-memory
+# Sélectionner : cursor
+```
+
+#### Configuration manuelle
+
+Ajoutez à `.cursor/mcp.json` :
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### OpenCode
+
+OpenCode utilise une approche basée sur les plugins pour les hooks.
+
+#### Configuration automatique
+
+```bash
+npx toon-memory
+# Sélectionner : opencode
+```
+
+Cela crée :
+- `.opencode/opencode.json` — Config MCP
+- `.opencode/plugins/toon-memory.ts` — Plugin avec hooks SessionStart
+
+#### Configuration manuelle
+
+Ajoutez à `.opencode/opencode.json` :
+
+```json
+{
+  "mcp": {
+    "toon-memory": {
+      "type": "local",
+      "command": ["npx", "-y", "toon-memory", "mcp"],
+      "enabled": true
+    }
+  }
+}
+```
+
+**Note :** OpenCode 1.17+ rejette `"Unrecognized key: hooks"` dans la config. Utilisez plutôt l'approche plugin.
+
+### Windsurf
+
+Ajoutez à `~/.codeium/windsurf/mcp_config.json` :
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### VS Code / Copilot
+
+Ajoutez à `.vscode/mcp.json` :
+
+```json
+{
+  "servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### Codex CLI
+
+Ajoutez à `.codex/config.toml` :
+
+```toml
+[mcpServers.toon-memory]
+command = "npx"
+args = ["-y", "toon-memory", "mcp"]
+```
+
+Le Codex CLI supporte également les hooks via la configuration `[[hooks]]`.
+
+### Gemini CLI
+
+Ajoutez à `.gemini/settings.json` :
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+Le Gemini CLI supporte les hooks via la configuration `hooks.*`.
+
+### Zed
+
+Ajoutez à `~/.config/zed/settings.json` :
+
+```json
+{
+  "mcp_servers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+## Configuration multi-agents
+
+Vous pouvez configurer toon-memory pour **plusieurs agents simultanément** :
+
+```bash
+npx toon-memory
+# Sélectionner : claude, cursor, opencode
+```
+
+Tous les agents partagent le même fichier mémoire à `.toon-memory/memory/data.toon`.
+
+### Coordination de sessions
+
+Lors de l'exécution de plusieurs agents en parallèle :
+
+```bash
+memory_sessions()
+// 🧭 Active sessions (2):
+// • claude @ feature/auth (you)
+// • opencode @ feature/db
+// 🔥 Soft conflicts: src/types.ts
+```
+
+Voyez quels fichiers les autres sessions touchent pour éviter les conflits.
+
+## Commandes essentielles
+
+### Sauvegarder le contexte important
+
+```bash
+# Décisions d'architecture
+memory_remember({
+  category: "decision",
+  key: "use-microservices",
+  content: "Use microservices for payment and auth, monolith for core"
+})
+
+# Correctifs de bugs
+memory_remember({
+  category: "bug",
+  key: "redis-timeout",
+  content: "Redis connection timeout — fix was increasing pool to 20"
+})
+
+# Patterns de code
+memory_remember({
+  category: "pattern",
+  key: "error-handling",
+  content: "Always use custom AppError class, never throw raw Error"
+})
+```
+
+### Rechercher en mémoire
+
+```bash
+# Recherche par mots-clés simple
+memory_recall({ query: "database" })
+
+# Mode graphe (trouve les entrées liées)
+memory_recall({ query: "redis", mode: "graph", hops: 2 })
+
+# Mode compact (moins de tokens)
+memory_recall({ query: "auth", compact: true })
+
+# Rappel intelligent (recommandé)
+memory_smart_recall({ intent: "what I was working on" })
+```
+
+### Gérer la mémoire
+
+```bash
+# Voir les stats
+memory_stats()
+
+# Voir les changements depuis la dernière session
+memory_diff({ since: "24h" })
+
+# Trouver des entrées liées
+memory_suggest({ context: "database configuration" })
+
+# Obtenir le contexte complet en un appel
+context_generate({})
+```
+
+## Conseils pour une mémoire efficace
+
+### Quoi sauvegarder
+
+- **Décisions d'architecture** — « Pourquoi X plutôt que Y »
+- **Correctifs de bugs** — « Qu'est-ce qui était cassé et comment nous l'avons corrigé »
+- **Patterns de code** — « Comment nous faisons les choses ici »
+- **Connaissances du projet** — « Conventions d'équipe, processus de déploiement »
+
+### Quoi NE PAS sauvegarder
+
+- Notes de débogage temporaires
+- Secrets ou clés API
+- Choses évidentes en lisant le code
+- Informations en doublon (la fusion-dédup gère automatiquement les clés identiques)
+
+### Habitudes de session
+
+**Début de session :**
+```bash
+memory_smart_recall({ intent: "what I was working on" })
+memory_sessions()
+```
+
+**Fin de session :**
+```bash
+memory_remember({
+  category: "decision",
+  key: "today's-approach",
+  content: "What I decided and why"
+})
+```
+
+## Dépannage
+
+### Mémoire introuvable après installation
+
+1. Lancez `npx toon-memory status` pour vérifier l'installation
+2. Redémarrez complètement votre agent
+3. Vérifiez que le fichier de config MCP existe et est un JSON valide
+
+### Le fichier mémoire est vide
+
+C'est normal lors de la première installation. Commencez à utiliser `memory_remember` pour enregistrer des entrées.
+
+### Entrées en doublon
+
+`memory_remember` avec la même clé fusionne maintenant automatiquement. Utilisez `memory_consolidate` pour nettoyer les doublons existants.
+
+## Commencer
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Installateur interactif
+```
+
+Votre agent aura une mémoire persistante dans la prochaine session.

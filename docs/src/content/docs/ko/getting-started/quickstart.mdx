@@ -1,0 +1,49 @@
+---
+title: 빠른 시작 — MCP 메모리 서버 3단계 설정
+description: "3단계로 toon-memory MCP 메모리 서버를 설치하세요. Claude, Cursor, OpenCode, Windsurf 및 15개 이상의 AI 코딩 에이전트와 호환됩니다. 설정 없이 영구 메모리 사용 가능."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP 메모리 서버 설정, 빠른 시작 AI 메모리, Claude 메모리 설정, Cursor 메모리 설정"
+---
+
+## 1. 설치
+
+```bash
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex
+
+# 또는 npm으로 설치 (모든 플랫폼)
+npm i -g toon-memory
+```
+
+## 2. 에이전트 설정
+
+```bash
+# 대화형 설치 프로그램 — 화살표 키, Space, Enter로 에이전트 선택
+npx toon-memory
+
+# 또는 비대화형: 에이전트와 범위를 직접 지정
+npx toon-memory init --agent opencode --scope global
+```
+
+## 3. 사용하기
+
+```bash
+# 다음 세션에서 실행:
+memory_stats      # 메모리 내용 확인
+memory_recall     # 파일 읽기 전에 메모리 검색
+memory_remember   # 중요한 결정 사항 저장
+```
+
+## 끝입니다!
+
+이제 에이전트가 세션 간에 영구 메모리를 갖게 됩니다. 자세한 내용을 알아보세요:
+
+- [MCP 도구](/toon-memory/ko/features/tools) — 15개의 메모리 도구와 3개의 리소스
+- [CLI 명령어](/toon-memory/ko/features/cli) — 터미널에서 메모리 관리
+- [설정](/toon-memory/configuration/agents) — 에이전트별 설정

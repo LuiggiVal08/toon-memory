@@ -1,0 +1,198 @@
+---
+title: "toon-memory vs mem0 vs shodh-memory：AI 记忆解决方案对比"
+description: "对比主流 AI 记忆解决方案 — toon-memory vs mem0 vs shodh-memory。Token 效率、图召回、离线支持和代理兼容性。哪个最适合你的 AI 编程代理？"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "AI 记忆解决方案对比, toon-memory vs mem0, AI 编程记忆, 记忆服务器对比"
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: '{"@context":"https://schema.org","@type":"Article","headline":"toon-memory vs mem0 vs shodh-memory: AI Memory Solutions Compared","description":"Compare the top AI memory solutions.","author":{"@type":"Person","name":"LuiggiVal"},"publisher":{"@type":"Organization","name":"toon-memory"},"url":"https://luiggival08.github.io/toon-memory/blog/memory-solutions-compared/","mainEntityOfPage":{"@type":"WebPage","@id":"https://luiggival08.github.io/toon-memory/blog/memory-solutions-compared/"}}'
+---
+
+## 为什么对比 AI 记忆解决方案？
+
+AI 编程代理需要记忆才能高效工作。但哪个记忆解决方案最好？本指南对比三个主流选项：
+
+- **toon-memory** — 使用 token 高效格式的 MCP 服务器
+- **mem0** — 基于云的记忆平台
+- **shodh-memory** — 混合向量 + 图记忆
+
+## 快速对比
+
+| 功能 | toon-memory | mem0 | shodh-memory |
+|------|-------------|------|--------------|
+| **存储** | 本地文件 (TOON) | 云端 | RocksDB |
+| **依赖** | 零 | 云端 API | sentence-transformers、RocksDB |
+| **搜索** | BM25 + 图 + 质量 | 仅向量 | 混合（向量 + 图） |
+| **Token 效率** | 比 JSON 少 22% | N/A（云端） | 类似 |
+| **质量评分** | 自动（0-1，启发式） | 无 | BND 算法 |
+| **合并去重** | 标签并集 + 最大置信度 | 无 | 内容去重 |
+| **置信度追踪** | 按条目（0-1） | 无 | 按条目 |
+| **系统引导** | 自动生成 | 无 | 无 |
+| **多会话** | 基于文件协调 | 无 | 无 |
+| **钩子** | 15 个代理 | 无 | 仅 Claude |
+| **加密** | AES-256-GCM | 云管理 | 无 |
+| **设置时间** | `npx toon-memory` | 云注册 | Docker + 配置 |
+| **费用** | 免费 | 按使用计费 | 免费 |
+| **需要互联网** | 否 | 是 | 否 |
+
+## 深入分析：toon-memory
+
+### 优势
+
+- **Token 效率** — TOON 格式比 JSON 少 22% token
+- **图感知召回** — BM25 + 中心性 + 质量评分
+- **代理支持** — 15+ 代理，自动设置
+- **零依赖** — 无云端、无 Docker、无 sentence-transformers
+- **完整功能集** — 21 个 MCP 工具、加密、多会话协调
+
+### 劣势
+
+- **无向量搜索** — 使用 BM25，而非嵌入
+- **需要 MCP** — 代理必须支持 Model Context Protocol
+- **仅本地** — 无法跨设备云同步（使用 Git 代替）
+
+### 最适合
+
+- 需要**离线、私密记忆**的开发者
+- 使用**多个 AI 代理**（Claude、Cursor、OpenCode）的团队
+- **Token 效率**至关重要的项目（节省费用）
+
+## 深入分析：mem0
+
+### 优势
+
+- **托管服务** — 无需设置
+- **向量搜索** — 使用嵌入的语义相似度
+- **云端同步** — 跨设备自动工作
+- **API 访问** — 易于集成
+
+### 劣势
+
+- **需要互联网** — 不支持离线
+- **费用** — 按使用计费，费用逐渐累积
+- **隐私** — 数据离开你的设备
+- **无 token 优化** — 非为 LLM 效率设计
+- **功能有限** — 无质量评分、无图召回
+
+### 最适合
+
+- 需要**跨设备同步**而不想使用 Git 的团队
+- **隐私不是问题**的项目
+- 无需本地设置的快速原型开发
+
+## 深入分析：shodh-memory
+
+### 优势
+
+- **混合搜索** — 向量 + 图召回
+- **质量评分** — BND 算法
+- **离线** — 无需云端
+- **RocksDB 存储** — 快速、持久
+
+### 劣势
+
+- **设置复杂** — 需要 Docker + sentence-transformers
+- **依赖较重** — 大型 Python 环境
+- **仅 Claude** — 代理支持有限
+- **无 token 优化** — 非为 LLM 效率设计
+
+### 最适合
+
+- 需要**向量搜索 + 图召回**的项目
+- 已使用 **Docker** 和 **Python** 的团队
+- 仅使用 Claude 的环境
+
+## 基准：Token 效率
+
+衡量获取相同上下文所需的 token 数：
+
+```
+方法                              Token 数    对比重读文件
+────────────────────────────  ────────  ───────────────────
+重新读取源文件                    ~3000    基准
+toon-memory (平铺)               ~1200    -60%
+toon-memory (图, 紧凑)           ~900     -70%
+toon-memory (smart_recall)       ~850     -72%
+shodh-memory (混合)              ~1100    -63%
+mem0 (云端)                      N/A      N/A（云端）
+```
+
+## 基准：费用
+
+假设 GPT-4 定价（$0.03/1K 输入 token），每天 10 次会话：
+
+| 解决方案 | 月费用 | 备注 |
+|----------|--------|------|
+| **toon-memory** | $8.70 | 免费，token 高效 |
+| **mem0** | ~$15-30 | 按使用计费 |
+| **shodh-memory** | $10.50 | 免费，token 效率较低 |
+| **无记忆** | $21.60 | 重新解释上下文 |
+
+## 功能对比
+
+### 记忆操作
+
+| 功能 | toon-memory | mem0 | shodh-memory |
+|------|-------------|------|--------------|
+| 保存决策 | ✅ | ✅ | ✅ |
+| 保存模式 | ✅ | ❌ | ❌ |
+| 保存缺陷 | ✅ | ❌ | ❌ |
+| 质量评分 | ✅ (0-1) | ❌ | ✅ (BND) |
+| 置信度追踪 | ✅ | ❌ | ✅ |
+| TTL（过期） | ✅ | ❌ | ❌ |
+| 合并去重 | ✅ | ❌ | ✅ |
+| 加密 | ✅ (AES-256) | ✅ (云端) | ❌ |
+
+### 搜索与召回
+
+| 功能 | toon-memory | mem0 | shodh-memory |
+|------|-------------|------|--------------|
+| 关键词搜索 | ✅ (BM25) | ❌ | ❌ |
+| 向量搜索 | ❌ | ✅ | ✅ |
+| 图召回 | ✅ | ❌ | ✅ |
+| 质量排序 | ✅ | ❌ | ✅ |
+| 紧凑输出 | ✅ | ❌ | ❌ |
+| 智能召回 | ✅ | ❌ | ❌ |
+
+### 集成
+
+| 功能 | toon-memory | mem0 | shodh-memory |
+|------|-------------|------|--------------|
+| MCP 协议 | ✅ | ❌ | ❌ |
+| 代理支持 | 15+ | 任意 (API) | 仅 Claude |
+| 自动设置 | ✅ | ✅ | ❌ |
+| 钩子 | ✅ | ❌ | ✅ (Claude) |
+| 多会话 | ✅ | ❌ | ❌ |
+| 离线 | ✅ | ❌ | ✅ |
+
+## 决策矩阵
+
+| 如果你需要…… | 选择 |
+|--------------|------|
+| **离线 + 私密记忆** | toon-memory |
+| **Token 效率** | toon-memory |
+| **多代理支持** | toon-memory |
+| **跨设备同步（无 Git）** | mem0 |
+| **向量搜索** | shodh-memory 或 mem0 |
+| **最简单的设置** | toon-memory |
+| **最低费用** | toon-memory |
+
+## 结论
+
+**toon-memory** 是大多数开发者的最佳选择：
+
+- **Token 高效** — 每会话节省 22%
+- **代理无关** — 兼容 15+ 代理
+- **私密** — 无云端，数据不离开你的设备
+- **功能完整** — 21 个 MCP 工具、图召回、质量评分
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # 交互式安装器
+```
+
+如果你需要向量搜索或云端同步，可以考虑 mem0 或 shodh-memory。但对于大多数用例，toon-memory 提供了功能、性能和简洁性的最佳平衡。

@@ -1,0 +1,50 @@
+---
+title: "AES-256-GCM-Verschlüsselung für AI-Agent-Speicher"
+description: "AES-256-GCM-Verschlüsselung für AI-Agent-Speicher — schütze sensible Daten in toon-memory. Sichere deinen MCP Memory Server mit militärisch-grade Verschlüsselung."
+---
+
+## Überblick
+
+toon-memory unterstützt AES-256-GCM-Verschlüsselung zum Schutz sensibler Speicherdaten.
+
+## Verschlüsselung aktivieren
+
+```typescript
+memory_encrypt()
+// 🔐 Encriptación habilitada
+// ⚠️ Guarda esta clave (no se puede recuperar):
+// a1b2c3d4e5f6...
+```
+
+**Wichtig:** Speichere den Verschlüsselungsschlüssel! Er kann nicht wiederhergestellt werden, wenn er verloren geht.
+
+## Verschlüsselung deaktivieren
+
+```typescript
+memory_decrypt({ key: "a1b2c3d4e5f6..." })
+// 🔓 Encriptación deshabilitada
+```
+
+## So funktioniert es
+
+1. Wenn aktiviert, wird ein zufälliger 256-Bit-Schlüssel generiert
+2. Die Speicherdatei wird mit AES-256-GCM verschlüsselt
+3. Der Schlüssel wird in `.toon-memory/memory/config.json` gespeichert
+4. Entschlüsselung erfolgt automatisch beim Lesen
+
+## Sicherheitshinweise
+
+- Verschlüsselung ist **projektspezifisch** (jedes Projekt hat seinen eigenen Schlüssel)
+- Der Schlüssel wird lokal in `config.json` gespeichert
+- **Lege `config.json` niemals in Git ab**
+- Sicherungen werden ebenfalls verschlüsselt, wenn die Verschlüsselung aktiviert ist
+
+## Dateistruktur
+
+```
+.toon-memory/memory/
+├── data.toon        # Verschlüsselt wenn aktiviert
+├── config.json      # Enthält den Verschlüsselungsschlüssel
+└── backups/
+    └── backup-*.toon  # Ebenfalls verschlüsselt
+```

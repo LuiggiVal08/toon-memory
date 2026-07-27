@@ -1,0 +1,88 @@
+---
+title: "AIエージェントメモリの自動バックアップモード"
+description: "AIエージェントメモリの自動バックアップモード — 圧縮とログ記録付きの定期バックアップ。MCPメモリサーバーのデータを安全に保つ。"
+---
+
+## 概要
+
+ウォッチモードは、変更が検出されると自動的にメモリファイルをバックアップするデーモンを実行します。圧縮、ログ記録、古いバックアップの自動プルーンをサポートしています。
+
+## 使用方法
+
+```bash
+# デフォルト: 5分ごとにバックアップ、10件保持
+npx toon-memory watch
+
+# カスタム間隔（分）
+npx toon-memory watch 10
+
+# gzip圧縮を有効化
+npx toon-memory watch -c
+
+# ファイルログを有効化
+npx toon-memory watch -l
+
+# 最大20件保持
+npx toon-memory watch -m 20
+
+# 全オプションを組み合わせ
+npx toon-memory watch 15 -c -l -m 20
+
+# Ctrl+Cで停止
+```
+
+## オプション
+
+| オプション | 説明 | デフォルト |
+|--------|-------------|---------|
+| `[interval]` | バックアップ間隔（分） | 5 |
+| `-c, --compress` | gzip圧縮を有効化 | オフ |
+| `-l, --log [path]` | ファイルログを有効化 | オフ |
+| `-m, --max-backups <n>` | 保持する最大バックアップ数（0=無制限） | 10 |
+
+## 出力例
+
+```bash
+$ npx toon-memory watch 15 -c -l -m 20
+
+🧠 toon-memory watch
+
+Watching memory file every 15 minutes...
+Max backups: 20
+Compression: enabled
+Logging: enabled (.toon-memory/memory/watch.log)
+Press Ctrl+C to stop
+
+📦 Backup #1 created: 2026-07-11T16-00-00-000Z
+📦 Backup #2 created: 2026-07-11T16-15-00-00-000Z
+🗑️  Pruned 1 old backup(s)
+^C
+✅ Watch stopped. 2 backups created.
+```
+
+## 仕組み
+
+1. `.toon-memory/memory/data.toon`の変更を監視
+2. コンテキストが変更されると、タイムスタンプ付きバックアップを作成
+3. バックアップは`.toon-memory/memory/backups/`に保存
+4. コンテキストが実際に変更された場合のみバックアップを作成
+5. max-backupsを超えた場合、古いバックアップがプルーン
+6. オプションのgzip圧縮でバックアップサイズを約60-80%削減
+7. オプションのログ記録でイベントをファイルに書き込み
+
+## バックアップファイル
+
+```
+.toon-memory/memory/backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-15-00-00-000Z.toon.gz    # 圧縮済み
+└── backup-2026-07-11T16-30-00-00-000Z.toon
+```
+
+## ユースケース
+
+- **長時間コーディングセッション** — 作業中の自動バックアップ
+- **デプロイ前** — 重要な変更前に実行
+- **CI/CD** — 自動変更前にバックアップ
+- **ディスク容量不足** -cオプションで圧縮を使用
+- **デバッグ** -lオプションでバックアップイベントをログ記録

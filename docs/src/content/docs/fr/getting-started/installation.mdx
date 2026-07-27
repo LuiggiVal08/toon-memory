@@ -1,0 +1,64 @@
+---
+title: "Installation — Comment installer le serveur MCP toon-memory"
+description: "Comment installer toon-memory — npm, curl ou PowerShell. Installation sans configuration du serveur MCP memory pour les agents de codage IA. Compatible macOS, Linux et Windows."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "installer serveur MCP, installation toon-memory, npm install mémoire IA, configuration mémoire agent IA"
+---
+
+## Prérequis
+
+- Node.js 20 ou supérieur
+- npm, yarn ou pnpm
+
+## Méthodes d'installation
+
+### npm (Recommandé)
+
+```bash
+npm install -g toon-memory
+```
+
+### Scripts autonomes
+
+#### macOS / Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+```
+
+#### Windows (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex
+```
+
+### Depuis les sources
+
+```bash
+git clone https://github.com/LuiggiVal08/toon-memory.git
+cd toon-memory
+npm install
+npm run build
+npm link
+```
+
+## Vérifier l'installation
+
+```bash
+toon-memory --version
+# ou
+npx toon-memory status
+```
+
+## Désinstallation
+
+```bash
+# Supprimer de tous les agents
+npx toon-memory uninstall
+
+# Ou avec l'installation globale
+toon-memory uninstall
+```

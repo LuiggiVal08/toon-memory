@@ -1,0 +1,88 @@
+---
+title: "Mode de sauvegarde automatique pour la mémoire des agents IA"
+description: "Mode de sauvegarde automatique pour la mémoire des agents IA — sauvegardes périodiques avec compression et journalisation. Protégez les données de votre serveur MCP memory."
+---
+
+## Présentation
+
+Le mode watch exécute un daemon qui sauvegarde automatiquement votre fichier mémoire lorsque des changements sont détectés. Supporte la compression, la journalisation et le nettoyage automatique des vieilles sauvegardes.
+
+## Utilisation
+
+```bash
+# Par défaut : sauvegarde toutes les 5 minutes, conserve 10 sauvegardes
+npx toon-memory watch
+
+# Intervalle personnalisé (en minutes)
+npx toon-memory watch 10
+
+# Activer la compression gzip
+npx toon-memory watch -c
+
+# Activer la journalisation fichier
+npx toon-memory watch -l
+
+# Conserver au maximum 20 sauvegardes
+npx toon-memory watch -m 20
+
+# Toutes les options combinées
+npx toon-memory watch 15 -c -l -m 20
+
+# Appuyez sur Ctrl+C pour arrêter
+```
+
+## Options
+
+| Option | Description | Défaut |
+|--------|-------------|--------|
+| `[interval]` | Intervalle de sauvegarde en minutes | 5 |
+| `-c, --compress` | Activer la compression gzip | désactivé |
+| `-l, --log [path]` | Activer la journalisation fichier | désactivé |
+| `-m, --max-backups <n>` | Nombre max de sauvegardes à conserver (0=illimité) | 10 |
+
+## Exemple de sortie
+
+```bash
+$ npx toon-memory watch 15 -c -l -m 20
+
+🧠 toon-memory watch
+
+Watching memory file every 15 minutes...
+Max backups: 20
+Compression: enabled
+Logging: enabled (.toon-memory/memory/watch.log)
+Press Ctrl+C to stop
+
+📦 Backup #1 created: 2026-07-11T16-00-00-000Z
+📦 Backup #2 created: 2026-07-11T16-15-00-00-00Z
+🗑️  Pruned 1 old backup(s)
+^C
+✅ Watch stopped. 2 backups created.
+```
+
+## Comment ça marche
+
+1. Surveille `.toon-memory/memory/data.toon` pour les changements
+2. Lorsque le contenu change, crée une sauvegarde horodatée
+3. Les sauvegardes sont stockées dans `.toon-memory/memory/backups/`
+4. Crée une sauvegarde uniquement lorsque le contenu change réellement
+5. Si le max-backups est dépassé, les plus vieilles sauvegardes sont supprimées
+6. La compression gzip optionnelle réduit la taille des sauvegardes d'environ 60-80%
+7. La journalisation optionnelle écrit les événements dans un fichier
+
+## Fichiers de sauvegarde
+
+```
+.toon-memory/memory/backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-15-00-00-000Z.toon.gz    # compressé
+└── backup-2026-07-11T16-30-00-00-000Z.toon
+```
+
+## Cas d'usage
+
+- **Sessions de codage longues** — Sauvegarde automatique pendant que vous travaillez
+- **Pré-déploiement** — Lancez avant des changements importants
+- **CI/CD** — Sauvegardez avant les changements automatisés
+- **Espace disque limité** — Utilisez `-c` pour la compression
+- **Débogage** — Utilisez `-l` pour journaliser les événements de sauvegarde

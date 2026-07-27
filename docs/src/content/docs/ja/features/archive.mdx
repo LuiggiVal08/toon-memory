@@ -1,0 +1,72 @@
+---
+title: "古いメモリエントリの自動アーカイブ"
+description: "古いメモリエントリの自動アーカイブ — TTLと低品質エントリのクリーンアップでAIエージェントメモリを保つ。自動MCPメモリ管理。"
+---
+
+## 概要
+
+toon-memoryは30日以上経過したエントリやTTLが期限切れのエントリを自動的にアーカイブし、メモリをクリーンに保ちます。
+
+## 手動アーカイブ
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+## 仕組み
+
+1. 30日以上経過したエントリは`archive.toon`に移動
+2. TTLが期限切れのエントリもアーカイブされる
+3. アクティブメモリは100エントリ以下に保たれる
+4. アーカイブされたエントリは履歴として保持される
+5. 手動または自動でトリガー可能
+
+## TTLベースのアーカイブ
+
+`ttl`フィールドを持つエントリは、30日ルールに関わらずTTLが期限切れになるとアーカイブされます：
+
+```
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|permanent|This stays forever|file.ts||2026-07-10|
+  e5f6g7h8|knowledge|sprint-info|Sprint ends Friday|file.ts||2026-07-10|7d
+  i9j0k1l2|bug|temp-fix|Temporary workaround|file.ts||2026-07-10|2026-07-15
+```
+
+この例では：
+- `permanent` — TTLなし、TTLで期限切れにならない
+- `sprint-info` — 作成から7日後に期限切れ
+- `temp-fix` — 特定の日付で期限切れ
+
+## ファイル構造
+
+```
+.toon-memory/memory/
+├── data.toon        # アクティブメモリ（30日未満、TTL未期限切れ）
+└── archive.toon     # アーカイブされたエントリ（30日以上またはTTL期限切れ）
+```
+
+## アーカイブフォーマット
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  a1b2c3d4|decision|old-decision|This was decided...|src/old.ts|decision|2026-06-01
+  e5f6g7h8|pattern|old-pattern|This pattern was used...|src/pattern.ts|pattern|2026-06-15
+```
+
+## 設定
+
+| 設定 | デフォルト | 説明 |
+|---------|---------|-------------|
+| 最大エントリ数 | 100 | 最大アクティブエントリ数 |
+| アーカイブ日数 | 30 | アーカイブまでの日数 |
+| アーカイブファイル | `archive.toon` | アーカイブされたエントリの保存先 |
+
+## ユースケース
+
+- **メモリをクリーンに保つ** — 無制限の増加を防止
+- **履歴的参照** — 古い決定も引き続きアクセス可能
+- **パフォーマンス** — エントリ数が少なくなり検索が高速化
+- **一時的コンテキスト** — TTLで締め切り、スプリント、時間制限付きメモを処理

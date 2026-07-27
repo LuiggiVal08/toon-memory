@@ -1,0 +1,198 @@
+---
+title: "toon-memory vs mem0 vs shodh-memory: Soluções de Memória IA Comparadas"
+description: "Compare as melhores soluções de memória IA — toon-memory vs mem0 vs shodh-memory. Eficiência em tokens, recall por grafo, suporte offline e compatibilidade com agentes. Qual é a melhor para o seu agente de codificação com IA?"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "comparação soluções memória IA, toon-memory vs mem0, memória codificação IA, comparação servidor memória"
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: '{"@context":"https://schema.org","@type":"Article","headline":"toon-memory vs mem0 vs shodh-memory: AI Memory Solutions Compared","description":"Compare the top AI memory solutions.","author":{"@type":"Person","name":"LuiggiVal"},"publisher":{"@type":"Organization","name":"toon-memory"},"url":"https://luiggival08.github.io/toon-memory/blog/memory-solutions-compared/","mainEntityOfPage":{"@type":"WebPage","@id":"https://luiggival08.github.io/toon-memory/blog/memory-solutions-compared/"}}'
+---
+
+## Por que Comparar Soluções de Memória IA?
+
+Agentes de codificação com IA precisam de memória para serem produtivos. Mas qual solução de memória é a melhor? Este guia compara as três opções líderes:
+
+- **toon-memory** — Servidor MCP com formato eficiente em tokens
+- **mem0** — Plataforma de memória em nuvem
+- **shodh-memory** — Memória híbrida vetorial + grafo
+
+## Comparação Rápida
+
+| Funcionalidade | toon-memory | mem0 | shodh-memory |
+|---------------|-------------|------|--------------|
+| **Armazenamento** | Arquivo local (TOON) | Nuvem | RocksDB |
+| **Dependências** | Zero | API em nuvem | sentence-transformers, RocksDB |
+| **Busca** | BM25 + grafo + qualidade | Apenas vetorial | Híbrida (vetorial + grafo) |
+| **Eficiência em tokens** | 22% menos que JSON | N/A (nuvem) | Similar |
+| **Pontuação de qualidade** | Automática (0-1, heurísticas) | Nenhum | Algoritmo BND |
+| **Merge-dedup** | União de tags + confiança máxima | Nenhum | Dedup de conteúdo |
+| **Rastreamento de confiança** | Por entrada (0-1) | Nenhum | Por entrada |
+| **Primer do Sistema** | Gerado automaticamente | Nenhum | Nenhum |
+| **Multi-sessão** | Coordenação baseada em arquivo | Nenhum | Nenhum |
+| **Hooks** | 15 agentes | Nenhum | Apenas Claude |
+| **Criptografia** | AES-256-GCM | Gerenciada em nuvem | Nenhuma |
+| **Tempo de configuração** | `npx toon-memory` | Cadastro em nuvem | Docker + configuração |
+| **Custo** | Gratuito | Baseado em uso | Gratuito |
+| **Requer internet** | Não | Sim | Não |
+
+## Aprofundamento: toon-memory
+
+### Pontos Fortes
+
+- **Eficiência em tokens** — Formato TOON com 22% menos tokens que JSON
+- **Recall consciente de grafo** — BM25 + centralidade + pontuação de qualidade
+- **Suporte a agentes** — 15+ agentes com configuração automática
+- **Zero dependências** — sem nuvem, sem Docker, sem sentence-transformers
+- **Conjunto completo de funcionalidades** — 21 ferramentas MCP, criptografia, coordenação multi-sessão
+
+### Pontos Fracos
+
+- **Sem busca vetorial** — usa BM25, não embeddings
+- **MCP obrigatório** — o agente deve suportar Model Context Protocol
+- **Apenas local** — sem sincronização em nuvem entre máquinas (use Git ao invés)
+
+### Melhor Para
+
+- Desenvolvedores que querem **memória offline e privada**
+- Equipes usando **múltiplos agentes de IA** (Claude, Cursor, OpenCode)
+- Projetos onde **eficiência em tokens** importa (economia de custos)
+
+## Aprofundamento: mem0
+
+### Pontos Fortes
+
+- **Serviço gerenciado** — sem necessidade de configuração
+- **Busca vetorial** — similaridade semântica com embeddings
+- **Sincronização em nuvem** — funciona entre máquinas automaticamente
+- **Acesso via API** — integração fácil
+
+### Pontos Fracos
+
+- **Requer internet** — sem suporte offline
+- **Custo** — preços baseados em uso se acumulam
+- **Privacidade** — dados saem da sua máquina
+- **Sem otimização de tokens** — não projetado para eficiência de LLM
+- **Funcionalidades limitadas** — sem pontuação de qualidade, sem recall por grafo
+
+### Melhor Para
+
+- Equipes que precisam de **sincronização entre máquinas** sem Git
+- Projetos onde **privacidade não é uma preocupação**
+- Prototipagem rápida sem configuração local
+
+## Aprofundamento: shodh-memory
+
+### Pontos Fortes
+
+- **Busca híbrida** — recall vetorial + grafo
+- **Pontuação de qualidade** — algoritmo BND
+- **Offline** — sem necessidade de nuvem
+- **Armazenamento RocksDB** — rápido e persistente
+
+### Pontos Fracos
+
+- **Configuração complexa** — requer Docker + sentence-transformers
+- **Dependências pesadas** — grande ambiente Python
+- **Apenas Claude** — suporte limitado a agentes
+- **Sem otimização de tokens** — não projetado para eficiência de LLM
+
+### Melhor Para
+
+- Projetos que precisam de **busca vetorial + recall por grafo**
+- Equipes já usando **Docker** e **Python**
+- Ambientes apenas com Claude
+
+## Benchmark: Eficiência em Tokens
+
+Medindo tokens necessários para obter o mesmo contexto:
+
+```
+Método                          Tokens    vs re-ler arquivos
+────────────────────────────  ────────  ───────────────────
+Re-ler arquivos-fonte            ~3000    referência
+toon-memory (flat)              ~1200    -60%
+toon-memory (graph, compact)    ~900     -70%
+toon-memory (smart_recall)      ~850     -72%
+shodh-memory (hybrid)           ~1100    -63%
+mem0 (cloud)                    N/A      N/A (nuvem)
+```
+
+## Benchmark: Custo
+
+Considerando preços do GPT-4 ($0,03/1K tokens de entrada), 10 sessões/dia:
+
+| Solução | Custo/mês | Notas |
+|---------|-----------|-------|
+| **toon-memory** | $8,70 | Gratuito, eficiente em tokens |
+| **mem0** | ~$15-30 | Preços baseados em uso |
+| **shodh-memory** | $10,50 | Gratuito, menos eficiente em tokens |
+| **Sem memória** | $21,60 | Re-explicando contexto |
+
+## Comparação de Funcionalidades
+
+### Operações de Memória
+
+| Funcionalidade | toon-memory | mem0 | shodh-memory |
+|---------------|-------------|------|--------------|
+| Salvar decisões | ✅ | ✅ | ✅ |
+| Salvar padrões | ✅ | ❌ | ❌ |
+| Salvar bugs | ✅ | ❌ | ❌ |
+| Pontuação de qualidade | ✅ (0-1) | ❌ | ✅ (BND) |
+| Rastreamento de confiança | ✅ | ❌ | ✅ |
+| TTL (expiração) | ✅ | ❌ | ❌ |
+| Merge-dedup | ✅ | ❌ | ✅ |
+| Criptografia | ✅ (AES-256) | ✅ (nuvem) | ❌ |
+
+### Busca e Recall
+
+| Funcionalidade | toon-memory | mem0 | shodh-memory |
+|---------------|-------------|------|--------------|
+| Busca por palavra-chave | ✅ (BM25) | ❌ | ❌ |
+| Busca vetorial | ❌ | ✅ | ✅ |
+| Recall por grafo | ✅ | ❌ | ✅ |
+| Ranking por qualidade | ✅ | ❌ | ✅ |
+| Saída compacta | ✅ | ❌ | ❌ |
+| Smart recall | ✅ | ❌ | ❌ |
+
+### Integração
+
+| Funcionalidade | toon-memory | mem0 | shodh-memory |
+|---------------|-------------|------|--------------|
+| Protocolo MCP | ✅ | ❌ | ❌ |
+| Suporte a agentes | 15+ | Qualquer (API) | Apenas Claude |
+| Configuração automática | ✅ | ✅ | ❌ |
+| Hooks | ✅ | ❌ | ✅ (Claude) |
+| Multi-sessão | ✅ | ❌ | ❌ |
+| Offline | ✅ | ❌ | ✅ |
+
+## Matriz de Decisão
+
+| Se você precisa... | Escolha |
+|-------------------|---------|
+| **Memória offline e privada** | toon-memory |
+| **Eficiência em tokens** | toon-memory |
+| **Suporte a múltiplos agentes** | toon-memory |
+| **Sincronização entre máquinas (sem Git)** | mem0 |
+| **Busca vetorial** | shodh-memory ou mem0 |
+| **Configuração mais simples** | toon-memory |
+| **Menor custo** | toon-memory |
+
+## Conclusão
+
+O **toon-memory** é a melhor escolha para a maioria dos desenvolvedores:
+
+- **Eficiente em tokens** — economiza 22% em cada sessão
+- **Agnóstico de agente** — funciona com mais de 15 agentes
+- **Privado** — sem nuvem, dados não saem da sua máquina
+- **Completo** — 21 ferramentas MCP, recall por grafo, pontuação de qualidade
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # Instalador interativo
+```
+
+Se você precisa de busca vetorial ou sincronização em nuvem, considere mem0 ou shodh-memory. Mas para a maioria dos casos de uso, o toon-memory oferece o melhor equilíbrio entre funcionalidades, desempenho e simplicidade.

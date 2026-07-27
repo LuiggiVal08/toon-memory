@@ -1,0 +1,91 @@
+---
+title: "什么是 MCP 记忆？面向 AI 编程代理的持久化记忆"
+description: "MCP 记忆为 Claude、Cursor 和 OpenCode 等 AI 编程代理提供跨会话持久化记忆。了解 Model Context Protocol 如何实现离线、token 高效的记忆。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP 记忆, 持久化记忆, AI 编程代理, Model Context Protocol, Claude 记忆, Cursor 记忆"
+---
+
+## 什么是 MCP 记忆？
+
+MCP 记忆是一种让 AI 编程代理**在会话之间记住事物**的方式。没有 MCP 记忆时，每次你与 Claude、Cursor 或 OpenCode 开始新对话，代理都从零开始 — 它会忘记之前对话中的所有决策、模式和缺陷。
+
+**toon-memory** 是一个解决此问题的 MCP 服务器。它为你的 AI 编程代理提供持久化记忆，具有以下特点：
+
+- **跨重启存活** — 你的代理今天还记得昨天的上下文
+- **离线工作** — 无云端、无 API 调用、存储无需 LLM
+- **节省 token** — 比 JSON 少 22% token，每会话减少 80% 工具调用
+- **兼容 15+ 代理** — Claude Code、Cursor、OpenCode、Windsurf、VS Code Copilot 等
+
+## MCP 记忆的工作原理
+
+### 问题
+
+AI 编程代理**在会话之间没有记忆**。每个新会话中，代理：
+
+1. 忘记你选择 Postgres 而非 MongoDB 的原因
+2. 不记得你上周修复的 Redis 超时缺陷
+3. 无法回忆你团队建立的架构模式
+4. 必须从头重新学习你的项目
+
+### 解决方案：MCP 记忆服务器
+
+toon-memory 作为**本地 MCP 服务器**运行，你的代理通过 Model Context Protocol 与之连接。它以 **TOON 格式**（Token-Oriented Object Notation）存储记忆，具有以下特点：
+
+- 比 JSON **效率高 22%**，更适合 LLM 处理
+- **可搜索**，支持 BM25 相关性 + 图感知召回
+- **自动质量评分**（基于结构的 0-1 评分）
+- **图连接**，条目之间通过链接和引用连接
+
+## MCP 记忆 vs 其他方案
+
+| 方案 | 优点 | 缺点 |
+|------|------|------|
+| **MCP 记忆 (toon-memory)** | 离线、token 高效、图感知、15+ 代理 | 需要 MCP 支持 |
+| **Markdown 文件** | 简单、人类可读 | 非结构化、不可搜索、不兼容 MCP |
+| **云记忆 (mem0)** | 托管、向量搜索 | 需要互联网、有费用、数据离开你的设备 |
+| **记忆库 (shodh-memory)** | 混合搜索 | 设置复杂、需要 Docker、sentence-transformers 依赖 |
+
+## 如何获取 MCP 记忆
+
+### 第 1 步：安装 toon-memory
+
+```bash
+npm install -g toon-memory
+```
+
+### 第 2 步：配置你的代理
+
+```bash
+# 交互式安装器
+npx toon-memory
+
+# 或手动设置 — 参见[安装指南](/toon-memory/zh/getting-started/installation)
+```
+
+### 第 3 步：开始使用记忆
+
+在你的下一次代理会话中：
+
+```bash
+# 保存重要决策
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance and JSON support"
+})
+
+# 编码前搜索记忆
+memory_recall({ query: "database" })
+
+# 一次调用获取完整上下文
+memory_smart_recall({ intent: "what I was working on" })
+```
+
+## 了解更多
+
+- [AI 编程代理的记忆](/toon-memory/zh/learn/memory-for-ai-agents) — 持久化记忆的工作原理
+- [持久化记忆的 MCP 服务器](/toon-memory/zh/learn/mcp-server-memory) — 技术深入解析
+- [快速入门](/toon-memory/zh/getting-started/quickstart) — 3 步上手

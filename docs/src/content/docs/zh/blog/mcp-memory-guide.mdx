@@ -1,0 +1,248 @@
+---
+title: "MCP 记忆服务器：持久化 AI 记忆完全指南"
+description: "关于 MCP 记忆服务器你需要知道的一切 — Model Context Protocol 如何为 AI 编程代理提供持久化记忆。包含示例、基准测试和设置的完整指南。"
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "MCP 记忆服务器, Model Context Protocol 记忆, AI 持久化记忆, MCP 服务器指南"
+  - tag: script
+    attrs:
+      type: application/ld+json
+    content: '{"@context":"https://schema.org","@type":"Article","headline":"MCP Memory Server: Complete Guide to Persistent AI Memory","description":"Everything you need to know about MCP memory servers.","author":{"@type":"Person","name":"LuiggiVal"},"publisher":{"@type":"Organization","name":"toon-memory"},"url":"https://luiggival08.github.io/toon-memory/blog/mcp-memory-guide/","mainEntityOfPage":{"@type":"WebPage","@id":"https://luiggival08.github.io/toon-memory/blog/mcp-memory-guide/"}}'
+---
+
+## 什么是 MCP 记忆服务器？
+
+MCP 记忆服务器是一个**本地服务**，它实现了 Model Context Protocol（MCP），为 AI 编程代理提供持久化记忆。你的代理不再在会话之间丢失上下文，而是将决策、模式和缺陷存储在可搜索的记忆库中。
+
+**toon-memory** 是目前最完整的 MCP 记忆服务器：
+
+- **21 个 MCP 工具** + 3 个资源
+- **15+ 代理支持** — Claude、Cursor、OpenCode 等
+- **Token 高效格式** — 比 JSON 少 22% token
+- **图感知召回** — BM25 + 中心性 + 质量评分
+- **零配置** — 安装即用
+
+## MCP 记忆服务器的工作原理
+
+### Model Context Protocol
+
+MCP（Model Context Protocol）是 AI 代理与外部工具通信的标准。MCP 记忆服务器：
+
+1. **通过 stdio 接收**代理的请求
+2. **处理记忆操作**（保存、搜索、删除）
+3. **以结构化格式本地存储**数据
+4. **返回结果**并格式化为代理可使用的格式
+
+### 架构
+
+```
+你的 AI 代理
+    ↓ MCP 协议 (stdio)
+记忆服务器 (toon-memory)
+    ↓
+本地文件 (.toon-memory/memory/data.toon)
+```
+
+无云端。无 API 调用。无网络。一切都在你的设备上。
+
+## 为什么使用 MCP 记忆服务器？
+
+### 问题
+
+AI 编程代理**在会话之间没有记忆**：
+
+- Claude 忘记昨天的架构决策
+- Cursor 无法回忆你发现的缺陷修复
+- OpenCode 不记得你团队建立的模式
+
+这浪费了 token、消耗了时间，并导致令人沮丧的重复。
+
+### 解决方案
+
+MCP 记忆服务器为你的代理提供**持久化记忆**：
+
+| 无 MCP 记忆 | 使用 MCP 记忆 |
+|-------------|--------------|
+| 每次会话重新解释上下文 | 上下文自动持久保存 |
+| 每会话 2,411 token | 每会话 972 token（-60%） |
+| 每会话 25 次工具调用 | 每会话 5 次工具调用（-80%） |
+| 每会话 $0.072 (GPT-4) | 每会话 $0.029（-60%） |
+
+## MCP 记忆服务器功能
+
+### 21 个 MCP 工具
+
+toon-memory 暴露 **21 个 MCP 工具**，实现完整的记忆管理：
+
+**核心工具：**
+- `memory_remember` — 保存决策、模式、缺陷、知识
+- `memory_recall` — 搜索记忆（平铺或图模式）
+- `memory_smart_recall` — 统一召回，结合 BM25 + 图 + 质量
+- `memory_forget` — 移除条目
+- `memory_stats` — 查看记忆状态
+
+**上下文工具：**
+- `context_brief` — 单次调用的上下文简报
+- `context_generate` — 完整项目简报
+- `context_diff` — 自上次会话以来的更改
+- `context_focus` — 超聚焦简报
+- `context_health` — 记忆健康审计
+- `context_export` — 导出为 markdown
+
+**管理工具：**
+- `memory_summary` — 保存/获取文件摘要
+- `memory_archive` — 归档旧条目
+- `memory_diff` — 显示自某日期以来的更改
+- `memory_suggest` — 查找相关条目
+- `memory_sessions` — 多会话协调
+- `memory_captured` — 查看钩子捕获的活动
+- `memory_consolidate` — 合并重复项
+- `memory_encrypt` — AES-256-GCM 加密
+- `memory_decrypt` — 禁用加密
+
+### Token 高效格式
+
+记忆以 **TOON 格式**（Token-Oriented Object Notation）存储：
+
+```
+a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10
+```
+
+比等效 JSON **少 22% token**，专为 LLM 理解而设计。
+
+### 图感知召回
+
+条目通过**显式链接**和**隐式引用**连接：
+
+```bash
+memory_remember({
+  category: "decision",
+  key: "use-redis",
+  content: "Use Redis for session storage (see [[redis-config]])",
+  links: "redis-config"
+})
+```
+
+召回会展开**自我子图**以查找相关条目，即使它们不包含完全相同的搜索词。
+
+### 质量评分
+
+每个条目自动获得**质量评分**（0-1）：
+
+| 因素 | 权重 |
+|------|------|
+| 标签 | 最高 0.3 |
+| 链接 | 最高 0.2 |
+| 内容长度 | 最高 0.3 |
+| 新近度 | 最高 0.1 |
+| 具体性 | 最高 0.1 |
+
+高质量条目在召回中排在最前面。
+
+## 设置指南
+
+### 第 1 步：安装
+
+```bash
+npm install -g toon-memory
+```
+
+### 第 2 步：配置
+
+```bash
+npx toon-memory  # 交互式安装器
+```
+
+或手动添加到代理的 MCP 配置：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+### 第 3 步：使用
+
+```bash
+# 保存重要决策
+memory_remember({
+  category: "decision",
+  key: "use-postgres",
+  content: "Choose Postgres for ACID compliance"
+})
+
+# 搜索记忆
+memory_recall({ query: "database" })
+
+# 一次调用获取完整上下文
+memory_smart_recall({ intent: "what I was working on" })
+```
+
+## 基准测试
+
+### Token 效率
+
+```
+格式              Token 数 (16 条目)    对比 JSON
+──────────────  ───────────────────    ───────
+JSON            1097                   基准
+TOON            850                    -22.5%
+```
+
+### 召回效率
+
+```
+方法                              获取上下文的 Token 数    对比重读文件
+────────────────────────────  ─────────────────────    ───────────────────
+重新读取源文件                    ~3000                    基准
+memory_recall (平铺)             ~1200                    -60%
+memory_recall (图, 紧凑)         ~900                     -70%
+memory_smart_recall              ~850                     -72%
+```
+
+### 上下文工具基准
+
+```
+场景                                  无       有       节省     工具数
+───────────────────────────────  ────────  ──────  ───────  ──────
+context_generate (完整简报)          5,556     378    93.2%   6 → 1
+context_diff (增量)                    533     152    71.5%   4 → 1
+context_focus (定向)                    413     225    45.5%   4 → 1
+context_health (审计)                   322     246    23.6%   5 → 1
+context_export (可注入 md)           1,178     218    81.5%   3 → 1
+───────────────────────────────  ────────  ──────  ───────  ──────
+总计                               8,002   1,219    84.8%  22 → 5
+```
+
+## 支持的代理
+
+toon-memory 兼容 **15+ AI 编程代理**：
+
+- OpenCode、Claude Code、Cursor、Windsurf、VS Code Copilot
+- Codex CLI、Gemini CLI、Zed、Cline、Continue
+- Antigravity、Aider、KiloCode、OpenClaw、Kiro
+
+参见[支持的代理](/toon-memory/zh/configuration/agents)页面获取配置详情。
+
+## 结论
+
+MCP 记忆服务器为你的 AI 编程代理提供了真正高效工作所需的持久化记忆。toon-memory 是目前最完整的解决方案：
+
+- **21 个 MCP 工具**实现完整的记忆管理
+- **Token 高效格式**每会话节省 22%
+- **图感知召回**自动查找相关上下文
+- **15+ 代理支持**零配置设置
+
+```bash
+npm install -g toon-memory
+npx toon-memory  # 交互式安装器
+```
+
+你的代理将在下一次会话中记住一切。

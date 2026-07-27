@@ -727,6 +727,1505 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			text: 'Licencia MIT — ',
 		},
 	},
+	zh: {
+	nav: {
+		docs: '文档',
+		npm: 'npm',
+		github: 'GitHub',
+	},
+	hero: {
+		tagline: '面向 AI 编程代理的 MCP 记忆服务器 — 跨会话召回上下文',
+		subtitle: '你的代理在会话之间记住决策、模式和 bug。',
+		getStarted: '快速开始',
+		viewGithub: '在 GitHub 上查看',
+		copy: '复制',
+		copied: '已复制！',
+		installCmd: 'npm install -g toon-memory',
+	},
+	problem: {
+		title: '为什么代理会在会话之间丢失上下文？',
+		subtitle: 'AI 编程代理每次会话都从失忆开始',
+		cards: [
+			{ icon: '🌀', title: '上下文每天重置', body: '每次新会话，你的代理都会忘记昨天学到的决策、模式和 bug。你需要一遍又一遍地重新解释相同的上下文。' },
+			{ icon: '🔍', title: '在历史中搜寻', body: '没有记忆时，代理需要搜索 git 历史并重新读取文件来重建为什么某事以特定方式构建 — 消耗 token 和时间。' },
+			{ icon: '📋', title: '复制粘贴笔记', body: '开发者在聊天之间手动粘贴上下文。这种方式脆弱、容易过时，而且永远无法传递到下一次自主运行中。' },
+		],
+		resolution: 'toon-memory 为你的代理提供持久的、可查询的记忆 — 让上下文在每个会话中自动存活。',
+	},
+	features: {
+		cards: [
+			{ icon: '🧩', title: '21 个 MCP 工具 + 3 个资源', body: '通过 MCP 实现完整的记忆管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、context_brief、context_generate、context_diff、context_focus、context_health、context_export。外加直接上下文读取的资源。', tags: ['remember', 'recall', 'context', 'diff'] },
+			{ icon: '⭐', title: '多代理', body: '支持所有主流 AI 编程代理。OpenCode、VS Code、Claude、Cursor、Windsurf、Cline、Continue — 零配置。', tags: ['OpenCode', 'Claude', 'Cursor'] },
+			{ icon: '📄', title: 'TOON 格式', body: '比 JSON 减少 22% 的 token（实测）。自定义编码专为 LLM 理解和 token 效率设计。', stats: ['减少 22% token', '解析速度提升 1.3x'] },
+			{ icon: '🔎', title: '智能召回', body: '基于图的召回按 BM25 相关性和图中心性重新排序（中心节点即使不包含查询词也会浮现）。按跳数衰减保持远距离上下文较低。Token 高效的 `compact` 模式返回数字索引、片段截断的结果。', stats: ['BM25', '中心性', 'compact'] },
+			{ icon: '🧠', title: '智能记忆', body: '从内置词汇表和项目依赖自动推断标签、质量评分、置信度评分、合并去重、相关条目建议、记忆 diff，以及可配置的临时上下文 TTL。', stats: ['自动标签', '质量评分', '合并去重'] },
+			{ icon: '🔒', title: '加密', body: 'AES-256-GCM 保护敏感数据。自动归档旧条目。Watch 模式每隔 N 分钟自动备份。', stats: ['AES-256-GCM', '自动备份'] },
+		],
+	},
+	agents: { title: '支持 15+ 个 AI 编程代理', subtitle: '零配置 — toon-memory 自动检测并配置每个代理' },
+	stats: { items: [{ number: '21', label: 'MCP 工具' }, { number: '15', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
+	howItWorks: {
+		title: '它是如何工作的？',
+		subtitle: '从失忆到记忆的四个步骤',
+		steps: [
+			{ n: 1, title: '安装', body: '一条命令。15+ 个代理零配置。', code: 'npm install -g toon-memory' },
+			{ n: 2, title: '记忆', body: '在工作时保存决策、模式和 bug — 支持自动标签推断和可选 TTL。', code: 'memory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})' },
+			{ n: 3, title: '召回', body: '你的代理按需查询记忆 — 无需重复解释，不浪费 token。', code: 'memory_recall({ query: "validation" })\n// [decision] use-zod (a1b2c3d4)\n//   Use Zod for validation — src/types.ts' },
+			{ n: 4, title: '上下文', body: '一次调用为你的代理提供全部信息：项目、git、记忆、会话。减少 80% 的工具调用。', code: 'context_generate({})\n// # Project Briefing (full)\n// ## Project — toon-memory v2.6.0\n// ## Git — branch: main, 3 commits\n// ## Memory — 26 entries, 18 edges\n// ## Sessions — 2 active' },
+		],
+	},
+	tips: {
+		title: '记忆技巧', subtitle: '通过这些模式充分利用 toon-memory',
+		items: [
+			{ n: 1, title: '立即保存决策', body: '当你做出选择时，立即保存。添加关于<em>为什么</em>选择 A 而非 B 的上下文 — 未来的你会感谢自己。' },
+			{ n: 2, title: '使用一致的键名', body: '按领域前缀键名：<code class="inline-code">db:redis-config</code>、<code class="inline-code">auth:jwt</code>。加快召回速度并避免冲突。' },
+			{ n: 3, title: '标签自动推断', body: '留空标签，系统会从内容推断 — redis、auth、api、db 等 16+ 种类别。也可以手动添加以精确控制。' },
+			{ n: 4, title: '使用 TTL 处理临时上下文', body: '截止日期、冲刺计划、时间敏感的笔记 — 设置 <code class="inline-code">ttl: "7d"</code>，它们会自动过期。无需手动清理。' },
+		],
+	},
+	comparison: {
+		title: '之前 vs 之后', subtitle: '看看 toon-memory 如何改变你的工作流程', beforeTitle: '之前', afterTitle: '之后',
+		before: ['每次会话都要重复解释', '忘记为什么做了某个决策', '在 git 历史中搜寻上下文', '在聊天之间复制粘贴笔记'],
+		after: ['代理记住一切', '一次调用获得完整项目上下文', '每次会话减少 80% 的工具调用', '会话之间零上下文丢失'],
+	},
+	codeExamples: {
+		quickExample: '快速示例', quickInstall: '快速安装',
+		exampleCode: '// 保存决策（自动标签推断）\nmemory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})\n// 🏷️ Tags inferred: types\n\n// 带 TTL 保存（7 天后过期）\nmemory_remember({\n  category: "knowledge",\n  key: "sprint-deadline",\n  content: "Sprint ends July 18",\n  ttl: "7d"\n})\n\n// 查看自上次会话以来的变化\nmemory_diff({ since: "24h" })\n\n// 搜索记忆\nmemory_recall({ query: "redis" })\n// [bug] redis-pool-fix (i9j0k1l2)\n//   Added max_connections=20',
+		installCode: '# npm\nnpm install -g toon-memory\n\n# macOS / Linux\ncurl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh\n\n# Windows (PowerShell)\nirm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex',
+	},
+	tokenSavings: {
+		title: '减少 22% 的 token，设计如此', subtitle: 'TOON 格式专为 LLM 设计，而非人类',
+		stats: [{ num: '22.5%', cap: '比 JSON 减少 token' }, { num: '30.5%', cap: '单条条目' }, { num: '1.3x', cap: '解析更快' }],
+		note: '使用 <code>gpt-tokenizer</code>（cl100k_base）在 16 条代表性记忆条目上测量，比较实际磁盘上的 TOON 格式与紧凑 JSON。可复现：<code>npm run bench</code>。',
+	},
+	benchmarks: {
+		title: '基准测试', subtitle: 'TOON 格式的 token 效率 — 实测而非假设',
+		fewerTokens: '比 JSON 减少 token', onSingle: '单条条目', entriesMeasured: '条目已测量',
+		note: '使用 <code>gpt-tokenizer</code>（cl100k_base）在 16 条代表性记忆条目上测量，比较实际磁盘上的 TOON 格式与紧凑 JSON。可复现：<code>npm run bench</code>。',
+	},
+	impactSection: {
+		title: '每次会话减少 80% 的工具调用',
+		subtitle: '模拟完整会话：25 次工具调用 → 使用 context_* 工具后 5 次。减少 47% 的 token，减少 80% 的延迟。',
+		stats: [{ num: '80%', cap: '减少工具调用 (25 → 5)' }, { num: '47%', cap: '每次会话减少 token' }, { num: '$20', cap: '/月节省（每天 20 次会话）' }],
+		note: '完整会话基准测试：会话开始 → 调试 → 实现 → 审查 → 收尾。<code>context_*</code> 工具用约 318 个额外 token 换取 7 次更少的调用 — 更丰富的上下文意味着更少的后续读取。可复现：<code>npm run bench:full</code>。',
+	},
+	tools: {
+		title: '21 个 MCP 工具，3 个资源', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
+		cards: [
+			{ name: 'memory_remember', title: '保存到记忆', desc: '存储决策、模式、bug 或知识 — 跨会话持久化，自动质量评分。' },
+			{ name: 'memory_recall', title: '搜索记忆', desc: '在读取文件之前查询知识图谱。质量加权结果。' },
+			{ name: 'memory_forget', title: '从记忆中删除', desc: '通过键或 id 删除条目。' },
+			{ name: 'memory_stats', title: '记忆统计', desc: '显示项目记忆的统计信息，包括质量分布。' },
+			{ name: 'memory_diff', title: '记忆差异', desc: '查看自上次会话以来的变化。' },
+			{ name: 'memory_suggest', title: '建议相关条目', desc: '为给定上下文显示相关条目。' },
+			{ name: 'memory_summary', title: '文件摘要', desc: '保存或检索文件摘要以节省 token。' },
+			{ name: 'memory_archive', title: '归档旧条目', desc: '移动超过 30 天的条目以保持记忆整洁。' },
+			{ name: 'memory_smart_recall', title: '智能召回', desc: '统一搜索，在一次调用中结合 BM25 + 图中心性 + 质量评分 + 新鲜度。' },
+			{ name: 'memory_captured', title: '捕获的活动', desc: '查看 hooks 自动捕获的活动日志 — 将观察提升为记忆。' },
+			{ name: 'memory_consolidate', title: '合并去重', desc: '以确定性方式合并内容相同的重复条目。' },
+			{ name: 'memory_sessions', title: '会话', desc: '显示活跃的代理会话并检测软冲突。' },
+			{ name: 'context_brief', title: '上下文简报', desc: '一次调用的上下文简报：记忆 + 会话 + 健康状态，紧凑 markdown。零 LLM。' },
+			{ name: 'context_generate', title: '完整项目简报', desc: '一次调用的简报：项目结构 + git 状态 + 记忆 + 会话。替代 6 次手动调用。节省 93% token。' },
+			{ name: 'context_diff', title: '增量简报', desc: 'git 提交 + 修改的文件 + 自上次会话以来的新/更新记忆。节省 72% token。' },
+			{ name: 'context_focus', title: '定向简报', desc: '特定查询的相关记忆 + 相关文件 + 调用者 + 测试文件。' },
+			{ name: 'context_health', title: '健康审计', desc: '孤立链接、重复项、损坏的文件引用、过期 TTL、过时会话。评分 0–100。' },
+			{ name: 'context_export', title: '导出为 Markdown', desc: '将记忆导出为可注入的 markdown 用于系统提示。节省 82% token。' },
+			{ name: 'memory_encrypt', title: '启用加密', desc: '使用自动生成密钥的 AES-256-GCM 加密。' },
+			{ name: 'memory_decrypt', title: '禁用加密', desc: '解密并禁用加密。' },
+			{ name: 'memory_backup', title: '备份记忆', desc: '创建带时间戳的记忆文件备份。自动修剪至最近 10 条。' },
+		],
+	},
+	graphSection: {
+		title: '你的记忆，以图谱形式',
+		subtitle: '将决策与规格、bug 和架构连接起来。召回返回正确的上下文 — 不仅仅是关键词匹配。',
+		points: ['使用 `links` 或 `[[key]]` 引用连接条目 — 无需嵌入，无需 LLM', '`memory_recall({ mode: "graph" })` 展开关系感知的子图', '更少的 token，更高的精度，完全离线且确定性'],
+		caption: '一个决策传播到其规格和架构 — 代理看到全貌。',
+	},
+	smartRecallSection: {
+		title: '智能、高 token 效率的召回',
+		subtitle: '召回通过 BM25 相关性和图中心性离线重新排序 — 然后在 token 重要时压缩为紧凑形式。质量评分和新鲜度提升最佳条目。',
+		points: ['在 id + 类别 + 键 + 内容 + 标签上进行 BM25 评分', '图中心性使中心条目即使不包含查询词也会浮现', '质量评分 (0-1) 和新鲜度衰减提升最佳、最新的条目', '`compact: true` → 数字索引，省略 id/日期/文件，片段截断的邻居'],
+		standardCode: 'memory_recall({ query: "riesgo", mode: "graph" })\n[decision] risk-engine-priority (a1b2c3d4)\n  The engine prioritizes risk over speed.\n  File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01\n  links: engine-arch',
+		compactCode: 'memory_recall({ query: "riesgo", mode: "graph", compact: true })\n[1] decision/risk-engine-priority\n  The engine prioritizes risk over speed.\n  tags: risk;spec · edges: ->2, ->3',
+		caption: 'compact 模式以更少的 token 保留相同的上下文 — .toon 文件从不被修改。',
+	},
+	faq: {
+		title: '常见问题', subtitle: '关于为你的代理提供记忆你需要知道的一切',
+		items: [
+			{ q: '什么是 toon-memory？', a: '面向 AI 编程代理的持久记忆层，包含 21 个 MCP 工具。它以紧凑的 TOON 格式存储决策、模式、bug 和上下文，让你的代理在会话之间记住一切 — 每次会话减少 80% 的工具调用。' },
+			{ q: '支持哪些代理？', a: 'OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex、Gemini、Zed、Antigravity、Aider、KiloCode、OpenClaw 和 Kiro — 通过 MCP 服务器零配置支持 15+ 个代理。' },
+			{ q: '我的数据如何存储？', a: '条目写入本地 TOON 文件（一种 token 高效的格式，比 JSON 小约 22%，实测）。你拥有该文件，可以像任何其他源文件一样提交、diff 或备份。' },
+			{ q: '我的记忆是加密的吗？', a: '是的。使用 memory_encrypt 工具启用加密，通过 AES-256-GCM 保护敏感条目。密钥自动生成并保持在本地。' },
+			{ q: '它能离线工作吗？', a: '完全可以。toon-memory 在本地运行，无需外部服务或账户。Watch 模式甚至可以按计划自动创建备份。' },
+			{ q: '多个代理可以共享相同的记忆吗？', a: '可以。因为记忆存储在项目中的普通文件中，为该项目配置的每个代理都读写相同的上下文。' },
+			{ q: '如何备份我的记忆？', a: '使用 watch 模式进行定时自动备份，或者直接将 TOON 文件提交到 git。旧条目在 30 天后自动归档以保持整洁。' },
+			{ q: '它是免费和开源的吗？', a: '是的。toon-memory 采用 MIT 许可证，免费使用。源代码在 GitHub 上，包发布在 npm 上。' },
+			{ q: '它与代理内置记忆有什么不同？', a: '内置记忆通常是临时的或特定于供应商的。toon-memory 提供一个可移植、可 diff、加密的记忆文件，你完全控制，跨代理和项目使用。' },
+			{ q: '我可以设置临时上下文过期吗？', a: '可以。在任何条目上设置 TTL（例如 ttl: "7d"），它会自动过期 — 非常适合冲刺计划、截止日期和时间敏感的笔记。' },
+			{ q: '什么是智能召回？', a: 'memory_smart_recall 在一次调用中结合 BM25 关键词搜索、图中心性、质量评分和新鲜度衰减 — 无需手动编排的最佳排名策略。' },
+			{ q: '质量评分是如何工作的？', a: '每条条目自动获得质量评分 (0-1)，基于标签覆盖率、链接丰富度、内容详细度、新鲜度和特定度。高质量条目在召回结果中首先出现。' },
+			{ q: '如果我两次保存相同的键会怎样？', a: '系统合并属性而非替换：标签和链接取并集，质量和置信度取最大值，日期更新。你的条目随时间变得更丰富。' },
+		],
+	},
+	cta: { title: '准备好为你的代理提供记忆了吗？', subtitle: '几秒钟内安装，再也不用向代理重复解释上下文。', getStarted: '快速开始', viewGithub: '在 GitHub 上查看' },
+	footer: { text: 'MIT 许可证 — ' },
+},
+	ja: {
+	nav: { docs: 'ドキュメント', npm: 'npm', github: 'GitHub' },
+	hero: {
+		tagline: 'AI コーディングエージェント向け MCP メモリサーバー — セッション間でコンテキストを取得',
+		subtitle: 'エージェントがセッション間で意思決定、パターン、バグを記憶します。',
+		getStarted: 'はじめに', viewGithub: 'GitHub で見る', copy: 'コピー', copied: 'コピーしました！', installCmd: 'npm install -g toon-memory',
+	},
+	problem: {
+		title: 'なぜエージェントはセッション間でコンテキストを失うのか？', subtitle: 'AI コーディングエージェントは毎セッション記憶喪失から始める',
+		cards: [
+			{ icon: '🌀', title: 'コンテキストが毎日リセットされる', body: '新しいセッションごとに、エージェントは昨日学んだ意思決定、パターン、バグを忘れます。同じコンテキストを何度も繰り返し説明する必要があります。' },
+			{ icon: '🔍', title: '履歴の中を検索', body: 'メモリがなければ、エージェントは git 履歴を検索し、ファイルを再読み込みして、なぜそのような方法で構築されたのかを再構築します — トークンと時間を消費します。' },
+			{ icon: '📋', title: 'コピー＆ペーストのメモ', body: '開発者はチャット間で手動でコンテキストを貼り付けます。これは脆く、古くなりやすく、次の自律的な実行には伝わりません。' },
+		],
+		resolution: 'toon-memory はエージェントに永続的でクエリ可能なメモリを提供します — コンテキストが自動的にすべてのセッションで生存します。',
+	},
+	features: {
+		cards: [
+			{ icon: '🧩', title: '21 個の MCP ツール + 3 個のリソース', body: 'MCP 経由で完全なメモリ管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、context_brief、context_generate、context_diff、context_focus、context_health、context_export。加えて直接コンテキスト読み取り用リソース。', tags: ['remember', 'recall', 'context', 'diff'] },
+			{ icon: '⭐', title: 'マルチエージェント', body: 'すべての主要 AI コーディングエージェントに対応。OpenCode、VS Code、Claude、Cursor、Windsurf、Cline、Continue — ゼロコンフィグ。', tags: ['OpenCode', 'Claude', 'Cursor'] },
+			{ icon: '📄', title: 'TOON フォーマット', body: 'JSON より 22% トークン削減（実測）。LLM 理解とトークン効率のために設計されたカスタムエンコーディング。', stats: ['トークン 22% 削減', 'パース速度 1.3x 向上'] },
+			{ icon: '🔎', title: 'スマートリコール', body: 'グラフベースのリコールが BM25 関連性とグラフ中心性で再順位付けされます（クエリワードがなくてもハブが浮上）。ホップごとの減衰で遠いコンテキストを低く維持。トークン効率の高い `compact` モードは数字インデックス、スニペット切り詰めの結果を返します。', stats: ['BM25', '中心性', 'compact'] },
+			{ icon: '🧠', title: 'スマートメモリ', body: '組み込み語彙とプロジェクト依存関係からの自動タグ推論、品質スコア、信頼度スコア、マージ重複排除、関連エントリの提案、メモリ diff、および一時コンテキスト用の設定可能な TTL。', stats: ['自動タグ', '品質評価', 'マージ重複排除'] },
+			{ icon: '🔒', title: '暗号化', body: 'AES-256-GCM による機密データ保護。古いエントリの自動アーカイブ。Watch モードで N 分ごとに自動バックアップ。', stats: ['AES-256-GCM', '自動バックアップ'] },
+		],
+	},
+	agents: { title: '15 以上の AI コーディングエージェントに対応', subtitle: 'ゼロコンフィグ — toon-memory が自動検出し、各エージェントを設定' },
+	stats: { items: [{ number: '21', label: 'MCP ツール' }, { number: '15', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
+	howItWorks: {
+		title: 'どのように機能するのか？', subtitle: '記憶喪失からメモリへの 4 つのステップ',
+		steps: [
+			{ n: 1, title: 'インストール', body: 'ワンコマンド。15 以上のエージェントにゼロコンフィグ。', code: 'npm install -g toon-memory' },
+			{ n: 2, title: '記憶する', body: '作業しながら意思決定、パターン、バグを保存 — 自動タグ推論とオプションの TTL 対応。', code: 'memory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})' },
+			{ n: 3, title: 'リコール', body: 'エージェントがオンデマンドでメモリをクエリ — 再説明不要、トークン浪費なし。', code: 'memory_recall({ query: "validation" })\n// [decision] use-zod (a1b2c3d4)\n//   Use Zod for validation — src/types.ts' },
+			{ n: 4, title: 'コンテキスト', body: '1 回の呼び出しでエージェントにすべてを提供：プロジェクト、git、メモリ、セッション。ツール呼び出しを 80% 削減。', code: 'context_generate({})\n// # Project Briefing (full)\n// ## Project — toon-memory v2.6.0\n// ## Git — branch: main, 3 commits\n// ## Memory — 26 entries, 18 edges\n// ## Sessions — 2 active' },
+		],
+	},
+	tips: {
+		title: 'メモリのヒント', subtitle: 'これらのパターンで toon-memory を最大限に活用',
+		items: [
+			{ n: 1, title: '意思決定はすぐに保存', body: '選択をしたら、すぐに保存します。<em>なぜ</em>オプション A を B に選んだのかのコンテキストを追加 — 未来の自分が感謝します。' },
+			{ n: 2, title: '一貫したキーを使用', body: 'ドメインごとにキーにプレフィックス：<code class="inline-code">db:redis-config</code>、<code class="inline-code">auth:jwt</code>。リコールを高速化し、衝突を回避。' },
+			{ n: 3, title: 'タグは自動推論', body: 'タグを空のままにすると、システムが内容から推論 — redis、auth、api、db など 16 以上のカテゴリ。手動で追加して正確に制御することも可能。' },
+			{ n: 4, title: '一時コンテキストに TTL を使用', body: '締め切り、スプリント、時間制約のあるメモ — <code class="inline-code">ttl: "7d"</code> を設定すると自動的に期限切れに。手動クリーンアップ不要。' },
+		],
+	},
+	comparison: {
+		title: 'Before vs After', subtitle: 'toon-memory がワークフローをどう変えるか', beforeTitle: 'Before', afterTitle: 'After',
+		before: ['毎セッション説明を繰り返す', '意思決定の理由を忘れる', 'git 履歴からコンテキストを探す', 'チャット間でメモをコピー＆ペースト'],
+		after: ['エージェントがすべてを記憶', '1 回の呼び出しで完全なプロジェクトコンテキスト', 'セッションあたり 80% ツール呼び出し削減', 'セッション間でコンテキスト損失ゼロ'],
+	},
+	codeExamples: {
+		quickExample: 'クイック例', quickInstall: 'クイックインストール',
+		exampleCode: '// 意思決定を保存（自動タグ推論）\nmemory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})\n// 🏷️ Tags inferred: types\n\n// TTL 付きで保存（7 日後に期限切れ）\nmemory_remember({\n  category: "knowledge",\n  key: "sprint-deadline",\n  content: "Sprint ends July 18",\n  ttl: "7d"\n})\n\n// 前回セッション以降の変更を確認\nmemory_diff({ since: "24h" })\n\n// メモリを検索\nmemory_recall({ query: "redis" })\n// [bug] redis-pool-fix (i9j0k1l2)\n//   Added max_connections=20',
+		installCode: '# npm\nnpm install -g toon-memory\n\n# macOS / Linux\ncurl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh\n\n# Windows (PowerShell)\nirm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex',
+	},
+	tokenSavings: {
+		title: '設計によりトークンを 22% 削減', subtitle: 'TOON フォーマットは人間のためではなく、LLM のために構築された',
+		stats: [{ num: '22.5%', cap: 'JSON よりトークン削減' }, { num: '30.5%', cap: '単一エントリ' }, { num: '1.3x', cap: 'パース速度向上' }],
+		note: '<code>gpt-tokenizer</code>（cl100k_base）で 16 件の代表的なメモリエントリを測定。実際の TOON フォーマットとコンパクト JSON を比較。再現可能：<code>npm run bench</code>。',
+	},
+	benchmarks: {
+		title: 'ベンチマーク', subtitle: 'TOON フォーマットのトークン効率 — 推測ではなく実測',
+		fewerTokens: 'JSON よりトークン削減', onSingle: '単一エントリ', entriesMeasured: 'エントリを測定',
+		note: '<code>gpt-tokenizer</code>（cl100k_base）で 16 件の代表的なメモリエントリを測定。実際の TOON フォーマットとコンパクト JSON を比較。再現可能：<code>npm run bench</code>。',
+	},
+	impactSection: {
+		title: 'セッションあたり 80% ツール呼び出し削減',
+		subtitle: 'シミュレーションされた完全セッション：25 回のツール呼び出し → context_* ツール使用で 5 回。トークン 47% 削減、レイテンシ 80% 削減。',
+		stats: [{ num: '80%', cap: 'ツール呼び出し削減 (25 → 5)' }, { num: '47%', cap: 'セッションあたりトークン削減' }, { num: '$20', cap: '/月節約（1 日 20 セッション）' }],
+		note: '完全セッションベンチマーク：セッション開始 → デバッグ → 実装 → レビュー → 終了。<code>context_*</code> ツールは約 318 トークンの追加で 7 回の呼び出しを削減 — より豊富なコンテキストはより少ない再読み取りを意味します。再現可能：<code>npm run bench:full</code>。',
+	},
+	tools: {
+		title: '21 個の MCP ツール、3 個のリソース', subtitle: 'エージェントが記憶、リコール、推論するために必要なすべて', resourcesLabel: 'リソース：',
+		cards: [
+			{ name: 'memory_remember', title: 'メモリに保存', desc: '意思決定、パターン、バグ、知識を保存 — 自動品質スコアリング付きでセッション間永続化。' },
+			{ name: 'memory_recall', title: 'メモリを検索', desc: 'ファイルを読む前にナレッジグラフをクエリ。品質加重の結果。' },
+			{ name: 'memory_forget', title: 'メモリから削除', desc: 'キーまたは id でエントリを削除。' },
+			{ name: 'memory_stats', title: 'メモリ統計', desc: '品質分布を含むプロジェクトメモリの統計を表示。' },
+			{ name: 'memory_diff', title: 'メモリ差分', desc: '前回セッション以降の変更を確認。' },
+			{ name: 'memory_suggest', title: '関連を提案', desc: '指定されたコンテキストの関連エントリを表示。' },
+			{ name: 'memory_summary', title: 'ファイル要約', desc: 'トークン節約のためにファイル要約を保存または取得。' },
+			{ name: 'memory_archive', title: '古いものをアーカイブ', desc: 'メモリをきれいに保つために 30 日以上のエントリを移動。' },
+			{ name: 'memory_smart_recall', title: 'スマートリコール', desc: 'BM25 + グラフ中心性 + 品質スコア + 新鮮度を 1 回の呼び出しで統合検索。' },
+			{ name: 'memory_captured', title: 'キャプチャされたアクティビティ', desc: 'フックによって自動キャプチャされたアクティビティログを表示 — オブザベーションをメモリに昇格。' },
+			{ name: 'memory_consolidate', title: '統合', desc: '内容が同一の重複エントリを決定的にマージ。' },
+			{ name: 'memory_sessions', title: 'セッション', desc: 'アクティブなエージェントセッションを表示し、ソフト衝突を検出。' },
+			{ name: 'context_brief', title: 'コンテキストブリーフィング', desc: '1 回呼び出しのコンテキストブリーフィング：メモリ + セッション + ヘルスをコンパクト markdown で。ゼロ LLM。' },
+			{ name: 'context_generate', title: '完全プロジェクトブリーフィング', desc: '1 回呼び出しのブリーフィング：プロジェクト構造 + git 状態 + メモリ + セッション。6 回の手動呼び出しを置換。トークン 93% 節約。' },
+			{ name: 'context_diff', title: 'インクリメンタルブリーフィング', desc: 'git コミット + 変更されたファイル + 前回セッション以降の新規/更新メモリ。トークン 72% 節約。' },
+			{ name: 'context_focus', title: 'ターゲットブリーフィング', desc: '特定のクエリに関する関連メモリ + 関連ファイル + コーラー + テストファイル。' },
+			{ name: 'context_health', title: 'ヘルス監査', desc: '孤立リンク、重複、壊れたファイル参照、期限切れ TTL、古いセッション。スコア 0–100。' },
+			{ name: 'context_export', title: 'Markdown としてエクスポート', desc: 'システムプロンプト用のインジェクタブル markdown としてメモリをエクスポート。トークン 82% 節約。' },
+			{ name: 'memory_encrypt', title: '暗号化を有効化', desc: '自動生成キーによる AES-256-GCM 暗号化。' },
+			{ name: 'memory_decrypt', title: '暗号化を無効化', desc: '復号化して暗号化を無効化。' },
+			{ name: 'memory_backup', title: 'メモリのバックアップ', desc: 'タイムスタンプ付きのメモリファイルバックアップを作成。最新 10 件に自動整理。' },
+		],
+	},
+	graphSection: {
+		title: 'メモリをグラフで', subtitle: '意思決定を仕様、バグ、アーキテクチャに接続。リコールは正しいコンテキストを返す — 単なるキーワード一致ではない。',
+		points: ['`links` または `[[key]]` 参照でエントリを接続 — 埋め込み不要、LLM 不要', '`memory_recall({ mode: "graph" })` がリレーションシップを考慮したサブグラフを展開', 'トークン削減、精度向上、完全オフラインで決定的'],
+		caption: '意思決定が仕様とアーキテクチャに波及 — エージェントが全体像を把握。',
+	},
+	smartRecallSection: {
+		title: 'スマートでトークン効率の高いリコール',
+		subtitle: 'リコールは BM25 関連性とグラフ中心性でオフラインで再順位付けされた後、トークンが重要な場合は紧凑な形式に圧縮。品質スコアと新鮮度が最良のエントリを押し上げる。',
+		points: ['id + カテゴリ + キー + 内容 + タグに対する BM25 スコアリング', 'グラフ中心性がクエリワードがなくてもハブエントリを浮上', '品質スコア（0-1）と新鮮度の減衰が最良の最新エントリを押し上げ', '`compact: true` → 数字インデックス、id/日付/ファイル省略、スニペット切り詰めの近隣'],
+		standardCode: 'memory_recall({ query: "riesgo", mode: "graph" })\n[decision] risk-engine-priority (a1b2c3d4)\n  The engine prioritizes risk over speed.\n  File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01\n  links: engine-arch',
+		compactCode: 'memory_recall({ query: "riesgo", mode: "graph", compact: true })\n[1] decision/risk-engine-priority\n  The engine prioritizes risk over speed.\n  tags: risk;spec · edges: ->2, ->3',
+		caption: 'compact モードは同じコンテキストをより少ないトークンで保持 — .toon ファイルは変更されない。',
+	},
+	faq: {
+		title: 'よくある質問', subtitle: 'エージェントにメモリを与えるために知っておくべきことすべて',
+		items: [
+			{ q: 'toon-memory とは？', a: '21 個の MCP ツールを備えた AI コーディングエージェント向けの永続メモリレイヤー。意思決定、パターン、バグ、コンテキストをコンパクトな TOON フォーマットで保存し、エージェントがセッション間ですべてを記憶 — セッションあたり 80% ツール呼び出し削減。' },
+			{ q: 'どのエージェントがサポートされているか？', a: 'OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex、Gemini、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro — MCP サーバー経由でゼロコンフィグの 15 以上のエージェント。' },
+			{ q: 'データはどのように保存されるか？', a: 'エントリはローカル TOON ファイル（JSON より約 22% 小さいトークン効率のフォーマット、実測）に書き込まれます。ファイルはあなたのもので、他のソースファイルと同様にコミット、diff、バックアップが可能。' },
+			{ q: 'メモリは暗号化されているか？', a: 'はい。memory_encrypt ツールで暗号化を有効にし、AES-256-GCM で機密エントリを保護。キーは自動生成され、ローカルに保持。' },
+			{ q: 'オフラインで動作するか？', a: '完全に。toon-memory は外部サービスやアカウント不要でローカルで実行。Watch モードではスケジュールに従って自動バックアップも作成。' },
+			{ q: '複数のエージェントが同じメモリを共有できるか？', a: 'はい。メモリがプロジェクト内のプレーンファイルに存在するため、そのプロジェクトに設定されたすべてのエージェントが同じコンテキストを読み書き。' },
+			{ q: 'メモリのバックアップはどうすればいいか？', a: 'Watch モードで定期的な自動バックアップ、または TOON ファイルを git にコミットするだけ。古いエントリは 30 日後に自動アーカイブ。' },
+			{ q: '無料でオープンソースか？', a: 'はい。toon-memory は MIT ライセンスで無料使用。ソースは GitHub にあり、パッケージは npm に公開。' },
+			{ q: 'エージェントの組み込みメモリとの違いは？', a: '組み込みメモリはエフェメラルまたはベンダー固有の場合が多い。toon-memory はエージェントやプロジェクト全体で完全にコントロールできる、ポータブルで diff 可能、暗号化されたメモリファイルを提供。' },
+			{ q: '一時コンテキストを期限切れにできるか？', a: 'はい。任意のエントリに TTL（例：ttl: "7d"）を設定すると自動的に期限切れ — スプリント、締め切り、時間制約のあるメモに最適。' },
+			{ q: 'スマートリコールとは？', a: 'memory_smart_recall は BM25 キーワード検索、グラフ中心性、品質スコアリング、新鮮度の減衰を 1 回の呼び出しで組み合わせ — 手動オーケストレーションなしですべてのランキング戦略の最良を実現。' },
+			{ q: '品質スコアリングはどのように機能するか？', a: '各エントリはタグカバレッジ、リンクの豊かさ、コンテンツの詳細度、新鮮度、特異性に基づいて自動的に品質スコア（0-1）を取得。高品質エントリがリコール結果で最初に表示。' },
+			{ q: '同じキーを 2 回保存するとどうなるか？', a: 'システムは属性をマージして置換しない：タグとリンクは和集合、品質と信頼度は最大値、日付は更新。エントリは時間とともに豊かになる。' },
+		],
+	},
+	cta: { title: 'エージェントにメモリを与える準備はできましたか？', subtitle: '数秒でインストールし、二度とエージェントにコンテキストを再説明することはありません。', getStarted: 'はじめに', viewGithub: 'GitHub で見る' },
+	footer: { text: 'MIT ライセンス — ' },
+},
+	ko: {
+	nav: { docs: '문서', npm: 'npm', github: 'GitHub' },
+	hero: {
+		tagline: 'AI 코딩 에이전트를 위한 MCP 메모리 서버 — 세션 간 컨텍스트 회수',
+		subtitle: '에이전트가 세션 간에 결정, 패턴, 버그를 기억합니다.',
+		getStarted: '시작하기', viewGithub: 'GitHub에서 보기', copy: '복사', copied: '복사됨!', installCmd: 'npm install -g toon-memory',
+	},
+	problem: {
+		title: '왜 에이전트가 세션 간에 컨텍스트를 잃는가?', subtitle: 'AI 코딩 에이전트는 매 세션 기억 상실로 시작합니다',
+		cards: [
+			{ icon: '🌀', title: '컨텍스트가 매일 리셋됨', body: '새 세션마다 에이전트는 어제 배운 결정, 패턴, 버그를 잊어버립니다. 같은 컨텍스트를 반복해서 설명해야 합니다.' },
+			{ icon: '🔍', title: '기록에서 검색', body: '메모리가 없으면 에이전트는 git 기록을 검색하고 파일을 다시 읽어서 왜 특정 방식으로 구축되었는지를 재구성합니다 — 토큰과 시간을 소모합니다.' },
+			{ icon: '📋', title: '복사-붙여넣기 메모', body: '개발자가 채팅 간에 수동으로 컨텍스트를 붙여넣습니다. 이는 취약하고, 오래되고, 다음 자동 실행에는 전달되지 않습니다.' },
+		],
+		resolution: 'toon-memory는 에이전트에 지속적이고 쿼리 가능한 메모리를 제공합니다 — 컨텍스트가 자동으로 모든 세션에서 살아남습니다.',
+	},
+	features: {
+		cards: [
+			{ icon: '🧩', title: '21개 MCP 도구 + 3개 리소스', body: 'MCP를 통한 완전한 메모리 관리 — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. 직접 컨텍스트 읽기를 위한 리소스 포함.', tags: ['remember', 'recall', 'context', 'diff'] },
+			{ icon: '⭐', title: '멀티 에이전트', body: '모든 주요 AI 코딩 에이전트와 호환. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue — 제로 구성.', tags: ['OpenCode', 'Claude', 'Cursor'] },
+			{ icon: '📄', title: 'TOON 형식', body: 'JSON보다 22% 적은 토큰 (실측). LLM 이해와 토큰 효율성을 위해 설계된 맞춤 인코딩.', stats: ['토큰 22% 절감', '파싱 속도 1.3x 향상'] },
+			{ icon: '🔎', title: '스마트 리콜', body: '그래프 기반 리콜이 BM25 관련성과 그래프 중심성으로 재순위화됨 (쿼리 단어 없이도 허브가 부상). 홉당 감쇠로 먼 컨텍스트를 낮게 유지. 토큰 효율적인 `compact` 모드는 숫자 인덱스, 스니펫 잘린 결과를 반환.', stats: ['BM25', '중심성', 'compact'] },
+			{ icon: '🧠', title: '스마트 메모리', body: '내장 어휘와 프로젝트 의존성에서 자동 태그 추론, 품질 점수, 신뢰도 점수, 병합 중복 제거, 관련 항목 제안, 메모리 diff, 및 구성 가능한 임시 컨텍스트 TTL.', stats: ['자동 태그', '품질 점수', '병합 중복 제거'] },
+			{ icon: '🔒', title: '암호화', body: 'AES-256-GCM로 민감한 데이터 보호. 오래된 항목 자동 아카이브. Watch 모드로 N분마다 자동 백업.', stats: ['AES-256-GCM', '자동 백업'] },
+		],
+	},
+	agents: { title: '15개 이상의 AI 코딩 에이전트 지원', subtitle: '제로 구성 — toon-memory가 각 에이전트를 자동 감지하고 구성' },
+	stats: { items: [{ number: '21', label: 'MCP 도구' }, { number: '15', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
+	howItWorks: {
+		title: '어떻게 작동하나요?', subtitle: '기억 상실에서 메모리까지 4단계',
+		steps: [
+			{ n: 1, title: '설치', body: '하나의 명령어. 15개 이상의 에이전트에 제로 구성.', code: 'npm install -g toon-memory' },
+			{ n: 2, title: '기억', body: '작업하면서 결정, 패턴, 버그를 저장 — 자동 태그 추론과 선택적 TTL 포함.', code: 'memory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})' },
+			{ n: 3, title: '리콜', body: '에이전트가 필요할 때 메모리를 쿼리 — 재설명 불필요, 토큰 낭비 없음.', code: 'memory_recall({ query: "validation" })\n// [decision] use-zod (a1b2c3d4)\n//   Use Zod for validation — src/types.ts' },
+			{ n: 4, title: '컨텍스트', body: '한 번의 호출로 에이전트에 모든 것을 제공: 프로젝트, git, 메모리, 세션. 도구 호출 80% 절감.', code: 'context_generate({})\n// # Project Briefing (full)\n// ## Project — toon-memory v2.6.0\n// ## Git — branch: main, 3 commits\n// ## Memory — 26 entries, 18 edges\n// ## Sessions — 2 active' },
+		],
+	},
+	tips: {
+		title: '메모리 팁', subtitle: '이 패턴으로 toon-memory를 최대한 활용',
+		items: [
+			{ n: 1, title: '즉시 결정 저장', body: '선택을 하면 즉시 저장합니다. 왜 옵션 A를 B보다 선택했는지에 대한 <em>이유</em> 컨텍스트를 추가 — 미래의 자신이 감사할 것입니다.' },
+			{ n: 2, title: '일관된 키 사용', body: '도메인별 키 접두사: <code class="inline-code">db:redis-config</code>, <code class="inline-code">auth:jwt</code>. 리콜 속도를 높이고 충돌을 방지.' },
+			{ n: 3, title: '태그 자동 추론', body: '태그를 비워두면 시스템이 내용에서 추론 — redis, auth, api, db 등 16개 이상의 카테고리. 수동으로 추가하여 정밀 제어도 가능.' },
+			{ n: 4, title: '임시 컨텍스트에 TTL 사용', body: '마감일, 스프린트, 시간 제한 메모 — <code class="inline-code">ttl: "7d"</code>를 설정하면 자동 만료. 수동 정리 불필요.' },
+		],
+	},
+	comparison: {
+		title: 'Before vs After', subtitle: 'toon-memory가 워크플로우를 어떻게 바꾸는지 확인', beforeTitle: 'Before', afterTitle: 'After',
+		before: ['매 세션 설명을 반복', '결정 이유를 잊음', 'git 기록에서 컨텍스트 검색', '채팅 간에 메모를 복사-붙여넣기'],
+		after: ['에이전트가 모든 것을 기억', '한 번의 호출로 전체 프로젝트 컨텍스트', '세션당 80% 도구 호출 절감', '세션 간 컨텍스트 손실 제로'],
+	},
+	codeExamples: {
+		quickExample: '빠른 예제', quickInstall: '빠른 설치',
+		exampleCode: '// 결정 저장 (자동 태그 추론)\nmemory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})\n// 🏷️ Tags inferred: types\n\n// TTL 포함 저장 (7일 후 만료)\nmemory_remember({\n  category: "knowledge",\n  key: "sprint-deadline",\n  content: "Sprint ends July 18",\n  ttl: "7d"\n})\n\n// 마지막 세션 이후 변경 사항 확인\nmemory_diff({ since: "24h" })\n\n// 메모리 검색\nmemory_recall({ query: "redis" })\n// [bug] redis-pool-fix (i9j0k1l2)\n//   Added max_connections=20',
+		installCode: '# npm\nnpm install -g toon-memory\n\n# macOS / Linux\ncurl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh\n\n# Windows (PowerShell)\nirm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex',
+	},
+	tokenSavings: {
+		title: '설계에 의해 토큰 22% 절감', subtitle: 'TOON 형식은 인간을 위해 만들어진 것이 아니라 LLM을 위해 만들어짐',
+		stats: [{ num: '22.5%', cap: 'JSON보다 토큰 절감' }, { num: '30.5%', cap: '단일 항목' }, { num: '1.3x', cap: '파싱 속도 향상' }],
+		note: '<code>gpt-tokenizer</code> (cl100k_base)로 16개의 대표적인 메모리 항목을 측정. 실제 TOON 형식과 컴팩트 JSON 비교. 재현 가능: <code>npm run bench</code>.',
+	},
+	benchmarks: {
+		title: '벤치마크', subtitle: 'TOON 형식의 토큰 효율성 — 추측이 아닌 실측',
+		fewerTokens: 'JSON보다 토큰 절감', onSingle: '단일 항목', entriesMeasured: '항목 측정됨',
+		note: '<code>gpt-tokenizer</code> (cl100k_base)로 16개의 대표적인 메모리 항목을 측정. 실제 TOON 형식과 컴팩트 JSON 비교. 재현 가능: <code>npm run bench</code>.',
+	},
+	impactSection: {
+		title: '세션당 80% 도구 호출 절감',
+		subtitle: '시뮬레이션된 전체 세션: 25회 도구 호출 → context_* 도구 사용 시 5회. 토큰 47% 절감, 레이턴시 80% 절감.',
+		stats: [{ num: '80%', cap: '도구 호출 절감 (25 → 5)' }, { num: '47%', cap: '세션당 토큰 절감' }, { num: '$20', cap: '/월 절약 (하루 20 세션)' }],
+		note: '전체 세션 벤치마크: 세션 시작 → 디버그 → 구현 → 리뷰 → 마무리. <code>context_*</code> 도구가 ~318 토큰 추가로 7회 호출 절감 — 더 풍부한 컨텍스트는 더 적은 재읽기를 의미. 재현 가능: <code>npm run bench:full</code>.',
+	},
+	tools: {
+		title: '21개 MCP 도구, 3개 리소스', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
+		cards: [
+			{ name: 'memory_remember', title: '메모리에 저장', desc: '결정, 패턴, 버그, 지식 저장 — 자동 품질 점수와 함께 세션 간 지속.' },
+			{ name: 'memory_recall', title: '메모리 검색', desc: '파일을 읽기 전에 지식 그래프를 쿼리. 품질 가중 결과.' },
+			{ name: 'memory_forget', title: '메모리에서 삭제', desc: '키 또는 id로 항목 삭제.' },
+			{ name: 'memory_stats', title: '메모리 통계', desc: '품질 분포를 포함한 프로젝트 메모리 통계 표시.' },
+			{ name: 'memory_diff', title: '메모리 차이', desc: '마지막 세션 이후 변경 사항 확인.' },
+			{ name: 'memory_suggest', title: '관련 항목 제안', desc: '지정된 컨텍스트의 관련 항목을 표시.' },
+			{ name: 'memory_summary', title: '파일 요약', desc: '토큰 절약을 위한 파일 요약 저장 또는 검색.' },
+			{ name: 'memory_archive', title: '오래된 항목 아카이브', desc: '메모리를 깨끗하게 유지하기 위해 30일 이상 된 항목 이동.' },
+			{ name: 'memory_smart_recall', title: '스마트 리콜', desc: 'BM25 + 그래프 중심성 + 품질 점수 + 신선도를 하나의 호출로 통합 검색.' },
+			{ name: 'memory_captured', title: '캡처된 활동', desc: '훅에 의해 자동 캡처된 활동 로그 표시 — 관찰을 메모리로 승격.' },
+			{ name: 'memory_consolidate', title: '통합', desc: '동일한 내용의 중복 항목을 결정적으로 병합.' },
+			{ name: 'memory_sessions', title: '세션', desc: '활성 에이전트 세션을 표시하고 소프트 충돌을 감지.' },
+			{ name: 'context_brief', title: '컨텍스트 브리핑', desc: '한 번의 호출 컨텍스트 브리핑: 메모리 + 세션 + 헬스를 컴팩트 markdown으로. 제로 LLM.' },
+			{ name: 'context_generate', title: '전체 프로젝트 브리핑', desc: '한 번의 호출 브리핑: 프로젝트 구조 + git 상태 + 메모리 + 세션. 6회 수동 호출 대체. 토큰 93% 절약.' },
+			{ name: 'context_diff', title: '점증 브리핑', desc: 'git 커밋 + 수정된 파일 + 마지막 세션 이후 신규/업데이트 메모리. 토큰 72% 절약.' },
+			{ name: 'context_focus', title: '타겟 브리핑', desc: '특정 쿼리에 대한 관련 메모리 + 관련 파일 + 호출자 + 테스트 파일.' },
+			{ name: 'context_health', title: '헬스 감사', desc: '고아 링크, 중복, 깨진 파일 참조, 만료된 TTL, 오래된 세션. 점수 0–100.' },
+			{ name: 'context_export', title: 'Markdown으로 내보내기', desc: '시스템 프롬프트용 주입 가능한 markdown으로 메모리 내보내기. 토큰 82% 절약.' },
+			{ name: 'memory_encrypt', title: '암호화 활성화', desc: '자동 생성 키로 AES-256-GCM 암호화.' },
+			{ name: 'memory_decrypt', title: '암호화 비활성화', desc: '복호화하고 암호화를 비활성화.' },
+			{ name: 'memory_backup', title: '메모리 백업', desc: '타임스탬프가 있는 메모리 파일 백업 생성. 최신 10개로 자동 정리.' },
+		],
+	},
+	graphSection: {
+		title: '메모리를 그래프로', subtitle: '결정을 사양, 버그, 아키텍처에 연결. 리콜은 올바른 컨텍스트를 반환 — 단순한 키워드 일치가 아님.',
+		points: ['`links` 또는 `[[key]]` 참조로 항목 연결 — 임베딩 불필요, LLM 불필요', '`memory_recall({ mode: "graph" })`가 관계 인식 서브그래프를 확장', '토큰 절감, 정확도 향상, 완전 오프라인이고 결정적'],
+		caption: '결정이 사양과 아키텍처로 파급 — 에이전트가 전체 그림을 파악.',
+	},
+	smartRecallSection: {
+		title: '스마트하고 토큰 효율적인 리콜',
+		subtitle: '리콜이 BM25 관련성과 그래프 중심성으로 오프라인에서 재순위화된 후, 토큰이 중요할 때 컴팩트 형태로 축소. 품질 점수와 신선도가 최고의 항목을 밀어올림.',
+		points: ['id + 카테고리 + 키 + 내용 + 태그에 대한 BM25 스코어링', '그래프 중심성이 쿼리 단어 없이도 허브 항목을 부상', '품질 점수 (0-1)와 신선도 감쇠가 최고의 최신 항목을 밀어올림', '`compact: true` → 숫자 인덱스, id/날짜/파일 생략, 스니펫 잘린 이웃'],
+		standardCode: 'memory_recall({ query: "riesgo", mode: "graph" })\n[decision] risk-engine-priority (a1b2c3d4)\n  The engine prioritizes risk over speed.\n  File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01\n  links: engine-arch',
+		compactCode: 'memory_recall({ query: "riesgo", mode: "graph", compact: true })\n[1] decision/risk-engine-priority\n  The engine prioritizes risk over speed.\n  tags: risk;spec · edges: ->2, ->3',
+		caption: 'compact 모드는 동일한 컨텍스트를 더 적은 토큰으로 유지 — .toon 파일은 변경되지 않음.',
+	},
+	faq: {
+		title: '자주 묻는 질문', subtitle: '에이전트에 메모리를 부여하기 위해 알아야 할 모든 것',
+		items: [
+			{ q: 'toon-memory란?', a: '21개 MCP 도구를 갖춘 AI 코딩 에이전트용 지속적 메모리 레이어. 결정, 패턴, 버그, 컨텍스트를 컴팩트 TOON 형식으로 저장하여 에이전트가 세션 간에 모든 것을 기억 — 세션당 80% 도구 호출 절감.' },
+			{ q: '지원되는 에이전트는?', a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro — MCP 서버를 통한 제로 구성의 15개 이상 에이전트.' },
+			{ q: '데이터는 어떻게 저장되나요?', a: '항목은 로컬 TOON 파일 (JSON보다 ~22% 작은 토큰 효율 형식, 실측)에 기록됩니다. 파일은 귀하의 것이며 다른 소스 파일처럼 커밋, diff, 백업이 가능합니다.' },
+			{ q: '메모리가 암호화되나요?', a: '네. memory_encrypt 도구로 암호화를 활성화하여 AES-256-GCM로 민감한 항목을 보호합니다. 키는 자동 생성되고 로컬에 유지됩니다.' },
+			{ q: '오프라인에서 작동하나요?', a: '완전히. toon-memory는 외부 서비스나 계정 없이 로컬에서 실행됩니다. Watch 모드는 예약에 따라 자동 백업도 생성합니다.' },
+			{ q: '여러 에이전트가 같은 메모리를 공유할 수 있나요?', a: '네. 메모리가 프로젝트의 일반 파일에 존재하기 때문에 해당 프로젝트에 설정된 모든 에이전트가 같은 컨텍스트를 읽고 씁니다.' },
+			{ q: '메모리 백업은 어떻게 하나요?', a: 'Watch 모드로 예약된 자동 백업을 사용하거나 TOON 파일을 git에 커밋하기만 하면 됩니다. 오래된 항목은 30일 후 자동 아카이브됩니다.' },
+			{ q: '무료이고 오픈 소스인가요?', a: '네. toon-memory는 MIT 라이선스로 무료 사용 가능합니다. 소스는 GitHub에 있고 패키지는 npm에 게시됩니다.' },
+			{ q: '에이전트의 내장 메모리와 어떻게 다른가요?', a: '내장 메모리는 일반적으로 임시적이거나 벤더별입니다. toon-memory는 에이전트와 프로젝트 전반에서 완전히 제어할 수 있는 이식 가능하고 diff 가능한 암호화된 메모리 파일을 제공합니다.' },
+			{ q: '임시 컨텍스트를 만료시킬 수 있나요?', a: '네. 모든 항목에 TTL (예: ttl: "7d")을 설정하면 자동 만료 — 스프린트, 마감일, 시간 제한 메모에 적합합니다.' },
+			{ q: '스마트 리콜이란?', a: 'memory_smart_recall은 BM25 키워드 검색, 그래프 중심성, 품질 스코어링, 신선도 감쇠를 하나의 호출로 결합 — 수동 오케스트레이션 없이 모든 순위 전략의 최고를 실현.' },
+			{ q: '품질 스코어링은 어떻게 작동하나요?', a: '모든 항목은 태그 커버리지, 링크 풍부함, 내용 상세도, 신선도, 구체성에 따라 자동 품질 점수 (0-1)를 받습니다. 고품질 항목이 리콜 결과에서 먼저 표시됩니다.' },
+			{ q: '같은 키를 두 번 저장하면 어떻게 되나요?', a: '시스템이 속성을 대체하지 않고 병합합니다: 태그와 링크는 합집합, 품질과 신뢰도는 최댓값, 날짜가 업데이트됩니다. 항목이 시간이 지남에 따라 풍부해집니다.' },
+		],
+	},
+	cta: { title: '에이전트에 메모리를 부여할 준비가 되셨나요?', subtitle: '몇 초 만에 설치하고 에이전트에 컨텍스트를 재설명하지 마세요.', getStarted: '시작하기', viewGithub: 'GitHub에서 보기' },
+	footer: { text: 'MIT 라이선스 — ' },
+},
+	pt-br: {
+	nav: {
+		docs: 'Documentação',
+		npm: 'npm',
+		github: 'GitHub',
+	},
+	hero: {
+		tagline: 'Servidor de memória MCP para agentes de IA — recupere contexto entre sessões',
+		subtitle: 'Seu agente lembra decisões, padrões e bugs entre sessões.',
+		getStarted: 'Começar',
+		viewGithub: 'Ver no GitHub',
+		copy: 'Copiar',
+		copied: 'Copiado!',
+		installCmd: 'npm install -g toon-memory',
+	},
+	problem: {
+		title: 'Por que os agentes perdem contexto entre sessões?',
+		subtitle: 'Agentes de IA começam cada sessão com amnésia',
+		cards: [
+			{
+				icon: '🌀',
+				title: 'Contexto reseta diariamente',
+				body: 'A cada nova sessão, seu agente esquece as decisões, padrões e bugs que aprendeu ontem. Você reexplica o mesmo contexto repetidamente.',
+			},
+			{
+				icon: '🔍',
+				title: 'Caçando no histórico',
+				body: 'Sem memória, os agentes fazem grep no histórico do git e relêem arquivos para reconstruir por que algo foi feito de certa forma — gastando tokens e tempo.',
+			},
+			{
+				icon: '📋',
+				title: 'Notas de copiar e colar',
+				body: 'Desenvolvedores colam contexto manualmente entre chats. É frágil, fica obsoleto e nunca chega à próxima execução autônoma.',
+			},
+		],
+		resolution:
+			'toon-memory dá ao seu agente uma memória persistente e consultável — para que o contexto sobreviva a cada sessão, automaticamente.',
+	},
+	features: {
+		cards: [
+			{
+				icon: '🧩',
+				title: '21 ferramentas MCP + 3 recursos',
+				body: 'Gerenciamento completo de memória via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Mais recursos para leitura direta de contexto.',
+				tags: ['remember', 'recall', 'context', 'diff'],
+			},
+			{
+				icon: '⭐',
+				title: 'Multi-agente',
+				body: 'Funciona com todos os principais agentes de IA. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue — zero configuração.',
+				tags: ['OpenCode', 'Claude', 'Cursor'],
+			},
+			{
+				icon: '📄',
+				title: 'Formato TOON',
+				body: '22% menos tokens que JSON (medido). Codificação personalizada projetada para compreensão de LLMs e eficiência de tokens.',
+				stats: ['22% menos tokens', '1.3x mais rápido para parsear'],
+			},
+			{
+				icon: '🔎',
+				title: 'Recall inteligente',
+				body: 'Recall baseado em grafo reordenado por relevância BM25 e centralidade do grafo (hubs aparecem mesmo sem a palavra de busca). Decaimento por hop mantém contexto distante baixo. Modo `compact` retorna resultados com índices numéricos e trechos.',
+				stats: ['BM25', 'Centralidade', 'compact'],
+			},
+			{
+				icon: '🧠',
+				title: 'Memória inteligente',
+				body: 'Inferência automática de tags a partir de vocabulário integrado e dependências do projeto, pontuação de qualidade, escores de confiança, merge-dedup, sugestões de entradas relacionadas, diff de memória e TTL configurável para contexto temporário.',
+				stats: ['Auto-tags', 'Qualidade', 'Merge-dedup'],
+			},
+			{
+				icon: '🔒',
+				title: 'Criptografia',
+				body: 'AES-256-GCM para dados sensíveis. Auto-arquivamento de entradas antigas. Modo watch para backup automático a cada N minutos.',
+				stats: ['AES-256-GCM', 'Auto-backup'],
+			},
+		],
+	},
+	agents: {
+		title: 'Funciona com 15+ agentes de IA',
+		subtitle: 'Zero configuração — toon-memory detecta e configura cada um automaticamente',
+	},
+	stats: {
+		items: [
+			{ number: '21', label: 'Ferramentas MCP' },
+			{ number: '15', label: 'Agentes' },
+			{ number: '80%', label: 'Menos chamadas de ferramenta/sessão' },
+			{ number: '0', label: 'Configuração necessária' },
+		],
+	},
+	howItWorks: {
+		title: 'Como funciona?',
+		subtitle: 'Quatro passos da amnésia à memória',
+		steps: [
+			{ n: 1, title: 'Instalar', body: 'Um comando. Zero configuração para 15+ agentes.', code: 'npm install -g toon-memory' },
+			{
+				n: 2,
+				title: 'Lembrar',
+				body: 'Salve decisões, padrões e bugs enquanto trabalha — com inferência automática de tags e TTL opcional.',
+				code: `memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts"
+})`,
+			},
+			{
+				n: 3,
+				title: 'Recall',
+				body: 'Seu agente consulta a memória sob demanda — sem reexplicar, sem desperdiçar tokens.',
+				code: `memory_recall({ query: "validation" })
+// [decision] use-zod (a1b2c3d4)
+//   Use Zod for validation — src/types.ts`,
+			},
+			{
+				n: 4,
+				title: 'Contexto',
+				body: 'Uma chamada dá ao seu agente tudo: projeto, git, memória, sessões. 80% menos chamadas de ferramenta.',
+				code: `context_generate({})
+// # Project Briefing (full)
+// ## Project — toon-memory v2.6.0
+// ## Git — branch: main, 3 commits
+// ## Memory — 26 entries, 18 edges
+// ## Sessions — 2 active`,
+			},
+		],
+	},
+	tips: {
+		title: 'Dicas de memória',
+		subtitle: 'Aproveite ao máximo o toon-memory com estes padrões',
+		items: [
+			{
+				n: 1,
+				title: 'Salve decisões imediatamente',
+				body: 'Quando fizer uma escolha, salve imediatamente. Adicione contexto sobre <em>por que</em> escolheu a opção A sobre B — seu eu futuro vai agradecer.',
+			},
+			{
+				n: 2,
+				title: 'Use chaves consistentes',
+				body: 'Prefixe chaves por domínio: <code class="inline-code">db:redis-config</code>, <code class="inline-code">auth:jwt</code>. Torna o recall mais rápido e evita colisões.',
+			},
+			{
+				n: 3,
+				title: 'Tags são inferidas automaticamente',
+				body: 'Deixe as tags vazias e o sistema infere a partir do conteúdo — redis, auth, api, db e 16+ categorias. Ou adicione manualmente para controle preciso.',
+			},
+			{
+				n: 4,
+				title: 'Use TTL para contexto temporário',
+				body: 'Prazos, sprints, notas sensíveis ao tempo — defina um <code class="inline-code">ttl: "7d"</code> e expiram automaticamente. Sem limpeza manual necessária.',
+			},
+		],
+	},
+	comparison: {
+		title: 'Antes vs Depois',
+		subtitle: 'Veja como o toon-memory muda seu fluxo de trabalho',
+		beforeTitle: 'Antes',
+		afterTitle: 'Depois',
+		before: [
+			'Repetir explicações a cada sessão',
+			'Esquecer por que uma decisão foi tomada',
+			'Procurar no histórico do git por contexto',
+			'Copiar e colar notas entre chats',
+		],
+		after: [
+			'Agente lembra tudo',
+			'Uma chamada dá o contexto completo do projeto',
+			'80% menos chamadas de ferramenta por sessão',
+			'Zero perda de contexto entre sessões',
+		],
+	},
+	codeExamples: {
+		quickExample: 'Exemplo rápido',
+		quickInstall: 'Instalação rápida',
+		exampleCode: `// Salvar uma decisão (com inferência automática de tags)
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts"
+})
+// 🏷️ Tags inferidas: types
+
+// Salvar com TTL (expira em 7 dias)
+memory_remember({
+  category: "knowledge",
+  key: "sprint-deadline",
+  content: "Sprint ends July 18",
+  ttl: "7d"
+})
+
+// Ver o que mudou desde a última sessão
+memory_diff({ since: "24h" })
+
+// Buscar na memória
+memory_recall({ query: "redis" })
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Added max_connections=20`,
+		installCode: `# npm
+npm install -g toon-memory
+
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex`,
+	},
+	tokenSavings: {
+		title: '22% menos tokens, por design',
+		subtitle: 'O formato TOON é feito para LLMs, não para humanos',
+		stats: [
+			{ num: '22.5%', cap: 'menos tokens que JSON' },
+			{ num: '30.5%', cap: 'em uma única entrada' },
+			{ num: '1.3x', cap: 'mais rápido para parsear' },
+		],
+		note: 'Medido com <code>gpt-tokenizer</code> (cl100k_base) em 16 entradas de memória representativas, comparando o formato TOON real em disco contra JSON compacto. Reproduzível: <code>npm run bench</code>.',
+	},
+	benchmarks: {
+		title: 'Benchmarks',
+		subtitle: 'Eficiência de tokens do formato TOON — medido, não assumido',
+		fewerTokens: 'menos tokens que JSON',
+		onSingle: 'em uma única entrada',
+		entriesMeasured: 'entradas medidas',
+		note: 'Medido com <code>gpt-tokenizer</code> (cl100k_base) em 16 entradas de memória representativas, comparando o formato TOON real em disco contra JSON compacto. Reproduzível: <code>npm run bench</code>.',
+	},
+	impactSection: {
+		title: '80% menos chamadas de ferramenta por sessão',
+		subtitle:
+			'Sessão completa simulada: 25 chamadas → 5 com ferramentas context_*. 47% menos tokens, 80% menos latência.',
+		stats: [
+			{ num: '80%', cap: 'menos chamadas (25 → 5)' },
+			{ num: '47%', cap: 'menos tokens por sessão' },
+			{ num: '$20', cap: '/mês economizado (20 sessões/dia)' },
+		],
+		note: 'Benchmark de sessão completa: início → debug → implementação → review → encerramento. Ferramentas <code>context_*</code> trocam ~318 tokens extras por 7 chamadas a menos — contexto mais rico significa menos re-leituras. Reproduzível: <code>npm run bench:full</code>.',
+	},
+	tools: {
+		title: '21 ferramentas MCP, 3 recursos',
+		subtitle: 'Tudo que seu agente precisa para lembrar, recuperar e raciocinar',
+		resourcesLabel: 'Recursos:',
+		cards: [
+			{ name: 'memory_remember', title: 'Salvar na memória', desc: 'Armazena decisões, padrões, bugs ou conhecimento — persistente entre sessões com pontuação de qualidade automática.' },
+			{ name: 'memory_recall', title: 'Buscar memória', desc: 'Consulta o grafo de conhecimento antes de ler arquivos. Resultados ponderados por qualidade.' },
+			{ name: 'memory_forget', title: 'Excluir da memória', desc: 'Remove uma entrada por key ou id.' },
+			{ name: 'memory_stats', title: 'Estatísticas', desc: 'Mostra estatísticas da memória do projeto, incluindo distribuição de qualidade.' },
+			{ name: 'memory_diff', title: 'Diff da memória', desc: 'Veja o que mudou desde sua última sessão.' },
+			{ name: 'memory_suggest', title: 'Sugerir relacionados', desc: 'Mostra entradas relacionadas para um contexto dado.' },
+			{ name: 'memory_summary', title: 'Resumo do arquivo', desc: 'Salva ou recupera um resumo de arquivo para economizar tokens.' },
+			{ name: 'memory_archive', title: 'Arquivar antigos', desc: 'Move entradas com mais de 30 dias para manter a memória limpa.' },
+			{ name: 'memory_smart_recall', title: 'Recall inteligente', desc: 'Busca unificada combinando BM25 + centralidade + qualidade + frescor em uma chamada.' },
+			{ name: 'memory_captured', title: 'Atividade capturada', desc: 'Exibe log de atividade capturado por hooks — promova observações para memória.' },
+			{ name: 'memory_consolidate', title: 'Consolidar', desc: 'Mescla entradas duplicadas com conteúdo idêntico de forma determinística.' },
+			{ name: 'memory_sessions', title: 'Sessões', desc: 'Mostra sessões ativas do agente e detecta conflitos leves.' },
+			{ name: 'context_brief', title: 'Briefing de contexto', desc: 'Briefing de contexto em uma chamada: memória + sessões + saúde em markdown compacto. Zero LLM.' },
+			{ name: 'context_generate', title: 'Briefing completo', desc: 'Briefing em uma chamada: estrutura do projeto + estado git + memória + sessões. Substitui 6 chamadas manuais. Economiza 93% tokens.' },
+			{ name: 'context_diff', title: 'Briefing incremental', desc: 'Commits git + arquivos modificados + memória nova/atualizada desde a última sessão. Economiza 72% tokens.' },
+			{ name: 'context_focus', title: 'Briefing direcionado', desc: 'Memória relevante + arquivos relacionados + callers + arquivos de teste para uma query específica.' },
+			{ name: 'context_health', title: 'Auditoria de saúde', desc: 'Links órfãos, duplicatas, referências quebradas, TTL expirados, sessões obsoletas. Nota 0–100.' },
+			{ name: 'context_export', title: 'Exportar como Markdown', desc: 'Exporta memória como markdown injetável para system prompts. Economiza 82% tokens.' },
+			{ name: 'memory_encrypt', title: 'Ativar criptografia', desc: 'Criptografia AES-256-GCM com chave auto-gerada.' },
+			{ name: 'memory_decrypt', title: 'Desativar criptografia', desc: 'Descriptografa e desativa a criptografia.' },
+			{ name: 'memory_backup', title: 'Backup da memória', desc: 'Cria backup com timestamp do arquivo de memória. Auto-poduz para os 10 mais recentes.' },
+		],
+	},
+	graphSection: {
+		title: 'Sua memória, como um grafo',
+		subtitle:
+			'Conecte decisões a suas specs, bugs e arquitetura. O recall retorna o contexto correto — não apenas correspondência de palavras.',
+		points: [
+			'Vincule entradas com `links` ou referências `[[key]]` — sem embeddings, sem LLM',
+			'`memory_recall({ mode: "graph" })` expande um subgrafo consciente de relações',
+			'Menos tokens, mais precisão, totalmente offline e determinístico',
+		],
+		caption: 'Uma decisão se propaga para sua spec e arquitetura — o agente vê o quadro completo.',
+	},
+	smartRecallSection: {
+		title: 'Recall inteligente e eficiente em tokens',
+		subtitle:
+			'O recall é reordenado offline por relevância BM25 e centralidade do grafo — depois comprimido em forma compacta quando tokens importam. Pontuações de qualidade e frescor impulsionam as melhores entradas.',
+		points: [
+			'Pontuação BM25 sobre id + categoria + key + conteúdo + tags',
+			'Centralidade do grafo faz hubs aparecerem mesmo sem a palavra de busca',
+			'Pontuação de qualidade (0-1) e decaimento de frescor impulsionam as melhores entradas mais recentes',
+			'`compact: true` → índices numéricos, sem id/data/arquivo, vizinhos como trecho',
+		],
+		standardCode: `memory_recall({ query: "riesgo", mode: "graph" })
+[decision] risk-engine-priority (a1b2c3d4)
+  The engine prioritizes risk over speed.
+  File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01
+  links: engine-arch`,
+		compactCode: `memory_recall({ query: "riesgo", mode: "graph", compact: true })
+[1] decision/risk-engine-priority
+  The engine prioritizes risk over speed.
+  tags: risk;spec · edges: ->2, ->3`,
+		caption: 'O modo compact mantém o mesmo contexto em menos tokens — o arquivo .toon nunca é alterado.',
+	},
+	faq: {
+		title: 'Perguntas frequentes',
+		subtitle: 'Tudo que você precisa saber para dar memória ao seu agente',
+		items: [
+			{
+				q: 'O que é toon-memory?',
+				a: 'Uma camada de memória persistente para agentes de IA com 21 ferramentas MCP. Armazena decisões, padrões, bugs e contexto em um formato TOON compacto para que seu agente lembre tudo entre sessões — com 80% menos chamadas de ferramenta por sessão.',
+			},
+			{
+				q: 'Quais agentes são suportados?',
+				a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw e Kiro — 15+ agentes com zero configuração via servidor MCP.',
+			},
+			{
+				q: 'Como meus dados são armazenados?',
+				a: 'Entradas são gravadas em um arquivo TOON local (um formato eficiente em tokens ~22% menor que JSON, medido). Você é dono do arquivo e pode commitar, diffar ou fazer backup como qualquer outro arquivo fonte.',
+			},
+			{
+				q: 'Minha memória é criptografada?',
+				a: 'Sim. Ative a criptografia com a ferramenta memory_encrypt para proteger entradas sensíveis com AES-256-GCM. A chave é gerada automaticamente e mantida local.',
+			},
+			{
+				q: 'Funciona offline?',
+				a: 'Completamente. toon-memory roda localmente sem serviços externos ou contas. O modo watch até cria backups automáticos em horário agendado.',
+			},
+			{
+				q: 'Vários agentes podem compartilhar a mesma memória?',
+				a: 'Sim. Como a memória vive em um arquivo simples no seu projeto, cada agente configurado para aquele projeto lê e escreve o mesmo contexto.',
+			},
+			{
+				q: 'Como faço backup da minha memória?',
+				a: 'Use o modo watch para backups automáticos agendados, ou simplesmente commite o arquivo TOON no git. Entradas antigas são auto-arquivadas após 30 dias para manter tudo limpo.',
+			},
+			{
+				q: 'É gratuito e open source?',
+				a: 'Sim. toon-memory é licenciado MIT e gratuito. O código está no GitHub e o pacote é publicado no npm.',
+			},
+			{
+				q: 'Como isso difere da memória embutida do meu agente?',
+				a: 'A memória embutida geralmente é efêmera ou específica do fornecedor. toon-memory dá a você um arquivo de memória portátil, com diff e criptografado que você controla totalmente entre agentes e projetos.',
+			},
+			{
+				q: 'Posso expirar contexto temporário?',
+				a: 'Sim. Defina um TTL (ex: ttl: "7d") em qualquer entrada e ela expira automaticamente — perfeito para sprints, prazos e notas sensíveis ao tempo.',
+			},
+			{
+				q: 'O que é smart recall?',
+				a: 'memory_smart_recall combina busca BM25 por palavras-chave, centralidade do grafo, pontuação de qualidade e decaimento de frescor em uma chamada — o melhor de todas as estratégias de ranking sem orquestração manual.',
+			},
+			{
+				q: 'Como funciona a pontuação de qualidade?',
+				a: 'Cada entrada recebe automaticamente uma pontuação de qualidade (0-1) baseada em cobertura de tags, riqueza de links, detalhe do conteúdo, frescor e especificidade. Entradas de alta qualidade aparecem primeiro nos resultados.',
+			},
+			{
+				q: 'O que acontece se eu salvar a mesma chave duas vezes?',
+				a: 'O sistema mescla atributos em vez de substituir: tags e links são unidos, qualidade e confiança tomam o máximo, e a data é atualizada. Sua entrada fica mais rica com o tempo.',
+			},
+		],
+	},
+	cta: {
+		title: 'Pronto para dar memória ao seu agente?',
+		subtitle: 'Instale em segundos e nunca mais reexplique contexto ao seu agente.',
+		getStarted: 'Começar',
+		viewGithub: 'Ver no GitHub',
+	},
+	footer: {
+		text: 'Licença MIT — ',
+	},
+},
+	de: {
+	nav: {
+		docs: 'Dokumentation',
+		npm: 'npm',
+		github: 'GitHub',
+	},
+	hero: {
+		tagline: 'MCP-Speicherserver für KI-Coding-Agenten — Kontext über Sitzungen hinweg abrufen',
+		subtitle: 'Dein Agent erinnert sich an Entscheidungen, Muster und Bugs zwischen Sitzungen.',
+		getStarted: 'Loslegen',
+		viewGithub: 'Auf GitHub ansehen',
+		copy: 'Kopieren',
+		copied: 'Kopiert!',
+		installCmd: 'npm install -g toon-memory',
+	},
+	problem: {
+		title: 'Warum verlieren Agenten Kontext zwischen Sitzungen?',
+		subtitle: 'KI-Coding-Agenten starten jede Sitzung mit Gedächtnisverlust',
+		cards: [
+			{
+				icon: '🌀',
+				title: 'Kontext wird täglich zurückgesetzt',
+				body: 'Bei jeder neuen Sitzung vergisst dein Agent die Entscheidungen, Muster und Bugs, die er gelernt hat. Du erklärst denselben Kontext immer und immer wieder.',
+			},
+			{
+				icon: '🔍',
+				title: 'In der Geschichte stöbern',
+				body: 'Ohne Speicher durchsuchen Agenten den Git-Verlauf und lesen Dateien neu, um zu rekonstruieren, warum etwas auf eine bestimmte Weise gebaut wurde — und verbrennen Token und Zeit.',
+			},
+			{
+				icon: '📋',
+				title: 'Copy-Paste-Notizen',
+				body: 'Entwickler fügen Kontext manuell zwischen Chats ein. Es ist zerbrechlich, veraltet und erreicht nie den nächsten autonomen Lauf.',
+			},
+		],
+		resolution:
+			'toon-memory gibt deinem Agenten einen persistenten, abfragbaren Speicher — sodass Kontext automatisch jede Sitzung überlebt.',
+	},
+	features: {
+		cards: [
+			{
+				icon: '🧩',
+				title: '21 MCP-Tools + 3 Ressourcen',
+				body: 'Vollständiges Speicher-Management über MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Plus Ressourcen für direktes Kontext-Lesen.',
+				tags: ['remember', 'recall', 'context', 'diff'],
+			},
+			{
+				icon: '⭐',
+				title: 'Multi-Agent',
+				body: 'Funktioniert mit allen großen KI-Coding-Agenten. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue — Null Konfiguration.',
+				tags: ['OpenCode', 'Claude', 'Cursor'],
+			},
+			{
+				icon: '📄',
+				title: 'TOON-Format',
+				body: '22% weniger Token als JSON (gemessen). Benutzerdefinierte Kodierung für LLM-Verständnis und Token-Effizienz.',
+				stats: ['22% weniger Token', '1.3x schnelleres Parsen'],
+			},
+			{
+				icon: '🔎',
+				title: 'Smart Recall',
+				body: 'Graph-basierter Recall, neu sortiert nach BM25-Relevanz und Graph-Zentralität (Hubs tauchen auch ohne Suchwort auf). Hop-Weiser Decay hält fernen Kontext niedrig. Token-effizienter `compact`-Modus gibt numerisch indexierte, snippet-abgeschnittene Ergebnisse zurück.',
+				stats: ['BM25', 'Zentralität', 'compact'],
+			},
+			{
+				icon: '🧠',
+				title: 'Intelligenter Speicher',
+				body: 'Automatische Tag-Inferenz aus integriertem Vokabular plus Projekt-Abhängigkeiten, Qualitäts-Bewertung, Konfidenz-Scores, Merge-Dedup, verwandte Eintrags-Vorschläge, Speicher-Diff und konfigurierbare TTL für temporären Kontext.',
+				stats: ['Auto-Tags', 'Qualität', 'Merge-Dedup'],
+			},
+			{
+				icon: '🔒',
+				title: 'Verschlüsselung',
+				body: 'AES-256-GCM für sensible Daten. Automatisches Archiv alter Einträge. Watch-Modus für automatische Sicherung alle N Minuten.',
+				stats: ['AES-256-GCM', 'Auto-Backup'],
+			},
+		],
+	},
+	agents: {
+		title: 'Funktioniert mit 15+ KI-Coding-Agenten',
+		subtitle: 'Null Konfiguration — toon-memory erkennt und konfiguriert jeden automatisch',
+	},
+	stats: {
+		items: [
+			{ number: '21', label: 'MCP-Tools' },
+			{ number: '15', label: 'Agenten' },
+			{ number: '80%', label: 'Weniger Tool-Aufrufe/Sitzung' },
+			{ number: '0', label: 'Benötigte Konfiguration' },
+		],
+	},
+	howItWorks: {
+		title: 'Wie funktioniert das?',
+		subtitle: 'Vier Schritte von Gedächtnisverlust zu Speicher',
+		steps: [
+			{ n: 1, title: 'Installieren', body: 'Ein Befehl. Null Konfiguration für 15+ Agenten.', code: 'npm install -g toon-memory' },
+			{
+				n: 2,
+				title: 'Merken',
+				body: 'Speichere Entscheidungen, Muster und Bugs während der Arbeit — mit automatischer Tag-Inferenz und optionalem TTL.',
+				code: `memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts"
+})`,
+			},
+			{
+				n: 3,
+				title: 'Abrufen',
+				body: 'Dein Agent fragt den Speicher bei Bedarf ab — keine Neuerklärung, kein Token-Verschwendung.',
+				code: `memory_recall({ query: "validation" })
+// [decision] use-zod (a1b2c3d4)
+//   Use Zod for validation — src/types.ts`,
+			},
+			{
+				n: 4,
+				title: 'Kontext',
+				body: 'Ein Aufruf gibt deinem Agenten alles: Projekt, Git, Speicher, Sitzungen. 80% weniger Tool-Aufrufe.',
+				code: `context_generate({})
+// # Project Briefing (full)
+// ## Project — toon-memory v2.6.0
+// ## Git — branch: main, 3 commits
+// ## Memory — 26 entries, 18 edges
+// ## Sessions — 2 active`,
+			},
+		],
+	},
+	tips: {
+		title: 'Speicher-Tipps',
+		subtitle: 'Hole das Beste aus toon-memory mit diesen Mustern',
+		items: [
+			{
+				n: 1,
+				title: 'Entscheidungen sofort speichern',
+				body: 'Wenn du eine Wahl triffst, speichere sie sofort. Füge Kontext hinzu, <em>warum</em> du Option A über B gewählt hast — dein zukünftiges Ich wird dir danken.',
+			},
+			{
+				n: 2,
+				title: 'Konsistente Keys verwenden',
+				body: 'Präfixe nach Domäne: <code class="inline-code">db:redis-config</code>, <code class="inline-code">auth:jwt</code>. Macht Recall schneller und vermeidet Kollisionen.',
+			},
+			{
+				n: 3,
+				title: 'Tags werden automatisch inferiert',
+				body: 'Lasse Tags leer und das System inferiert sie aus dem Inhalt — redis, auth, api, db und 16+ weitere Kategorien. Oder füge sie manuell für präzise Kontrolle hinzu.',
+			},
+			{
+				n: 4,
+				title: 'TTL für temporären Kontext verwenden',
+				body: 'Deadlines, Sprints, zeitkritische Notizen — setze ein <code class="inline-code">ttl: "7d"</code> und sie laufen automatisch ab. Kein manuelles Aufräumen nötig.',
+			},
+		],
+	},
+	comparison: {
+		title: 'Vorher vs Nachher',
+		subtitle: 'Sieh, wie toon-memory deinen Workflow ändert',
+		beforeTitle: 'Vorher',
+		afterTitle: 'Nachher',
+		before: [
+			'Erklärungen in jeder Sitzung wiederholen',
+			'Vergessen, warum eine Entscheidung getroffen wurde',
+			'Im Git-Verlauf nach Kontext suchen',
+			'Notizen zwischen Chats kopieren und einfügen',
+		],
+		after: [
+			'Agent erinnert sich an alles',
+			'Ein Aufruf gibt vollständigen Projekt-Kontext',
+			'80% weniger Tool-Aufrufe pro Sitzung',
+			'Kein Kontextverlust zwischen Sitzungen',
+		],
+	},
+	codeExamples: {
+		quickExample: 'Schnelles Beispiel',
+		quickInstall: 'Schnelle Installation',
+		exampleCode: `// Entscheidung speichern (mit auto Tag-Inferenz)
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts"
+})
+// 🏷️ Tags inferiert: types
+
+// Mit TTL speichern (läuft in 7 Tagen ab)
+memory_remember({
+  category: "knowledge",
+  key: "sprint-deadline",
+  content: "Sprint ends July 18",
+  ttl: "7d"
+})
+
+// Änderungen seit letzter Sitzung ansehen
+memory_diff({ since: "24h" })
+
+// Speicher durchsuchen
+memory_recall({ query: "redis" })
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Added max_connections=20`,
+		installCode: `# npm
+npm install -g toon-memory
+
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex`,
+	},
+	tokenSavings: {
+		title: '22% weniger Token, durch Design',
+		subtitle: 'Das TOON-Format ist für LLMs gebaut, nicht für Menschen',
+		stats: [
+			{ num: '22.5%', cap: 'weniger Token als JSON' },
+			{ num: '30.5%', cap: 'bei einem einzelnen Eintrag' },
+			{ num: '1.3x', cap: 'schnelleres Parsen' },
+		],
+		note: 'Gemessen mit <code>gpt-tokenizer</code> (cl100k_base) über 16 repräsentative Speicher-Einträge, vergleicht das echte TOON-Format auf Disk mit kompaktem JSON. Reproduzierbar: <code>npm run bench</code>.',
+	},
+	benchmarks: {
+		title: 'Benchmarks',
+		subtitle: 'Token-Effizienz des TOON-Formats — gemessen, nicht angenommen',
+		fewerTokens: 'weniger Token als JSON',
+		onSingle: 'bei einem einzelnen Eintrag',
+		entriesMeasured: 'Einträge gemessen',
+		note: 'Gemessen mit <code>gpt-tokenizer</code> (cl100k_base) über 16 repräsentative Speicher-Einträge, vergleicht das echte TOON-Format auf Disk mit kompaktem JSON. Reproduzierbar: <code>npm run bench</code>.',
+	},
+	impactSection: {
+		title: '80% weniger Tool-Aufrufe pro Sitzung',
+		subtitle:
+			'Simulierte vollständige Sitzung: 25 Tool-Aufrufe → 5 mit context_*-Tools. 47% weniger Token, 80% weniger Latenz.',
+		stats: [
+			{ num: '80%', cap: 'weniger Tool-Aufrufe (25 → 5)' },
+			{ num: '47%', cap: 'weniger Token pro Sitzung' },
+			{ num: '$20', cap: '/Monat gespart (20 Sitzungen/Tag)' },
+		],
+		note: 'Vollständiger Sitzungs-Benchmark: Sitzungsstart → Debugging → Implementierung → Review → Abschluss. <code>context_*</code>-Tools tauschen ~318 zusätzliche Token für 7 weniger Aufrufe — reicherer Kontext bedeutet weniger Nachlese. Reproduzierbar: <code>npm run bench:full</code>.',
+	},
+	tools: {
+		title: '21 MCP-Tools, 3 Ressourcen',
+		subtitle: 'Alles, was dein Agent zum Merken, Abrufen und Denken braucht',
+		resourcesLabel: 'Ressourcen:',
+		cards: [
+			{ name: 'memory_remember', title: 'Im Speicher speichern', desc: 'Speichere Entscheidungen, Muster, Bugs oder Wissen — persistiert über Sitzungen mit automatischer Qualitätsbewertung.' },
+			{ name: 'memory_recall', title: 'Speicher durchsuchen', desc: 'Befrage den Wissensgraph vor dem Datei-Lesen. Qualitätsgewichtete Ergebnisse.' },
+			{ name: 'memory_forget', title: 'Aus Speicher löschen', desc: 'Entfernt einen Eintrag per Key oder ID.' },
+			{ name: 'memory_stats', title: 'Speicher-Statistiken', desc: 'Zeigt Statistiken über den Projekt-Speicher inklusive Qualitätsverteilung.' },
+			{ name: 'memory_diff', title: 'Speicher-Diff', desc: 'Sieh, was sich seit deiner letzten Sitzung geändert hat.' },
+			{ name: 'memory_suggest', title: 'Ähnliche vorschlagen', desc: 'Zeigt verwandte Einträge für einen gegebenen Kontext.' },
+			{ name: 'memory_summary', title: 'Datei-Zusammenfassung', desc: 'Speichere oder rufe eine Datei-Zusammenfassung ab, um Token zu sparen.' },
+			{ name: 'memory_archive', title: 'Alte archivieren', desc: 'Verschiebt Einträge älter als 30 Tage, um den Speicher sauber zu halten.' },
+			{ name: 'memory_smart_recall', title: 'Smart Recall', desc: 'Einheitliche Suche kombiniert BM25 + Graph-Zentralität + Qualität + Frische in einem Aufruf.' },
+			{ name: 'memory_captured', title: 'Erfasste Aktivität', desc: 'Zeigt automatisch erfasste Hook-Aktivität an — befördere Beobachtungen zum Speicher.' },
+			{ name: 'memory_consolidate', title: 'Konsolidieren', desc: 'Führt doppelte Einträge mit identischem Inhalt deterministisch zusammen.' },
+			{ name: 'memory_sessions', title: 'Sitzungen', desc: 'Zeigt aktive Agenten-Sitzungen und erkennt weiche Konflikte.' },
+			{ name: 'context_brief', title: 'Kontext-Briefing', desc: 'Ein-Aufruf-Kontext-Briefing: Speicher + Sitzungen + Gesundheit in kompaktem Markdown. Null LLM.' },
+			{ name: 'context_generate', title: 'Vollständiges Projektbriefing', desc: 'Ein-Aufruf-Briefing: Projektstruktur + Git-Zustand + Speicher + Sitzungen. Ersetzt 6 manuelle Aufrufe. Spart 93% Token.' },
+			{ name: 'context_diff', title: 'Inkrementelles Briefing', desc: 'Git-Commits + geänderte Dateien + neue/aktualisierte Speicher-Einträge seit letzter Sitzung. Spart 72% Token.' },
+			{ name: 'context_focus', title: 'Gezieltes Briefing', desc: 'Relevanter Speicher + verwandte Dateien + Aufrufer + Testdateien für eine bestimmte Anfrage.' },
+			{ name: 'context_health', title: 'Gesundheits-Audit', desc: 'Verwaiste Links, Duplikate, defekte Dateiverweise, abgelaufene TTL, veraltete Sitzungen. Score 0–100.' },
+			{ name: 'context_export', title: 'Als Markdown exportieren', desc: 'Exportiert Speicher als injizierbares Markdown für System-Prompts. Spart 82% Token.' },
+			{ name: 'memory_encrypt', title: 'Verschlüsselung aktivieren', desc: 'AES-256-GCM-Verschlüsselung mit automatisch generiertem Schlüssel.' },
+			{ name: 'memory_decrypt', title: 'Verschlüsselung deaktivieren', desc: 'Entschlüsselt und deaktiviert die Verschlüsselung.' },
+			{ name: 'memory_backup', title: 'Speicher sichern', desc: 'Erstellt einen zeitgestempelten Backup der Speicherdatei. Automatisch auf die 10 neuesten gekürzt.' },
+		],
+	},
+	graphSection: {
+		title: 'Dein Speicher als Graph',
+		subtitle:
+			'Verbinde Entscheidungen mit Specs, Bugs und Architektur. Recall gibt den richtigen Kontext zurück — nicht nur Übereinstimmung.',
+		points: [
+			'Verbinde Einträge mit `links` oder `[[key]]`-Referenzen — keine Embeddings, kein LLM',
+			'`memory_recall({ mode: "graph" })` erweitert einen beziehungsbewussten Subgraphen',
+			'Weniger Token, höhere Präzision, vollständig offline und deterministisch',
+		],
+		caption: 'Eine Entscheidung verbreitet sich auf Spec und Architektur — der Agent sieht das Gesamtbild.',
+	},
+	smartRecallSection: {
+		title: 'Intelligenter, token-effizienter Recall',
+		subtitle:
+			'Recall wird offline nach BM25-Relevanz und Graph-Zentralität neu sortiert — dann zu kompakter Form komprimiert, wenn Token wichtig sind. Qualitäts-Scores und Frische heben die besten Einträge hervor.',
+		points: [
+			'BM25-Bewertung über id + Kategorie + Key + Inhalt + Tags',
+			'Graph-Zentralität lässt Hubs erscheinen, auch ohne Suchwort',
+			'Qualitäts-Score (0-1) und Frische-Decay heben die besten, neuesten Einträge hervor',
+			'`compact: true` → numerische Indizes, ohne id/Datum/Datei, snippet-abgeschnittene Nachbarn',
+		],
+		standardCode: `memory_recall({ query: "riesgo", mode: "graph" })
+[decision] risk-engine-priority (a1b2c3d4)
+  The engine prioritizes risk over speed.
+  File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01
+  links: engine-arch`,
+		compactCode: `memory_recall({ query: "riesgo", mode: "graph", compact: true })
+[1] decision/risk-engine-priority
+  The engine prioritizes risk over speed.
+  tags: risk;spec · edges: ->2, ->3`,
+		caption: 'Kompakter Modus behält den selben Kontext in weniger Token — die .toon-Datei wird nie geändert.',
+	},
+	faq: {
+		title: 'Häufig gestellte Fragen',
+		subtitle: 'Alles, was du wissen musst, um deinem Agenten einen Speicher zu geben',
+		items: [
+			{
+				q: 'Was ist toon-memory?',
+				a: 'Eine persistente Speicherschicht für KI-Coding-Agenten mit 21 MCP-Tools. Es speichert Entscheidungen, Muster, Bugs und Kontext in einem kompakten TOON-Format, damit dein Agent sich an alles zwischen Sitzungen erinnert — mit 80% weniger Tool-Aufrufen pro Sitzung.',
+			},
+			{
+				q: 'Welche Agenten werden unterstützt?',
+				a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw und Kiro — 15+ Agenten mit Null Konfiguration über den MCP-Server.',
+			},
+			{
+				q: 'Wie werden meine Daten gespeichert?',
+				a: 'Einträge werden in eine lokale TOON-Datei geschrieben (ein token-effizientes Format, ~22% kleiner als JSON, gemessen). Du besitzt die Datei und kannst sie committen, diffen oder sichern wie jede andere Quelldatei.',
+			},
+			{
+				q: 'Ist mein Speicher verschlüsselt?',
+				a: 'Ja. Aktiviere Verschlüsselung mit dem memory_encrypt-Tool, um sensible Einträge mit AES-256-GCM zu sichern. Der Schlüssel wird automatisch generiert und lokal gehalten.',
+			},
+			{
+				q: 'Funktioniert es offline?',
+				a: 'Völlig. toon-memory läuft lokal ohne externe Dienste oder Konten. Watch-Modus erstellt sogar automatische Sicherungen nach Zeitplan.',
+			},
+			{
+				q: 'Können mehrere Agenten denselben Speicher teilen?',
+				a: 'Ja. Da der Speicher in einer normalen Datei in deinem Projekt lebt, lesen und schreiben alle für dieses Projekt konfigurierten Agenten denselben Kontext.',
+			},
+			{
+				q: 'Wie sichere ich meinen Speicher?',
+				a: 'Verwende den Watch-Modus für geplante automatische Sicherungen oder committe einfach die TOON-Datei in Git. Alte Einträge werden nach 30 Tagen automatisch archiviert.',
+			},
+			{
+				q: 'Ist es frei und Open Source?',
+				a: 'Ja. toon-memory ist MIT-lizenziert und kostenlos nutzbar. Der Quellcode ist auf GitHub und das Paket wird auf npm veröffentlicht.',
+			},
+			{
+				q: 'Wie unterscheidet es sich vom eingebauten Speicher meines Agenten?',
+				a: 'Eingebauter Speicher ist oft flüchtig oder anbieterspezifisch. toon-memory gibt dir eine portable, diffbare, verschlüsselte Speicherdatei, die du vollständig kontrollierst — über Agenten und Projekte hinweg.',
+			},
+			{
+				q: 'Kann ich temporären Kontext ablaufen lassen?',
+				a: 'Ja. Setze ein TTL (z.B. ttl: "7d") auf einen Eintrag und er läuft automatisch ab — perfekt für Sprints, Deadlines und zeitkritische Notizen.',
+			},
+			{
+				q: 'Was ist Smart Recall?',
+				a: 'memory_smart_recall kombiniert BM25-Suche, Graph-Zentralität, Qualitätsbewertung und Frische-Decay in einem Aufruf — das Beste aller Ranking-Strategien ohne manuelle Orchestrierung.',
+			},
+			{
+				q: 'Wie funktioniert die Qualitätsbewertung?',
+				a: 'Jeder Eintrag erhält automatisch einen Qualitäts-Score (0-1) basierend auf Tag-Abdeckung, Link-Reichtum, Inhaltsdetail, Frische und Spezifität. Hochwertige Einträge tauchen zuerst in Recall-Ergebnissen auf.',
+			},
+			{
+				q: 'Was passiert, wenn ich denselben Key zweimal speichere?',
+				a: 'Das System vermergt Attribute statt zu ersetzen: Tags und Links werden vereint, Qualität und Konfidenz nehmen den Maximalwert, und das Datum wird aktualisiert. Dein Eintrag wird im Laufe der Zeit reicher.',
+			},
+		],
+	},
+	cta: {
+		title: 'Bereit, deinem Agenten einen Speicher zu geben?',
+		subtitle: 'In Sekunden installieren und nie wieder Kontext an deinen Agenten erklären.',
+		getStarted: 'Loslegen',
+		viewGithub: 'Auf GitHub ansehen',
+	},
+	footer: {
+		text: 'MIT-Lizenz — ',
+	},
+},
+	fr: {
+	nav: {
+		docs: 'Documentation',
+		npm: 'npm',
+		github: 'GitHub',
+	},
+	hero: {
+		tagline: 'Serveur de mémoire MCP pour agents de code IA — récupérez le contexte entre les sessions',
+		subtitle: 'Votre agent se souvient des décisions, motifs et bugs entre les sessions.',
+		getStarted: 'Commencer',
+		viewGithub: 'Voir sur GitHub',
+		copy: 'Copier',
+		copied: 'Copié !',
+		installCmd: 'npm install -g toon-memory',
+	},
+	problem: {
+		title: 'Pourquoi les agents perdent-ils le contexte entre les sessions ?',
+		subtitle: 'Les agents de code IA commencent chaque session avec une amnésie',
+		cards: [
+			{
+				icon: '🌀',
+				title: 'Le contexte se réinitialise quotidiennement',
+				body: 'À chaque nouvelle session, votre agent oublie les décisions, motifs et bugs appris hier. Vous réexpliquez le même contexte encore et encore.',
+			},
+			{
+				icon: '🔍',
+				title: 'Chercher dans l\'historique',
+				body: 'Sans mémoire, les agents fouillent l\'historique git et relisent les fichiers pour reconstruire pourquoi quelque chose a été construit d\'une certaine façon — en brûlant des tokens et du temps.',
+			},
+			{
+				icon: '📋',
+				title: 'Notes copier-coller',
+				body: 'Les développeurs collent le contexte manuellement entre les chats. C\'est fragile, ça devient obsolète et n\'arrive jamais à la prochaine exécution autonome.',
+			},
+		],
+		resolution:
+			'toon-memory donne à votre agent une mémoire persistante et interrogeable — le contexte survit automatiquement à chaque session.',
+	},
+	features: {
+		cards: [
+			{
+				icon: '🧩',
+				title: '21 outils MCP + 3 ressources',
+				body: 'Gestion complète de la mémoire via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Plus des ressources pour la lecture directe du contexte.',
+				tags: ['remember', 'recall', 'context', 'diff'],
+			},
+			{
+				icon: '⭐',
+				title: 'Multi-agent',
+				body: 'Fonctionne avec tous les principaux agents de code IA. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue — zéro configuration.',
+				tags: ['OpenCode', 'Claude', 'Cursor'],
+			},
+			{
+				icon: '📄',
+				title: 'Format TOON',
+				body: '22% de tokens en moins que JSON (mesuré). Encodage personnalisé conçu pour la compréhension des LLMs et l\'efficacité des tokens.',
+				stats: ['22% moins de tokens', '1.3x plus rapide à parser'],
+			},
+			{
+				icon: '🔎',
+				title: 'Rappel intelligent',
+				body: 'Rappel basé sur le graph, rerangé par pertinence BM25 et centralité du graph (les hubs émergent même sans le mot de recherche). La décroissance par hop maintient le contexte distant bas. Le mode `compact` retourne des résultats avec indices numériques et extraits tronqués.',
+				stats: ['BM25', 'Centralité', 'compact'],
+			},
+			{
+				icon: '🧠',
+				title: 'Mémoire intelligente',
+				body: 'Inférence automatique de tags à partir d\'un vocabulaire intégré et des dépendances du projet, notation de qualité, scores de confiance, merge-dedup, suggestions d\'entrées liées, diff de mémoire et TTL configurable pour le contexte temporaire.',
+				stats: ['Auto-tags', 'Qualité', 'Merge-dedup'],
+			},
+			{
+				icon: '🔒',
+				title: 'Chiffrement',
+				body: 'AES-256-GCM pour les données sensibles. Archivage automatique des anciennes entrées. Mode watch pour sauvegarde automatique toutes les N minutes.',
+				stats: ['AES-256-GCM', 'Auto-backup'],
+			},
+		],
+	},
+	agents: {
+		title: 'Fonctionne avec 15+ agents de code IA',
+		subtitle: 'Zéro configuration — toon-memory détecte et configure chacun automatiquement',
+	},
+	stats: {
+		items: [
+			{ number: '21', label: 'Outils MCP' },
+			{ number: '15', label: 'Agents' },
+			{ number: '80%', label: 'Moins d\'appels d\'outil/session' },
+			{ number: '0', label: 'Configuration requise' },
+		],
+	},
+	howItWorks: {
+		title: 'Comment ça marche ?',
+		subtitle: 'Quatre étapes de l\'amnésie à la mémoire',
+		steps: [
+			{ n: 1, title: 'Installer', body: 'Une commande. Zéro configuration pour 15+ agents.', code: 'npm install -g toon-memory' },
+			{
+				n: 2,
+				title: 'Mémoriser',
+				body: 'Enregistrez décisions, motifs et bugs au fur et à mesure — avec inférence automatique de tags et TTL optionnel.',
+				code: `memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts"
+})`,
+			},
+			{
+				n: 3,
+				title: 'Rappeler',
+				body: 'Votre agent interroge la mémoire à la demande — plus besoin de réexpliquer, plus de tokens gaspillés.',
+				code: `memory_recall({ query: "validation" })
+// [decision] use-zod (a1b2c3d4)
+//   Use Zod for validation — src/types.ts`,
+			},
+			{
+				n: 4,
+				title: 'Contexte',
+				body: 'Un seul appel donne à votre agent tout : projet, git, mémoire, sessions. 80% moins d\'appels d\'outil.',
+				code: `context_generate({})
+// # Project Briefing (full)
+// ## Project — toon-memory v2.6.0
+// ## Git — branch: main, 3 commits
+// ## Memory — 26 entries, 18 edges
+// ## Sessions — 2 active`,
+			},
+		],
+	},
+	tips: {
+		title: 'Astuces mémoire',
+		subtitle: 'Tirez le meilleur de toon-memory avec ces patterns',
+		items: [
+			{
+				n: 1,
+				title: 'Enregistrez les décisions immédiatement',
+				body: 'Quand vous faites un choix, enregistrez-le tout de suite. Ajoutez le contexte du <em>pourquoi</em> vous avez choisi l\'option A plutôt que B — votre vous futur vous remerciera.',
+			},
+			{
+				n: 2,
+				title: 'Utilisez des clés cohérentes',
+				body: 'Préfixez les clés par domaine : <code class="inline-code">db:redis-config</code>, <code class="inline-code">auth:jwt</code>. Accélère le rappel et évite les collisions.',
+			},
+			{
+				n: 3,
+				title: 'Les tags s\'infèrent automatiquement',
+				body: 'Laissez les tags vides et le système les infère du contenu — redis, auth, api, db et 16+ catégories. Ou ajoutez-les manuellement pour un contrôle précis.',
+			},
+			{
+				n: 4,
+				title: 'Utilisez le TTL pour le contexte temporaire',
+				body: 'Échéances, sprints, notes sensibles au temps — définissez un <code class="inline-code">ttl: "7d"</code> et elles expirent automatiquement. Pas de nettoyage manuel nécessaire.',
+			},
+		],
+	},
+	comparison: {
+		title: 'Avant vs Après',
+		subtitle: 'Voyez comment toon-memory change votre flux de travail',
+		beforeTitle: 'Avant',
+		afterTitle: 'Après',
+		before: [
+			'Répéter les explications à chaque session',
+			'Oublier pourquoi une décision a été prise',
+			'Fouiller l\'historique git pour le contexte',
+			'Copier-coller des notes entre les chats',
+		],
+		after: [
+			'L\'agent se souvient de tout',
+			'Un seul appel donne le contexte complet du projet',
+			'80% moins d\'appels d\'outil par session',
+			'Zéro perte de contexte entre les sessions',
+		],
+	},
+	codeExamples: {
+		quickExample: 'Exemple rapide',
+		quickInstall: 'Installation rapide',
+		exampleCode: `// Enregistrer une décision (avec inférence auto de tags)
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts"
+})
+// 🏷️ Tags inférés : types
+
+// Enregistrer avec TTL (expire dans 7 jours)
+memory_remember({
+  category: "knowledge",
+  key: "sprint-deadline",
+  content: "Sprint ends July 18",
+  ttl: "7d"
+})
+
+// Voir les changements depuis la dernière session
+memory_diff({ since: "24h" })
+
+// Rechercher dans la mémoire
+memory_recall({ query: "redis" })
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Added max_connections=20`,
+		installCode: `# npm
+npm install -g toon-memory
+
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex`,
+	},
+	tokenSavings: {
+		title: '22% moins de tokens, par conception',
+		subtitle: 'Le format TOON est conçu pour les LLMs, pas pour les humains',
+		stats: [
+			{ num: '22.5%', cap: 'moins de tokens que JSON' },
+			{ num: '30.5%', cap: 'sur une seule entrée' },
+			{ num: '1.3x', cap: 'plus rapide à parser' },
+		],
+		note: 'Mesuré avec <code>gpt-tokenizer</code> (cl100k_base) sur 16 entrées de mémoire représentatives, comparant le format TOON réel sur disque au JSON compact. Reproductible : <code>npm run bench</code>.',
+	},
+	benchmarks: {
+		title: 'Benchmarks',
+		subtitle: 'Efficacité token du format TOON — mesuré, pas supposé',
+		fewerTokens: 'moins de tokens que JSON',
+		onSingle: 'sur une seule entrée',
+		entriesMeasured: 'entrées mesurées',
+		note: 'Mesuré avec <code>gpt-tokenizer</code> (cl100k_base) sur 16 entrées de mémoire représentatives, comparant le format TOON réel sur disque au JSON compact. Reproductible : <code>npm run bench</code>.',
+	},
+	impactSection: {
+		title: '80% moins d\'appels d\'outil par session',
+		subtitle:
+			'Session complète simulée : 25 appels → 5 avec les outils context_*. 47% moins de tokens, 80% moins de latence.',
+		stats: [
+			{ num: '80%', cap: 'moins d\'appels d\'outil (25 → 5)' },
+			{ num: '47%', cap: 'moins de tokens par session' },
+			{ num: '$20', cap: '/mois économisé (20 sessions/jour)' },
+		],
+		note: 'Benchmark de session complète : début → debug → implémentation → review → clôture. Les outils <code>context_*</code> échangent ~318 tokens supplémentaires contre 7 appels en moins — plus de contexte signifie moins de relectures. Reproductible : <code>npm run bench:full</code>.',
+	},
+	tools: {
+		title: '21 outils MCP, 3 ressources',
+		subtitle: 'Tout ce dont votre agent a besoin pour mémoriser, rappeler et raisonner',
+		resourcesLabel: 'Ressources :',
+		cards: [
+			{ name: 'memory_remember', title: 'Enregistrer en mémoire', desc: 'Stockez décisions, motifs, bugs ou connaissances — persistant entre les sessions avec notation de qualité automatique.' },
+			{ name: 'memory_recall', title: 'Rechercher en mémoire', desc: 'Interrogez le graphe de connaissances avant de lire les fichiers. Résultats pondérés par la qualité.' },
+			{ name: 'memory_forget', title: 'Supprimer de la mémoire', desc: 'Supprime une entrée par key ou id.' },
+			{ name: 'memory_stats', title: 'Statistiques', desc: 'Affiche les statistiques de la mémoire du projet, incluant la distribution de qualité.' },
+			{ name: 'memory_diff', title: 'Diff de mémoire', desc: 'Voyez ce qui a changé depuis votre dernière session.' },
+			{ name: 'memory_suggest', title: 'Suggérer des liés', desc: 'Affiche les entrées liées pour un contexte donné.' },
+			{ name: 'memory_summary', title: 'Résumé de fichier', desc: 'Enregistrez ou récupérez un résumé de fichier pour économiser des tokens.' },
+			{ name: 'memory_archive', title: 'Archiver les anciens', desc: 'Déplace les entrées de plus de 30 jours pour garder la mémoire propre.' },
+			{ name: 'memory_smart_recall', title: 'Rappel intelligent', desc: 'Recherche unifiée combinant BM25 + centralité + qualité + fraîcheur en un seul appel.' },
+			{ name: 'memory_captured', title: 'Activité capturée', desc: 'Affiche le journal d\'activité capturé par les hooks — promouvez les observations en mémoire.' },
+			{ name: 'memory_consolidate', title: 'Consolider', desc: 'Fusionne les entrées en doublon avec un contenu identique de façon déterministe.' },
+			{ name: 'memory_sessions', title: 'Sessions', desc: 'Affiche les sessions agent actives et détecte les conflits doux.' },
+			{ name: 'context_brief', title: 'Brief de contexte', desc: 'Brief de contexte en un appel : mémoire + sessions + santé en markdown compact. Zéro LLM.' },
+			{ name: 'context_generate', title: 'Brief complet du projet', desc: 'Brief en un appel : structure du projet + état git + mémoire + sessions. Remplace 6 appels manuels. Économise 93% de tokens.' },
+			{ name: 'context_diff', title: 'Brief incrémental', desc: 'Commits git + fichiers modifiés + mémoire nouvelle/mise à jour depuis la dernière session. Économise 72% de tokens.' },
+			{ name: 'context_focus', title: 'Brief ciblé', desc: 'Mémoire pertinente + fichiers liés + appelants + fichiers de test pour une requête spécifique.' },
+			{ name: 'context_health', title: 'Audit santé', desc: 'Liens orphelins, doublons, références cassées, TTL expirés, sessions obsolètes. Score 0–100.' },
+			{ name: 'context_export', title: 'Exporter en Markdown', desc: 'Exporte la mémoire en markdown injectable pour les system prompts. Économise 82% de tokens.' },
+			{ name: 'memory_encrypt', title: 'Activer le chiffrement', desc: 'Chiffrement AES-256-GCM avec clé auto-générée.' },
+			{ name: 'memory_decrypt', title: 'Désactiver le chiffrement', desc: 'Déchiffre et désactive le chiffrement.' },
+			{ name: 'memory_backup', title: 'Sauvegarder la mémoire', desc: 'Crée une sauvegarde horodatée du fichier mémoire. Auto-nettoyage aux 10 plus récents.' },
+		],
+	},
+	graphSection: {
+		title: 'Votre mémoire, en graphe',
+		subtitle:
+			'Connectez les décisions à leurs specs, bugs et architecture. Le rappel retourne le bon contexte — pas seulement les correspondances de mots.',
+		points: [
+			'Connectez les entrées avec `links` ou références `[[key]]` — sans embeddings, sans LLM',
+			'`memory_recall({ mode: "graph" })` étend un sous-graphe conscient des relations',
+			'Moins de tokens, plus de précision, totalement offline et déterministe',
+		],
+		caption: 'Une décision se propage à sa spec et architecture — l\'agent voit le tableau complet.',
+	},
+	smartRecallSection: {
+		title: 'Rappel intelligent et économe en tokens',
+		subtitle:
+			'Le rappel est rerangé offline par pertinence BM25 et centralité du graphe — puis compressé en forme compacte quand les tokens comptent. Les scores de qualité et de fraîcheur boostent les meilleures entrées.',
+		points: [
+			'Scoring BM25 sur id + catégorie + key + contenu + tags',
+			'La centralité du graphe fait émerger les hubs même sans le mot de recherche',
+			'Le score de qualité (0-1) et la décroissance de fraîcheur boostent les meilleures entrées récentes',
+			'`compact: true` → indices numériques, sans id/date/fichier, voisins en extrait',
+		],
+		standardCode: `memory_recall({ query: "riesgo", mode: "graph" })
+[decision] risk-engine-priority (a1b2c3d4)
+  The engine prioritizes risk over speed.
+  File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01
+  links: engine-arch`,
+		compactCode: `memory_recall({ query: "riesgo", mode: "graph", compact: true })
+[1] decision/risk-engine-priority
+  The engine prioritizes risk over speed.
+  tags: risk;spec · edges: ->2, ->3`,
+		caption: 'Le mode compact conserve le même contexte en moins de tokens — le fichier .toon n\'est jamais modifié.',
+	},
+	faq: {
+		title: 'Foire aux questions',
+		subtitle: 'Tout ce que vous devez savoir pour donner une mémoire à votre agent',
+		items: [
+			{
+				q: 'Qu\'est-ce que toon-memory ?',
+				a: 'Une couche de mémoire persistante pour les agents de code IA avec 21 outils MCP. Elle stocke les décisions, motifs, bugs et contexte dans un format TOON compact pour que votre agent se souvienne de tout entre les sessions — avec 80% moins d\'appels d\'outil par session.',
+			},
+			{
+				q: 'Quels agents sont supportés ?',
+				a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw et Kiro — 15+ agents avec zéro configuration via le serveur MCP.',
+			},
+			{
+				q: 'Comment mes données sont-elles stockées ?',
+				a: 'Les entrées sont écrites dans un fichier TOON local (un format économe en tokens ~22% plus petit que JSON, mesuré). Vous possédez le fichier et pouvez le commit, le differ ou le sauvegarder comme n\'importe quel autre fichier source.',
+			},
+			{
+				q: 'Ma mémoire est-elle chiffrée ?',
+				a: 'Oui. Activez le chiffrement avec l\'outil memory_encrypt pour sécuriser les entrées sensibles avec AES-256-GCM. La clé est générée automatiquement et conservée localement.',
+			},
+			{
+				q: 'Ça fonctionne hors ligne ?',
+				a: 'Complètement. toon-memory tourne localement sans services externes ni comptes. Le mode watch crée même des sauvegardes automatiques selon un calendrier.',
+			},
+			{
+				q: 'Plusieurs agents peuvent-ils partager la même mémoire ?',
+				a: 'Oui. Comme la mémoire vit dans un fichier simple de votre projet, chaque agent configuré pour ce projet lit et écrit le même contexte.',
+			},
+			{
+				q: 'Comment sauvegarder ma mémoire ?',
+				a: 'Utilisez le mode watch pour des sauvegardes automatiques programmées, ou commitez simplement le fichier TOON dans git. Les anciennes entrées sont auto-archivées après 30 jours pour garder les choses propres.',
+			},
+			{
+				q: 'C\'est gratuit et open source ?',
+				a: 'Oui. toon-memory est sous licence MIT et gratuit. Le code source est sur GitHub et le package est publié sur npm.',
+			},
+			{
+				q: 'Comment est-ce différent de la mémoire intégrée de mon agent ?',
+				a: 'La mémoire intégrée est souvent éphémère ou spécifique au fournisseur. toon-memory vous donne un fichier mémoire portable, diffable et chiffré que vous contrôlez totalement — entre agents et projets.',
+			},
+			{
+				q: 'Puis-je faire expirer le contexte temporaire ?',
+				a: 'Oui. Définissez un TTL (ex : ttl: "7d") sur n\'importe quelle entrée et elle expire automatiquement — parfait pour les sprints, échéances et notes sensibles au temps.',
+			},
+			{
+				q: 'Qu\'est-ce que le rappel intelligent ?',
+				a: 'memory_smart_recall combine la recherche BM25 par mots-clés, la centralité du graphe, la notation de qualité et la décroissance de fraîcheur en un seul appel — le meilleur de toutes les stratégies de classement sans orchestration manuelle.',
+			},
+			{
+				q: 'Comment fonctionne la notation de qualité ?',
+				a: 'Chaque entrée reçoit automatiquement un score de qualité (0-1) basé sur la couverture des tags, la richesse des liens, le détail du contenu, la fraîcheur et la spécificité. Les entrées de haute qualité apparaissent en premier dans les résultats de rappel.',
+			},
+			{
+				q: 'Que se passe-t-il si j\'enregistre la même clé deux fois ?',
+				a: 'Le système fusionne les attributs au lieu de remplacer : les tags et liens sont unis, la qualité et la confiance prennent le maximum, et la date est mise à jour. Votre entrée s\'enrichit avec le temps.',
+			},
+		],
+	},
+	cta: {
+		title: 'Prêt à donner une mémoire à votre agent ?',
+		subtitle: 'Installez en quelques secondes et n\'expliquez plus jamais le contexte à votre agent.',
+		getStarted: 'Commencer',
+		viewGithub: 'Voir sur GitHub',
+	},
+	footer: {
+		text: 'Licence MIT — ',
+	},
+},
 } as const;
 
 export type Lang = keyof typeof content;

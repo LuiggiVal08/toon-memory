@@ -1,0 +1,72 @@
+---
+title: "Arquivamento Automático de Entradas Antigas de Memória"
+description: "Arquivamento automático de entradas antigas de memória — mantenha a memória do agente IA limpa com TTL e limpeza de entradas de baixa qualidade. Gerenciamento automático de memória MCP."
+---
+
+## Visão Geral
+
+O toon-memory arquiva automaticamente entradas com mais de 30 dias ou com TTL expirado para manter sua memória limpa.
+
+## Arquivamento Manual
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+## Como Funciona
+
+1. Entradas com mais de 30 dias são movidas para `archive.toon`
+2. Entradas com TTL expirado também são arquivadas
+3. A memória ativa permanece abaixo de 100 entradas
+4. Entradas arquivadas são preservadas para histórico
+5. Pode ser acionado manual ou automaticamente
+
+## Arquivamento Baseado em TTL
+
+Entradas com um campo `ttl` são arquivadas quando o TTL expira, independentemente da regra de 30 dias:
+
+```
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|permanent|This stays forever|file.ts||2026-07-10|
+  e5f6g7h8|knowledge|sprint-info|Sprint ends Friday|file.ts||2026-07-10|7d
+  i9j0k1l2|bug|temp-fix|Temporary workaround|file.ts||2026-07-10|2026-07-15
+```
+
+Neste exemplo:
+- `permanent` — sem TTL, nunca expira por TTL
+- `sprint-info` — expira 7 dias após a criação
+- `temp-fix` — expira em uma data específica
+
+## Estrutura de Arquivos
+
+```
+.toon-memory/memory/
+├── data.toon        # Memória ativa (< 30 dias, sem TTL expirado)
+└── archive.toon     # Entradas arquivadas (> 30 dias ou TTL expirado)
+```
+
+## Formato do Arquivo
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  a1b2c3d4|decision|old-decision|This was decided...|src/old.ts|decision|2026-06-01
+  e5f6g7h8|pattern|old-pattern|This pattern was used...|src/pattern.ts|pattern|2026-06-15
+```
+
+## Configuração
+
+| Configuração | Padrão | Descrição |
+|-------------|--------|-----------|
+| Máximo de entradas | 100 | Máximo de entradas ativas |
+| Dias para arquivar | 30 | Dias antes do arquivamento |
+| Arquivo de arquivo | `archive.toon` | Onde as entradas arquivadas vão |
+
+## Casos de Uso
+
+- **Manter a memória limpa** — Previne crescimento ilimitado
+- **Referência histórica** — Decisões antigas ainda acessíveis
+- **Performance** — Buscas mais rápidas com menos entradas
+- **Contexto temporário** — TTL lida com prazos, sprints, notas com data de validade

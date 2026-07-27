@@ -1,0 +1,352 @@
+---
+title: "21 outils MCP pour la mémoire IA persistante"
+description: "21 outils MCP pour la mémoire persistante des agents IA — memory_remember, memory_recall, memory_smart_recall, context_generate et plus encore. Rappel économe en tokens, basé sur le graphe, pour Claude, Cursor, OpenCode."
+head:
+  - tag: meta
+    attrs:
+      name: keywords
+      content: "outils MCP, memory_remember, memory_recall, outils mémoire IA, API mémoire persistante"
+---
+
+## Présentation
+
+toon-memory fournit 21 outils MCP et 3 ressources MCP pour gérer la mémoire persistante :
+
+## Outils
+
+| Outil | Description |
+|-------|-------------|
+| `memory_remember` | Enregistrer une décision, un pattern, un bug ou une connaissance (TTL optionnel, inférence automatique des tags, `links`, score de qualité automatique, fusion-dédup, confiance) |
+| `memory_recall` | Rechercher en mémoire (à utiliser AVANT de lire les fichiers, filtre les TTL expirés). `mode: "graph"` étend un sous-graphe conscient des relations pour plus de précision. Classement pondéré par la qualité |
+| `memory_forget` | Supprimer une entrée par clé ou id |
+| `memory_stats` | Voir l'état de la mémoire (y compris les stats TTL et la distribution de qualité) |
+| `memory_summary` | Enregistrer/récupérer des résumés de fichiers |
+| `memory_archive` | Archiver les vieilles entrées (>30 jours) et les TTL expirés |
+| `memory_diff` | Afficher les changements depuis une date (24h, 7d ou date précise) |
+| `memory_suggest` | Trouver des entrées liées pour un contexte donné |
+| `memory_captured` | Lister l'activité capturée automatiquement par les hooks (opt-in) ou vider le journal |
+| `memory_consolidate` | Dédupliquer les entrées avec un contenu identique et fusionner les attributs (déterministe, pas de LLM) |
+| `memory_encrypt` | Activer le chiffrement AES-256-GCM |
+| `memory_decrypt` | Désactiver le chiffrement |
+| `memory_backup` | Créer une sauvegarde horodatée du fichier mémoire (auto-nettoyage à 10 sauvegardes récentes) |
+| `memory_sessions` | Afficher les sessions actives, branches et conflits de fichiers pour la coordination multi-sessions |
+| `context_brief` | **Briefing contextuel en un appel** : mémoire + sessions + santé en markdown compact. Utilisez au lieu de 5-6 appels memory_* séparés. Zéro LLM |
+| `context_generate` | **Briefing projet complet** : combine structure du projet, état git, entrées mémoire et sessions actives en un seul appel. Remplace 5-6 appels manuels d'outils |
+| `context_diff` | **Briefing incrémental** : commits git + fichiers modifiés + mémoire nouvelle/mise à jour + sessions actives depuis la dernière session |
+| `context_focus` | **Briefing ciblé** : uniquement la mémoire pertinente + fichiers sources associés + appelants + fichiers de test pour une requête |
+| `context_health` | **Audit santé mémoire** : liens orphelins, doublons, références fichiers cassées, TTL expirés, sessions obsolètes, score 0–100 |
+| `context_export` | **Exporter la mémoire en markdown** : contexte injectable pour les prompts système (complet ou compact) |
+| `memory_smart_recall` | Recherche unifiée : BM25 + graphe + qualité + fraîcheur + décroissance en un seul appel |
+
+## Ressources MCP
+
+La mémoire est également exposée en tant que ressources MCP pour la lecture directe du contexte :
+
+| Ressource | URI | Description |
+|-----------|-----|-------------|
+| Entrées mémoire | `toon://memory/entries` | Dump complet de la mémoire |
+| Stats mémoire | `toon://memory/stats` | Compteurs par catégorie et infos TTL |
+| Résumés mémoire | `toon://memory/summaries` | Amorce système générée automatiquement : carte des connaissances, mémoires récentes et décisions clés |
+
+Les ressources permettent aux agents de lire la mémoire comme contexte sans invocations d'outils — utile pour les prompts système ou le démarrage de session. L'amorce système fournit un contexte instantan sur l'état des connaissances de votre projet.
+
+## Exemples
+
+### Enregistrer une décision
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "use-zod",
+  content: "Use Zod for validation",
+  file: "src/types.ts",
+  tags: "validation;types"
+})
+// 🧠 Guardado: decision/use-zod (a1b2c3d4)
+// 🎯 Quality: 0.80 | Confidence: 1.00
+// 🔗 Entradas relacionadas:
+//   [pattern] zod-schemas — Shared Zod schemas for API validation
+```
+
+Les entrées sont notées automatiquement pour la qualité (0-1) selon les tags, liens, détail du contenu et la spécificité. Les mémoires assertées par l'utilisateur obtiennent une confiance de 1.0 ; les mémoires inférées/rassemblées obtiennent 0.65-0.75.
+
+### Enregistrer avec TTL
+
+```typescript
+memory_remember({
+  category: "knowledge",
+  key: "sprint-deadline",
+  content: "Sprint ends July 18, feature freeze is July 16",
+  ttl: "7d"
+})
+// 🧠 Guardado: knowledge/sprint-deadline (x1y2z3w4)
+// 🎯 Quality: 0.55 | Confidence: 1.00
+// ⏰ TTL: 2026-07-19
+```
+
+Utilisez `ttl` pour le contexte temporaire comme les échéances ou les infos de sprint. Supporte les durées relatives (`7d`, `30d`) ou les dates précises (`2026-12-31`). Les entrées expirées sont filtrées automatiquement des résultats de recherche.
+
+### Tags inférés automatiquement
+
+```typescript
+memory_remember({
+  category: "bug",
+  key: "redis-connection-timeout",
+  content: "Redis connection timeout in production, increased pool size"
+  // tags laissés vides — inférés automatiquement du contenu
+})
+// 🧠 Guardado: bug/redis-connection-timeout (a1b2c3d4)
+// 🏷️ Tags inferidos: redis
+```
+
+Lorsque `tags` est vide, le système les infère du contenu à l'aide d'un vocabulaire de 20+ catégories : redis, auth, api, db, security, test, deploy, config, performance, refactor, error, logging, types, async, state, ui, storage, email, payment, webhook. De plus, `toon-memory init` écrit un **vocabulaire du projet** dérivé de vos dépendances (`package.json`, `Cargo.toml`, `requirements.txt`, `pyproject.toml`, `go.mod`), donc une entrée mentionnant une dépendance comme `redis` obtient également le tag automatique `redis`. Plus de tags = score de qualité plus élevé.
+
+### Rechercher en mémoire
+
+```typescript
+memory_recall({ query: "redis" })
+// [bug] redis-pool-fix (i9j0k1l2)
+//   Added max_connections=20
+//   File: redis.ts | Tags: redis;fix | Date: 2026-07-10 | Quality: 0.82
+```
+
+Les résultats sont pondérés par la qualité — les entrées avec plus de détail, tags et liens apparaissent en premier.
+
+### Recherche avec filtre de date
+
+```typescript
+memory_recall({
+  query: "redis",
+  from_date: "2026-07-01",
+  to_date: "2026-07-31"
+})
+```
+
+### Afficher les changements depuis la dernière session
+
+```typescript
+memory_diff({ since: "24h" })
+// 📋 Cambios desde 2026-07-11:
+//
+// ➕ Nuevas (2):
+//   [decision] use-zod (a1b2c3d4)
+//     Use Zod for validation
+//   [bug] redis-timeout (e5f6g7h8)
+//     Redis connection timeout fix
+```
+
+Supporte `since` en relatif (`24h`, `7d`) ou date précise. Filtre par `type` : `all`, `created` ou `updated`.
+
+### Trouver des entrées liées
+
+```typescript
+memory_suggest({ context: "redis cache configuration" })
+// 🔍 Sugerencias para "redis cache configuration":
+//
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+```
+
+### Archiver les vieilles entrées
+
+```typescript
+memory_archive()
+// 📦 Archivadas 5 entradas antiguas
+// 📋 Quedan 42 entradas activas
+```
+
+### Activer le chiffrement
+
+```typescript
+memory_encrypt()
+// 🔐 Encriptación habilitada
+// ⚠️ Guarda esta clave (no se puede recuperar):
+// a1b2c3d4...
+```
+
+### Lister les sessions actives et les conflits
+
+```typescript
+memory_sessions({ conflictsOnly: false })
+// 🧭 Sesiones activas (2) — ventana 10 min:
+//
+// • opencode @ feature/foo
+//    id: sess-B
+//    Archivos:
+//      • src/shared.ts
+// • claude @ feature/foo (tú)
+//    id: sess-A
+//
+// 🔥 Conflictos suaves (1):
+//   ⚠️ src/shared.ts  ↔  opencode@feature/foo, claude@feature/foo
+```
+
+Utilisez `memory_sessions({ conflictsOnly: true })` si vous ne vous souciez que des conflits. Voir [Coordination multi-sessions](#coordination-multi-sessions) ci-dessous.
+
+## Coordination multi-sessions
+
+Lorsque vous exécutez **plusieurs sessions d'agent IA en parallèle** (par exemple trois sessions OpenCode sur le même dépôt simultanément), elles peuvent se marcher dessus. `memory_sessions` est un outil de coordination **basé sur des fichiers** — **pas de serveur, pas de réseau, pas d'appels LLM** — qui permet à chaque session de voir ce que font les autres.
+
+### Comment ça marche
+
+- Au démarrage, un hook `SessionStart` écrit un **fichier heartbeat** pour la session dans `.toon-memory/memory/sessions/<id>.json`. Chaque processus écrit *uniquement son propre* fichier, donc il n'y a pas de concurrence de verrouillage.
+- L'enregistrement heartbeat contient le nom de l'agent, la **branche git**, les **fichiers touchés** et un horodatage de **dernière vue**.
+- La lecture de tous ces fichiers donne à chaque session une vue partagée, éventuellement cohérente, des autres sessions actives.
+- Une session est « active » tant que son dernier heartbeat est dans la fenêtre TTL (10 min). Les sessions mortes (PID du processus plus actif **et** heartbeat obsolète) sont nettoyées paresseusement.
+- Les conflits doux sont les fichiers touchés par **2+ sessions actives** — mis en avant par `memory_sessions` pour éviter d'empiéter sur le travail des autres.
+
+### Habitude recommandée pour les sessions parallèles
+
+1. Au démarrage de la session, le hook `SessionStart` affiche les autres sessions actives, leurs branches et les éventuels conflits doux.
+2. Avant de modifier des fichiers partagés, lancez `memory_sessions()` pour confirmer qu'aucune autre session ne les touche.
+3. À la fin, votre heartbeat est marqué comme terminé et les fichiers sont libérés.
+
+## Graphe mémoire (rappel basé sur le graphe)
+
+Pour les grandes mémoires, une recherche plate par mots-clés peut retourner trop de résultats ou manquer des relations. toon-memory peut traiter la mémoire comme un **graphe de connaissances léger** afin que le rappel retourne les *bonnes* entrées avec moins de tokens. Combiné au scoring de qualité, les entrées les plus utiles apparaissent en premier.
+
+C'est entièrement **déterministe et hors ligne** — pas d'embeddings, pas de base de données vectorielle, pas de LLM, pas de serveur. Les arêtes proviennent de :
+
+- **`links` explicites** — clés que vous déclarez lors de l'enregistrement d'une entrée.
+- **Références `[[key]]` implicites** — toute mention de `[[quelque-clé]]` dans le contenu.
+
+### Enregistrer avec des liens
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "risk-engine-priority",
+  content: "The engine prioritizes risk over speed (see [[risk-spec]]).",
+  file: "spec.md:10",
+  tags: "risk;spec",
+  links: "engine-arch"   // explicit edge to another entry
+})
+// 🧠 Guardado: decision/risk-engine-priority (a1b2c3d4)
+```
+
+### Rappel en mode graphe
+
+`memory_recall({ mode: "graph" })` trouve les correspondances par mots-clés (graines) et étend le **sous-graphe égo** jusqu'à `hops` (1 ou 2). La pertinence se propage des graines aux voisins, donc une spec ou décision liée apparaît même sans le mot exact de la requête. Le résultat est limité (`limit`, par défaut 6) pour un contexte plus petit et plus précis.
+
+```typescript
+memory_recall({ query: "riesgo", mode: "graph", hops: 2 })
+// [decision] risk-engine-priority (a1b2c3d4)
+//   The engine prioritizes risk over speed (see [[risk-spec]]).
+//   File: spec.md:10 | Tags: risk;spec | Date: 2026-07-01
+//   links: engine-arch
+//
+// [knowledge] risk-spec (a2b3c4d5)
+//   Risk specification for the engine.
+//   links: risk-engine-priority;engine-arch
+//
+// [pattern] engine-arch (e6f7g8h9)
+//   Engine architecture.
+//   links: risk-spec
+```
+
+> Utilisez `mode: "graph"` lorsqu'une décision se répercute sur plusieurs entrées (architecture, specs, bugs liés). Pour des faits isolés, le mode `flat` par défaut suffit. Le graphe est construit à la lecture, donc pas de fichier d'index supplémentaire à maintenir.
+
+### Rappel économe en tokens (`compact: true`)
+
+Lorsque chaque token compte, passez `compact: true` pour une sortie plus dense :
+
+```typescript
+memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
+// [1] decision/risk-engine-priority
+//   The engine prioritizes risk over speed (see [[risk-spec]]).
+//   tags: risk;spec · edges: ->2, ->3
+//
+// [2] knowledge/risk-spec
+//   Risk specification for the engine.
+//   tags: risk · edges: ->1
+//
+// [3] pattern/engine-arch
+//   Engine architecture.
+//   tags: engine · edges: ->1
+```
+
+Ce que `compact` modifie :
+
+- Chaque entrée reçoit un index numérique stable (`[1]`, `[2]`, …) par ordre de score.
+- `id`, `date` et `file` sont supprimés — seul `tags` est conservé.
+- En mode `graph`, les arêtes s'affichent comme `->2` (numériques, pas les noms de clés).
+- Les voisins atteints via le graphe (non-graines) sont tronqués en un court extrait avec ellipsis, tandis que les graines directement correspondantes conservent leur contenu complet.
+- Le fichier `.toon` stocké n'est **jamais** modifié — `compact` ne fait que reformater la réponse.
+
+### Comment le classement des résultats fonctionne
+
+Le rappel est déterministe et hors ligne (pas d'embeddings, pas de LLM). Chaque entrée candidate reçoit un score combiné provenant de :
+
+- **Pertinence BM25** — score probabiliste de fréquence de termes sur `id` + `category` + `key` + `content` + `file` + `tags`.
+- **Centralité du graphe** — degré normalisé (0..1) ; un hub connecté à de nombreuses entrées score près de 1, donc il apparaît même sans le mot de la requête.
+- **Importance** — fraîcheur + fréquence d'accès.
+- **Boost de qualité** — les entrées avec des scores de qualité plus élevés (plus de tags, liens, détails) reçoivent un boost de classement.
+- **Bonus de graine** — les entrées qui correspondent directement à la requête reçoivent un boost fixe.
+- **Décroissance par hop** — les nœuds à `hops` d'une graine sont multipliés par `0.5^d`, maintenant le contexte distant en dessous du contexte proche.
+
+En mode `graph`, le rappel part des correspondances par mots-clés, étend le sous-graphe égo jusqu'à `hops`, et retourne les `limit` meilleurs (par défaut 6) par score combiné. `memory_smart_recall` combine tous ces signaux en un seul appel.
+
+### Rappel intelligent (`memory_smart_recall`)
+
+Une recherche unifiée qui combine BM25, graphe, qualité, fraîcheur et décroissance en un seul appel :
+
+```typescript
+memory_smart_recall({ intent: "redis cache configuration", hops: 2 })
+// Combines BM25 relevance + graph centrality + quality score + freshness decay
+// Returns top results ranked by combined score
+```
+
+C'est la méthode recommandée pour rappeler la mémoire — elle gère tout en un seul appel au lieu de vous demander d'orchestrer plusieurs outils.
+
+### Score de qualité
+
+Chaque entrée est automatiquement notée pour la qualité (0-1) selon :
+
+- **Couverture des tags** (poids 0.3) — plus de tags = score plus élevé
+- **Richesse des liens** (poids 0.2) — plus de liens = plus connecté
+- **Détail du contenu** (poids 0.2) — contenu plus long et détaillé = score plus élevé
+- **Fraîcheur** (poids 0.15) — entrées récentes scorent légèrement plus haut
+- **Spécificité** (poids 0.15) — entrées avec références de fichiers et clés spécifiques = score plus élevé
+
+Les entrées de haute qualité apparaissent en premier dans les résultats de rappel, garantissant que le contexte le plus utile est toujours mis en avant.
+
+### Fusion-déduplication
+
+Lorsque vous enregistrez une entrée avec une clé existante, le système fusionne les attributs :
+
+- **Tags** : union des deux ensembles de tags
+- **Liens** : union des deux ensembles de liens
+- **Qualité** : maximum des deux scores
+- **Confiance** : maximum des deux scores
+- **Contenu** : conservé tel quel (pas d'écrasement)
+- **Date** : mise à jour à maintenant
+
+Cela signifie que re-enrichir une entrée l'enrichit plutôt que de la remplacer.
+
+### Auto-tag depuis les dépendances du projet
+
+Lors de `toon-memory init`, le CLI scanne vos manifests de dépendances et écrit un tableau `vocab` dans `.toon-memory/memory/config.json` :
+
+```json
+{
+  "vocab": {
+    "react": ["react"],
+    "zod": ["zod"],
+    "redis": ["redis"]
+  }
+}
+```
+
+`memory_remember` compare les nouvelles entrées à ce vocabulaire en plus de celui intégré. Ré-exécutez `toon-memory init` après avoir ajouté des dépendances majeures pour le rafraîchir. La clé `vocab` est fusionnée (jamais écrasée) avec les flags `encrypted`/`capture` dans `config.json`. Plus de tags = score de qualité plus élevé.
+
+## Catégories
+
+Les entrées sont organisées par catégorie :
+
+| Catégorie | Cas d'usage |
+|-----------|-------------|
+| `decision` | Décisions de design ("Pourquoi X plutôt que Y ?") |
+| `pattern` | Patterns du projet ("Utilise Zod pour la validation") |
+| `bug` | Correctifs de bugs ("Épuisement du pool Redis") |
+| `knowledge` | Connaissances générales ("Le broker utilise RESP") |

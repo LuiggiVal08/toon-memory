@@ -1,0 +1,70 @@
+---
+title: コントリビュート
+description: toon-memoryへのコントリビュート方法
+---
+
+## コントリビュート
+
+コントリビューションは大歓迎です！以下の手順に従ってください：
+
+## コントリビュート方法
+
+1. リポジトリを**フォーク**
+2. **フィーチャーブランチを作成**（`git checkout -b feature/amazing-feature`）
+3. **変更をコミット**（`git commit -m 'feat: add amazing feature'`）
+4. ブランチに**プッシュ**（`git push origin feature/amazing-feature`）
+5. **プルリクエストを作成**
+
+## 開発環境のセットアップ
+
+```bash
+git clone https://github.com/LuiggiVal08/toon-memory.git
+cd toon-memory
+npm install
+npm run build
+npm test
+```
+
+## プロジェクト構造
+
+```
+toon-memory/
+├── src/
+│   ├── bin/              # エントリポイント（CLI + MCPルーター）
+│   ├── cli/              # CLIコマンド（setup、capture、session-start）
+│   ├── lib/              # コアライブラリ（graph、quality、sessions、context、vocab、lock）
+│   └── mcp/              # MCPサーバー（21ツール、3リソース）
+├── tests/                # ユニットテスト（vitest）
+├── docs/                 # ドキュメントサイト（Astro + Starlight）
+├── bin/                  # ビルド出力（エントリポイント）
+├── mcp/                  # ビルド出力（MCPサーバー）
+└── package.json
+```
+
+## スクリプト
+
+```bash
+npm run build         # 全体をビルド
+npm run build:cli     # CLIをビルド
+npm run build:mcp     # MCPサーバーをビルド
+npm test              # テストを実行
+npm run test:watch    # ウォッチモードでテストを実行
+```
+
+## コードスタイル
+
+- TypeScriptのstrictモード
+- インデント2スペース
+- 変数/関数はcamelCase
+- クラスはPascalCase
+
+## プルリクエストガイドライン
+
+- 明確なコミットメッセージを記述
+- 新機能にはテストを追加
+- 必要に応じてドキュメントを更新
+- 既存のコードスタイルに従う
+
+## 行動規範
+
+コントリビュート前に[行動規範](/toon-memory/ja/community/code-of-conduct)をお読みください。

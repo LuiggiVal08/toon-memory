@@ -1,0 +1,70 @@
+---
+title: "기여하기"
+description: "toon-memory에 기여하는 방법"
+---
+
+## 기여하기
+
+기여를 환영합니다! 다음 단계를 따라주세요:
+
+## 기여 방법
+
+1. 리포지토리를 **포크**합니다
+2. 기능 브랜치를 **생성**합니다 (`git checkout -b feature/amazing-feature`)
+3. 변경사항을 **커밋**합니다 (`git commit -m 'feat: add amazing feature'`)
+4. 브랜치에 **푸시**합니다 (`git push origin feature/amazing-feature`)
+5. Pull Request를 **생성**합니다
+
+## 개발 환경 설정
+
+```bash
+git clone https://github.com/LuiggiVal08/toon-memory.git
+cd toon-memory
+npm install
+npm run build
+npm test
+```
+
+## 프로젝트 구조
+
+```
+toon-memory/
+├── src/
+│   ├── bin/              # 진입점 (CLI + MCP 라우터)
+│   ├── cli/              # CLI 명령어 (설정, 캡처, 세션 시작)
+│   ├── lib/              # 핵심 라이브러리 (그래프, 품질, 세션, 컨텍스트, 어휘, 잠금)
+│   └── mcp/              # MCP 서버 (21개 도구, 3개 리소스)
+├── tests/                # 단위 테스트 (vitest)
+├── docs/                 # 문서 사이트 (Astro + Starlight)
+├── bin/                  # 빌드 출력 (진입점)
+├── mcp/                  # 빌드 출력 (MCP 서버)
+└── package.json
+```
+
+## 스크립트
+
+```bash
+npm run build         # 전체 빌드
+npm run build:cli     # CLI 빌드
+npm run build:mcp     # MCP 서버 빌드
+npm test              # 테스트 실행
+npm run test:watch    # 워치 모드로 테스트 실행
+```
+
+## 코드 스타일
+
+- 엄격 모드의 TypeScript
+- 2칸 들여쓰기
+- 변수/함수에 camelCase
+- 클래스에 PascalCase
+
+## Pull Request 지침
+
+- 명확한 커밋 메시지를 작성하세요
+- 새 기능에 대한 테스트를 추가하세요
+- 필요시 문서를 업데이트하세요
+- 기존 코드 스타일을 따르세요
+
+## 행동 강령
+
+기여하기 전에 [행동 강령](/toon-memory/ko/community/code-of-conduct)을 읽어주세요.

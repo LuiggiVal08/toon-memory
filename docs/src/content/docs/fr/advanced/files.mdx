@@ -1,0 +1,71 @@
+---
+title: "Structure des fichiers mémoire"
+description: "Structure des fichiers mémoire — disposition du répertoire .toon-memory, format data.toon, config.json, sauvegardes. Comment le serveur MCP mémoire stocke les données localement."
+---
+
+## Structure du projet
+
+```
+.toon-memory/
+├── memory/
+│   ├── data.toon        # Fichier mémoire principal
+│   ├── archive.toon     # Entrées archivées (>30 jours ou TTL expiré)
+│   ├── config.json      # Paramètres de chiffrement
+│   └── backups/         # Sauvegardes du mode watch
+│       ├── backup-2026-07-11T16-00-00-000Z.toon
+│       └── backup-2026-07-11T16-10-00-000Z.toon
+└── hooks/
+    ├── session-start-claude.sh
+    ├── session-start-codex.sh
+    ├── session-start-gemini.sh
+    └── session-start-antigravity.sh
+```
+
+## Description des fichiers
+
+### data.toon
+
+Le fichier mémoire principal contenant toutes les entrées actives :
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10|
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10|
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d
+```
+
+### archive.toon
+
+Contient les entrées de plus de 30 jours ou avec un TTL expiré :
+
+```
+version: 1
+archived[5|]{id|category|key|content|file|tags|date}:
+  x1y2z3w4|knowledge|old-knowledge|This was important...|src/old.ts|knowledge|2026-06-01
+```
+
+### config.json
+
+Configuration de chiffrement (existe uniquement lorsque le chiffrement est activé) :
+
+```json
+{
+  "encrypted": true
+}
+```
+
+### backups/
+
+Répertoire contenant les sauvegardes horodatées du mode watch :
+
+```
+backups/
+├── backup-2026-07-11T16-00-00-000Z.toon
+├── backup-2026-07-11T16-10-00-000Z.toon
+└── backup-2026-07-11T16-20-00-000Z.toon
+```
+
+## Git Ignore
+
+toon-memory ajoute automatiquement `.toon-memory/memory/` à `.gitignore` pour empêcher le commit de données sensibles.

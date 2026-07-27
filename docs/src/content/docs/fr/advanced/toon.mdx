@@ -1,0 +1,66 @@
+---
+title: "Format TOON — 22% de tokens en moins que le JSON"
+description: "Format TOON — 22% de tokens en moins que le JSON, conçu pour la compréhension des LLMs et l'efficacité de la mémoire des agents IA. Token-Oriented Object Notation."
+---
+
+## Qu'est-ce que TOON ?
+
+TOON (Token-Oriented Object Notation) est un format de données conçu pour les LLMs. Il utilise environ 22,5% de tokens en moins que le JSON (mesuré avec gpt-tokenizer sur des entrées représentatives) tout en maintenant un aller-retour sans perte.
+
+## Comparaison
+
+| Format | Nombre de tokens | Précision LLM |
+|--------|-----------------|---------------|
+| JSON | 100 | 75% |
+| YAML | 95 | 72% |
+| **TOON** | **60** | **76,4%** |
+
+## Structure du format
+
+```
+version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0|patterns/zod-schemas|0.80|1.00
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.72|1.00
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d|3||0.68|0.85
+summaries:
+  src/services/redis.ts: Redis connection pool with retry logic
+```
+
+## Composants
+
+| Composant | Description |
+|-----------|-------------|
+| `version: 1` | Version du format |
+| `entries[N\|]{fields}:` | En-tête avec le nombre et les noms de champs |
+| `id\|category\|key\|...` | Valeurs séparées par des pipe |
+| `ttl` | Durée de vie optionnelle (vide = pas d'expiration) |
+| `accessed` | Nombre d'accès (pour le classement par importance) |
+| `links` | Clés d'entrée séparées par des points-virgules (arêtes du graphe) |
+| `quality` | Score de qualité 0-1 (calculé automatiquement) |
+| `confidence` | Score de confiance 0-1 (1,0=asserté, &lt;1,0=inféré) |
+| `summaries:` | Résumés de fichiers optionnels |
+
+## Champs des entrées
+
+| Champ | Requis | Description | Exemple |
+|-------|--------|-------------|---------|
+| `id` | Oui | ID hexadécimal à 8 caractères | `a1b2c3d4` |
+| `category` | Oui | `decision`, `pattern`, `bug`, `knowledge` | `decision` |
+| `key` | Oui | Titre en kebab-case | `use-zod` |
+| `content` | Oui | Description détaillée | `Use Zod for validation` |
+| `file` | Non | Chemin du fichier associé | `src/types.ts` |
+| `tags` | Non | Tags séparés par des points-virgules | `validation;types` |
+| `date` | Oui | AAAA-MM-JJ | `2026-07-10` |
+| `ttl` | Non | Expiration : `7d`, `30d` ou `2026-12-31` | `7d` |
+| `accessed` | Non | Nombre d'accès (auto-incrémenté au rappel) | `3` |
+| `links` | Non | Clés d'entrée séparées par des points-virgules (arêtes du graphe) | `patterns/zod-schemas` |
+| `quality` | Non | Score de qualité 0-1 (calculé automatiquement) | `0.80` |
+| `confidence` | Non | Score de confiance 0-1 (1,0=asserté) | `1.00` |
+
+## Avantages
+
+1. **Moins de tokens** — Plus efficace pour le contexte LLM
+2. **Meilleure précision** — Les LLMs le comprennent mieux que le JSON
+3. **Sans perte** — Aucune perte de données lors de la conversion
+4. **Lisible par les humains** — Facile à lire et à modifier manuellement
