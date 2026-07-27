@@ -1134,7 +1134,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	cta: { title: '에이전트에 메모리를 부여할 준비가 되셨나요?', subtitle: '몇 초 만에 설치하고 에이전트에 컨텍스트를 재설명하지 마세요.', getStarted: '시작하기', viewGithub: 'GitHub에서 보기' },
 	footer: { text: 'MIT 라이선스 — ' },
 },
-	pt-br: {
+	'pt-br': {
 	nav: {
 		docs: 'Documentação',
 		npm: 'npm',
