@@ -1,3 +1,5 @@
+[English](README.md) | [Español](README.es.md) | [中文](README.zh.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Português (BR)](README.pt-br.md) | [Deutsch](README.de.md) | [Français](README.fr.md)
+
 # toon-memory
 
 > MCP memory server for AI coding agents — remember decisions, patterns, and bugs between sessions.
