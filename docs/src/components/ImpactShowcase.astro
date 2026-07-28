@@ -15,6 +15,14 @@ const recallWithPct = 31.5;
 // Benchmark 2: full session — tool calls 25→5 (80% fewer)
 const sessionWithoutPct = 100;
 const sessionWithPct = 20;
+
+// Benchmark 3: compress-all — 14.3% token savings
+const compressBeforePct = 100;
+const compressAfterPct = 85.7;
+
+// Benchmark 4: primer — 58.4% token savings, 4→0 tool calls
+const primerWithoutPct = 100;
+const primerWithPct = 41.6;
 ---
 
 <section class="content-section impact-section">
@@ -23,7 +31,7 @@ const sessionWithPct = 20;
 		<p>{s.subtitle}</p>
 	</div>
 
-	<div class="benchmark-pair">
+	<div class="benchmark-grid">
 		<div class="benchmark-block">
 			<h3 class="benchmark-label">{lang === 'es' ? 'Recall compacto vs re-leer archivos' : 'Compact recall vs re-reading files'}</h3>
 			<div class="savings-bars impact-bars">
@@ -55,6 +63,42 @@ const sessionWithPct = 20;
 					<span class="savings-label">{lang === 'es' ? 'Con context_* (5 calls)' : 'With context_* (5 calls)'}</span>
 					<div class="bar-track">
 						<div class="bar bar-toon" style={`--pct:${sessionWithPct}%`} data-pct={sessionWithPct}><span>{sessionWithPct}%</span></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="benchmark-block">
+			<h3 class="benchmark-label">{lang === 'es' ? 'Compresión por lotes' : 'Batch compression'}</h3>
+			<div class="savings-bars impact-bars">
+				<div class="savings-bar">
+					<span class="savings-label">{lang === 'es' ? 'Sin comprimir (30)' : 'Uncompressed (30)'}</span>
+					<div class="bar-track">
+						<div class="bar bar-json" style={`--pct:${compressBeforePct}%`} data-pct={compressBeforePct}><span>{compressBeforePct}%</span></div>
+					</div>
+				</div>
+				<div class="savings-bar">
+					<span class="savings-label">{lang === 'es' ? 'Comprimido (20)' : 'Compressed (20)'}</span>
+					<div class="bar-track">
+						<div class="bar bar-toon" style={`--pct:${compressAfterPct}%`} data-pct={compressAfterPct}><span>{compressAfterPct}%</span></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="benchmark-block">
+			<h3 class="benchmark-label">{lang === 'es' ? 'System primer: auto-inyección' : 'System primer: auto-injection'}</h3>
+			<div class="savings-bars impact-bars">
+				<div class="savings-bar">
+					<span class="savings-label">{lang === 'es' ? '4 recalls manuales' : '4 manual recalls'}</span>
+					<div class="bar-track">
+						<div class="bar bar-json" style={`--pct:${primerWithoutPct}%`} data-pct={primerWithoutPct}><span>{primerWithoutPct}%</span></div>
+					</div>
+				</div>
+				<div class="savings-bar">
+					<span class="savings-label">{lang === 'es' ? 'Primer automático (0 calls)' : 'Auto primer (0 calls)'}</span>
+					<div class="bar-track">
+						<div class="bar bar-toon" style={`--pct:${primerWithPct}%`} data-pct={primerWithPct}><span>{primerWithPct}%</span></div>
 					</div>
 				</div>
 			</div>
@@ -109,10 +153,10 @@ const sessionWithPct = 20;
 	.impact-stats {
 		margin-top: 1.5rem;
 	}
-	.benchmark-pair {
+	.benchmark-grid {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 2rem;
+		gap: 1.5rem;
 		margin-bottom: 1.5rem;
 	}
 	.benchmark-block {
@@ -122,7 +166,7 @@ const sessionWithPct = 20;
 		border: 1px solid rgba(139, 92, 246, 0.15);
 	}
 	.benchmark-label {
-		font-size: 0.9rem;
+		font-size: 0.85rem;
 		font-weight: 600;
 		color: #a78bfa;
 		margin-bottom: 1rem;
@@ -130,7 +174,7 @@ const sessionWithPct = 20;
 		letter-spacing: .05em;
 	}
 	@media (max-width: 768px) {
-		.benchmark-pair {
+		.benchmark-grid {
 			grid-template-columns: 1fr;
 		}
 	}

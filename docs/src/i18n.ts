@@ -250,13 +250,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		impactSection: {
 			title: '80% fewer tool calls per session',
 			subtitle:
-				'Simulated full session: 25 tool calls → 5 with context_* tools. 47% fewer tokens, 80% less latency.',
+				'Four benchmarks: compact recall saves 68%, full session saves 80% tool calls, batch compression saves 14%, system primer saves 58%.',
 			stats: [
 				{ num: '80%', cap: 'fewer tool calls (25 → 5)' },
-				{ num: '47%', cap: 'fewer tokens per session' },
-				{ num: '$20', cap: '/month saved (20 sessions/day)' },
+				{ num: '68%', cap: 'fewer tokens (compact recall)' },
+				{ num: '58%', cap: 'fewer tokens (system primer)' },
+				{ num: '14%', cap: 'fewer tokens (batch compress)' },
 			],
-			note: 'Full session benchmark: session start → debug → implement → review → wrap-up. <code>context_*</code> tools trade ~318 extra tokens for 7 fewer calls — richer context means fewer follow-up reads. Reproducible: <code>npm run bench:full</code>.',
+			note: 'Full session benchmark: session start → debug → implement → review → wrap-up. <code>context_*</code> tools trade ~318 extra tokens for 7 fewer calls — richer context means fewer follow-up reads. Reproducible: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 		},
 		tools: {
 			title: '27 MCP tools, 3 resources',
@@ -658,15 +659,16 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Medido con <code>gpt-tokenizer</code> (cl100k_base) sobre 16 entradas de memoria representativas, comparando el formato TOON real en disco contra JSON compacto. Reproducible: <code>npm run bench</code>.',
 		},
 		impactSection: {
-			title: '80% menos llamadas por sesión',
+			title: '80% menos tool calls por sesión',
 			subtitle:
-				'Sesión completa simulada: 25 tool calls → 5 con context_*. 47% menos tokens, 80% menos latencia.',
+				'Cuatro benchmarks: recall compacto ahorra 68%, sesión completa ahorra 80% tool calls, compresión por lotes ahorra 14%, system primer ahorra 58%.',
 			stats: [
 				{ num: '80%', cap: 'menos tool calls (25 → 5)' },
-				{ num: '47%', cap: 'menos tokens por sesión' },
-				{ num: '$20', cap: '/mes ahorrado (20 sesiones/día)' },
+				{ num: '68%', cap: 'menos tokens (recall compacto)' },
+				{ num: '58%', cap: 'menos tokens (system primer)' },
+				{ num: '14%', cap: 'menos tokens (compresión por lotes)' },
 			],
-			note: 'Benchmark de sesión completa: inicio → debug → implementar → review → cierre. Las herramientas <code>context_*</code> intercambian ~318 tokens extra por 7 llamadas menos — contexto más rico significa menos re-lecturas. Reproducible: <code>npm run bench:full</code>.',
+			note: 'Benchmark de sesión completa: inicio → debug → implementar → revisar → cerrar. Las herramientas <code>context_*</code> intercambian ~318 tokens extra por 7 llamadas menos — contexto más rico significa menos re-lecturas. Reproducible: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 		},
 	tools: {
 		title: '27 herramientas MCP, 3 recursos',
@@ -919,10 +921,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: '使用 <code>gpt-tokenizer</code>（cl100k_base）在 16 条代表性记忆条目上测量，比较实际磁盘上的 TOON 格式与紧凑 JSON。可复现：<code>npm run bench</code>。',
 	},
 	impactSection: {
-		title: '每次会话减少 80% 的工具调用',
-		subtitle: '模拟完整会话：25 次工具调用 → 使用 context_* 工具后 5 次。减少 47% 的 token，减少 80% 的延迟。',
-		stats: [{ num: '80%', cap: '减少工具调用 (25 → 5)' }, { num: '47%', cap: '每次会话减少 token' }, { num: '$20', cap: '/月节省（每天 20 次会话）' }],
-		note: '完整会话基准测试：会话开始 → 调试 → 实现 → 审查 → 收尾。<code>context_*</code> 工具用约 318 个额外 token 换取 7 次更少的调用 — 更丰富的上下文意味着更少的后续读取。可复现：<code>npm run bench:full</code>。',
+		title: '每会话减少 80% 工具调用',
+		subtitle: '四项基准测试：紧凑召回节省 68%，完整会话节省 80% 工具调用，批量压缩节省 14%，系统提示节省 58%。',
+		stats: [{ num: '80%', cap: '更少工具调用 (25 → 5)' }, { num: '68%', cap: '更少令牌 (紧凑召回)' }, { num: '58%', cap: '更少令牌 (系统提示)' }, { num: '14%', cap: '更少令牌 (批量压缩)' }],
+		note: '完整会话基准测试：启动 → 调试 → 实现 → 审查 → 完成。<code>context_*</code> 工具以约 318 个额外令牌换取 7 次更少调用——更丰富的上下文意味着更少的重新阅读。可复现：<code>npm run bench:full</code>、<code>npm run bench:primer</code>、<code>npm run bench:compress-all</code>。',
 	},
 	tools: {
 		title: '27 个 MCP 工具，3 个资源', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
@@ -1092,10 +1094,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: '<code>gpt-tokenizer</code>（cl100k_base）で 16 件の代表的なメモリエントリを測定。実際の TOON フォーマットとコンパクト JSON を比較。再現可能：<code>npm run bench</code>。',
 	},
 	impactSection: {
-		title: 'セッションあたり 80% ツール呼び出し削減',
-		subtitle: 'シミュレーションされた完全セッション：25 回のツール呼び出し → context_* ツール使用で 5 回。トークン 47% 削減、レイテンシ 80% 削減。',
-		stats: [{ num: '80%', cap: 'ツール呼び出し削減 (25 → 5)' }, { num: '47%', cap: 'セッションあたりトークン削減' }, { num: '$20', cap: '/月節約（1 日 20 セッション）' }],
-		note: '完全セッションベンチマーク：セッション開始 → デバッグ → 実装 → レビュー → 終了。<code>context_*</code> ツールは約 318 トークンの追加で 7 回の呼び出しを削減 — より豊富なコンテキストはより少ない再読み取りを意味します。再現可能：<code>npm run bench:full</code>。',
+		title: 'セッションあたり80% fewer tool calls',
+		subtitle: '4つのベンチマーク：コンパクトrecallは68%節約、フルセッションは80% fewer tool calls、バッチ圧縮は14%節約、システムprimerは58%節約。',
+		stats: [{ num: '80%', cap: 'fewer tool calls (25 → 5)' }, { num: '68%', cap: 'fewer tokens (compact recall)' }, { num: '58%', cap: 'fewer tokens (system primer)' }, { num: '14%', cap: 'fewer tokens (batch compress)' }],
+		note: 'フルセッションベンチマーク：開始 → デバッグ → 実装 → レビュー → 終了。<code>context_*</code>ツールは追加~318トークンで7回 fewer callsと引き換え — より豊かなコンテキストはより少ない再読み込みを意味します。再現可能：<code>npm run bench:full</code>、<code>npm run bench:primer</code>、<code>npm run bench:compress-all</code>。',
 	},
 	tools: {
 		title: '27 個の MCP ツール、3 個のリソース', subtitle: 'エージェントが記憶、リコール、推論するために必要なすべて', resourcesLabel: 'リソース：',
@@ -1264,10 +1266,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: '<code>gpt-tokenizer</code> (cl100k_base)로 16개의 대표적인 메모리 항목을 측정. 실제 TOON 형식과 컴팩트 JSON 비교. 재현 가능: <code>npm run bench</code>.',
 	},
 	impactSection: {
-		title: '세션당 80% 도구 호출 절감',
-		subtitle: '시뮬레이션된 전체 세션: 25회 도구 호출 → context_* 도구 사용 시 5회. 토큰 47% 절감, 레이턴시 80% 절감.',
-		stats: [{ num: '80%', cap: '도구 호출 절감 (25 → 5)' }, { num: '47%', cap: '세션당 토큰 절감' }, { num: '$20', cap: '/월 절약 (하루 20 세션)' }],
-		note: '전체 세션 벤치마크: 세션 시작 → 디버그 → 구현 → 리뷰 → 마무리. <code>context_*</code> 도구가 ~318 토큰 추가로 7회 호출 절감 — 더 풍부한 컨텍스트는 더 적은 재읽기를 의미. 재현 가능: <code>npm run bench:full</code>.',
+		title: '세션당 80% fewer tool calls',
+		subtitle: '4개 벤치마크: 컴팩트 recall은 68% 절약, 전체 세션은 80% fewer tool calls, 배치 압축은 14% 절약, 시스템 primer은 58% 절약.',
+		stats: [{ num: '80%', cap: 'fewer tool calls (25 → 5)' }, { num: '68%', cap: 'fewer tokens (compact recall)' }, { num: '58%', cap: 'fewer tokens (system primer)' }, { num: '14%', cap: 'fewer tokens (batch compress)' }],
+		note: '전체 세션 벤치마크: 시작 → 디버그 → 구현 → 검토 → 마무리. <code>context_*</code> 도구는 추가 ~318 토큰으로 7번 fewer calls와 교환 — 더 풍부한 컨텍스트는 fewer 재읽기를 의미합니다. 재현 가능: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 	},
 	tools: {
 		title: '27개 MCP 도구, 3개 리소스', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
@@ -1595,15 +1597,16 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: 'Medido com <code>gpt-tokenizer</code> (cl100k_base) em 16 entradas de memória representativas, comparando o formato TOON real em disco contra JSON compacto. Reproduzível: <code>npm run bench</code>.',
 	},
 	impactSection: {
-		title: '80% menos chamadas de ferramenta por sessão',
+		title: '80% menos chamadas de ferramentas por sessão',
 		subtitle:
-			'Sessão completa simulada: 25 chamadas → 5 com ferramentas context_*. 47% menos tokens, 80% menos latência.',
+			'Quatro benchmarks: recall compacto economiza 68%, sessão completa economiza 80% de chamadas, compressão em lote economiza 14%, system primer economiza 58%.',
 		stats: [
 			{ num: '80%', cap: 'menos chamadas (25 → 5)' },
-			{ num: '47%', cap: 'menos tokens por sessão' },
-			{ num: '$20', cap: '/mês economizado (20 sessões/dia)' },
+			{ num: '68%', cap: 'menos tokens (recall compacto)' },
+			{ num: '58%', cap: 'menos tokens (system primer)' },
+			{ num: '14%', cap: 'menos tokens (compressão em lote)' },
 		],
-		note: 'Benchmark de sessão completa: início → debug → implementação → review → encerramento. Ferramentas <code>context_*</code> trocam ~318 tokens extras por 7 chamadas a menos — contexto mais rico significa menos re-leituras. Reproduzível: <code>npm run bench:full</code>.',
+		note: 'Benchmark de sessão completa: início → depuração → implementação → revisão → encerramento. As ferramentas <code>context_*</code> trocam ~318 tokens extras por 7 chamadas a menos — contexto mais rico significa menos re-leituras. Reprodutível: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 	},
 	tools: {
 		title: '27 ferramentas MCP, 3 recursos',
@@ -2005,15 +2008,16 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: 'Gemessen mit <code>gpt-tokenizer</code> (cl100k_base) über 16 repräsentative Speicher-Einträge, vergleicht das echte TOON-Format auf Disk mit kompaktem JSON. Reproduzierbar: <code>npm run bench</code>.',
 	},
 	impactSection: {
-		title: '80% weniger Tool-Aufrufe pro Sitzung',
+		title: '80% weniger Tool-Calls pro Sitzung',
 		subtitle:
-			'Simulierte vollständige Sitzung: 25 Tool-Aufrufe → 5 mit context_*-Tools. 47% weniger Token, 80% weniger Latenz.',
+			'Vier Benchmarks: Kompakter Recall spart 68%, volle Sitzung spart 80% Tool-Calls, Batch-Komprimierung spart 14%, System-Primer spart 58%.',
 		stats: [
-			{ num: '80%', cap: 'weniger Tool-Aufrufe (25 → 5)' },
-			{ num: '47%', cap: 'weniger Token pro Sitzung' },
-			{ num: '$20', cap: '/Monat gespart (20 Sitzungen/Tag)' },
+			{ num: '80%', cap: 'weniger Tool-Calls (25 → 5)' },
+			{ num: '68%', cap: 'weniger Tokens (kompakter Recall)' },
+			{ num: '58%', cap: 'weniger Tokens (System-Primer)' },
+			{ num: '14%', cap: 'weniger Tokens (Batch-Komprimierung)' },
 		],
-		note: 'Vollständiger Sitzungs-Benchmark: Sitzungsstart → Debugging → Implementierung → Review → Abschluss. <code>context_*</code>-Tools tauschen ~318 zusätzliche Token für 7 weniger Aufrufe — reicherer Kontext bedeutet weniger Nachlese. Reproduzierbar: <code>npm run bench:full</code>.',
+		note: 'Vollständiger Sitzungs-Benchmark: Start → Debug → Implementierung → Review → Abschluss. <code>context_*</code>-Tools tauschen ~318 zusätzliche Tokens gegen 7 weniger Aufrufe — reicherer Kontext bedeutet weniger Nachlesevorgänge. Reproduzierbar: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 	},
 	tools: {
 		title: '27 MCP-Tools, 3 Ressourcen',
@@ -2415,15 +2419,16 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: 'Mesuré avec <code>gpt-tokenizer</code> (cl100k_base) sur 16 entrées de mémoire représentatives, comparant le format TOON réel sur disque au JSON compact. Reproductible : <code>npm run bench</code>.',
 	},
 	impactSection: {
-		title: '80% moins d\'appels d\'outil par session',
+		title: '80% moins d\'appels d\'outils par session',
 		subtitle:
-			'Session complète simulée : 25 appels → 5 avec les outils context_*. 47% moins de tokens, 80% moins de latence.',
+			'Quatre benchmarks : recall compact économise 68%, session complète économise 80% d\'appels, compression par lot économise 14%, system primer économise 58%.',
 		stats: [
-			{ num: '80%', cap: 'moins d\'appels d\'outil (25 → 5)' },
-			{ num: '47%', cap: 'moins de tokens par session' },
-			{ num: '$20', cap: '/mois économisé (20 sessions/jour)' },
+			{ num: '80%', cap: 'moins d\'appels (25 → 5)' },
+			{ num: '68%', cap: 'moins de tokens (recall compact)' },
+			{ num: '58%', cap: 'moins de tokens (system primer)' },
+			{ num: '14%', cap: 'moins de tokens (compression par lot)' },
 		],
-		note: 'Benchmark de session complète : début → debug → implémentation → review → clôture. Les outils <code>context_*</code> échangent ~318 tokens supplémentaires contre 7 appels en moins — plus de contexte signifie moins de relectures. Reproductible : <code>npm run bench:full</code>.',
+		note: 'Benchmark de session complète : démarrage → débogage → implémentation → révision → clôture. Les outils <code>context_*</code> échangent ~318 tokens supplémentaires pour 7 appels en moins — un contexte plus riche signifie moins de re-lectures. Reproductible : <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 	},
 	tools: {
 		title: '27 outils MCP, 3 ressources',
