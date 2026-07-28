@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.1.0] - 2026-07-28
+
+### Added
+- **Intelligent auto-loading** — OpenCode plugin now does `memory_recall` by file path on every tool execution, injecting only relevant context instead of dumping all memory
+- **`memory_merge_similar` MCP tool** — Find entries with >50% word similarity (Jaccard) and merge them deterministically. No LLM needed
+- **`memory_graph_path` MCP tool** — BFS shortest path between two entries in the knowledge graph. Shows how concepts are connected
+- **Staleness decay** — Quality scoring now penalizes entries not accessed in 30+ days (up to -0.2). Ensures old knowledge doesn't dominate rankings
+
+### Fixed
+- **6 agent config corrections** — Claude Code now uses `.mcp.json` (MCP) + `.claude/settings.json` (hooks), Continue uses `experimental.modelContextProtocolServers` array, Zed uses `context_servers` with `source: "custom"`, Antigravity moved to `.agents/`, KiloCode uses `mcp` key with `type: "local"`, OpenClaw uses nested `mcp.servers` format
+- Added `hookPath` field to Agent type for agents where hook registration differs from MCP config path
+
+### Changed
+- Tool count: 27 → 29 MCP tools
+- Test updated: tool count 27 → 29
+
 ## [2.10.0] - 2026-07-27
 
 ### Added

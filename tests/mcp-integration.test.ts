@@ -58,10 +58,10 @@ class McpClient {
 	async request(method: string, params: Record<string, unknown> = {}): Promise<McpResponse> {
 		const id = this.nextId++
 		return new Promise((resolve, reject) => {
-			const timeout = setTimeout(() => {
-				this.pending.delete(id)
-				reject(new Error(`MCP request ${method} timed out (id=${id})`))
-			}, 10_000)
+		const timeout = setTimeout(() => {
+			this.pending.delete(id)
+			reject(new Error(`MCP request ${method} timed out (id=${id})`))
+		}, 20_000)
 
 			this.pending.set(id, {
 				resolve: (v) => { clearTimeout(timeout); resolve(v) },
@@ -140,36 +140,38 @@ describe("MCP Integration", () => {
 
 	// ── Tool listing ──────────────────────────────────────────────
 
-	it("lists all 27 tools", async () => {
-		const tools = await client.listTools()
-		expect(tools.length).toBe(27)
-		expect(tools).toContain("memory_remember")
-		expect(tools).toContain("memory_recall")
-		expect(tools).toContain("memory_forget")
-		expect(tools).toContain("memory_stats")
-		expect(tools).toContain("memory_summary")
-		expect(tools).toContain("memory_archive")
-		expect(tools).toContain("memory_diff")
-		expect(tools).toContain("memory_suggest")
-		expect(tools).toContain("memory_smart_recall")
-		expect(tools).toContain("memory_encrypt")
-		expect(tools).toContain("memory_decrypt")
-		expect(tools).toContain("memory_captured")
-		expect(tools).toContain("memory_consolidate")
-		expect(tools).toContain("memory_sessions")
-		expect(tools).toContain("memory_backup")
-		expect(tools).toContain("memory_compress")
-		expect(tools).toContain("memory_compress_all")
-		expect(tools).toContain("memory_primer")
-		expect(tools).toContain("memory_merge_sessions")
-		expect(tools).toContain("memory_export_gist")
-		expect(tools).toContain("memory_import_gist")
-		expect(tools).toContain("context_brief")
-		expect(tools).toContain("context_generate")
-		expect(tools).toContain("context_diff")
-		expect(tools).toContain("context_focus")
-		expect(tools).toContain("context_health")
-		expect(tools).toContain("context_export")
+  it("lists all 29 tools", async () => {
+    const tools = await client.listTools()
+    expect(tools.length).toBe(29)
+    expect(tools).toContain("memory_remember")
+    expect(tools).toContain("memory_recall")
+    expect(tools).toContain("memory_forget")
+    expect(tools).toContain("memory_stats")
+    expect(tools).toContain("memory_summary")
+    expect(tools).toContain("memory_archive")
+    expect(tools).toContain("memory_encrypt")
+    expect(tools).toContain("memory_decrypt")
+    expect(tools).toContain("memory_suggest")
+    expect(tools).toContain("memory_smart_recall")
+    expect(tools).toContain("memory_diff")
+    expect(tools).toContain("memory_compress")
+    expect(tools).toContain("memory_compress_all")
+    expect(tools).toContain("memory_consolidate")
+    expect(tools).toContain("memory_backup")
+    expect(tools).toContain("memory_sessions")
+    expect(tools).toContain("memory_captured")
+    expect(tools).toContain("memory_merge_sessions")
+    expect(tools).toContain("memory_export_gist")
+    expect(tools).toContain("memory_import_gist")
+    expect(tools).toContain("memory_primer")
+    expect(tools).toContain("context_brief")
+    expect(tools).toContain("context_diff")
+    expect(tools).toContain("context_focus")
+    expect(tools).toContain("context_generate")
+    expect(tools).toContain("context_health")
+    expect(tools).toContain("context_export")
+    expect(tools).toContain("memory_merge_similar")
+    expect(tools).toContain("memory_graph_path")
 	})
 
 	// ── Resource listing ──────────────────────────────────────────

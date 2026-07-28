@@ -63,7 +63,7 @@ AIエージェントが昨日のセッションの内容を全て忘れてしま
 
 ## 主な機能
 
-- **27個のMCPツール** — Model Context Protocolによる完全なメモリ管理。`memory_smart_recall`（統一リコール）、マルチセッション連携用の`memory_sessions`、ワンコールでコンテキストを生成する`context_*`ツール（ブリーフィング、差分、フォーカス、ヘルス監査、エクスポート）を含みます
+- **29個のMCPツール** — Model Context Protocolによる完全なメモリ管理。`memory_smart_recall`（統一リコール）、マルチセッション連携用の`memory_sessions`、ワンコールでコンテキストを生成する`context_*`ツール（ブリーフィング、差分、フォーカス、ヘルス監査、エクスポート）を含みます
 - **MCPリソース** — ツール呼び出しせずにメモリをコンテキストとして読み取れます。システムプライマー（自動生成されたナレッジマップ）を含みます
 - **15のエージェントに対応** — OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex CLI、Gemini CLI、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro
 - **インタラクティブインストーラー** — メニューから設定するエージェントを選択できます
@@ -142,7 +142,7 @@ memory_remember   # 重要な意思決定を保存
 |-------|-----------------|--------|-------|------------|
 | **OpenCode** | `.opencode/opencode.json` + `.opencode/plugins/toon-memory.ts` | プラグイン | SessionStart（プラグイン方式、トップレベル`hooks`なし） | ✅ |
 | **VS Code / Copilot** | `.vscode/mcp.json` | JSON | — | ✅ |
-| **Claude Code** | `.claude/settings.json` | JSON | SessionStart + PostToolUse + Stop | ✅ |
+| **Claude Code** | `.mcp.json` (MCP) + `.claude/settings.json` (hooks) | JSON | SessionStart + PostToolUse + Stop | ✅ |
 | **Cursor** | `.cursor/mcp.json` | JSON | — | ✅ |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | JSON | — | ✅ |
 | **Cline** | `.cline/mcp.json` | JSON | — | ✅ |
@@ -150,7 +150,7 @@ memory_remember   # 重要な意思決定を保存
 | **Codex CLI** | `.codex/config.toml` | TOML | SessionStart + PostToolUse + Stop（`[[hooks]] event=`） | ✅ |
 | **Gemini CLI** | `.gemini/settings.json` | JSON | SessionStart + PostToolUse + Stop（`hooks.*`） | ✅ |
 | **Zed** | `~/.config/zed/settings.json` | JSONC | — | ✅ |
-| **Antigravity** | `.gemini/config/mcp_config.json` + `.gemini/config/hooks.json` | hooks.json | PreInvocation + PostToolUse + Stop（SessionStartイベントなし） | ✅ |
+| **Antigravity** | `.agents/mcp_config.json` + `.agents/hooks.json` | hooks.json | PreInvocation + PostToolUse + Stop（SessionStartイベントなし） | ✅ |
 | **Aider** | — | — | — | 📝 手動設定 |
 | **KiloCode** | `~/.kilocode/mcp_settings.json` | JSON | — | ✅ |
 | **OpenClaw** | `.openclaw.json` | JSON | — | ✅ |
@@ -185,6 +185,8 @@ memory_remember   # 重要な意思決定を保存
 | `memory_merge_sessions` | ファイルの並列セッション間でオブザベーションをマージ。重複排除し、自動昇格 |
 | `memory_export_gist` | エントリを GitHub Gist（公開/非公開）にエクスポート。GITHUB_TOKEN または gh CLI を使用 |
 | `memory_import_gist` | GitHub Gist からエントリをインポート。既存エントリとマージ（タグ联合、最大信頼度） |
+| `memory_merge_similar` | 語彙類似度>50%（Jaccard）のエントリを見つけて決定論的にマージ |
+| `memory_graph_path` | ナレッジグラフ内の2つのエントリ間のBFS最短経路 |
 | `context_brief` | **ワンコールコンテキストブリーフィング**：メモリ＋セッション＋ヘルスをコンパクトマークダウンで提供。5〜6回の個別`memory_*`呼び出しの代替。LLM不使用、純粋な決定論的集約 |
 | `context_generate` | **完全プロジェクトブリーフィング**：プロジェクト構造、git状態、メモリエントリ、アクティブセッションを1回の呼び出しで統合。5〜6回の手動ツール呼び出しの代替 |
 | `context_diff` | **インクリメンタルブリーフィング**：gitコミット＋変更ファイル＋新規/更新メモリ＋前回セッション以降のアクティブセッション |
@@ -833,7 +835,7 @@ npx toon-memory
 
 ### Claude Code
 
-`.claude/settings.json`に追加：
+`.mcp.json`（プロジェクトルート）に追加：
 
 ```json
 {
@@ -1162,7 +1164,7 @@ toon-memory/
 │   │   ├── setup.ts             # CLIコマンド
 │   │   └── toon-memory.ts       # CLIランナー
 │   ├── mcp/
-│   │   └── server.ts            # MCPサーバー（27ツール＋3リソース）
+│   │   └── server.ts            # MCPサーバー（29ツール＋3リソース）
 │   ├── lib/
 │   │   ├── lock.ts              # アドバイザリファイルロック＋アトミックライト
 │   │   ├── sessions.ts          # マルチセッション連携

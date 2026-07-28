@@ -63,7 +63,7 @@
 
 ## 기능
 
-- **MCP 도구 27개** — Model Context Protocol을 통한 전체 메모리 관리. `memory_smart_recall` (통합 리콜), `memory_sessions` 다세션 협업, `context_*` 도구를 통한 원 호출 컨텍스트 생성(브리핑, 차이점, 집중, 건강 감사, 내보내기) 포함
+- **MCP 도구 29개** — Model Context Protocol을 통한 전체 메모리 관리. `memory_smart_recall` (통합 리콜), `memory_sessions` 다세션 협업, `context_*` 도구를 통한 원 호출 컨텍스트 생성(브리핑, 차이점, 집중, 건강 감사, 내보내기) 포함
 - **MCP 리소스** — 도구 호출 없이 컨텍스트로 메모리 읽기. 시스템 프라이머(자동 생성 지식 맵) 포함
 - **에이전트 15개 지원** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **인터랙티브 설치기** — 메뉴에서 설정할 에이전트 선택
@@ -142,7 +142,7 @@ memory_remember   # 중요한 결정 저장
 |-------|-----------------|--------|-------|------------|
 | **OpenCode** | `.opencode/opencode.json` + `.opencode/plugins/toon-memory.ts` | 플러그인 | SessionStart (플러그인, 최상위 `hooks` 없음) | ✅ |
 | **VS Code / Copilot** | `.vscode/mcp.json` | JSON | — | ✅ |
-| **Claude Code** | `.claude/settings.json` | JSON | SessionStart + PostToolUse + Stop | ✅ |
+| **Claude Code** | `.mcp.json` (MCP) + `.claude/settings.json` (hooks) | JSON | SessionStart + PostToolUse + Stop | ✅ |
 | **Cursor** | `.cursor/mcp.json` | JSON | — | ✅ |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | JSON | — | ✅ |
 | **Cline** | `.cline/mcp.json` | JSON | — | ✅ |
@@ -150,7 +150,7 @@ memory_remember   # 중요한 결정 저장
 | **Codex CLI** | `.codex/config.toml` | TOML | SessionStart + PostToolUse + Stop (`[[hooks]] event=`) | ✅ |
 | **Gemini CLI** | `.gemini/settings.json` | JSON | SessionStart + PostToolUse + Stop (`hooks.*`) | ✅ |
 | **Zed** | `~/.config/zed/settings.json` | JSONC | — | ✅ |
-| **Antigravity** | `.gemini/config/mcp_config.json` + `.gemini/config/hooks.json` | hooks.json | PreInvocation + PostToolUse + Stop (SessionStart 이벤트 없음) | ✅ |
+| **Antigravity** | `.agents/mcp_config.json` + `.agents/hooks.json` | hooks.json | PreInvocation + PostToolUse + Stop (SessionStart 이벤트 없음) | ✅ |
 | **Aider** | — | — | — | 📝 설명서 |
 | **KiloCode** | `~/.kilocode/mcp_settings.json` | JSON | — | ✅ |
 | **OpenClaw** | `.openclaw.json` | JSON | — | ✅ |
@@ -185,6 +185,8 @@ memory_remember   # 중요한 결정 저장
 | `memory_merge_sessions` | 파일의 병렬 세션 간 관찰 병합. 중복 제거 및 자동 승격 |
 | `memory_export_gist` | 항목을 GitHub Gist(공개/비공개)로 내보내기. GITHUB_TOKEN 또는 gh CLI 사용 |
 | `memory_import_gist` | GitHub Gist에서 항목 가져오기. 기존 항목과 병합(태그 합집합, 최대 신뢰도) |
+| `memory_merge_similar` | 어휘 유사도 >50% (Jaccard)인 항목을 찾아 결정론적으로 병합 |
+| `memory_graph_path` | 지식 그래프에서 두 항목 간의 BFS 최단 경로 |
 | `context_brief` | **원 호출 컨텍스트 브리핑**: 컴팩트 마크다운에 메모리 + 세션 + 건강 상태. 별도의 5-6개 memory_* 호출 대신 사용. LLM 불필요, 순수 결정론적 집계 |
 | `context_generate` | **전체 프로젝트 브리핑**: 프로젝트 구조, git 상태, 메모리 항목, 활성 세션을 하나의 호출로 결합. 5-6개의 수동 도구 호출 대체 |
 | `context_diff` | **증분 브리핑**: git 커밋 + 수정된 파일 + 신규/업데이트된 메모리 + 이전 세션 이후 활성 세션 |
@@ -833,7 +835,7 @@ npx toon-memory
 
 ### Claude Code
 
-`.claude/settings.json`에 추가:
+`.mcp.json`(프로젝트 루트)에 추가:
 
 ```json
 {
@@ -1162,7 +1164,7 @@ toon-memory/
 │   │   ├── setup.ts             # CLI 명령어
 │   │   └── toon-memory.ts       # CLI 러너
 │   ├── mcp/
-│   │   └── server.ts            # MCP 서버 (27개 도구 + 3개 리소스)
+│   │   └── server.ts            # MCP 서버 (29개 도구 + 3개 리소스)
 │   ├── lib/
 │   │   ├── lock.ts              # 조언 파일 잠금 + 원자적 쓰기
 │   │   ├── sessions.ts          # 다세션 협업

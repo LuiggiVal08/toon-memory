@@ -11,7 +11,7 @@ import { archiveOldEntries } from "./archive"
 import { consolidateEntries } from "./consolidation"
 import { readUnderLock } from "../lib/lock"
 import { encrypt, decrypt } from "./crypto"
-import { graphRecallDetailed, renderCompact, parseEntries } from "../lib/graph"
+import { graphRecallDetailed, renderCompact, parseEntries, buildGraph } from "../lib/graph"
 import { qualityScore, mergeEntries, generateSmartRecall } from "../lib/quality"
 import { generateContextBrief, generateContextGenerate, generateContextDiff, generateContextFocus, generateContextHealth, generateContextExport } from "../lib/context"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } from "../lib/sessions"
@@ -1371,6 +1371,182 @@ server.registerTool(
     }
 
     return { content: [{ type: "text" as const, text: sections.join("\n") }] }
+  }
+)
+
+// ── memory_merge_similar ─────────────────────────────────────────────
+
+server.registerTool(
+  "memory_merge_similar",
+  {
+    title: "Merge Similar Entries",
+    description: "Find entries with overlapping content (>50% word similarity) and merge them. Deterministic, no LLM. Keeps the longer content and combines tags.",
+    inputSchema: {
+      dryRun: z.boolean().optional().default(false).describe("If true, show what would be merged without making changes."),
+    },
+  },
+  async ({ dryRun }) => {
+    const data = readMemory()
+    const entries = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
+
+    if (entries.length < 2) {
+      return { content: [{ type: "text" as const, text: "✅ Not enough entries to compress." }] }
+    }
+
+    // Parse entries and compute similarity
+    const parsed = entries.map((line) => {
+      const parts = line.trim().split("|")
+      if (parts.length < 7) return null
+      const [id, cat, key, content, file, tags, date, ttl, accessedRaw] = parts
+      const words = new Set(normalize(`${key} ${content} ${tags}`).split(" ").filter(Boolean))
+      return { id, cat, key, content, file, tags, date, ttl, accessed: parseInt(accessedRaw) || 0, words, line }
+    }).filter(Boolean) as Array<{ id: string; cat: string; key: string; content: string; file: string; tags: string; date: string; ttl: string; accessed: number; words: Set<string>; line: string }>
+
+    // Find pairs with >50% word overlap (Jaccard similarity)
+    const mergePairs: Array<{ a: number; b: number; similarity: number }> = []
+    for (let i = 0; i < parsed.length; i++) {
+      for (let j = i + 1; j < parsed.length; j++) {
+        const a = parsed[i], b = parsed[j]
+        const intersection = new Set([...a.words].filter((w) => b.words.has(w)))
+        const union = new Set([...a.words, ...b.words])
+        const similarity = union.size > 0 ? intersection.size / union.size : 0
+        if (similarity > 0.5) {
+          mergePairs.push({ a: i, b: j, similarity })
+        }
+      }
+    }
+
+    if (mergePairs.length === 0) {
+      return { content: [{ type: "text" as const, text: "✅ No similar entries found to merge." }] }
+    }
+
+    // Sort by similarity (highest first) and merge greedily
+    mergePairs.sort((x, y) => y.similarity - x.similarity)
+    const merged = new Set<number>()
+    const mergeActions: string[] = []
+
+    for (const pair of mergePairs) {
+      if (merged.has(pair.a) || merged.has(pair.b)) continue
+      const a = parsed[pair.a], b = parsed[pair.b]
+
+      // Merge: keep the entry with more content, combine tags
+      const mergedTags = [...new Set([...a.tags.split(";"), ...b.tags.split(";")])].filter(Boolean).join(";")
+      const longer = a.content.length >= b.content.length ? a : b
+      const shorter = a.content.length < b.content.length ? a : b
+      const newContent = longer.content
+      const newDate = a.date > b.date ? a.date : b.date
+      const newAccessed = a.accessed + b.accessed
+
+      mergeActions.push(`  [${longer.cat}] ${longer.key} ← ${shorter.key} (similarity: ${(pair.similarity * 100).toFixed(0)}%)`)
+
+      if (!dryRun) {
+        // Update the longer entry with merged data
+        const mergedLine = `  ${longer.id}|${longer.cat}|${longer.key}|${newContent}|${longer.file}|${mergedTags}|${newDate}|${longer.ttl}|${newAccessed}|${longer.line.split("|")[9] || ""}|${longer.line.split("|")[10] || ""}|${longer.line.split("|")[11] || ""}|${longer.line.split("|")[12] || ""}`
+        // Replace in entries array
+        entries[entries.indexOf(longer.line)] = mergedLine
+        merged.add(pair.b)
+      }
+    }
+
+    if (dryRun) {
+      return {
+        content: [{
+          type: "text" as const,
+          text: `🔍 Dry run — would merge ${merged.size} entries:\n\n${mergeActions.join("\n")}\n\nRun with dryRun: false to apply.`
+        }],
+      }
+    }
+
+    // Remove merged entries and write back
+    const newLines = entries.filter((_, i) => !merged.has(i))
+    const headerIdx = newLines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+    if (headerIdx !== -1) {
+      const count = newLines.filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:")).length
+      newLines[headerIdx] = newLines[headerIdx].replace(/\[\d+\|/, `[${count}|`)
+    }
+    writeMemory(newLines.join("\n"))
+
+    return {
+      content: [{
+        type: "text" as const,
+        text: `✅ Merged ${merged.size} entries into ${entries.length - merged.size} entries.\n\n${mergeActions.join("\n")}`
+      }],
+    }
+  }
+)
+
+// ── memory_graph_path ────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_graph_path",
+  {
+    title: "Find Graph Path",
+    description: "Find the shortest path between two memory entries in the knowledge graph. Shows how two concepts are connected through related entries.",
+    inputSchema: {
+      from: z.string().describe("Starting entry key"),
+      to: z.string().describe("Target entry key"),
+    },
+  },
+  async ({ from, to }) => {
+    const data = readMemory()
+    const entries = parseEntries(data)
+    const graph = buildGraph(entries)
+
+    if (!graph.byKey.has(from)) {
+      return { content: [{ type: "text" as const, text: `❌ Entry "${from}" not found in memory.` }] }
+    }
+    if (!graph.byKey.has(to)) {
+      return { content: [{ type: "text" as const, text: `❌ Entry "${to}" not found in memory.` }] }
+    }
+
+    // BFS shortest path
+    const visited = new Set<string>()
+    const parent = new Map<string, string>()
+    const queue = [from]
+    visited.add(from)
+
+    while (queue.length > 0) {
+      const current = queue.shift()!
+      if (current === to) break
+
+      for (const neighbor of graph.adjacency.get(current) || []) {
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor)
+          parent.set(neighbor, current)
+          queue.push(neighbor)
+        }
+      }
+    }
+
+    if (!visited.has(to)) {
+      return {
+        content: [{
+          type: "text" as const,
+          text: `🔗 No path found between "${from}" and "${to}". They may be in disconnected parts of the memory graph.`
+        }],
+      }
+    }
+
+    // Reconstruct path
+    const path: string[] = []
+    let current: string | null = to
+    while (current !== null) {
+      path.unshift(current)
+      current = parent.get(current) || null
+    }
+
+    const pathStr = path.map((key, i) => {
+      const entry = graph.byKey.get(key)!
+      const arrow = i < path.length - 1 ? ` → ` : ""
+      return `[${entry.category}] ${key}${arrow}`
+    }).join("\n   ")
+
+    return {
+      content: [{
+        type: "text" as const,
+        text: `🔗 Path (${path.length} hops):\n\n   ${pathStr}`
+      }],
+    }
   }
 )
 

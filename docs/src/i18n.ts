@@ -41,7 +41,7 @@ export const content = {
 			cards: [
 				{
 					icon: '🧩',
-					title: '27 MCP Tools + 3 Resources',
+					title: '29 MCP Tools + 3 Resources',
 					body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Plus resources for direct context reading.',
 					tags: ['remember', 'recall', 'context', 'diff'],
 				},
@@ -95,7 +95,7 @@ export const content = {
 		},
 		stats: {
 			items: [
-				{ number: '27', label: 'MCP Tools' },
+				{ number: '29', label: 'MCP Tools' },
 				{ number: '15', label: 'Agents' },
 				{ number: '80%', label: 'Fewer Tool Calls / session' },
 				{ number: '0', label: 'Config Needed' },
@@ -260,7 +260,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Full session benchmark: session start → debug → implement → review → wrap-up. <code>context_*</code> tools trade ~318 extra tokens for 7 fewer calls — richer context means fewer follow-up reads. Reproducible: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 		},
 		tools: {
-			title: '27 MCP tools, 3 resources',
+			title: '29 MCP tools, 3 resources',
 			subtitle: 'Everything your agent needs to remember, recall, and reason',
 			resourcesLabel: 'Resources:',
 			groups: {
@@ -339,7 +339,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			items: [
 				{
 					q: 'What is toon-memory?',
-					a: 'A persistent memory layer for AI coding agents with 27 MCP tools. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions — with 80% fewer tool calls per session.',
+					a: 'A persistent memory layer for AI coding agents with 29 MCP tools. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions — with 80% fewer tool calls per session.',
 				},
 				{
 					q: 'Which agents are supported?',
@@ -475,7 +475,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			cards: [
 				{
 					icon: '🧩',
-					title: '27 herramientas MCP + 3 recursos',
+					title: '29 herramientas MCP + 3 recursos',
 					body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Más recursos para lectura directa de contexto.',
 					tags: ['remember', 'recall', 'context', 'diff'],
 				},
@@ -517,7 +517,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		stats: {
 			items: [
-				{ number: '27', label: 'Herramientas MCP' },
+				{ number: '29', label: 'Herramientas MCP' },
 				{ number: '15', label: 'Agentes' },
 				{ number: '80%', label: 'Menos tool calls por sesión' },
 				{ number: '0', label: 'Config necesaria' },
@@ -671,7 +671,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Benchmark de sesión completa: inicio → debug → implementar → revisar → cerrar. Las herramientas <code>context_*</code> intercambian ~318 tokens extra por 7 llamadas menos — contexto más rico significa menos re-lecturas. Reproducible: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 		},
 	tools: {
-		title: '27 herramientas MCP, 3 recursos',
+		title: '29 herramientas MCP, 3 recursos',
 		subtitle: 'Todo lo que tu agente necesita para recordar, recuperar y razonar',
 		resourcesLabel: 'Recursos:',
 		groups: {
@@ -871,7 +871,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	features: {
 		cards: [
-			{ icon: '🧩', title: '27 个 MCP 工具 + 3 个资源', body: '通过 MCP 实现完整的记忆管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、compress、compress_all、primer、merge_sessions、export_gist、import_gist、context_brief、context_generate、context_diff、context_focus、context_health、context_export。外加直接上下文读取的资源。', tags: ['remember', 'recall', 'context', 'diff'] },
+			{ icon: '🧩', title: '29 个 MCP 工具 + 3 个资源', body: '通过 MCP 实现完整的记忆管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、compress、compress_all、primer、merge_sessions、export_gist、import_gist、context_brief、context_generate、context_diff、context_focus、context_health、context_export、merge_similar、graph_path。外加直接上下文读取的资源。', tags: ['remember', 'recall', 'context', 'diff'] },
 			{ icon: '⭐', title: '多代理', body: '支持所有主流 AI 编程代理。OpenCode、VS Code、Claude、Cursor、Windsurf、Cline、Continue — 零配置。', tags: ['OpenCode', 'Claude', 'Cursor'] },
 			{ icon: '📄', title: 'TOON 格式', body: '比 JSON 减少 22% 的 token（实测）。自定义编码专为 LLM 理解和 token 效率设计。', stats: ['减少 22% token', '解析速度提升 1.3x'] },
 			{ icon: '🔎', title: '智能召回', body: '基于图的召回按 BM25 相关性和图中心性重新排序（中心节点即使不包含查询词也会浮现）。按跳数衰减保持远距离上下文较低。Token 高效的 `compact` 模式返回数字索引、片段截断的结果。', stats: ['BM25', '中心性', 'compact'] },
@@ -880,7 +880,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '支持 15+ 个 AI 编程代理', subtitle: '零配置 — toon-memory 自动检测并配置每个代理' },
-	stats: { items: [{ number: '27', label: 'MCP 工具' }, { number: '15', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
+	stats: { items: [{ number: '29', label: 'MCP 工具' }, { number: '15', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
 	howItWorks: {
 		title: '它是如何工作的？',
 		subtitle: '从失忆到记忆的四个步骤',
@@ -927,7 +927,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: '完整会话基准测试：启动 → 调试 → 实现 → 审查 → 完成。<code>context_*</code> 工具以约 318 个额外令牌换取 7 次更少调用——更丰富的上下文意味着更少的重新阅读。可复现：<code>npm run bench:full</code>、<code>npm run bench:primer</code>、<code>npm run bench:compress-all</code>。',
 	},
 	tools: {
-		title: '27 个 MCP 工具，3 个资源', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
+		title: '29 个 MCP 工具，3 个资源', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
 		groups: {
 			core: '核心记忆',
 			search: '搜索与智能',
@@ -983,7 +983,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	faq: {
 		title: '常见问题', subtitle: '关于为你的代理提供记忆你需要知道的一切',
 		items: [
-			{ q: '什么是 toon-memory？', a: '面向 AI 编程代理的持久记忆层，包含 27 个 MCP 工具。它以紧凑的 TOON 格式存储决策、模式、bug 和上下文，让你的代理在会话之间记住一切 — 每次会话减少 80% 的工具调用。' },
+			{ q: '什么是 toon-memory？', a: '面向 AI 编程代理的持久记忆层，包含 29 个 MCP 工具。它以紧凑的 TOON 格式存储决策、模式、bug 和上下文，让你的代理在会话之间记住一切 — 每次会话减少 80% 的工具调用。' },
 			{ q: '支持哪些代理？', a: 'OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex、Gemini、Zed、Antigravity、Aider、KiloCode、OpenClaw 和 Kiro — 通过 MCP 服务器零配置支持 15+ 个代理。' },
 			{ q: '我的数据如何存储？', a: '条目写入本地 TOON 文件（一种 token 高效的格式，比 JSON 小约 22%，实测）。你拥有该文件，可以像任何其他源文件一样提交、diff 或备份。' },
 			{ q: '我的记忆是加密的吗？', a: '是的。使用 memory_encrypt 工具启用加密，通过 AES-256-GCM 保护敏感条目。密钥自动生成并保持在本地。' },
@@ -1045,7 +1045,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	features: {
 		cards: [
-			{ icon: '🧩', title: '27 個の MCP ツール + 3 個のリソース', body: 'MCP 経由で完全なメモリ管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、compress、compress_all、primer、merge_sessions、export_gist、import_gist、context_brief、context_generate、context_diff、context_focus、context_health、context_export。加えて直接コンテキスト読み取り用リソース。', tags: ['remember', 'recall', 'context', 'diff'] },
+			{ icon: '🧩', title: '29 個の MCP ツール + 3 個のリソース', body: 'MCP 経由で完全なメモリ管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、compress、compress_all、primer、merge_sessions、export_gist、import_gist、context_brief、context_generate、context_diff、context_focus、context_health、context_export。加えて直接コンテキスト読み取り用リソース。', tags: ['remember', 'recall', 'context', 'diff'] },
 			{ icon: '⭐', title: 'マルチエージェント', body: 'すべての主要 AI コーディングエージェントに対応。OpenCode、VS Code、Claude、Cursor、Windsurf、Cline、Continue — ゼロコンフィグ。', tags: ['OpenCode', 'Claude', 'Cursor'] },
 			{ icon: '📄', title: 'TOON フォーマット', body: 'JSON より 22% トークン削減（実測）。LLM 理解とトークン効率のために設計されたカスタムエンコーディング。', stats: ['トークン 22% 削減', 'パース速度 1.3x 向上'] },
 			{ icon: '🔎', title: 'スマートリコール', body: 'グラフベースのリコールが BM25 関連性とグラフ中心性で再順位付けされます（クエリワードがなくてもハブが浮上）。ホップごとの減衰で遠いコンテキストを低く維持。トークン効率の高い `compact` モードは数字インデックス、スニペット切り詰めの結果を返します。', stats: ['BM25', '中心性', 'compact'] },
@@ -1054,7 +1054,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '15 以上の AI コーディングエージェントに対応', subtitle: 'ゼロコンフィグ — toon-memory が自動検出し、各エージェントを設定' },
-	stats: { items: [{ number: '27', label: 'MCP ツール' }, { number: '15', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
+	stats: { items: [{ number: '29', label: 'MCP ツール' }, { number: '15', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
 	howItWorks: {
 		title: 'どのように機能するのか？', subtitle: '記憶喪失からメモリへの 4 つのステップ',
 		steps: [
@@ -1100,7 +1100,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: 'フルセッションベンチマーク：開始 → デバッグ → 実装 → レビュー → 終了。<code>context_*</code>ツールは追加~318トークンで7回 fewer callsと引き換え — より豊かなコンテキストはより少ない再読み込みを意味します。再現可能：<code>npm run bench:full</code>、<code>npm run bench:primer</code>、<code>npm run bench:compress-all</code>。',
 	},
 	tools: {
-		title: '27 個の MCP ツール、3 個のリソース', subtitle: 'エージェントが記憶、リコール、推論するために必要なすべて', resourcesLabel: 'リソース：',
+		title: '29 個の MCP ツール、3 個のリソース', subtitle: 'エージェントが記憶、リコール、推論するために必要なすべて', resourcesLabel: 'リソース：',
 		groups: {
 			core: 'コアメモリ',
 			search: '検索＆インテリジェンス',
@@ -1155,7 +1155,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	faq: {
 		title: 'よくある質問', subtitle: 'エージェントにメモリを与えるために知っておくべきことすべて',
 		items: [
-			{ q: 'toon-memory とは？', a: '27 個の MCP ツールを備えた AI コーディングエージェント向けの永続メモリレイヤー。意思決定、パターン、バグ、コンテキストをコンパクトな TOON フォーマットで保存し、エージェントがセッション間ですべてを記憶 — セッションあたり 80% ツール呼び出し削減。' },
+			{ q: 'toon-memory とは？', a: '29 個の MCP ツールを備えた AI コーディングエージェント向けの永続メモリレイヤー。意思決定、パターン、バグ、コンテキストをコンパクトな TOON フォーマットで保存し、エージェントがセッション間ですべてを記憶 — セッションあたり 80% ツール呼び出し削減。' },
 			{ q: 'どのエージェントがサポートされているか？', a: 'OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex、Gemini、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro — MCP サーバー経由でゼロコンフィグの 15 以上のエージェント。' },
 			{ q: 'データはどのように保存されるか？', a: 'エントリはローカル TOON ファイル（JSON より約 22% 小さいトークン効率のフォーマット、実測）に書き込まれます。ファイルはあなたのもので、他のソースファイルと同様にコミット、diff、バックアップが可能。' },
 			{ q: 'メモリは暗号化されているか？', a: 'はい。memory_encrypt ツールで暗号化を有効にし、AES-256-GCM で機密エントリを保護。キーは自動生成され、ローカルに保持。' },
@@ -1217,7 +1217,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	features: {
 		cards: [
-			{ icon: '🧩', title: '27개 MCP 도구 + 3개 리소스', body: 'MCP를 통한 완전한 메모리 관리 — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. 직접 컨텍스트 읽기를 위한 리소스 포함.', tags: ['remember', 'recall', 'context', 'diff'] },
+			{ icon: '🧩', title: '29개 MCP 도구 + 3개 리소스', body: 'MCP를 통한 완전한 메모리 관리 — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. 직접 컨텍스트 읽기를 위한 리소스 포함.', tags: ['remember', 'recall', 'context', 'diff'] },
 			{ icon: '⭐', title: '멀티 에이전트', body: '모든 주요 AI 코딩 에이전트와 호환. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue — 제로 구성.', tags: ['OpenCode', 'Claude', 'Cursor'] },
 			{ icon: '📄', title: 'TOON 형식', body: 'JSON보다 22% 적은 토큰 (실측). LLM 이해와 토큰 효율성을 위해 설계된 맞춤 인코딩.', stats: ['토큰 22% 절감', '파싱 속도 1.3x 향상'] },
 			{ icon: '🔎', title: '스마트 리콜', body: '그래프 기반 리콜이 BM25 관련성과 그래프 중심성으로 재순위화됨 (쿼리 단어 없이도 허브가 부상). 홉당 감쇠로 먼 컨텍스트를 낮게 유지. 토큰 효율적인 `compact` 모드는 숫자 인덱스, 스니펫 잘린 결과를 반환.', stats: ['BM25', '중심성', 'compact'] },
@@ -1226,7 +1226,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '15개 이상의 AI 코딩 에이전트 지원', subtitle: '제로 구성 — toon-memory가 각 에이전트를 자동 감지하고 구성' },
-	stats: { items: [{ number: '27', label: 'MCP 도구' }, { number: '15', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
+	stats: { items: [{ number: '29', label: 'MCP 도구' }, { number: '15', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
 	howItWorks: {
 		title: '어떻게 작동하나요?', subtitle: '기억 상실에서 메모리까지 4단계',
 		steps: [
@@ -1272,7 +1272,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: '전체 세션 벤치마크: 시작 → 디버그 → 구현 → 검토 → 마무리. <code>context_*</code> 도구는 추가 ~318 토큰으로 7번 fewer calls와 교환 — 더 풍부한 컨텍스트는 fewer 재읽기를 의미합니다. 재현 가능: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 	},
 	tools: {
-		title: '27개 MCP 도구, 3개 리소스', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
+		title: '29개 MCP 도구, 3개 리소스', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
 		groups: {
 			core: '핵심 메모리',
 			search: '검색 및 인텔리전스',
@@ -1327,7 +1327,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	faq: {
 		title: '자주 묻는 질문', subtitle: '에이전트에 메모리를 부여하기 위해 알아야 할 모든 것',
 		items: [
-			{ q: 'toon-memory란?', a: '27개 MCP 도구를 갖춘 AI 코딩 에이전트용 지속적 메모리 레이어. 결정, 패턴, 버그, 컨텍스트를 컴팩트 TOON 형식으로 저장하여 에이전트가 세션 간에 모든 것을 기억 — 세션당 80% 도구 호출 절감.' },
+			{ q: 'toon-memory란?', a: '29개 MCP 도구를 갖춘 AI 코딩 에이전트용 지속적 메모리 레이어. 결정, 패턴, 버그, 컨텍스트를 컴팩트 TOON 형식으로 저장하여 에이전트가 세션 간에 모든 것을 기억 — 세션당 80% 도구 호출 절감.' },
 			{ q: '지원되는 에이전트는?', a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro — MCP 서버를 통한 제로 구성의 15개 이상 에이전트.' },
 			{ q: '데이터는 어떻게 저장되나요?', a: '항목은 로컬 TOON 파일 (JSON보다 ~22% 작은 토큰 효율 형식, 실측)에 기록됩니다. 파일은 귀하의 것이며 다른 소스 파일처럼 커밋, diff, 백업이 가능합니다.' },
 			{ q: '메모리가 암호화되나요?', a: '네. memory_encrypt 도구로 암호화를 활성화하여 AES-256-GCM로 민감한 항목을 보호합니다. 키는 자동 생성되고 로컬에 유지됩니다.' },
@@ -1413,7 +1413,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		cards: [
 			{
 			icon: '🧩',
-			title: '27 ferramentas MCP + 3 recursos',
+			title: '29 ferramentas MCP + 3 recursos',
 			body: 'Gerenciamento completo de memória via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Mais recursos para leitura direta de contexto.',
 				tags: ['remember', 'recall', 'context', 'diff'],
 			},
@@ -1455,7 +1455,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	stats: {
 		items: [
-			{ number: '27', label: 'Ferramentas MCP' },
+			{ number: '29', label: 'Ferramentas MCP' },
 			{ number: '15', label: 'Agentes' },
 			{ number: '80%', label: 'Menos chamadas de ferramenta/sessão' },
 			{ number: '0', label: 'Configuração necessária' },
@@ -1609,7 +1609,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: 'Benchmark de sessão completa: início → depuração → implementação → revisão → encerramento. As ferramentas <code>context_*</code> trocam ~318 tokens extras por 7 chamadas a menos — contexto mais rico significa menos re-leituras. Reprodutível: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 	},
 	tools: {
-		title: '27 ferramentas MCP, 3 recursos',
+		title: '29 ferramentas MCP, 3 recursos',
 		subtitle: 'Tudo que seu agente precisa para lembrar, recuperar e raciocinar',
 		resourcesLabel: 'Recursos:',
 		groups: {
@@ -1688,7 +1688,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		items: [
 			{
 				q: 'O que é toon-memory?',
-				a: 'Uma camada de memória persistente para agentes de IA com 27 ferramentas MCP. Armazena decisões, padrões, bugs e contexto em um formato TOON compacto para que seu agente lembre tudo entre sessões — com 80% menos chamadas de ferramenta por sessão.',
+				a: 'Uma camada de memória persistente para agentes de IA com 29 ferramentas MCP. Armazena decisões, padrões, bugs e contexto em um formato TOON compacto para que seu agente lembre tudo entre sessões — com 80% menos chamadas de ferramenta por sessão.',
 			},
 			{
 				q: 'Quais agentes são suportados?',
@@ -1824,7 +1824,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		cards: [
 			{
 			icon: '🧩',
-			title: '27 MCP-Tools + 3 Ressourcen',
+			title: '29 MCP-Tools + 3 Ressourcen',
 			body: 'Vollständiges Speicher-Management über MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Plus Ressourcen für direktes Kontext-Lesen.',
 				tags: ['remember', 'recall', 'context', 'diff'],
 			},
@@ -1866,7 +1866,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	stats: {
 		items: [
-			{ number: '27', label: 'MCP-Tools' },
+			{ number: '29', label: 'MCP-Tools' },
 			{ number: '15', label: 'Agenten' },
 			{ number: '80%', label: 'Weniger Tool-Aufrufe/Sitzung' },
 			{ number: '0', label: 'Benötigte Konfiguration' },
@@ -2020,7 +2020,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: 'Vollständiger Sitzungs-Benchmark: Start → Debug → Implementierung → Review → Abschluss. <code>context_*</code>-Tools tauschen ~318 zusätzliche Tokens gegen 7 weniger Aufrufe — reicherer Kontext bedeutet weniger Nachlesevorgänge. Reproduzierbar: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 	},
 	tools: {
-		title: '27 MCP-Tools, 3 Ressourcen',
+		title: '29 MCP-Tools, 3 Ressourcen',
 		subtitle: 'Alles, was dein Agent zum Merken, Abrufen und Denken braucht',
 		resourcesLabel: 'Ressourcen:',
 		groups: {
@@ -2099,7 +2099,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		items: [
 			{
 				q: 'Was ist toon-memory?',
-				a: 'Eine persistente Speicherschicht für KI-Coding-Agenten mit 27 MCP-Tools. Es speichert Entscheidungen, Muster, Bugs und Kontext in einem kompakten TOON-Format, damit dein Agent sich an alles zwischen Sitzungen erinnert — mit 80% weniger Tool-Aufrufen pro Sitzung.',
+				a: 'Eine persistente Speicherschicht für KI-Coding-Agenten mit 29 MCP-Tools. Es speichert Entscheidungen, Muster, Bugs und Kontext in einem kompakten TOON-Format, damit dein Agent sich an alles zwischen Sitzungen erinnert — mit 80% weniger Tool-Aufrufen pro Sitzung.',
 			},
 			{
 				q: 'Welche Agenten werden unterstützt?',
@@ -2235,7 +2235,7 @@ cta: {
 		cards: [
 			{
 			icon: '🧩',
-			title: '27 outils MCP + 3 ressources',
+			title: '29 outils MCP + 3 ressources',
 			body: 'Gestion complète de la mémoire via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Plus des ressources pour la lecture directe du contexte.',
 				tags: ['remember', 'recall', 'context', 'diff'],
 			},
@@ -2277,7 +2277,7 @@ cta: {
 	},
 	stats: {
 		items: [
-			{ number: '27', label: 'Outils MCP' },
+			{ number: '29', label: 'Outils MCP' },
 			{ number: '15', label: 'Agents' },
 			{ number: '80%', label: 'Moins d\'appels d\'outil/session' },
 			{ number: '0', label: 'Configuration requise' },
@@ -2431,7 +2431,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: 'Benchmark de session complète : démarrage → débogage → implémentation → révision → clôture. Les outils <code>context_*</code> échangent ~318 tokens supplémentaires pour 7 appels en moins — un contexte plus riche signifie moins de re-lectures. Reproductible : <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 	},
 	tools: {
-		title: '27 outils MCP, 3 ressources',
+		title: '29 outils MCP, 3 ressources',
 		subtitle: 'Tout ce dont votre agent a besoin pour mémoriser, rappeler et raisonner',
 		resourcesLabel: 'Ressources :',
 		groups: {
@@ -2510,7 +2510,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		items: [
 			{
 				q: 'Qu\'est-ce que toon-memory ?',
-				a: 'Une couche de mémoire persistante pour les agents de code IA avec 27 outils MCP. Elle stocke les décisions, motifs, bugs et contexte dans un format TOON compact pour que votre agent se souvienne de tout entre les sessions — avec 80% moins d\'appels d\'outil par session.',
+				a: 'Une couche de mémoire persistante pour les agents de code IA avec 29 outils MCP. Elle stocke les décisions, motifs, bugs et contexte dans un format TOON compact pour que votre agent se souvienne de tout entre les sessions — avec 80% moins d\'appels d\'outil par session.',
 			},
 			{
 				q: 'Quels agents sont supportés ?',

@@ -187,7 +187,7 @@ export function uninstall(): void {
     console.log("  Removed .opencode/plugins/toon-memory.ts")
   }
 
-  const agyHooks = join(projectRoot, ".gemini", "config", "hooks.json")
+  const agyHooks = join(projectRoot, ".agents", "hooks.json")
   if (existsSync(agyHooks)) {
     try {
       const agyCfg = JSON.parse(readFileSync(agyHooks, "utf-8"))

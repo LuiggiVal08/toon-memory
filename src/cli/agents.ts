@@ -58,7 +58,8 @@ export function detectAgents(): Agent[] {
   agents.push({
     name: "claude",
     global: join(HOME, ".claude", "settings.json"),
-    local: join(projectRoot, ".claude", "settings.json"),
+    local: join(projectRoot, ".mcp.json"),
+    hookPath: join(projectRoot, ".claude", "settings.json"),
     mcpKey: "mcpServers",
     format: "json",
     needsHooks: true,
@@ -99,8 +100,8 @@ export function detectAgents(): Agent[] {
   agents.push({
     name: "continue",
     local: join(projectRoot, ".continue", "config.json"),
-    mcpKey: "mcpServers",
-    format: "json",
+    mcpKey: "experimental.modelContextProtocolServers",
+    format: "continue",
     needsHooks: false,
     needsInstructions: false
   })
@@ -130,7 +131,7 @@ export function detectAgents(): Agent[] {
   agents.push({
     name: "zed",
     global: join(HOME, ".config", "zed", "settings.json"),
-    mcpKey: "mcp_servers",
+    mcpKey: "context_servers",
     format: "jsonc",
     needsHooks: false,
     needsInstructions: false
@@ -138,7 +139,7 @@ export function detectAgents(): Agent[] {
 
   agents.push({
     name: "antigravity",
-    local: join(projectRoot, ".gemini", "config", "mcp_config.json"),
+    local: join(projectRoot, ".agents", "mcp_config.json"),
     mcpKey: "mcpServers",
     format: "json",
     needsHooks: true,
@@ -158,7 +159,7 @@ export function detectAgents(): Agent[] {
   agents.push({
     name: "kilocode",
     global: join(HOME, ".kilocode", "mcp_settings.json"),
-    mcpKey: "mcpServers",
+    mcpKey: "mcp",
     format: "json",
     needsHooks: false,
     needsInstructions: true,
@@ -167,9 +168,9 @@ export function detectAgents(): Agent[] {
 
   agents.push({
     name: "openclaw",
-    local: join(projectRoot, ".openclaw.json"),
-    mcpKey: "mcpServers",
-    format: "json",
+    global: join(HOME, ".openclaw", "openclaw.json"),
+    mcpKey: "mcp.servers",
+    format: "openclaw",
     needsHooks: false,
     needsInstructions: false
   })

@@ -98,10 +98,10 @@ describe("CLI Commands", () => {
     const vscodeConfig = JSON.parse(readFileSync(join(testDir, ".vscode", "mcp.json"), "utf-8"))
     expect(vscodeConfig.servers?.["toon-memory"]).toBeDefined()
 
-    // Check Claude Code config + instructions + hooks
-    expect(existsSync(join(testDir, ".claude", "settings.json"))).toBe(true)
-    const claudeConfig = JSON.parse(readFileSync(join(testDir, ".claude", "settings.json"), "utf-8"))
-    expect(claudeConfig.mcpServers?.["toon-memory"]).toBeDefined()
+    // Check Claude Code MCP config (.mcp.json) + instructions + hooks (.claude/settings.json)
+    expect(existsSync(join(testDir, ".mcp.json"))).toBe(true)
+    const claudeMcp = JSON.parse(readFileSync(join(testDir, ".mcp.json"), "utf-8"))
+    expect(claudeMcp.mcpServers?.["toon-memory"]).toBeDefined()
     expect(existsSync(join(testDir, ".claude", "AGENTS.md"))).toBe(true)
 
     // Check Codex CLI TOML
@@ -129,8 +129,8 @@ describe("CLI Commands", () => {
     expect(existsSync(geminiConfig.hooks.SessionStart[0].command)).toBe(true)
 
     // Check Antigravity hooks.json (official schema: hook-name -> events -> handlers)
-    expect(existsSync(join(testDir, ".gemini", "config", "hooks.json"))).toBe(true)
-    const agyHooks = JSON.parse(readFileSync(join(testDir, ".gemini", "config", "hooks.json"), "utf-8"))
+    expect(existsSync(join(testDir, ".agents", "hooks.json"))).toBe(true)
+    const agyHooks = JSON.parse(readFileSync(join(testDir, ".agents", "hooks.json"), "utf-8"))
     expect(agyHooks["toon-memory"]).toBeDefined()
     expect(Array.isArray(agyHooks["toon-memory"].PreInvocation)).toBe(true)
     expect(Array.isArray(agyHooks["toon-memory"].PostToolUse)).toBe(true)
@@ -224,7 +224,7 @@ describe("CLI Commands", () => {
       env: { ...process.env, HOME: testDir },
     })
 
-    const agyHooks = JSON.parse(readFileSync(join(testDir, ".gemini", "config", "hooks.json"), "utf-8"))
+    const agyHooks = JSON.parse(readFileSync(join(testDir, ".agents", "hooks.json"), "utf-8"))
     expect(agyHooks["toon-memory"]).toBeDefined()
     expect(Array.isArray(agyHooks["toon-memory"].PreInvocation)).toBe(true)
     expect(Array.isArray(agyHooks["toon-memory"].PostToolUse)).toBe(true)
@@ -324,7 +324,7 @@ describe("CLI Commands", () => {
     expect(opencodeConfig.mcp?.["toon-memory"]).toBeDefined()
 
     // Claude should NOT be configured
-    expect(existsSync(join(testDir, ".claude", "settings.json"))).toBe(false)
+    expect(existsSync(join(testDir, ".mcp.json"))).toBe(false)
 
     // Codex should NOT be configured
     expect(existsSync(join(testDir, ".codex", "config.toml"))).toBe(false)
@@ -342,7 +342,7 @@ describe("CLI Commands", () => {
 
     // Both should be configured
     expect(existsSync(join(testDir, ".opencode", "opencode.json"))).toBe(true)
-    expect(existsSync(join(testDir, ".claude", "settings.json"))).toBe(true)
+    expect(existsSync(join(testDir, ".mcp.json"))).toBe(true)
 
     // Codex should NOT be configured
     expect(existsSync(join(testDir, ".codex", "config.toml"))).toBe(false)

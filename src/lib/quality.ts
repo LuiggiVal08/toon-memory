@@ -24,6 +24,7 @@ import { fuzzyMatch } from "./fuzzy"
  *   - Specificity (0.1 max): unique word ratio
  *   - Access frequency (0.15 max): how often recalled
  *   - Access recency (0.1 max): how recently accessed
+ *   - Staleness decay: entries not accessed in 30+ days lose up to 0.2
  */
 export function qualityScore(
 	tags: string,
@@ -68,7 +69,23 @@ export function qualityScore(
 		else if (daysSinceAccess < 7) score += 0.07
 		else if (daysSinceAccess < 30) score += 0.03
 	}
-	return Math.min(1, score)
+
+	// Staleness decay: penalize entries that haven't been accessed recently
+	// and were created more than 30 days ago. Decay ramps up over time.
+	if (date) {
+		const daysSinceCreation = (Date.now() - new Date(`${date}T00:00:00`).getTime()) / 86400000
+		const daysSinceLastAccess = lastAccessed
+			? (Date.now() - new Date(lastAccessed).getTime()) / 86400000
+			: daysSinceCreation
+
+		// Only decay if entry is old AND hasn't been accessed recently
+		if (daysSinceCreation > 30 && daysSinceLastAccess > 30) {
+			const staleness = Math.min(1, (daysSinceLastAccess - 30) / 90) // 0→1 over 30-120 days
+			score -= staleness * 0.2 // Max penalty: -0.2
+		}
+	}
+
+	return Math.max(0, Math.min(1, score))
 }
 
 /**

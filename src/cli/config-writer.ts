@@ -35,6 +35,11 @@ export function installJSONConfig(agent: Agent, scope: string): void {
       type: "local",
       command: ["npx", "-y", "toon-memory", "mcp"]
     }
+  } else if (agent.name === "kilocode") {
+    config[mcpKey]["toon-memory"] = {
+      type: "local",
+      command: ["npx", "-y", "toon-memory", "mcp"]
+    }
   } else {
     config[mcpKey]["toon-memory"] = {
       command: "npx",
@@ -86,11 +91,12 @@ export function installZedConfig(agent: Agent): void {
     }
   }
 
-  if (!config.mcp_servers) config.mcp_servers = {}
+  if (!config.context_servers) config.context_servers = {}
 
-  config.mcp_servers["toon-memory"] = {
+  config.context_servers["toon-memory"] = {
     command: "npx",
-    args: ["-y", "toon-memory", "mcp"]
+    args: ["-y", "toon-memory", "mcp"],
+    source: "custom"
   }
 
   writeFileSync(configPath, JSON.stringify(config, null, 2))
@@ -98,7 +104,84 @@ export function installZedConfig(agent: Agent): void {
 }
 
 /**
- * Install MCP config for an agent based on its format.
+ * Install MCP server configuration for Continue (array-based format).
+ * Uses experimental.modelContextProtocolServers with name/command/args array.
+ */
+export function installContinueConfig(agent: Agent): void {
+  const configPath = agent.local
+  if (!configPath) return
+
+  const configDir = dirname(configPath)
+  if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
+
+  let config: Record<string, any> = {}
+  if (existsSync(configPath)) {
+    try {
+      config = JSON.parse(readFileSync(configPath, "utf-8"))
+    } catch {
+      config = {}
+    }
+  }
+
+  if (!config.experimental) config.experimental = {}
+  if (!config.experimental.modelContextProtocolServers) {
+    config.experimental.modelContextProtocolServers = []
+  }
+
+  const servers = config.experimental.modelContextProtocolServers
+  const existing = servers.findIndex(
+    (s: any) => s.name === "toon-memory"
+  )
+  const entry = {
+    name: "toon-memory",
+    command: "npx",
+    args: ["-y", "toon-memory", "mcp"]
+  }
+
+  if (existing >= 0) {
+    servers[existing] = entry
+  } else {
+    servers.push(entry)
+  }
+
+  writeFileSync(configPath, JSON.stringify(config, null, 2))
+  console.log(`  MCP server added to ${configPath}`)
+}
+
+/**
+ * Install MCP server configuration for OpenClaw (nested mcp.servers format).
+ */
+export function installOpenClawConfig(agent: Agent): void {
+  const configPath = agent.global
+  if (!configPath) return
+
+  const configDir = dirname(configPath)
+  if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
+
+  let config: Record<string, any> = {}
+  if (existsSync(configPath)) {
+    try {
+      config = JSON.parse(readFileSync(configPath, "utf-8"))
+    } catch {
+      config = {}
+    }
+  }
+
+  if (!config.mcp) config.mcp = {}
+  if (!config.mcp.servers) config.mcp.servers = {}
+
+  config.mcp.servers["toon-memory"] = {
+    command: "npx",
+    args: ["-y", "toon-memory", "mcp"],
+    enabled: true
+  }
+
+  writeFileSync(configPath, JSON.stringify(config, null, 2))
+  console.log(`  MCP server added to ${configPath}`)
+}
+
+/**
+ * Install MCP server configuration for an agent based on its format.
  */
 export function installMCPConfig(agent: Agent, scope: string): void {
   if (agent.format === "none") {
@@ -110,6 +193,10 @@ export function installMCPConfig(agent: Agent, scope: string): void {
     installTOMLConfig(agent)
   } else if (agent.format === "jsonc") {
     installZedConfig(agent)
+  } else if (agent.format === "continue") {
+    installContinueConfig(agent)
+  } else if (agent.format === "openclaw") {
+    installOpenClawConfig(agent)
   } else {
     installJSONConfig(agent, scope)
   }

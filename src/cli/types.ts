@@ -1,11 +1,13 @@
-/** Config format: "json" | "toml" | "jsonc" | "none" (instructions only) */
-export type AgentFormat = "json" | "toml" | "jsonc" | "none"
+/** Config format: "json" | "toml" | "jsonc" | "continue" | "openclaw" | "none" (instructions only) */
+export type AgentFormat = "json" | "toml" | "jsonc" | "continue" | "openclaw" | "none"
 
 /** Supported AI coding agent configuration */
 export interface Agent {
   name: string
   global?: string
   local?: string
+  /** Separate path for hook registration (when it differs from the MCP config path) */
+  hookPath?: string
   mcpKey: string
   format: AgentFormat
   needsHooks: boolean

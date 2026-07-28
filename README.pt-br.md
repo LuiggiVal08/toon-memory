@@ -63,7 +63,7 @@ Leia [Como o toon-memory Torna Seu Agente de IA Mais Inteligente](https://luiggi
 
 ## Funcionalidades
 
-- **27 ferramentas MCP** — Gerenciamento completo de memória via Model Context Protocol, incluindo `memory_smart_recall` (recall unificado), `memory_sessions` para coordenação multi-sessão, e ferramentas `context_*` para geração de contexto em uma única chamada (briefing, diff, foco, auditoria de saúde, exportação)
+- **29 ferramentas MCP** — Gerenciamento completo de memória via Model Context Protocol, incluindo `memory_smart_recall` (recall unificado), `memory_sessions` para coordenação multi-sessão, e ferramentas `context_*` para geração de contexto em uma única chamada (briefing, diff, foco, auditoria de saúde, exportação)
 - **Recursos MCP** — Leia memória como contexto sem invocações de ferramentas, incluindo um System Primer (mapa de conhecimento auto-gerado)
 - **15 agentes suportados** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Instalador interativo** — Selecione quais agentes configurar a partir de um menu
@@ -142,7 +142,7 @@ memory_remember   # Salve decisões importantes
 |--------|----------------------|---------|-------|------------------------|
 | **OpenCode** | `.opencode/opencode.json` + `.opencode/plugins/toon-memory.ts` | Plugin | SessionStart (plugin, sem `hooks` de nível superior) | ✅ |
 | **VS Code / Copilot** | `.vscode/mcp.json` | JSON | — | ✅ |
-| **Claude Code** | `.claude/settings.json` | JSON | SessionStart + PostToolUse + Stop | ✅ |
+| **Claude Code** | `.mcp.json` (MCP) + `.claude/settings.json` (hooks) | JSON | SessionStart + PostToolUse + Stop | ✅ |
 | **Cursor** | `.cursor/mcp.json` | JSON | — | ✅ |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | JSON | — | ✅ |
 | **Cline** | `.cline/mcp.json` | JSON | — | ✅ |
@@ -150,7 +150,7 @@ memory_remember   # Salve decisões importantes
 | **Codex CLI** | `.codex/config.toml` | TOML | SessionStart + PostToolUse + Stop (`[[hooks]] event=`) | ✅ |
 | **Gemini CLI** | `.gemini/settings.json` | JSON | SessionStart + PostToolUse + Stop (`hooks.*`) | ✅ |
 | **Zed** | `~/.config/zed/settings.json` | JSONC | — | ✅ |
-| **Antigravity** | `.gemini/config/mcp_config.json` + `.gemini/config/hooks.json` | hooks.json | PreInvocation + PostToolUse + Stop (sem evento SessionStart) | ✅ |
+| **Antigravity** | `.agents/mcp_config.json` + `.agents/hooks.json` | hooks.json | PreInvocation + PostToolUse + Stop (sem evento SessionStart) | ✅ |
 | **Aider** | — | — | — | 📝 Instruções |
 | **KiloCode** | `~/.kilocode/mcp_settings.json` | JSON | — | ✅ |
 | **OpenClaw** | `.openclaw.json` | JSON | — | ✅ |
@@ -185,6 +185,8 @@ memory_remember   # Salve decisões importantes
 | `memory_merge_sessions` | Mescla observações entre sessões paralelas para um arquivo. Deduplica e promove automaticamente |
 | `memory_export_gist` | Exporta entradas para um GitHub Gist (público ou privado). Usa GITHUB_TOKEN ou gh CLI |
 | `memory_import_gist` | Importa entradas de um GitHub Gist. Mescla com entradas existentes (união de tags, confiança máxima) |
+| `memory_merge_similar` | Encontrar entradas com >50% de similaridade de palavras (Jaccard) e mesclá-las deterministamente |
+| `memory_graph_path` | Caminho BFS mais curto entre duas entradas no grafo de conhecimento |
 | `context_brief` | **Briefing de contexto em uma chamada**: memória + sessões + saúde em markdown compacto. Use no lugar de 5-6 chamadas separadas de memory_*. Zero LLM, pura agregação determinística |
 | `context_generate` | **Briefing completo do projeto**: combina estrutura do projeto, estado do git, entradas de memória e sessões ativas em uma chamada. Substitui 5-6 chamadas manuais de ferramentas |
 | `context_diff` | **Briefing incremental**: commits git + arquivos modificados + memória nova/atualizada + sessões ativas desde a última sessão |
@@ -835,7 +837,7 @@ Adicione ao `.opencode/opencode.json` ou `~/.config/opencode/opencode.json`:
 
 ### Claude Code
 
-Adicione ao `.claude/settings.json`:
+Adicione ao `.mcp.json` (raiz do projeto):
 
 ```json
 {
@@ -1164,7 +1166,7 @@ toon-memory/
 │   │   ├── setup.ts             # Comandos CLI
 │   │   └── toon-memory.ts       # Runner do CLI
 │   ├── mcp/
-│   │   └── server.ts            # Servidor MCP (27 ferramentas + 3 recursos)
+│   │   └── server.ts            # Servidor MCP (29 ferramentas + 3 recursos)
 │   ├── lib/
 │   │   ├── lock.ts              # Lock de arquivo advisory + escrita atômica
 │   │   ├── sessions.ts          # Coordenação multi-sessão

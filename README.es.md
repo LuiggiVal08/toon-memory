@@ -63,7 +63,7 @@ Lee [Cómo toon-memory Hace tu Agente de IA más Inteligente](https://luiggival0
 
 ## Características
 
-- **27 herramientas MCP** — Gestión completa de memoria vía Model Context Protocol, incluyendo `memory_smart_recall` (recall unificado), `memory_sessions` para coordinación multi-sesión, herramientas `context_*` para generación de contexto en una sola llamada, `memory_compress` (compresión con LLM), `memory_compress_all` (compresión por lotes), `memory_primer` (contexto auto-inyectado), `memory_merge_sessions` (fusión multi-sesión), y `memory_export_gist`/`memory_import_gist` (sincronización con GitHub Gist)
+- **29 herramientas MCP** — Gestión completa de memoria vía Model Context Protocol, incluyendo `memory_smart_recall` (recall unificado), `memory_sessions` para coordinación multi-sesión, herramientas `context_*` para generación de contexto en una sola llamada, `memory_compress` (compresión con LLM), `memory_compress_all` (compresión por lotes), `memory_primer` (contexto auto-inyectado), `memory_merge_sessions` (fusión multi-sesión), y `memory_export_gist`/`memory_import_gist` (sincronización con GitHub Gist)
 - **Recursos MCP** — Lee memoria como contexto sin invocaciones de herramientas, incluyendo un System Primer (mapa de conocimiento auto-generado)
 - **15 agentes soportados** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Instalador interactivo** — Selecciona qué agentes configurar desde un menú
@@ -147,7 +147,7 @@ memory_remember   # Guarda decisiones importantes
 |--------|---------------------|---------|-------|------------|
 | **OpenCode** | `.opencode/opencode.json` + `.opencode/plugins/toon-memory.ts` | Plugin | SessionStart (plugin, sin `hooks` de nivel superior) | ✅ |
 | **VS Code / Copilot** | `.vscode/mcp.json` | JSON | — | ✅ |
-| **Claude Code** | `.claude/settings.json` | JSON | SessionStart + PostToolUse + Stop | ✅ |
+| **Claude Code** | `.mcp.json` (MCP) + `.claude/settings.json` (hooks) | JSON | SessionStart + PostToolUse + Stop | ✅ |
 | **Cursor** | `.cursor/mcp.json` | JSON | — | ✅ |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | JSON | — | ✅ |
 | **Cline** | `.cline/mcp.json` | JSON | — | ✅ |
@@ -155,7 +155,7 @@ memory_remember   # Guarda decisiones importantes
 | **Codex CLI** | `.codex/config.toml` | TOML | SessionStart + PostToolUse + Stop (`[[hooks]] event=`) | ✅ |
 | **Gemini CLI** | `.gemini/settings.json` | JSON | SessionStart + PostToolUse + Stop (`hooks.*`) | ✅ |
 | **Zed** | `~/.config/zed/settings.json` | JSONC | — | ✅ |
-| **Antigravity** | `.gemini/config/mcp_config.json` + `.gemini/config/hooks.json` | hooks.json | PreInvocation + PostToolUse + Stop (sin evento SessionStart) | ✅ |
+| **Antigravity** | `.agents/mcp_config.json` + `.agents/hooks.json` | hooks.json | PreInvocation + PostToolUse + Stop (sin evento SessionStart) | ✅ |
 | **Aider** | — | — | — | 📝 Instrucciones |
 | **KiloCode** | `~/.kilocode/mcp_settings.json` | JSON | — | ✅ |
 | **OpenClaw** | `.openclaw.json` | JSON | — | ✅ |
@@ -190,6 +190,8 @@ memory_remember   # Guarda decisiones importantes
 | `memory_merge_sessions` | Fusiona observaciones entre sesiones paralelas para un archivo. Deduplica y opcionalmente auto-promueve a memoria |
 | `memory_export_gist` | Exporta entradas de memoria a un GitHub Gist (público o privado). Usa `GITHUB_TOKEN` o `gh` CLI para autenticación |
 | `memory_import_gist` | Importa entradas desde un GitHub Gist. Fusiona con entradas existentes (unión de tags, máxima confianza) |
+| `memory_merge_similar` | Encontrar entries con >50% similitud de palabras (Jaccard) y mergearlas determinísticamente |
+| `memory_graph_path` | Camino BFS más corto entre dos entries en el knowledge graph |
 | `context_brief` | **Briefing de contexto en una llamada**: memoria + sesiones + salud en markdown compacto. Usa en lugar de 5-6 llamadas manuales de memory_*. Cero LLM, agregación puramente determinística |
 | `context_generate` | **Briefing completo del proyecto**: combina estructura del proyecto, estado de git, entradas de memoria y sesiones activas en una llamada. Reemplaza 5-6 llamadas manuales de herramientas |
 | `context_diff` | **Briefing incremental**: commits de git + archivos modificados + memoria nueva/actualizada + sesiones activas desde la última sesión |
@@ -838,7 +840,7 @@ Agrega a `.opencode/opencode.json` o `~/.config/opencode/opencode.json`:
 
 ### Claude Code
 
-Agrega a `.claude/settings.json`:
+Agrega a `.mcp.json` (raíz del proyecto):
 
 ```json
 {
@@ -1167,7 +1169,7 @@ toon-memory/
 │   │   ├── setup.ts             # Comandos CLI
 │   │   └── toon-memory.ts       # Ejecutor CLI
 │   ├── mcp/
-│   │   └── server.ts            # Servidor MCP (27 herramientas + 3 recursos)
+│   │   └── server.ts            # Servidor MCP (29 herramientas + 3 recursos)
 │   ├── lib/
 │   │   ├── lock.ts              # Lock de archivo Advisory + escritura atómica
 │   │   ├── sessions.ts          # Coordinación multi-sesión

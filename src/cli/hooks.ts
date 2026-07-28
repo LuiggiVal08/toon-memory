@@ -66,7 +66,7 @@ export function installHooks(agent: Agent): void {
 
 /** Register activity-capture hooks (PostToolUse/Stop) in a JSON agent config. */
 export function registerCaptureHookJSON(agent: Agent, scriptPath: string): void {
-  const configPath = agent.local || agent.global
+  const configPath = agent.hookPath || agent.local || agent.global
   if (!configPath) return
 
   const configDir = dirname(configPath)
@@ -126,7 +126,7 @@ export function registerHookTOML(agent: Agent, hookPath: string): void {
 
 /** Register SessionStart hook in JSON config (Claude Code / Gemini CLI). */
 export function registerHookJSON(agent: Agent, hookPath: string): void {
-  const configPath = agent.format === "jsonc" ? agent.global : (agent.local || agent.global)
+  const configPath = agent.hookPath || (agent.format === "jsonc" ? agent.global : (agent.local || agent.global))
   if (!configPath) return
 
   const configDir = dirname(configPath)

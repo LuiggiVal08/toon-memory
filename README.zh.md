@@ -63,7 +63,7 @@
 
 ## 功能特性
 
-- **27 个 MCP 工具** — 通过 Model Context Protocol 实现完整的记忆管理，包括 `memory_smart_recall`（统一召回）、`memory_sessions`（多会话协调）以及 `context_*` 系列工具（一键生成上下文：简报、差异、聚焦、健康审计、导出）
+- **29 个 MCP 工具** — 通过 Model Context Protocol 实现完整的记忆管理，包括 `memory_smart_recall`（统一召回）、`memory_sessions`（多会话协调）以及 `context_*` 系列工具（一键生成上下文：简报、差异、聚焦、健康审计、导出）
 - **MCP 资源** — 无需工具调用即可将记忆作为上下文读取，包括系统知识图谱（自动生成的知识地图）
 - **支持 15 种 Agent** — OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex CLI、Gemini CLI、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro
 - **交互式安装器** — 从菜单中选择要配置的 Agent
@@ -142,7 +142,7 @@ memory_remember   # 保存重要决策
 |-------|---------|------|------|---------|
 | **OpenCode** | `.opencode/opencode.json` + `.opencode/plugins/toon-memory.ts` | 插件 | SessionStart（插件方式，非顶层 `hooks`） | ✅ |
 | **VS Code / Copilot** | `.vscode/mcp.json` | JSON | — | ✅ |
-| **Claude Code** | `.claude/settings.json` | JSON | SessionStart + PostToolUse + Stop | ✅ |
+| **Claude Code** | `.mcp.json` (MCP) + `.claude/settings.json` (hooks) | JSON | SessionStart + PostToolUse + Stop | ✅ |
 | **Cursor** | `.cursor/mcp.json` | JSON | — | ✅ |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | JSON | — | ✅ |
 | **Cline** | `.cline/mcp.json` | JSON | — | ✅ |
@@ -150,7 +150,7 @@ memory_remember   # 保存重要决策
 | **Codex CLI** | `.codex/config.toml` | TOML | SessionStart + PostToolUse + Stop（`[[hooks]] event=`） | ✅ |
 | **Gemini CLI** | `.gemini/settings.json` | JSON | SessionStart + PostToolUse + Stop（`hooks.*`） | ✅ |
 | **Zed** | `~/.config/zed/settings.json` | JSONC | — | ✅ |
-| **Antigravity** | `.gemini/config/mcp_config.json` + `.gemini/config/hooks.json` | hooks.json | PreInvocation + PostToolUse + Stop（无 SessionStart 事件） | ✅ |
+| **Antigravity** | `.agents/mcp_config.json` + `.agents/hooks.json` | hooks.json | PreInvocation + PostToolUse + Stop（无 SessionStart 事件） | ✅ |
 | **Aider** | — | — | — | 📝 说明文档 |
 | **KiloCode** | `~/.kilocode/mcp_settings.json` | JSON | — | ✅ |
 | **OpenClaw** | `.openclaw.json` | JSON | — | ✅ |
@@ -185,6 +185,8 @@ memory_remember   # 保存重要决策
 | `memory_merge_sessions` | 合并文件的并行会话中的观察。去重并自动提升 |
 | `memory_export_gist` | 将条目导出到 GitHub Gist（公开或私有）。使用 GITHUB_TOKEN 或 gh CLI |
 | `memory_import_gist` | 从 GitHub Gist 导入条目。与现有条目合并（标签联合，最大置信度） |
+| `memory_merge_similar` | 查找词汇相似度>50%（Jaccard）的条目并确定性合并 |
+| `memory_graph_path` | 知识图谱中两个条目之间的BFS最短路径 |
 | `context_brief` | **一键上下文简报**：紧凑 markdown 格式的记忆 + 会话 + 健康状态。替代 5-6 次独立 memory_* 调用。零 LLM 开销，纯确定性聚合 |
 | `context_generate` | **完整项目简报**：一次调用整合项目结构、git 状态、记忆条目和活跃会话。替代 5-6 次手动调用 |
 | `context_diff` | **增量简报**：自上次会话以来的 git 提交 + 修改文件 + 新增/更新记忆 + 活跃会话 |
@@ -833,7 +835,7 @@ npx toon-memory
 
 ### Claude Code
 
-添加到 `.claude/settings.json`：
+添加到 `.mcp.json`（项目根目录）：
 
 ```json
 {
@@ -1162,7 +1164,7 @@ toon-memory/
 │   │   ├── setup.ts             # CLI 命令
 │   │   └── toon-memory.ts       # CLI 运行器
 │   ├── mcp/
-│   │   └── server.ts            # MCP 服务器（27 个工具 + 3 个资源）
+│   │   └── server.ts            # MCP 服务器（29 个工具 + 3 个资源）
 │   ├── lib/
 │   │   ├── lock.ts              # 建议性文件锁 + 原子写入
 │   │   ├── sessions.ts          # 多会话协调
