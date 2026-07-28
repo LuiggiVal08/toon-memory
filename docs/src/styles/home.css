@@ -27,6 +27,18 @@ body {
 a { color: var(--brand-light); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
+/* Icon SVG */
+.icon-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-light);
+}
+.icon-svg :global(svg) {
+  width: 28px;
+  height: 28px;
+}
+
 /* Header */
 .site-header {
   display: flex;
@@ -373,8 +385,9 @@ a:hover { text-decoration: underline; }
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(99, 102, 241, 0.04));
 }
 .card.featured::before { opacity: 1; }
-.card.featured .card-icon { font-size: 2rem; }
-.card-icon { font-size: 1.75rem; margin-bottom: 0.75rem; }
+.card.featured .card-icon .icon-svg :global(svg) { width: 36px; height: 36px; }
+.card-icon { margin-bottom: 0.75rem; }
+.card-icon .icon-svg :global(svg) { width: 32px; height: 32px; }
 .card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
 .card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
 
@@ -775,7 +788,8 @@ pre code {
   border-color: var(--brand);
   transform: translateY(-2px);
 }
-.problem-icon { font-size: 1.75rem; margin-bottom: 0.75rem; }
+.problem-icon { margin-bottom: 0.75rem; }
+.problem-icon .icon-svg :global(svg) { width: 32px; height: 32px; }
 .problem-card h3 { font-size: 1.05rem; margin-bottom: 0.4rem; }
 .problem-card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; }
 .problem-resolution {
@@ -1025,9 +1039,9 @@ pre code {
   transform: translateY(-2px);
 }
 .what-new-icon {
-  font-size: 2rem;
   margin-bottom: 0.75rem;
 }
+.what-new-icon .icon-svg :global(svg) { width: 36px; height: 36px; }
 .what-new-card h3 {
   font-size: 1.1rem;
   margin-bottom: 0.5rem;

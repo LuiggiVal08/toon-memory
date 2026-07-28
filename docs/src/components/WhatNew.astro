@@ -1,5 +1,6 @@
 ---
 import { getContent } from '../i18n';
+import Icon from './Icon.astro';
 
 interface Props {
 	lang?: string;
@@ -20,7 +21,7 @@ if (!c.whatNew) return null;
   <div class="what-new-grid">
     {c.whatNew.cards.map((card) => (
       <div class="what-new-card">
-        <div class="what-new-icon">{card.icon}</div>
+        <div class="what-new-icon"><Icon emoji={card.icon} /></div>
         <h3>{card.title}</h3>
         <p>{card.body}</p>
         {card.stats && (

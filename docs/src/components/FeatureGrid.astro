@@ -1,5 +1,6 @@
 ---
 import { getContent } from '../i18n';
+import Icon from './Icon.astro';
 
 interface Props {
 	lang?: string;
@@ -12,7 +13,7 @@ const c = getContent(lang);
   {
     c.features.cards.map((f, i) => (
       <div class={`card${i === 0 ? ' featured' : ''}`}>
-        <div class="card-icon">{f.icon}</div>
+        <div class="card-icon"><Icon emoji={f.icon} /></div>
         <h3>{f.title}</h3>
         <p>{f.body}</p>
         {f.tags && (
