@@ -19,7 +19,7 @@ import SiteFooter from '../components/SiteFooter.astro';
 import '../styles/home.css';
 
 const description =
-  'MCP memory server giving AI coding agents (Claude, Cursor, OpenCode, Windsurf) offline, token-efficient persistent memory. 29 tools, 80% fewer tool calls. Remember decisions, patterns, and bugs between sessions.';
+  'MCP memory server giving AI coding agents (Claude, Cursor, OpenCode, Windsurf) offline, token-efficient persistent memory. 29 tools, ~90% fewer tokens with auto-loading, 80% fewer tool calls. Remember decisions, patterns, and bugs between sessions.';
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -50,7 +50,7 @@ const jsonLd = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>toon-memory — MCP Memory Server for AI Coding Agents | Persistent Memory</title>
     <meta name="description" content={description} />
-    <meta name="keywords" content="MCP memory server, persistent memory AI agents, Claude memory, Cursor memory, OpenCode memory, Model Context Protocol, token-efficient memory, BM25 recall, knowledge graph memory, AI coding agent" />
+    <meta name="keywords" content="MCP memory server, persistent memory AI agents, Claude memory, Cursor memory, OpenCode memory, Model Context Protocol, token-efficient memory, BM25 recall, knowledge graph memory, AI coding agent, auto-loading" />
     <link rel="icon" type="image/svg+xml" href={logoSrc.src} />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="toon-memory — MCP Memory Server for AI Coding Agents" />

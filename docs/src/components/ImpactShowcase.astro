@@ -8,21 +8,25 @@ const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 const s = c.impactSection;
 
-// Benchmark 1: memory_recall compact vs re-reading files (68.5% savings)
+// Benchmark 1: auto-loading — ~90% token savings
+const autoLoadWithoutPct = 100;
+const autoLoadWithPct = 10;
+
+// Benchmark 2: memory_recall compact vs re-reading files (68.5% savings)
 const recallWithoutPct = 100;
 const recallWithPct = 31.5;
 
-// Benchmark 2: full session — tool calls 25→5 (80% fewer)
+// Benchmark 3: full session — tool calls 25→5 (80% fewer)
 const sessionWithoutPct = 100;
 const sessionWithPct = 20;
-
-// Benchmark 3: compress-all — 14.3% token savings
-const compressBeforePct = 100;
-const compressAfterPct = 85.7;
 
 // Benchmark 4: primer — 58.4% token savings, 4→0 tool calls
 const primerWithoutPct = 100;
 const primerWithPct = 41.6;
+
+// Benchmark 5: compress-all — 14.3% token savings
+const compressBeforePct = 100;
+const compressAfterPct = 85.7;
 ---
 
 <section class="content-section impact-section">
@@ -32,6 +36,24 @@ const primerWithPct = 41.6;
 	</div>
 
 	<div class="benchmark-grid">
+		<div class="benchmark-block highlight">
+			<h3 class="benchmark-label">{lang === 'es' ? 'Auto-carga: solo file path relevante' : 'Auto-loading: only relevant file path'}</h3>
+			<div class="savings-bars impact-bars">
+				<div class="savings-bar">
+					<span class="savings-label">{lang === 'es' ? 'Sin auto-carga (dump completo)' : 'Without auto-loading (full dump)'}</span>
+					<div class="bar-track">
+						<div class="bar bar-json" style={`--pct:${autoLoadWithoutPct}%`} data-pct={autoLoadWithoutPct}><span>{autoLoadWithoutPct}%</span></div>
+					</div>
+				</div>
+				<div class="savings-bar">
+					<span class="savings-label">{lang === 'es' ? 'Con auto-loading (~90% ahorro)' : 'With auto-loading (~90% savings)'}</span>
+					<div class="bar-track">
+						<div class="bar bar-toon" style={`--pct:${autoLoadWithPct}%`} data-pct={autoLoadWithPct}><span>{autoLoadWithPct}%</span></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div class="benchmark-block">
 			<h3 class="benchmark-label">{lang === 'es' ? 'Recall compacto vs re-leer archivos' : 'Compact recall vs re-reading files'}</h3>
 			<div class="savings-bars impact-bars">
@@ -69,24 +91,6 @@ const primerWithPct = 41.6;
 		</div>
 
 		<div class="benchmark-block">
-			<h3 class="benchmark-label">{lang === 'es' ? 'Compresión por lotes' : 'Batch compression'}</h3>
-			<div class="savings-bars impact-bars">
-				<div class="savings-bar">
-					<span class="savings-label">{lang === 'es' ? 'Sin comprimir (30)' : 'Uncompressed (30)'}</span>
-					<div class="bar-track">
-						<div class="bar bar-json" style={`--pct:${compressBeforePct}%`} data-pct={compressBeforePct}><span>{compressBeforePct}%</span></div>
-					</div>
-				</div>
-				<div class="savings-bar">
-					<span class="savings-label">{lang === 'es' ? 'Comprimido (20)' : 'Compressed (20)'}</span>
-					<div class="bar-track">
-						<div class="bar bar-toon" style={`--pct:${compressAfterPct}%`} data-pct={compressAfterPct}><span>{compressAfterPct}%</span></div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="benchmark-block">
 			<h3 class="benchmark-label">{lang === 'es' ? 'System primer: auto-inyección' : 'System primer: auto-injection'}</h3>
 			<div class="savings-bars impact-bars">
 				<div class="savings-bar">
@@ -99,6 +103,24 @@ const primerWithPct = 41.6;
 					<span class="savings-label">{lang === 'es' ? 'Primer automático (0 calls)' : 'Auto primer (0 calls)'}</span>
 					<div class="bar-track">
 						<div class="bar bar-toon" style={`--pct:${primerWithPct}%`} data-pct={primerWithPct}><span>{primerWithPct}%</span></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="benchmark-block">
+			<h3 class="benchmark-label">{lang === 'es' ? 'Compresión por lotes' : 'Batch compression'}</h3>
+			<div class="savings-bars impact-bars">
+				<div class="savings-bar">
+					<span class="savings-label">{lang === 'es' ? 'Sin comprimir (30)' : 'Uncompressed (30)'}</span>
+					<div class="bar-track">
+						<div class="bar bar-json" style={`--pct:${compressBeforePct}%`} data-pct={compressBeforePct}><span>{compressBeforePct}%</span></div>
+					</div>
+				</div>
+				<div class="savings-bar">
+					<span class="savings-label">{lang === 'es' ? 'Comprimido (20)' : 'Compressed (20)'}</span>
+					<div class="bar-track">
+						<div class="bar bar-toon" style={`--pct:${compressAfterPct}%`} data-pct={compressAfterPct}><span>{compressAfterPct}%</span></div>
 					</div>
 				</div>
 			</div>
@@ -165,6 +187,11 @@ const primerWithPct = 41.6;
 		background: var(--color-accent-brand-ghost);
 		border: 1px solid var(--color-accent-lavender-dim);
 	}
+	.benchmark-block.highlight {
+		grid-column: 1 / -1;
+		border-color: var(--color-accent-success-border);
+		background: linear-gradient(135deg, var(--color-accent-success-subtle), var(--color-accent-brand-ghost-wash));
+	}
 	.benchmark-label {
 		font-size: 0.85rem;
 		font-weight: 600;
@@ -173,9 +200,15 @@ const primerWithPct = 41.6;
 		text-transform: uppercase;
 		letter-spacing: .05em;
 	}
+	.benchmark-block.highlight .benchmark-label {
+		color: var(--color-accent-success-mist);
+	}
 	@media (max-width: 768px) {
 		.benchmark-grid {
 			grid-template-columns: 1fr;
+		}
+		.benchmark-block.highlight {
+			grid-column: 1;
 		}
 	}
 </style>
