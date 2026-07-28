@@ -39,12 +39,13 @@ export const content = {
 		},
 		features: {
 			cards: [
-				{
-					icon: '🧩',
-					title: '29 MCP Tools + 3 Resources',
-					body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export, merge_similar, graph_path. Plus resources for direct context reading.',
-					tags: ['remember', 'recall', 'context', 'diff'],
-				},
+			{
+				icon: '🧩',
+				title: '29 MCP Tools + 3 Resources',
+				body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export, merge_similar, graph_path. Plus resources for direct context reading.',
+				tags: ['remember', 'recall', 'context', 'diff'],
+				wide: true,
+			},
 				{
 					icon: '⭐',
 					title: 'Multi-Agent',
@@ -494,12 +495,13 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		features: {
 			cards: [
-				{
-					icon: '🧩',
-					title: '29 herramientas MCP + 3 recursos',
-					body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export, merge_similar, graph_path. Más recursos para lectura directa de contexto.',
-					tags: ['remember', 'recall', 'context', 'diff'],
-				},
+			{
+				icon: '🧩',
+				title: '29 herramientas MCP + 3 recursos',
+				body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export, merge_similar, graph_path. Más recursos para lectura directa de contexto.',
+				tags: ['remember', 'recall', 'context', 'diff'],
+				wide: true,
+			},
 				{
 					icon: '⭐',
 					title: 'Multi-agente',

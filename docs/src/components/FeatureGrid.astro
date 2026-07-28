@@ -12,7 +12,7 @@ const c = getContent(lang);
 <div class="feature-cards">
   {
     c.features.cards.map((f, i) => (
-      <div class={`card${i === 0 ? ' featured' : ''}`}>
+      <div class={`card${i === 0 ? ' featured' : ''}${f.wide ? ' card-wide' : ''}`}>
         <div class="card-icon"><Icon emoji={f.icon} /></div>
         <h3>{f.title}</h3>
         <p>{f.body}</p>

@@ -405,6 +405,32 @@ a:hover { text-decoration: underline; }
 .card-icon .icon-svg :global(svg) { width: 32px; height: 32px; }
 .card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 700; }
 .card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.65; }
+.card-wide {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto auto;
+  column-gap: 1.5rem;
+  row-gap: 0;
+}
+.card-wide .card-icon {
+  grid-row: 1 / -1;
+  align-self: start;
+  margin-top: 0.15rem;
+}
+.card-wide .card-icon .icon-svg :global(svg) { width: 40px; height: 40px; }
+.card-wide h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.35rem;
+}
+.card-wide p {
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+.card-wide .card-tags,
+.card-wide .card-stats {
+  grid-column: 2;
+}
 
 .card-tags, .card-stats {
   display: flex;
@@ -1119,6 +1145,9 @@ pre code {
   .hero { padding: 3rem 1rem 2rem; }
   .site-header { padding: 0.75rem 1rem; }
   .feature-cards { grid-template-columns: repeat(2, 1fr); }
+  .card-wide { grid-template-columns: 1fr; }
+  .card-wide .card-icon { grid-row: auto; margin-bottom: 0.75rem; }
+  .card-wide .card-tags, .card-wide .card-stats { grid-column: 1; }
   .graph-grid { grid-template-columns: 1fr; }
   .tip-grid { grid-template-columns: 1fr; }
   .comparison { grid-template-columns: 1fr; }
