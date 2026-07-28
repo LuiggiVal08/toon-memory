@@ -36,9 +36,9 @@ const edges = [
 
 const typeColors: Record<string, string> = {
 	decision: 'var(--brand)',
-	pattern: '#22c55e',
-	bug: '#ef4444',
-	knowledge: '#f59e0b',
+	pattern: 'var(--color-success)',
+	bug: 'var(--color-error)',
+	knowledge: 'var(--color-warning)',
 };
 
 const outputCode = `[decision] risk-engine-priority (a1b2c3d4)
@@ -126,7 +126,7 @@ const outputCode = `[decision] risk-engine-priority (a1b2c3d4)
 							cy={n.y + n.r + 2}
 							rx={n.r * 0.7}
 							ry={n.r * 0.15}
-							fill="rgba(0,0,0,0.15)"
+							fill="var(--color-surface-overlay)"
 							style={`transition-delay:${n.delay}s`}
 							class="graph-shadow"
 						/>

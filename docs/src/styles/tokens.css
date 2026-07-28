@@ -1,0 +1,89 @@
+/* toon-memory tokens — OKLCH-first, locked values for the docs system */
+:root {
+  /* Brand palette (OKLCH) */
+  --color-brand: oklch(55% 0.25 280);
+  --color-brand-light: oklch(68% 0.22 280);
+  --color-brand-dark: oklch(48% 0.22 280);
+  --color-purple: oklch(59% 0.25 300);
+  --color-lavender: oklch(65% 0.25 310);
+  --color-pink: oklch(65% 0.26 340);
+
+  /* Surfaces (OKLCH) */
+  --color-paper: oklch(8% 0.02 270);
+  --color-surface: oklch(12% 0.02 270);
+  --color-border: oklch(21% 0.02 270);
+  --color-surface-raised: oklch(10% 0.02 270);
+  --color-surface-overlay: oklch(11% 0.02 270);
+  --color-surface-primary: oklch(98% 0 0);
+
+  /* Neutrals */
+  --color-neutral-600: oklch(45% 0.01 260);
+  --color-neutral-500: oklch(52% 0.01 260);
+
+  /* Text (OKLCH) */
+  --color-text: oklch(91% 0.01 270);
+  --color-text-muted: oklch(56% 0.02 270);
+
+  /* Semantic (OKLCH) */
+  --color-success: oklch(78% 0.2 155);
+  --color-warning: oklch(85% 0.18 85);
+  --color-error: oklch(65% 0.24 25);
+
+  /* Accents (OKLCH) */
+  --color-accent-error-subtle: oklch(65% 0.24 25 / 0.06);
+  --color-accent-error-border: oklch(65% 0.24 25 / 0.25);
+  --color-accent-success-subtle: oklch(78% 0.2 155 / 0.06);
+  --color-accent-success-border: oklch(78% 0.2 155 / 0.25);
+  --color-accent-brand-subtle: oklch(55% 0.25 280 / 0.12);
+  --color-accent-brand-dim: oklch(55% 0.25 280 / 0.10);
+  --color-accent-brand-soft: oklch(55% 0.25 280 / 0.08);
+  --color-accent-brand-mist: oklch(55% 0.25 280 / 0.25);
+  --color-accent-lavender-subtle: oklch(59% 0.25 300 / 0.12);
+  --color-accent-success-mist: oklch(78% 0.2 155 / 0.10);
+  --color-accent-brand-wash: oklch(55% 0.25 280 / 0.10);
+  --color-accent-brand-ghost: oklch(55% 0.25 280 / 0.08);
+  --color-accent-brand-glow: oklch(55% 0.25 280 / 0.5);
+  --color-accent-lavender-dim: oklch(59% 0.25 300 / 0.12);
+  --color-accent-lavender-ghost: oklch(59% 0.25 300 / 0.15);
+  --color-accent-lavender-glow: oklch(59% 0.25 300 / 0.45);
+  --color-accent-brand-ghost-wash: oklch(55% 0.25 280 / 0.15);
+
+  /* Composites */
+  --color-text-on-brand: oklch(100% 0 0);
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 9999px;
+
+  /* Spacing */
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Typography tokens */
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* Motion tokens */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Brand aliases for legacy selectors */
+  --brand: var(--color-brand);
+  --brand-light: var(--color-brand-light);
+  --brand-dark: var(--color-brand-dark);
+  --brand-glow: var(--color-accent-brand-glow);
+  --bg: var(--color-paper);
+  --bg-card: var(--color-surface);
+  --border: var(--color-border);
+  --text: var(--color-text);
+  --text-muted: var(--color-text-muted);
+}
