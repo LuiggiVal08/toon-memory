@@ -1,6 +1,7 @@
 import { captureToggle } from "./capture-toggle"
 import { init, uninstall, status, upgrade, stats, exportMemory, importMemory, dumpMemory, interactiveInstall } from "./commands"
 import { watch } from "./watch"
+import { viewer, viewerExport } from "../viewer"
 
 const args = process.argv.slice(2)
 
@@ -72,20 +73,28 @@ if (args[0] === "watch") {
   process.exit(0)
 }
 
-// Interactive installer when no command is given; otherwise report unknown command.
-if (args.length === 0) {
+if (args[0] === "viewer") {
+  const portIdx = args.indexOf("--port")
+  const port = portIdx !== -1 && args[portIdx + 1] ? args[portIdx + 1] : undefined
+  if (args.includes("--export")) {
+    viewerExport()
+  } else {
+    viewer(port)
+  }
+} else if (args.length === 0) {
   await interactiveInstall()
   process.exit(0)
+} else {
+  console.log(`Unknown command: '${args[0]}'\n`)
+  printUsage()
+  process.exit(1)
 }
-
-console.log(`Unknown command: '${args[0]}'\n`)
-printUsage()
-process.exit(1)
 
 /** Minimal usage string for unknown commands. */
 function printUsage(): void {
   console.log(`Usage: toon-memory <command> [options]
-Commands: init, status, stats, export, import, watch, uninstall, capture, upgrade, mcp
+Commands: init, status, stats, export, import, watch, viewer, uninstall, capture, upgrade, mcp
+  viewer [--export] [--port <n>]  — Start an HTTP server with the graph viewer (press 'r' to reload). --export saves static HTML.
 Init: toon-memory init [--agent <name> --agent <name>...] [--scope local|global]
   Without --agent: interactive agent and scope selector.
   With --agent: non-interactive installation (default: scope local).
