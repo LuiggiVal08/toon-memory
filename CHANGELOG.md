@@ -1,20 +1,20 @@
 # Changelog
 
-## [3.1.0] - 2026-07-28
+## [3.2.0] - 2026-07-29
 
 ### Added
-- **Intelligent auto-loading** — OpenCode plugin now does `memory_recall` by file path on every tool execution, injecting only relevant context instead of dumping all memory
-- **`memory_merge_similar` MCP tool** — Find entries with >50% word similarity (Jaccard) and merge them deterministically. No LLM needed
-- **`memory_graph_path` MCP tool** — BFS shortest path between two entries in the knowledge graph. Shows how concepts are connected
-- **Staleness decay** — Quality scoring now penalizes entries not accessed in 30+ days (up to -0.2). Ensures old knowledge doesn't dominate rankings
-
-### Fixed
-- **6 agent config corrections** — Claude Code now uses `.mcp.json` (MCP) + `.claude/settings.json` (hooks), Continue uses `experimental.modelContextProtocolServers` array, Zed uses `context_servers` with `source: "custom"`, Antigravity moved to `.agents/`, KiloCode uses `mcp` key with `type: "local"`, OpenClaw uses nested `mcp.servers` format
-- Added `hookPath` field to Agent type for agents where hook registration differs from MCP config path
+- **Interactive D3 force-directed graph viewer** — `toon-memory viewer` CLI command with live HTTP server (`--port`) and static export (`--export`). Full interactive graph with physics, zoom/pan, search, filters, timeline, stats, detail panel, path finder, dark/light theme, and PNG/SVG export
+- **Embedded viewer on homepage** — Self-contained `embed.html` generated from live memory data (173 entries, 421 edges) embedded across all 8 locale homepages
+- **`memory_session_store` MCP module** — Session-aware memory store with create/touch/addFile/getSessions for tracking agent sessions
+- **`summarize_project_context` MCP prompt** — Registers a new prompt that analyzes TOON memory state and generates a compact project summary
+- **Auto-checkpoint system** — Detects complex work patterns (many tool calls without recall) and auto-generates checkpoint entries to preserve working state
+- **Auto-connect graph edges** — Entries sharing 2+ tags are automatically linked in the graph, improving discoverability without manual links
 
 ### Changed
-- Tool count: 27 → 29 MCP tools
-- Test updated: tool count 27 → 29
+- Tool count: 29 → 31 MCP tools
+- `toon-memory viewer` added to CLI help and README
+
+## [3.1.0] - 2026-07-28
 
 ## [2.10.0] - 2026-07-27
 
