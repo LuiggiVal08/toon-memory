@@ -41,6 +41,11 @@ export interface MemoryConfig {
   maxEntries?: number
   /** Verbatim mode: skip tag inference and quality scoring at write time. */
   verbatim?: boolean
+  /** Auto-checkpoint configuration */
+  checkpoint?: {
+    enabled?: boolean
+    interval?: number
+  }
 }
 
 /**
