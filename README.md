@@ -8,15 +8,16 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml/badge.svg)](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-online-blue)](https://luiggival08.github.io/toon-memory/)
+[![MCP Badge](https://lobehub.com/badge/mcp/luiggival08-toon-memory)](https://lobehub.com/mcp/luiggival08-toon-memory)
 
 ---
 
 ## Table of Contents
 
-- [What is toon-memory?](#what-is-toon-memory)
+- [Overview](#overview)
 - [Blog Post](#blog-post)
 - [Features](#features)
-- [Quick Start](#quick-start)
+- [Installation](#installation)
 - [Supported Agents](#supported-agents)
 - [MCP Tools](#mcp-tools)
 - [Coordinación multi-sesión](#coordinación-multi-sesión)
@@ -30,11 +31,12 @@
 - [FAQ](#faq)
 - [Development](#development)
 - [Contributing](#contributing)
+- [Security & Privacy](#security--privacy)
 - [License](#license)
 
 ---
 
-## What is toon-memory?
+## Overview
 
 Ever had that feeling where your AI agent forgets everything from yesterday's session? You explain the same architecture decision for the third time, and it still suggests the approach you already rejected?
 
@@ -98,7 +100,7 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 
 ---
 
-## Quick Start
+## Installation
 
 ### 1. Install
 
@@ -138,6 +140,53 @@ memory_remember   # Save important decisions
 ```
 
 > **Tip:** Always run `memory_recall` at the start of a session. Your agent will have context from previous sessions instantly.
+
+### MCP Client Quick Setup
+
+#### Cursor
+
+Add to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+#### Claude Desktop
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+#### Windsurf
+
+Add to `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
 
 ---
 
@@ -206,8 +255,15 @@ Memory is also exposed as MCP resources for direct context reading:
 | Resource | URI | Description |
 |----------|-----|-------------|
 | Memory Entries | `toon://memory/entries` | Full memory dump |
+| Current Memory | `toon://memory/current` | Current memory state with recent entries |
 | Memory Stats | `toon://memory/stats` | Category counts and TTL info |
 | System Primer | `toon://memory/summaries` | Auto-generated knowledge map (top entries, categories, patterns) |
+
+### MCP Prompts
+
+| Prompt | Description |
+|--------|-------------|
+| `summarize_project_context` | Analyze current TOON memory and generate a compact project summary. Optional `intent` parameter to focus on a specific area |
 
 ### Examples
 
@@ -646,6 +702,51 @@ On `toon-memory init`, the CLI scans your dependency manifests and writes a `voc
 
 ---
 
+## Memory Graph Viewer
+
+Visualize your memory as an interactive force-directed graph. See entries, their connections, categories, and access patterns at a glance.
+
+```bash
+npx toon-memory viewer          # Start HTTP server + open browser
+npx toon-memory viewer --port 3001  # Custom port
+npx toon-memory viewer --export     # Save as static HTML
+```
+
+Once open, press `r` in the terminal to reload from disk, or `r` / ↻ in the browser to refresh the page.
+
+### Features
+
+| Interaction | Description |
+|---|---|
+| **Hover** a node | See tooltip with content preview, quality, access count |
+| **Click** a node | Select + center + highlight neighbors |
+| **Double-click** a node | Open the Detail panel |
+| **Drag** a node | Reposition manually (right-click to unfix) |
+| **Search** | Filter entries; matching nodes pulse with glow |
+| **⇿ Path finder** | Click two nodes to find and highlight the shortest path |
+| **Zoom/pan** | Mouse wheel or +/− buttons |
+| **⚙ Physics** | Adjust charge, link distance, center gravity |
+| **Theme toggle** | Dark/light mode (persisted) |
+| **Export** | Save graph as PNG or SVG |
+
+### Screenshots
+
+| Graph view | Search highlights | Path finder | Detail panel |
+|---|---|---|---|
+| ![Full graph](docs/public/viewer/graph-full.png) | ![Search](docs/public/viewer/graph-search.png) | ![Path](docs/public/viewer/graph-path.png) | ![Detail](docs/public/viewer/graph-detail.png) |
+
+![Viewer demo animation](docs/public/viewer/viewer-demo.gif)
+
+### Capturing your own screenshots
+
+```bash
+npm run capture:viewer
+```
+
+Requires [Playwright](https://playwright.dev) (`npx playwright install chromium`) and `ffmpeg`.
+
+---
+
 ## Tips & Best Practices
 
 Here are some patterns that work well with toon-memory:
@@ -718,6 +819,9 @@ npx toon-memory status       # Check installation status
 npx toon-memory stats        # View memory statistics
 npx toon-memory export       # Export memory to JSON
 npx toon-memory import <file> # Import memory from JSON
+npx toon-memory viewer       # Open the memory graph viewer (http server)
+npx toon-memory viewer --export # Save viewer as static HTML
+npx toon-memory viewer --port 3001 # Custom port
 npx toon-memory watch [options] # Auto-backup with options
 npx toon-memory upgrade      # Update to latest version
 npx toon-memory uninstall    # Remove from all agents
@@ -1172,7 +1276,18 @@ toon-memory/
 │   │   ├── setup.ts             # CLI commands
 │   │   └── toon-memory.ts       # CLI runner
 │   ├── mcp/
-│   │   └── server.ts            # MCP server (29 tools + 3 resources)
+│   │   ├── server.ts            # MCP server (29 tools + 4 resources + 1 prompt)
+│   │   ├── tools.ts             # Tool registration (29 tools)
+│   │   ├── resources.ts         # Resource registration (4 resources)
+│   │   ├── prompts.ts           # Prompt registration (1 prompt)
+│   │   ├── session-store.ts     # Session layer (auto-promote, cleanup)
+│   │   ├── memory-io.ts         # Memory file read/write
+│   │   ├── entries.ts           # Entry parsing & utilities
+│   │   ├── scoring.ts           # Entry scoring & access tracking
+│   │   ├── archive.ts           # Archive management
+│   │   ├── consolidation.ts     # Duplicate consolidation
+│   │   ├── config.ts            # Config loading & saving
+│   │   └── crypto.ts            # AES-256-GCM encryption
 │   ├── lib/
 │   │   ├── lock.ts              # Advisory file lock + atomic write
 │   │   ├── sessions.ts          # Multi-session coordination
@@ -1205,6 +1320,20 @@ Contributions are welcome! Please read our [Code of Conduct](CODE_OF_CONDUCT.md)
 3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+---
+
+## Security & Privacy
+
+toon-memory is designed with security and privacy as a core principle.
+
+- **100% local storage** — All memory is stored locally on your machine in `.toon-memory/memory/`. No data is ever sent to external servers, cloud services, or third parties.
+- **No telemetry** — The project has zero telemetry, analytics, or tracking of any kind. No usage data is collected.
+- **No remote code execution** — toon-memory runs as a standard MCP server over stdio. It does not download, execute, or evaluate remote code.
+- **Encryption at rest** — Optional AES-256-GCM encryption for the entire memory file. Enable with `memory_encrypt` (requires `TOON_MEMORY_KEY` environment variable).
+- **Encryption key is never stored** — The encryption key must be provided via environment variable and is never persisted by toon-memory. If lost, data cannot be recovered.
+- **Per-project isolation** — Each project has its own isolated memory file. Memory does not leak between projects.
+- **Automatic `.gitignore`** — The installer adds `.toon-memory/memory/` to `.gitignore` to prevent accidental commits of memory data.
 
 ---
 
