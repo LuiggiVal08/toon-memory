@@ -109,6 +109,22 @@ export function buildGraph(entries: GraphEntry[]): MemoryGraph {
 		for (const r of refs) link(e.key, r.slice(2, -2))
 	}
 
+	// Connect entries sharing 2+ tags
+	if (entries.some((e) => e.tags.length > 0)) {
+		for (let i = 0; i < entries.length; i++) {
+			const ei = entries[i]
+			if (ei.tags.length === 0) continue
+			const eTags = new Set(ei.tags)
+			for (let j = i + 1; j < entries.length; j++) {
+				const ej = entries[j]
+				if (ej.tags.length === 0) continue
+				let shared = 0
+				for (const t of ej.tags) if (eTags.has(t)) shared++
+				if (shared >= 2) link(ei.key, ej.key)
+			}
+		}
+	}
+
 	const adjacency = new Map<string, string[]>()
 	for (const [k, v] of adj) adjacency.set(k, [...v])
 	return { adjacency, byKey }
