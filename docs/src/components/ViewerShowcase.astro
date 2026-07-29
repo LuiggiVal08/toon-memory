@@ -1,0 +1,58 @@
+---
+import { getContent } from '../i18n';
+
+interface Props {
+  lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
+const t = c.viewerSection || {
+  title: 'Memory Graph Viewer',
+  subtitle: 'Visualize your memory as an interactive force-directed graph. See entries, connections, categories, and access patterns at a glance.',
+  features: [
+    'Hover nodes for tooltips with content preview and quality score',
+    'Click to select and center; double-click to open details',
+    'Search filters entries and highlights matching nodes with a pulsing glow',
+    'Path finder finds and highlights the shortest connection between two entries',
+    'Adjustable physics, dark/light theme, PNG/SVG export',
+  ],
+};
+---
+
+<section class="content-section viewer-showcase">
+  <div class="section-header">
+    <h2>{t.title}</h2>
+    <p>{t.subtitle}</p>
+  </div>
+
+  <div class="viewer-grid">
+    <div class="viewer-text">
+      <ul class="viewer-points">
+        {t.features.map((f) => <li set:html={f} />)}
+      </ul>
+      <pre class="code-block"><code>npx toon-memory viewer</code></pre>
+      <p class="viewer-caption">Press <kbd>r</kbd> in terminal to reload, or <kbd>r</kbd> / ↻ in the browser.</p>
+    </div>
+
+    <div class="viewer-screenshots">
+      <iframe src="/toon-memory/viewer/embed.html" class="viewer-iframe" title="Interactive memory graph viewer" loading="lazy" allow="fullscreen"></iframe>
+      <p class="viewer-caption">Interactive graph — click nodes, search, explore paths in real time</p>
+    </div>
+  </div>
+</section>
+
+<style is:global>
+.viewer-showcase{padding:5rem 1.5rem;max-width:1100px;margin:0 auto}
+.viewer-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+.viewer-points{list-style:none;padding:0;margin:0 0 1.5rem}
+.viewer-points li{padding:0.4rem 0;padding-left:1.4rem;position:relative;color:var(--color-text-secondary);font-size:0.95rem;line-height:1.5}
+.viewer-points li::before{content:'→';position:absolute;left:0;color:var(--brand)}
+.viewer-caption{font-size:0.85rem;color:var(--color-text-tertiary);margin-top:0.75rem}
+.viewer-caption kbd{font-family:monospace;background:var(--color-surface-overlay);padding:0.1rem 0.4rem;border-radius:4px;border:1px solid var(--color-border)}
+.viewer-screenshots{display:flex;flex-direction:column;gap:0.75rem}
+.viewer-iframe,.viewer-img{width:100%;border-radius:12px;border:1px solid var(--color-border);box-shadow:0 4px 24px rgba(0,0,0,0.15);aspect-ratio:4/3;background:var(--color-surface-overlay)}
+.viewer-thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem}
+.viewer-thumb{width:100%;border-radius:8px;border:1px solid var(--color-border);cursor:pointer;transition:transform 0.2s}
+.viewer-thumb:hover{transform:scale(1.05)}
+@media(max-width:768px){.viewer-grid{grid-template-columns:1fr}}
+</style>

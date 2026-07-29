@@ -21,6 +21,7 @@ npx toon-memory status       # Check installation status
 npx toon-memory stats        # View memory statistics
 npx toon-memory export       # Export memory to JSON
 npx toon-memory import <file> # Import memory from JSON
+npx toon-memory viewer [opts] # Open the memory graph viewer (HTTP server)
 npx toon-memory watch [opts] # Auto-backup with options
 npx toon-memory upgrade      # Update to latest version
 npx toon-memory uninstall    # Remove from all agents
@@ -32,6 +33,13 @@ npx toon-memory uninstall    # Remove from all agents
 |--------|-------------|---------|
 | `--agent <name>` | Non-interactive: configure specific agent(s). Repeat for multiple. | interactive |
 | `--scope <scope>` | `local` or `global` — where to store agent config | interactive |
+
+## Viewer Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--port <n>` | HTTP server port | 3000 |
+| `--export` | Save static HTML file instead of starting server | — |
 
 ## Watch Options
 
