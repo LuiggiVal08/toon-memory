@@ -8,3 +8,15 @@ bin/toon-memory.js
 .toon-memory/memory/
 .opencode/instructions/memory-autoload.md
 IDEAS-DEFERRED.md
+.agents/
+.claude/
+.codex/
+.cursor/
+.gemini/
+.impeccable/
+.kiro/
+.github/hooks/
+.toon-memory/viewer/
+videos/
+skills-lock.json
+.openclaw.json
