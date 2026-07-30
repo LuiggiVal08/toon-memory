@@ -1,8 +1,8 @@
 {
   "identifier": "luiggival08-toon-memory",
   "name": "toon-memory",
-  "description": "MCP server giving AI coding agents offline, token-efficient persistent memory — 29 tools, 80% fewer tool calls, recall decisions, patterns, and bugs across sessions. No LLM, no server; works with 15+ agents.",
-  "version": "3.3.1",
+  "description": "MCP server giving AI coding agents offline, token-efficient persistent memory — 35 tools, 80% fewer tool calls, recall decisions, patterns, and bugs across sessions. No LLM, no server; works with 15+ agents.",
+  "version": "3.4.0",
   "author": "LuiggiVal08",
   "authorUrl": "https://github.com/LuiggiVal08",
   "homepage": "https://github.com/LuiggiVal08/toon-memory",
@@ -132,6 +132,26 @@
     {
       "name": "memory_graph_path",
       "description": "Find the shortest path between two memory entries in the knowledge graph. Shows how two concepts are connected."
+    },
+    {
+      "name": "memory_checkpoint",
+      "description": "Create a session checkpoint snapshot with 7d TTL — saves current memory state for rollback reference during long sessions."
+    },
+    {
+      "name": "memory_pin",
+      "description": "Pin an entry with priority 1-5 — pinned entries always appear first in recall results, even without a keyword match."
+    },
+    {
+      "name": "memory_unpin",
+      "description": "Unpin an entry — removes the priority flag."
+    },
+    {
+      "name": "memory_search",
+      "description": "Unified search with category, tags, and date range filters. Tag filter uses AND logic — all specified tags must match."
+    },
+    {
+      "name": "memory_tag",
+      "description": "Batch tag operations: add, remove, or set tags on one or more entries by key or id."
     }
   ],
   "resources": [
