@@ -3,6 +3,7 @@ dist/
 mcp/server.js
 bin/toon-memory.js
 *.tgz
+DOCS-ROADMAP.md
 .opencode/
 .opencode/memory/
 .toon-memory/memory/
