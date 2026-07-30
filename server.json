@@ -1,20 +1,20 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.LuiggiVal08/toon-memory",
-  "description": "Offline, token-efficient persistent memory for AI coding agents — 35+ tools, 80% fewer calls, recall decisions and patterns across sessions. No LLM, no server.",
+  "description": "Offline persistent memory for AI coding agents — 37 tools, 80% fewer calls, no LLM",
   "title": "Toon Memory",
   "websiteUrl": "https://github.com/LuiggiVal08/toon-memory#readme",
   "repository": {
     "url": "https://github.com/LuiggiVal08/toon-memory",
     "source": "github"
   },
-  "version": "3.5.0",
+  "version": "3.6.0",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "toon-memory",
-      "version": "3.5.0",
+      "version": "3.6.0",
       "transport": {
         "type": "stdio"
       },
