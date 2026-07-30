@@ -706,6 +706,8 @@ On `toon-memory init`, the CLI scans your dependency manifests and writes a `voc
 
 Visualize your memory as an interactive force-directed graph. See entries, their connections, categories, and access patterns at a glance.
 
+### CLI viewer (standalone HTTP server)
+
 ```bash
 npx toon-memory viewer          # Start HTTP server + open browser
 npx toon-memory viewer --port 3001  # Custom port
@@ -713,6 +715,10 @@ npx toon-memory viewer --export     # Save as static HTML
 ```
 
 Once open, press `r` in the terminal to reload from disk, or `r` / ↻ in the browser to refresh the page.
+
+### Inline viewer (MCP Apps)
+
+Call `memory_visualize` in any MCP Apps–compatible host to render the graph inline — no server needed. The viewer appears as an interactive panel inside the chat interface.
 
 ### Features
 

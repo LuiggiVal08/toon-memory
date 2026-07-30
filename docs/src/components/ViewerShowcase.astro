@@ -30,8 +30,9 @@ const t = c.viewerSection || {
       <ul class="viewer-points">
         {t.features.map((f) => <li set:html={f} />)}
       </ul>
-      <pre class="code-block"><code>npx toon-memory viewer</code></pre>
-      <p class="viewer-caption">Press <kbd>r</kbd> in terminal to reload, or <kbd>r</kbd> / ↻ in the browser.</p>
+      <pre class="code-block"><code>npx toon-memory viewer        # CLI (HTTP server)
+memory_visualize()             # Inline in MCP Apps-compatible hosts</code></pre>
+      <p class="viewer-caption">Press <kbd>r</kbd> in terminal to reload, or call <code>memory_visualize()</code> for inline rendering.</p>
     </div>
 
     <div class="viewer-screenshots">

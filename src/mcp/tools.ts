@@ -1,4 +1,5 @@
-import type { McpServer } from "@modelcontextprotocol/server"
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import { registerAppTool } from "@modelcontextprotocol/ext-apps/server"
 import { z } from "zod"
 import { readFileSync, writeFileSync, existsSync, copyFileSync, mkdirSync, readdirSync } from "fs"
 import { join, basename } from "path"
@@ -1546,6 +1547,35 @@ server.registerTool(
         type: "text" as const,
         text: `🔗 Path (${path.length} hops):\n\n   ${pathStr}`
       }],
+    }
+  }
+)
+
+// ── memory_visualize (MCP Apps) ──────────────────────────────────────────────
+
+registerAppTool(
+  server as unknown as Parameters<typeof registerAppTool>[0],
+  "memory_visualize",
+  {
+    title: "Open Memory Graph Viewer",
+    description: "Open the interactive memory graph viewer (force-directed graph, stats, timeline, detail panel). Renders inline in MCP Apps-compatible hosts.",
+    inputSchema: {
+      query: z.string().optional().default("").describe("Optional search query to highlight entries in the viewer"),
+    },
+    _meta: { ui: { resourceUri: "ui://viewer" } },
+  },
+  async ({ query }) => {
+    const data = readMemory()
+    const entries = parseEntries(data)
+    const total = entries.length
+    const graph = buildGraph(entries)
+    const edgeCount = [...graph.adjacency.values()].reduce((sum, n) => sum + n.length, 0) / 2
+
+    let msg = `🧠 Memory Graph Viewer — ${total} entries, ${edgeCount} edges`
+    if (query) msg += `\n🔍 Focus: "${query}"`
+
+    return {
+      content: [{ type: "text" as const, text: msg }],
     }
   }
 )

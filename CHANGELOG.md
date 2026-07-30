@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.3.0] - 2026-07-30
+
+### Added
+- **`memory_visualize` MCP tool** — Opens the interactive D3 force-directed graph viewer inline in MCP Apps–compatible hosts (VS Code Copilot, etc.). No HTTP server needed. Registered via `registerAppTool` with `_meta.ui.resourceUri`
+- **`ui://viewer` MCP Apps resource** — Interactive graph viewer rendered as `text/html;profile=mcp-app` via `createUIResource` with `mcpApps` adapter
+- **Vendored D3.js** — Removed `d3` npm dependency. D3 v7.9.0 vendored at `src/viewer/d3.v7.min.js` (280 KB), read via `readFileSync` at module load time. Falls back to CDN URL string if local file not found
+- **`__MCP_UI__` polyfill** — Prevents host bridge injection crash (`Cannot read properties of undefined (reading 'invoke')`)
+- **ResizeObserver guard** — Waits for graph container to have non-zero dimensions before initializing D3. Safe proxy for graph methods before `initGraph()` completes
+- **Agent instructions for `memory_visualize`** — `toon-memory init` now writes "When asked to see the memory graph, call memory_visualize()" into AGENTS.md for all 15+ supported agents
+- **`height: 100%` layout** — Changed from `100vh` for iframe compatibility in MCP Apps hosts
+
+### Changed
+- Tool count: 31 → 32 MCP tools
+- Resource count: 3 → 4 MCP resources
+- `@modelcontextprotocol/sdk@^1.30.0` — Migrated from `@modelcontextprotocol/server@^2.0.0-beta.5`
+
 ## [3.2.0] - 2026-07-29
 
 ### Added

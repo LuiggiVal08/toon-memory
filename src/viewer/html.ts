@@ -1,7 +1,27 @@
+import { readFileSync } from "fs"
+import { resolve, dirname } from "path"
+import { fileURLToPath } from "url"
 import { ViewerData, COLORS } from "./types"
+
+const d3Src = (() => {
+  try {
+    const dir = dirname(fileURLToPath(import.meta.url))
+    return readFileSync(resolve(dir, "../src/viewer/d3.v7.min.js"), "utf-8")
+  } catch {
+    try {
+      const dir = dirname(fileURLToPath(import.meta.url))
+      return readFileSync(resolve(dir, "d3.v7.min.js"), "utf-8")
+    } catch {
+      return null
+    }
+  }
+})()
 
 export function generateHtml(viewerData: ViewerData): string {
   const jsonData = JSON.stringify(viewerData)
+  const d3Tag = d3Src
+    ? `<script>${d3Src}<\/script>`
+    : `<script src="https://d3js.org/d3.v7.min.js"><\/script>`
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -9,7 +29,8 @@ export function generateHtml(viewerData: ViewerData): string {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>toon-memory viewer</title>
-<script src="https://d3js.org/d3.v7.min.js"><\/script>
+<script>window.__MCP_UI__=window.__MCP_UI__||{invoke:()=>Promise.resolve({})}<\/script>
+${d3Tag}
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -19,7 +40,7 @@ export function generateHtml(viewerData: ViewerData): string {
   --pink:#ec4899;--cyan:#06b6d4;
 }
 html,body{height:100%;font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
-.app{display:grid;grid-template-rows:auto 1fr;height:100vh}
+.app{display:grid;grid-template-rows:auto 1fr;height:100%}
 header{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.5rem;border-bottom:1px solid var(--border);background:var(--bg2)}
 header h1{font-size:1.1rem;font-weight:700;background:linear-gradient(135deg,var(--brand),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 header .meta{display:flex;gap:1rem;font-size:0.8rem;color:var(--muted)}
@@ -57,7 +78,7 @@ header .meta span{display:flex;align-items:center;gap:0.3rem}
 .tab-content{flex:1;overflow:hidden;position:relative}
 .tab-panel{display:none;width:100%;height:100%;overflow:auto}
 .tab-panel.active{display:block}
-.graph-container{width:100%;height:100%;background:var(--bg);position:relative}
+.graph-container{width:100%;height:100%;min-height:300px;background:var(--bg);position:relative}
 .graph-container::before{content:'';position:absolute;inset:0;background-image:radial-gradient(var(--border) 1px,transparent 1px);background-size:24px 24px;opacity:0.3;pointer-events:none;z-index:0}
 .graph-container svg{width:100%;height:100%;position:relative;z-index:1}
 .node-circle{cursor:pointer;transition:r 0.2s ease,opacity 0.2s ease,filter 0.2s ease,stroke 0.2s ease}
@@ -445,8 +466,11 @@ function renderTimeline() {
 // --- Graph ---
 const graph = (function() {
   const container = document.getElementById('graphContainer');
-  const width = container.clientWidth;
-  const height = container.clientHeight;
+  let _impl = null;
+  const safe = (name, ...args) => { if (_impl && _impl[name]) return _impl[name](...args); };
+  const initGraph = () => {
+  const width = Math.max(container.clientWidth, 400);
+  const height = Math.max(container.clientHeight, 300);
   const svg = d3.select(container).append('svg').attr('width', '100%').attr('height', '100%');
 
   const defs = svg.append('defs');
@@ -820,12 +844,25 @@ const graph = (function() {
     selectEntry(d); hideTooltip();
   });
 
-  return { highlightNode, highlightSearch, centerOn, resize: () => {
+  _impl = { highlightNode, highlightSearch, centerOn, resize: () => {
     const w = container.clientWidth;
     const h = container.clientHeight;
     simulation.force('center', d3.forceCenter(w / 2, h / 2).strength(centerStrength));
     simulation.alpha(0.3).restart();
   }};
+  };
+  if (container.clientWidth > 0 && container.clientHeight > 0) {
+    initGraph();
+  } else {
+    const ro = new ResizeObserver(() => {
+      if (container.clientWidth > 0 && container.clientHeight > 0) {
+        ro.disconnect();
+        initGraph();
+      }
+    });
+    ro.observe(container);
+  }
+  return { highlightNode: (...a) => safe('highlightNode', ...a), highlightSearch: (...a) => safe('highlightSearch', ...a), centerOn: (...a) => safe('centerOn', ...a), resize: (...a) => safe('resize', ...a) };
 })();
 
 // --- Keyboard Shortcuts ---
@@ -874,6 +911,11 @@ document.getElementById('reloadBtn').addEventListener('click', () => location.re
 document.addEventListener('keydown', (e) => {
   if (e.key === 'r' && !e.metaKey && !e.ctrlKey && !e.target.closest('input,textarea')) location.reload();
 });
+
+// MCP Apps: expose a global so the host can detect the viewer is ready
+if (window.parent !== window) {
+  console.log('toon-memory viewer running in MCP Apps iframe');
+}
 <\/script>
 </body>
 </html>`

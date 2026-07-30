@@ -34,6 +34,9 @@ Persistent memory for this project. Use it to avoid re-investigating things.
 1. Run memory_stats to see what's in memory.
 2. If the user asks something that might be in memory, run memory_recall BEFORE reading files.
 
+## When asked to see the memory graph
+- Call memory_visualize() to open the interactive graph viewer inline.
+
 ## When making decisions
 - Before implementing a non-trivial change: memory_remember(category='decision')
 - When you resolve a complex bug: memory_remember(category='bug')
@@ -53,4 +56,5 @@ Persistent memory for this project. Use it to avoid re-investigating things.
 export const OPENCODE_PASSIVE_INSTRUCTION = `# toon-memory
 
 Memory auto-injects via .opencode/instructions/memory-autoload.md; use memory_recall only as fallback.
+When the user asks to see the memory graph, call memory_visualize().
 `

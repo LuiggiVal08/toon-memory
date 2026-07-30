@@ -1,10 +1,14 @@
-import type { McpServer } from "@modelcontextprotocol/server"
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import { registerAppResource } from "@modelcontextprotocol/ext-apps/server"
+import { createUIResource } from "@mcp-ui/server"
 import { readMemory } from "./memory-io"
 import { isExpired } from "./entries"
 import { generateSystemPrimer } from "../lib/quality"
+import { buildViewerData } from "../viewer/data"
+import { generateHtml } from "../viewer/html"
 
 /**
- * Register memory MCP resources (entries, stats, summaries).
+ * Register memory MCP resources (entries, stats, summaries, viewer).
  */
 export function registerResources(server: McpServer): void {
   server.registerResource(
@@ -53,5 +57,20 @@ export function registerResources(server: McpServer): void {
       const primer = generateSystemPrimer(data)
       return { contents: [{ uri: uri.href, text: primer }] }
     }
+  )
+
+  // MCP Apps: interactive graph viewer rendered inline in MCP hosts
+  const viewerResource = createUIResource({
+    uri: "ui://viewer",
+    content: { type: "rawHtml", htmlString: generateHtml(buildViewerData()) },
+    encoding: "text",
+    adapters: { mcpApps: { enabled: true } },
+  })
+  registerAppResource(
+    server as unknown as Parameters<typeof registerAppResource>[0],
+    "Memory Graph Viewer",
+    viewerResource.resource.uri,
+    { description: "Interactive memory graph viewer (D3.js force-directed graph with stats, timeline, detail panel)" },
+    async () => ({ contents: [viewerResource.resource] }),
   )
 }

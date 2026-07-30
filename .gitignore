@@ -10,13 +10,17 @@ bin/toon-memory.js
 IDEAS-DEFERRED.md
 .agents/
 .claude/
+.cline/
 .codex/
+.continue/
 .cursor/
 .gemini/
 .impeccable/
 .kiro/
+.mimocode/
 .github/hooks/
 .toon-memory/viewer/
 videos/
 skills-lock.json
 .openclaw.json
+.vscode/

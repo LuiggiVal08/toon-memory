@@ -103,6 +103,12 @@ class McpClient {
 		return result.tools.map((t) => t.name)
 	}
 
+	async getToolDefinitions(): Promise<Array<{ name: string; _meta?: Record<string, unknown> }>> {
+		const res = await this.request("tools/list")
+		expect(res.result).toBeDefined()
+		return (res.result as { tools: Array<{ name: string; _meta?: Record<string, unknown> }> }).tools
+	}
+
 	async readResource(uri: string): Promise<string> {
 		const res = await this.request("resources/read", { uri })
 		expect(res.result).toBeDefined()
@@ -140,9 +146,9 @@ describe("MCP Integration", () => {
 
 	// ── Tool listing ──────────────────────────────────────────────
 
-  it("lists all 29 tools", async () => {
+  it("lists all 30 tools", async () => {
     const tools = await client.listTools()
-    expect(tools.length).toBe(29)
+    expect(tools.length).toBe(30)
     expect(tools).toContain("memory_remember")
     expect(tools).toContain("memory_recall")
     expect(tools).toContain("memory_forget")
@@ -172,21 +178,32 @@ describe("MCP Integration", () => {
     expect(tools).toContain("context_export")
     expect(tools).toContain("memory_merge_similar")
     expect(tools).toContain("memory_graph_path")
+    expect(tools).toContain("memory_visualize")
 	})
 
 	// ── Resource listing ──────────────────────────────────────────
 
-	it("lists 3 resources", async () => {
+	it("lists 4 resources", async () => {
 		const res = await client.request("resources/list")
 		expect(res.result).toBeDefined()
 		const result = res.result as { resources: Array<{ uri: string }> }
-		expect(result.resources.length).toBe(3)
+		expect(result.resources.length).toBe(4)
 		const uris = result.resources.map((r) => r.uri)
 		expect(uris).toContain("toon://memory/entries")
 		expect(uris).toContain("toon://memory/stats")
 		expect(uris).toContain("toon://memory/summaries")
+		expect(uris).toContain("ui://viewer")
 	})
-
+	it("exposes the memory_visualize tool with UI resource metadata", async () => {
+		const tools = await client.getToolDefinitions()
+		const visualizeTool = tools.find((tool) => tool.name === "memory_visualize")
+		expect(visualizeTool).toBeDefined()
+		const meta = visualizeTool!._meta as Record<string, unknown>
+		expect(meta).toBeDefined()
+		const ui = meta.ui as Record<string, unknown>
+		expect(ui).toBeDefined()
+		expect(ui.resourceUri).toBe("ui://viewer")
+	})
 	// ── memory_remember + memory_recall ───────────────────────────
 
 	it("memory_remember saves and memory_recall finds it", async () => {

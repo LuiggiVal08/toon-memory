@@ -31,6 +31,15 @@ memory_recall(query: "src/cli/config-writer.ts")  → relevant entries about tha
 ```
 Instead of dumping ALL memory at session start (wastes tokens), recall only what's relevant to the current task.
 
+## Visual Memory Pattern
+
+When the user asks to see the memory graph, or at session start to get a visual overview, call `memory_visualize`:
+```
+memory_visualize(query: "")  → renders interactive graph inline in VS Code Copilot
+memory_visualize(query: "auth")  → opens graph with search pre-filled
+```
+This renders a D3.js force-directed graph inline in any MCP Apps-compatible host. No server needed.
+
 ## Testing
 
 Tests use temp directories and clean up automatically. No external services required.

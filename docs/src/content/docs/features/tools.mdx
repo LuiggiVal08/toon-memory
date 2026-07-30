@@ -10,7 +10,7 @@ head:
 
 ## Overview
 
-toon-memory provides 27 MCP tools and 3 MCP resources for managing persistent memory:
+toon-memory provides 30+ MCP tools and 4 MCP resources for managing persistent memory:
 
 ## Tools
 
@@ -37,6 +37,7 @@ toon-memory provides 27 MCP tools and 3 MCP resources for managing persistent me
 | `context_health` | **Memory health audit**: orphan links, duplicates, broken file refs, expired TTL, stale sessions, score 0–100 |
 | `context_export` | **Export memory as markdown**: injectable context for system prompts (full or compact) |
 | `memory_smart_recall` | Unified search: BM25 + graph + quality + freshness + decay in one call |
+| `memory_visualize` | **Open interactive graph viewer** inline in MCP Apps–compatible hosts. Force-directed graph, stats, timeline, detail panel |
 
 ## MCP Resources
 
@@ -47,6 +48,7 @@ Memory is also exposed as MCP resources for direct context reading:
 | Memory Entries | `toon://memory/entries` | Full memory dump |
 | Memory Stats | `toon://memory/stats` | Category counts and TTL info |
 | Memory Summaries | `toon://memory/summaries` | Auto-generated system primer: knowledge map, recent memories, and key decisions |
+| Memory Graph Viewer | `ui://viewer` | Interactive D3.js force-directed graph rendered inline in any MCP Apps–compatible host |
 
 Resources let agents read memory as context without tool invocations — useful for system prompts or session startup. The system primer provides instant context about your project's knowledge state.
 

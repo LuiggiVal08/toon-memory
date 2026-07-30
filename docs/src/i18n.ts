@@ -41,8 +41,8 @@ export const content = {
 			cards: [
 			{
 				icon: '🧩',
-				title: '31 MCP Tools + 3 Resources',
-				body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, promote, promote_all, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export, context_rebuild, graph_path. Plus resources for direct context reading.',
+				title: '32 MCP Tools + 4 Resources',
+				body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, promote, promote_all, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export, context_rebuild, graph_path, visualize. Plus resources for direct context reading including an interactive graph viewer.',
 				tags: ['remember', 'recall', 'context', 'diff'],
 				wide: true,
 			},
@@ -108,7 +108,7 @@ export const content = {
 		},
 		stats: {
 			items: [
-				{ number: '31', label: 'MCP Tools' },
+				{ number: '32', label: 'MCP Tools' },
 				{ number: '15', label: 'Agents' },
 				{ number: '80%', label: 'Fewer Tool Calls / session' },
 				{ number: '0', label: 'Config Needed' },
@@ -274,7 +274,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Auto-loading benchmark: OpenCode plugin injects only file-relevant memory instead of dumping all entries. Full session: start → debug → implement → review → wrap-up. Reproducible: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 		},
 		tools: {
-			title: '31 MCP tools, 3 resources',
+			title: '32 MCP tools, 4 resources',
 			subtitle: 'Everything your agent needs to remember, recall, and reason',
 			resourcesLabel: 'Resources:',
 			groups: {
@@ -315,6 +315,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'memory_encrypt', title: 'Enable Encryption', desc: 'AES-256-GCM encryption with an auto-generated key.', group: 'sync' },
 				{ name: 'memory_decrypt', title: 'Disable Encryption', desc: 'Decrypt and disable encryption.', group: 'sync' },
 				{ name: 'memory_backup', title: 'Backup Memory', desc: 'Create timestamped backup of memory file. Auto-prunes to 10 most recent.', group: 'sync' },
+				{ name: 'memory_visualize', title: 'Open Graph Viewer', desc: 'Render the interactive memory graph inline in MCP Apps–compatible hosts. Force-directed graph, stats, timeline, detail panel.', group: 'core' },
 			],
 		},
 		graphSection: {
@@ -332,6 +333,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			title: 'Memory Graph Viewer',
 			subtitle: 'Visualize your memory as an interactive force-directed graph. See entries, connections, categories, and access patterns at a glance.',
 			features: [
+				'<strong>CLI viewer:</strong> <code>npx toon-memory viewer</code> starts an HTTP server',
+				'<strong>Inline MCP Apps viewer:</strong> call <code>memory_visualize()</code> to render the graph directly in MCP Apps–compatible hosts — no server needed',
 				'Hover nodes for tooltips with content preview and quality score',
 				'Click to select and center; double-click to open details',
 				'Search filters entries and highlights matching nodes with a pulsing glow',
@@ -427,32 +430,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			],
 		},
 		whatNew: {
-			title: "What's New in v3.2.0",
-			subtitle: 'Interactive graph viewer, embedded on homepage, auto-connect tags, and session tracking',
+			title: "What's New in v3.3.0",
+			subtitle: 'Inline MCP Apps graph viewer, vendored D3.js, agent instructions for memory_visualize',
 			cards: [
 				{
-					icon: '🔮',
-					title: 'Interactive D3 Graph Viewer',
-					body: 'New CLI command toon-memory viewer with a full interactive force-directed graph — search, filter, path finder, physics controls, timeline, stats, detail panel, and theme toggle. Also embedded live on the homepage.',
-					stats: ['173 entries', '421 edges', 'Live embed'],
+					icon: '🖥️',
+					title: 'Inline MCP Apps Graph Viewer',
+					body: 'Call memory_visualize() to render the interactive force-directed graph directly inside MCP Apps–compatible hosts — no HTTP server needed. Vendored D3.js (no CDN) with ResizeObserver guard for iframe compatibility.',
+					stats: ['memory_visualize()', 'MCP Apps inline', 'No server'],
 				},
 				{
-					icon: '🔗',
-					title: 'Auto-Connect by Tags',
-					body: 'Entries sharing 2+ tags are automatically linked in the graph. Increases graph density and discoverability without requiring explicit manual links.',
-					stats: ['Tag-based edges', 'Auto-densify'],
+					icon: '📦',
+					title: 'Vendored D3.js',
+					body: 'Removed the d3 npm dependency. D3 v7.9.0 is now vendored locally at src/viewer/d3.v7.min.js (280 KB), read via readFileSync at module load time.',
+					stats: ['280 KB local', 'No CDN', 'No npm dep'],
 				},
 				{
-					icon: '📋',
-					title: 'Session-Aware Memory',
-					body: 'New session-store module tracks agent sessions, files touched, and detects soft conflicts between parallel sessions. Auto-checkpoint preserves working state during complex tasks.',
-					stats: ['Session tracking', 'Conflict detection'],
+					icon: '🤖',
+					title: 'Agent Instructions for Visualize',
+					body: 'toon-memory init now writes instructions in AGENTS.md telling the agent to call memory_visualize() when the user asks to see the memory graph. Works for all 15+ supported agents.',
+					stats: ['Auto-instructions', '15+ agents'],
 				},
 				{
 					icon: '🧩',
-					title: '31 MCP Tools + Prompt',
-					body: 'Added session-store, checkpoint, viewer, and a new summarize_project_context prompt. Total: 31 tools + 3 resources + 1 prompt.',
-					stats: ['+2 tools', '+1 prompt'],
+					title: '32 MCP Tools + 4 Resources',
+					body: 'Added memory_visualize tool and ui://viewer resource for MCP Apps inline rendering. Total: 32 tools + 4 resources.',
+					stats: ['+1 tool', '+1 resource'],
 				},
 			],
 		},
@@ -771,6 +774,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: 'Habilitar encriptación', desc: 'Encriptación AES-256-GCM con clave autogenerada.', group: 'sync' },
 			{ name: 'memory_decrypt', title: 'Deshabilitar encriptación', desc: 'Desencripta y deshabilita la encriptación.', group: 'sync' },
 			{ name: 'memory_backup', title: 'Backup de memoria', desc: 'Crea backup con timestamp del archivo de memoria. Auto-limpia a los 10 más recientes.', group: 'sync' },
+			{ name: 'memory_visualize', title: 'Abrir visor del grafo', desc: 'Renderiza el grafo de memoria interactivo inline en hosts compatibles con MCP Apps. Grafo de fuerza dirigida, estadísticas, línea de tiempo, panel de detalles.', group: 'core' },
 		],
 	},
 		graphSection: {
@@ -788,6 +792,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			title: 'Visor del grafo de memoria',
 			subtitle: 'Visualiza tu memoria como un grafo interactivo de fuerza dirigida. Ve entradas, conexiones, categorías y patrones de acceso de un vistazo.',
 			features: [
+				'<strong>Visor CLI:</strong> <code>npx toon-memory viewer</code> inicia un servidor HTTP',
+				'<strong>Visor inline MCP Apps:</strong> llama <code>memory_visualize()</code> para renderizar el grafo directamente en hosts compatibles con MCP Apps — sin servidor',
 				'Pasa el ratón sobre nodos para tooltips con vista previa y puntuación de calidad',
 				'Click para seleccionar y centrar; doble click para abrir detalles',
 				'La búsqueda filtra entradas y resalta nodos coincidentes con un brillo pulsante',
@@ -883,32 +889,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	whatNew: {
-		title: 'Novedades en v3.1.0',
-		subtitle: 'Auto-carga inteligente, nuevas herramientas y mejoras de calidad',
+		title: 'Novedades en v3.3.0',
+		subtitle: 'Visor de grafo inline MCP Apps, D3.js empaquetado, instrucciones para memory_visualize',
 		cards: [
 			{
-				icon: '⚡',
-				title: 'Auto-carga inteligente',
-				body: 'El plugin de OpenCode auto-recupera memoria relevante por file path en cada ejecución de herramienta — sin dump-all, sin contexto desperdiciado. Inyecta solo lo que importa vía setContext().',
-				stats: ['~90% menos tokens', 'Recall por file path'],
+				icon: '🖥️',
+				title: 'Visor de Grafo Inline MCP Apps',
+				body: 'Llama memory_visualize() para renderizar el grafo interactivo directamente en hosts compatibles con MCP Apps — sin servidor HTTP. D3.js empaquetado localmente (sin CDN) con guardia ResizeObserver para compatibilidad con iframes.',
+				stats: ['memory_visualize()', 'MCP Apps inline', 'Sin servidor'],
 			},
 			{
-				icon: '📉',
-				title: 'Decay de obsolescencia',
-				body: 'La puntuación de calidad ahora penaliza entradas no accedidas en 30+ días (hasta -0.2). El conocimiento más fresco y relevante aparece primero en los resultados.',
-				stats: ['Rampa de 30 días', 'Boost de calidad'],
-			},
-			{
-				icon: '🔀',
-				title: 'Merge Jaccard y Graph Path',
-				body: 'memory_merge_similar encuentra y fusiona casi-duplicados determinísticamente (Jaccard >50%). memory_graph_path encuentra la ruta BFS más corta entre dos entradas.',
-				stats: ['Sin LLM', 'Pathfinding BFS'],
+				icon: '📦',
+				title: 'D3.js Empaquetado',
+				body: 'Se eliminó la dependencia npm de d3. D3 v7.9.0 ahora está empaquetado localmente en src/viewer/d3.v7.min.js (280 KB), leído con readFileSync al cargar el módulo.',
+				stats: ['280 KB local', 'Sin CDN', 'Sin npm dep'],
 			},
 			{
 				icon: '🤖',
-				title: '15 agentes configurados',
-				body: 'Se agregaron Continue, Zed, Antigravity, KiloCode y OpenClaw con paths y formatos correctos. Cada agente obtiene config MCP, hooks y capture hooks adecuados.',
-				stats: ['5 nuevos agentes', 'Paths corregidos'],
+				title: 'Instrucciones para Visualizar',
+				body: 'toon-memory init ahora escribe instrucciones en AGENTS.md diciéndole al agente que llame memory_visualize() cuando el usuario pida ver el grafo de memoria. Funciona para los 15+ agentes soportados.',
+				stats: ['Auto-instrucciones', '15+ agentes'],
+			},
+			{
+				icon: '🧩',
+				title: '32 Herramientas MCP + 4 Recursos',
+				body: 'Se añadió la herramienta memory_visualize y el recurso ui://viewer para renderizado inline MCP Apps. Total: 32 herramientas + 4 recursos.',
+				stats: ['+1 herramienta', '+1 recurso'],
 			},
 		],
 	},
@@ -1042,6 +1048,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: '启用加密', desc: '使用自动生成密钥的 AES-256-GCM 加密。', group: 'sync' },
 			{ name: 'memory_decrypt', title: '禁用加密', desc: '解密并禁用加密。', group: 'sync' },
 			{ name: 'memory_backup', title: '备份记忆', desc: '创建带时间戳的记忆文件备份。自动修剪至最近 10 条。', group: 'sync' },
+			{ name: 'memory_visualize', title: '打开图谱查看器', desc: '在兼容 MCP Apps 的主机中内联渲染交互式记忆图谱。力导向图、统计、时间线、详情面板。', group: 'core' },
 		],
 	},
 	graphSection: {

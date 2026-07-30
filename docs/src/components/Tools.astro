@@ -7,7 +7,7 @@ interface Props {
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 
-const resources = ['memory-entries', 'memory-stats', 'memory-summaries'];
+const resources = ['memory-entries', 'memory-stats', 'memory-summaries', 'memory-viewer (ui://viewer)'];
 
 const groupOrder = ['core', 'search', 'context', 'compress', 'sessions', 'sync'];
 const groups = c.tools.groups;

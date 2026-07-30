@@ -6,8 +6,7 @@ export function buildViewerData(): ViewerData {
   const data = readMemory()
   const entries = parseEntries(data)
   if (entries.length === 0) {
-    console.log("Memory is empty. Nothing to display.")
-    process.exit(0)
+    return { nodes: [], edges: [], categories: {}, tagCounts: {}, totalEntries: 0 }
   }
 
   const graph = buildGraph(entries)
