@@ -45,9 +45,18 @@ function formatOverview(data: string): string {
 	const cats = Object.entries(byCategory)
 		.map(([k, v]) => `${k}:${v}`)
 		.join(" ")
-	const ttlNote = expired > 0 ? ` | ${expired} expired` : ""
 
-	return `## Memory (${entries.length} entries)${ttlNote}\n${cats}`
+	const originBreak = (): string => {
+		const o: Record<string, number> = {}
+		for (const e of entries) { o[e.origin] = (o[e.origin] || 0) + 1 }
+		return Object.entries(o).map(([k, v]) => `${k}:${v}`).join(" ")
+	}
+
+	const obsoleteCount = entries.filter((e) => e.status === "obsolete").length
+	const ttlNote = expired > 0 ? ` | ${expired} expired` : ""
+	const obsoleteNote = obsoleteCount > 0 ? ` | ${obsoleteCount} obsolete` : ""
+
+	return `## Memory (${entries.length} entries)${ttlNote}${obsoleteNote}\n${cats}\nOrigin: ${originBreak()}`
 }
 
 /**
@@ -569,7 +578,39 @@ export function generateContextHealth(data: string, root: string): { report: Hea
 		info.push(`${stale.length} stale sessions (will be pruned automatically)`)
 	}
 
-	// 8. Entry count
+	// 8. Missing evidence: entries with path_scope but no file
+	const missingEvidence = entries.filter((e) => e.path_scope && !e.file)
+	if (missingEvidence.length > 0) {
+		warnings.push(`${missingEvidence.length} entries with path_scope but no file (missing evidence): ${missingEvidence.slice(0, 3).map((e) => e.key).join(", ")}`)
+		score -= 3
+	}
+
+	// 9. Stale claims: entries with overlapping content in the same category
+	// that may contain competing/outdated information
+	const staleClaims: string[] = []
+	for (let i = 0; i < entries.length; i++) {
+		for (let j = i + 1; j < entries.length; j++) {
+			const a = entries[i], b = entries[j]
+			if (a.category !== b.category) continue
+			if (a.key === b.key) continue
+			const aWords = new Set(normalize(a.content).split(/\s+/).filter((w) => w.length > 3))
+			const bWords = new Set(normalize(b.content).split(/\s+/).filter((w) => w.length > 3))
+			const intersection = new Set([...aWords].filter((w) => bWords.has(w)))
+			const union = new Set([...aWords, ...bWords])
+			const similarity = union.size > 0 ? intersection.size / union.size : 0
+			if (similarity > 0.4) {
+				staleClaims.push(`${a.key} ≈ ${b.key} (${(similarity * 100).toFixed(0)}% same category)`)
+				if (staleClaims.length >= 5) break
+			}
+		}
+		if (staleClaims.length >= 5) break
+	}
+	if (staleClaims.length > 0) {
+		warnings.push(`${staleClaims.length} potentially overlapping claims: ${staleClaims.slice(0, 3).join("; ")}`)
+		score -= 3
+	}
+
+	// 10. Entry count
 	if (entries.length > 80) {
 		warnings.push(`${entries.length} entries (near limit of 100)`)
 		score -= 3

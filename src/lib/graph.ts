@@ -34,6 +34,12 @@ export interface GraphEntry {
 	lastAccessed: string
 	/** Priority level 0-5. 0 = normal, 1-5 = pinned with priority (5 = highest). */
 	priority: number
+	/** Glob pattern scoping this entry to a file path (e.g. "src/**\/*.ts"). Empty = global. */
+	path_scope: string
+	/** Who created this entry. */
+	origin: "human" | "agent" | "inferred"
+	/** Lifecycle status. Obsolete entries are filtered from normal recalls. */
+	status: "active" | "obsolete" | "resolved"
 }
 
 export interface MemoryGraph {
@@ -81,6 +87,9 @@ export function parseEntries(data: string): GraphEntry[] {
 				.filter(Boolean),
 			lastAccessed: parts.length > 12 ? parts[12] || "" : "",
 			priority: parts.length > 13 ? parseInt(parts[13]) || 0 : 0,
+			path_scope: parts.length > 14 ? parts[14] || "" : "",
+			origin: parts.length > 15 && parts[15] ? parts[15] as "human" | "agent" | "inferred" : "agent",
+			status: parts.length > 16 && parts[16] ? parts[16] as "active" | "obsolete" | "resolved" : "active",
 		})
 	}
 	return out
@@ -145,6 +154,8 @@ export interface GraphRecallOpts {
 	limit?: number
 	/** Session bias: boost entries whose file matches current session files. */
 	sessionFiles?: string[]
+	/** Path scope glob filter: only return entries whose path_scope matches. */
+	path_scope?: string
 }
 
 /**
@@ -157,7 +168,7 @@ export function bm25Scores(entries: GraphEntry[], query: string): Map<string, nu
 	if (N === 0) return scores
 
 	const docs = entries.map((e) =>
-		tokenize(`${e.id} ${e.category} ${e.key} ${e.content} ${e.file} ${e.tags.join(" ")}`)
+		tokenize(`${e.id} ${e.category} ${e.key} ${e.content} ${e.file} ${e.tags.join(" ")} ${e.path_scope}`)
 	)
 	const df = new Map<string, number>()
 	for (const d of docs) {
@@ -243,11 +254,13 @@ export function graphRecallDetailed(
 
 	const seedKeys = new Set<string>()
 	for (const e of entries) {
+		if (e.status === "obsolete") continue
 		if (category && e.category !== category) continue
 		if (tagsFilter.length > 0 && !tagsFilter.every((t) => e.tags.includes(t))) continue
 		if (from_date && e.date < from_date) continue
 		if (to_date && e.date > to_date) continue
 		if (e.ttl && isExpiredLocal(e.ttl)) continue
+		if (opts.path_scope && e.path_scope && !globMatch(opts.path_scope, e.path_scope)) continue
 		const text = normalize(
 			`${e.id} ${e.category} ${e.key} ${e.content} ${e.file} ${e.tags.join(" ")}`
 		)
@@ -263,6 +276,7 @@ export function graphRecallDetailed(
 	if (seedKeys.size === 0) {
 		scored.push(
 			...[...entries]
+				.filter((e) => e.status !== "obsolete")
 				.sort((a, b) => {
 					if (a.priority !== b.priority) return b.priority - a.priority
 					return importance(b) - importance(a)
@@ -313,7 +327,7 @@ export function graphRecallDetailed(
 	selected = scored.map((x) => x.e)
 
 	// Inject pinned entries that aren't already in the result set, sorted by priority desc.
-	const pinnedKeys = new Set(entries.filter((e) => e.priority > 0).map((e) => e.key))
+	const pinnedKeys = new Set(entries.filter((e) => e.priority > 0 && e.status !== "obsolete").map((e) => e.key))
 	const inResult = new Set(selected.map((e) => e.key))
 	const toInject = [...pinnedKeys]
 		.filter((k) => !inResult.has(k) && byKey.has(k))
@@ -357,6 +371,31 @@ export interface RenderCompactOpts {
 	seeds?: Set<string>
 	/** Max chars before a neighbor (non-seed) is truncated with an ellipsis. */
 	snippetLen?: number
+	/** Budget level: "tiny" (key+1 line), "normal" (compact, default), "deep" (all fields). */
+	budget?: "tiny" | "normal" | "deep"
+}
+
+/**
+ * Simple glob match: supports `*` (any chars except `/`), `**` (any chars),
+ * and `?` (single char). Used by path_scope filtering.
+ */
+export function globMatch(pattern: string, target: string): boolean {
+	if (!pattern) return true
+	if (pattern.startsWith("/")) pattern = pattern.slice(1)
+	if (target.startsWith("/")) target = target.slice(1)
+	const reStr = "^" + pattern
+		.replace(/\*\*/g, "___DOUBLESTAR___")
+		.replace(/\*/g, "[^/]*")
+		.replace(/___DOUBLESTAR___/g, ".*")
+		.replace(/\?/g, ".")
+		.replace(/\./g, "\\.")
+		.replace(/\\\.\*/g, ".*")
+	+ "$"
+	try {
+		return new RegExp(reStr).test(target)
+	} catch {
+		return false
+	}
 }
 
 /**
@@ -366,6 +405,11 @@ export interface RenderCompactOpts {
  *   - graph edges render as `->2, ->3` (numeric) when `adjacency` is given
  *   - neighbors reached via graph (non-seeds) are truncated to `snippetLen`
  *
+ * Budget levels:
+ *   "tiny"   — key + category + 1 line of content (~50 tokens). For proactive recall.
+ *   "normal" — current compact format with tags, edges, truncated neighbors.
+ *   "deep"   — full content with all fields (id, date, file, links, quality).
+ *
  * The stored `.toon` file is never mutated — this only shapes the output.
  */
 export function renderCompact(entries: GraphEntry[], opts: RenderCompactOpts = {}): string {
@@ -373,10 +417,33 @@ export function renderCompact(entries: GraphEntry[], opts: RenderCompactOpts = {
 	entries.forEach((e, i) => index.set(e.key, i + 1))
 	const snippetLen = opts.snippetLen ?? 90
 
+	const budget = opts.budget ?? "normal"
+
 	return entries
 		.map((e) => {
 			const n = index.get(e.key)!
 			const isSeed = opts.seeds ? opts.seeds.has(e.key) : true
+
+			if (budget === "tiny") {
+				const firstLine = e.content.split("\n")[0] || ""
+				const snippet = firstLine.length > 80 ? firstLine.slice(0, 80).trimEnd() + "…" : firstLine
+				const pin = e.priority > 0 ? (e.priority > 1 ? ` 📌${e.priority}` : " 📌") : ""
+				return `[${n}] ${e.category}/${e.key}${pin}\n  ${snippet}`
+			}
+
+			if (budget === "deep") {
+				const ttlInfo = e.ttl ? ` · ttl: ${e.ttl}` : ""
+				const accessInfo = e.accessed > 0 ? ` · accessed: ${e.accessed}x` : ""
+				const lastAccess = e.lastAccessed ? ` · lastAccess: ${e.lastAccessed}` : ""
+				const pin = e.priority > 0 ? (e.priority > 1 ? ` 📌${e.priority}` : " 📌") : ""
+				const links = e.links.length ? `\n  links: ${e.links.join(", ")}` : ""
+				const originInfo = e.origin !== "agent" ? ` · origin: ${e.origin}` : ""
+				const scopeInfo = e.path_scope ? ` · scope: ${e.path_scope}` : ""
+				const statusInfo = e.status !== "active" ? ` · status: ${e.status}` : ""
+				return `[${n}] ${e.category}/${e.key}${pin} (${e.id})\n  ${e.content}\n  File: ${e.file} | Tags: ${e.tags.join(";")} | Date: ${e.date}${ttlInfo}${accessInfo}${lastAccess}${originInfo}${scopeInfo}${statusInfo}${links}`
+			}
+
+			// "normal" budget (default)
 			let body = e.content
 			if (!isSeed && e.content.length > snippetLen) {
 				body = e.content.slice(0, snippetLen).trimEnd() + "…"

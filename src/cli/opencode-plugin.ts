@@ -26,14 +26,15 @@ export const ToonMemory = async ({ $, directory, worktree }) => {
     return await $\`npx -y toon-memory dump\`.cwd(root).text()
   }
 
-  const recall = async (query) => {
+  const recall = async (query, opts = {}) => {
     try {
+      const args = { query, mode: "flat", budget: opts.budget || "tiny", path_scope: opts.path_scope || "" }
       const result = await $\`npx -y toon-memory mcp\`.cwd(root)
         .stdin(JSON.stringify({
           jsonrpc: "2.0",
           id: 1,
           method: "tools/call",
-          params: { name: "memory_recall", arguments: { query, mode: "flat", compact: true } }
+          params: { name: "memory_recall", arguments: args }
         }))
         .text()
       const parsed = JSON.parse(result)
@@ -62,6 +63,7 @@ export const ToonMemory = async ({ $, directory, worktree }) => {
     "tool.execute.after": async (input) => {
       // Intelligent auto-loading: extract file path from tool result,
       // recall only memory relevant to that file, inject as context.
+      // Also proactively recalls entries scoped to the matched paths.
       try {
         const toolName = input?.tool || ""
         const args = input?.args || {}
@@ -71,6 +73,7 @@ export const ToonMemory = async ({ $, directory, worktree }) => {
         if (args.file) filePath = args.file
         else if (args.path) filePath = args.path
         else if (args.filePath) filePath = args.filePath
+        else if (args.target) filePath = args.target
 
         // Also try to extract from tool output text
         if (!filePath && input?.output) {
@@ -79,19 +82,40 @@ export const ToonMemory = async ({ $, directory, worktree }) => {
           if (fileMatch) filePath = fileMatch[1]
         }
 
-        if (!filePath) return
+        if (filePath) {
+          // Build recall query from file path components
+          const basename = path.basename(filePath, path.extname(filePath))
+          const dirParts = path.dirname(filePath).split(path.sep).filter(Boolean)
+          const query = [basename, ...dirParts.slice(-2)].join(" ")
 
-        // Build recall query from file path components
-        const basename = path.basename(filePath, path.extname(filePath))
-        const dirParts = path.dirname(filePath).split(path.sep).filter(Boolean)
-        const query = [basename, ...dirParts.slice(-2)].join(" ")
+          const text = await recall(query, { budget: "tiny", path_scope: filePath })
+          if (text && !text.includes("(empty)") && !text.includes("No results")) {
+            if (typeof input?.setContext === "function") {
+              input.setContext("toon-memory:" + filePath, text)
+            }
+          }
+        }
 
-        const text = await recall(query)
-        if (!text || text.includes("(empty)") || text.includes("No results")) return
+        // Proactive recall: if no file was found, try tool-name-based recall
+        // for common tool patterns that may have relevant memory entries
+        if (!filePath && toolName) {
+          const toolKeywords = toolName
+            .replace(/^memory_/, "")
+            .replace(/^context_/, "")
+            .replace(/^file_/, "")
+            .replace(/^text_document_/, "")
+            .split("_")
+            .filter(Boolean)
+            .join(" ")
 
-        // Inject as context for the next agent turn
-        if (typeof input?.setContext === "function") {
-          input.setContext("toon-memory:" + filePath, text)
+          if (toolKeywords.length > 3) {
+            const text = await recall(toolKeywords, { budget: "tiny" })
+            if (text && !text.includes("(empty)") && !text.includes("No results")) {
+              if (typeof input?.setContext === "function") {
+                input.setContext("toon-memory:" + toolName, text)
+              }
+            }
+          }
         }
       } catch {}
     },

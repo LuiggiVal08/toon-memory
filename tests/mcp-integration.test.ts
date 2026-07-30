@@ -146,9 +146,9 @@ describe("MCP Integration", () => {
 
 	// ── Tool listing ──────────────────────────────────────────────
 
-  it("lists all 35 tools", async () => {
+  it("lists all 37 tools", async () => {
     const tools = await client.listTools()
-    expect(tools.length).toBe(35)
+    expect(tools.length).toBe(37)
     expect(tools).toContain("memory_remember")
     expect(tools).toContain("memory_recall")
     expect(tools).toContain("memory_forget")
@@ -184,6 +184,8 @@ describe("MCP Integration", () => {
     expect(tools).toContain("memory_search")
     expect(tools).toContain("memory_tag")
     expect(tools).toContain("memory_checkpoint")
+    expect(tools).toContain("memory_resolve")
+    expect(tools).toContain("memory_suppress")
 	})
 
 	// ── Resource listing ──────────────────────────────────────────
@@ -252,13 +254,54 @@ describe("MCP Integration", () => {
 		const recall = await client.callTool("memory_recall", { query: "to-delete" })
 		expect(recall).toContain("to-delete")
 
-		// Delete it
-		const deleteResult = await client.callTool("memory_forget", { key: "to-delete" })
+		// Delete it (hard delete to fully remove)
+		const deleteResult = await client.callTool("memory_forget", { key: "to-delete", hard: true })
 		expect(deleteResult).toContain("to-delete")
 
 		// Verify it's gone (no entry content, only the "no results" echo)
 		const recallAfter = await client.callTool("memory_recall", { query: "to-delete" })
 		expect(recallAfter).not.toContain("Entry that will be deleted")
+	})
+
+	// ── memory_resolve + soft-delete ──────────────────────────────
+
+	it("memory_forget soft-deletes and memory_resolve restores", async () => {
+		// Add an entry
+		await client.callTool("memory_remember", {
+			category: "knowledge",
+			key: "soft-delete-test",
+			content: "Entry for soft delete test",
+		})
+
+		// Soft delete
+		const softResult = await client.callTool("memory_forget", { key: "soft-delete-test" })
+		expect(softResult).toContain("obsolete")
+
+		// Should not appear in normal recall
+		const recall = await client.callTool("memory_recall", { query: "soft-delete-test" })
+		expect(recall).not.toContain("soft-delete-test")
+
+		// Restore
+		const resolveResult = await client.callTool("memory_resolve", { key: "soft-delete-test" })
+		expect(resolveResult).toContain("restored")
+
+		// Should appear again
+		const recallAfter = await client.callTool("memory_recall", { query: "soft-delete-test" })
+		expect(recallAfter).toContain("soft-delete-test")
+	})
+
+	it("memory_suppress marks entry as obsolete", async () => {
+		await client.callTool("memory_remember", {
+			category: "knowledge",
+			key: "suppress-test",
+			content: "Entry to suppress",
+		})
+
+		const result = await client.callTool("memory_suppress", { key: "suppress-test" })
+		expect(result).toContain("suppressed")
+
+		const recall = await client.callTool("memory_recall", { query: "suppress-test" })
+		expect(recall).not.toContain("suppress-test")
 	})
 
 	// ── memory_consolidate ────────────────────────────────────────

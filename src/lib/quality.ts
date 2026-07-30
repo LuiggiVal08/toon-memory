@@ -32,7 +32,8 @@ export function qualityScore(
 	content: string,
 	date: string,
 	accessed: number = 0,
-	lastAccessed: string = ""
+	lastAccessed: string = "",
+	origin: string = ""
 ): number {
 	let score = 0
 	if (tags) {
@@ -69,6 +70,10 @@ export function qualityScore(
 		else if (daysSinceAccess < 7) score += 0.07
 		else if (daysSinceAccess < 30) score += 0.03
 	}
+
+	// Origin weighting: human > agent > inferred
+	if (origin === "human") score += 0.1
+	else if (origin === "inferred") score -= 0.05
 
 	// Staleness decay: penalize entries that haven't been accessed recently
 	// and were created more than 30 days ago. Decay ramps up over time.
@@ -146,7 +151,21 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 
 	const quality = qualityScore(mergedTags, mergedLinks, content, date, accessed, lastAccessed)
 
-	return `${id}|${category}|${key}|${content}|${file}|${mergedTags}|${date}|${ttl}|${accessed}|${mergedLinks}|${quality.toFixed(2)}|${confidence}|${lastAccessed}|${priority}`
+	// Merge new fields: path_scope (field 14), origin (field 15), status (field 16)
+	const existingScope = ep.length > 14 ? ep[14] || "" : ""
+	const newScope = np.length > 14 ? np[14] || "" : ""
+	const path_scope = newScope || existingScope
+
+	const existingOrigin = ep.length > 15 ? ep[15] || "" : ""
+	const newOrigin = np.length > 15 ? np[15] || "" : ""
+	const originRank: Record<string, number> = { human: 3, agent: 2, inferred: 1 }
+	const origin = (originRank[newOrigin] || 0) >= (originRank[existingOrigin] || 0) ? newOrigin : existingOrigin
+
+	const existingStatus = ep.length > 16 ? ep[16] || "" : ""
+	const newStatus = np.length > 16 ? np[16] || "" : ""
+	const status = newStatus === "active" || existingStatus === "active" ? "active" : newStatus || existingStatus || "active"
+
+	return `${id}|${category}|${key}|${content}|${file}|${mergedTags}|${date}|${ttl}|${accessed}|${mergedLinks}|${quality.toFixed(2)}|${confidence}|${lastAccessed}|${priority}|${path_scope}|${origin}|${status}`
 }
 
 /**

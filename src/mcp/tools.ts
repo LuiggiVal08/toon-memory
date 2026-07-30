@@ -21,7 +21,7 @@ import { normalize, isExpiredLocal, tokenize, importance } from "../lib/utils"
 import { expandSynonyms } from "../lib/synonyms"
 
 /**
- * Register all 20 memory tools.
+ * Register all 22 memory tools.
  */
 export function registerTools(server: McpServer): void {
 
@@ -40,9 +40,11 @@ server.registerTool(
       tags: z.string().optional().default("").describe("Semicolon-separated tags (e.g. risk;spec)"),
       ttl: z.string().optional().default("").describe("Time to live (e.g. 7d, 2026-07-17). Empty = no expiration"),
       links: z.string().optional().default("").describe("Related entry keys, separated by space or ';' (e.g. risk-spec engine-arch). Builds graph edges."),
+      path_scope: z.string().optional().default("").describe("Glob pattern to scope this entry (e.g. src/**.ts). Empty = global."),
+      origin: z.enum(["human", "agent", "inferred"]).optional().default("agent").describe("Who created this entry."),
     },
   },
-  async ({ category, key, content, file, tags, ttl, links }) => {
+  async ({ category, key, content, file, tags, ttl, links, path_scope, origin }) => {
     const data = readMemory()
     const newId = generateId()
     const date = new Date().toISOString().split("T")[0]
@@ -77,7 +79,7 @@ server.registerTool(
     const resolvedLinks = links
       ? links.split(/[\s;]+/).filter(Boolean).join(" ")
       : existingParts[9] || ""
-    let newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|0|${resolvedLinks}`
+    let newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|0|${resolvedLinks}|||||${path_scope || ""}|${origin}`
     let action = "Saved"
     let mergeInfo = ""
     const tagsInferred = !tags && resolvedTags ? true : false
@@ -90,9 +92,9 @@ server.registerTool(
     } else {
       const accessed = 0
       const lastAccessed = ""
-      const quality = verbatim ? 0.5 : qualityScore(resolvedTags, resolvedLinks, content, date, accessed, lastAccessed)
+      const quality = verbatim ? 0.5 : qualityScore(resolvedTags, resolvedLinks, content, date, accessed, lastAccessed, origin)
       const confidence = 1.0
-      newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|${accessed}|${resolvedLinks}|${quality.toFixed(2)}|${confidence}|${lastAccessed}`
+      newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|${accessed}|${resolvedLinks}|${quality.toFixed(2)}|${confidence}|${lastAccessed}|0|${path_scope || ""}|${origin}|active`
       const match = lines[headerIdx].match(/\[(\d+)\|/)
       const count = match ? parseInt(match[1]) : 0
       lines.splice(headerIdx + 1, 0, `  ${newEntry}`)
@@ -142,25 +144,29 @@ server.registerTool(
       mode: z.enum(["flat", "graph"]).optional().default("flat").describe("'flat' = keyword search (default). 'graph' = graph-based recall: expands the related-entry subgraph from matches (more precise, fewer tokens)."),
       hops: z.number().optional().default(1).describe("Graph depth in 'graph' mode (1 or 2). Default 1."),
       compact: z.boolean().optional().default(false).describe("Token-efficient output: numeric indices (1, 2), omits id/date/file (keeps tags), edges as '->2', truncates graph neighbors to a snippet. Does not mutate .toon file."),
+      budget: z.enum(["tiny", "normal", "deep"]).optional().default("deep").describe("'tiny': key+1 line (~50 tokens). 'normal': compact with tags/edges. 'deep': all fields (default). Overrides 'compact'."),
       bias: z.enum(["none", "session"]).optional().default("none").describe("'session': boost entries whose file matches current session files. 'none': no bias (default)."),
+      path_scope: z.string().optional().default("").describe("Glob pattern to filter entries by path scope (e.g. 'src/**.ts')."),
     },
   },
-  async ({ query, category, from_date, to_date, mode, hops, compact, bias }) => {
+  async ({ query, category, from_date, to_date, mode, hops, compact, bias, budget: budgetParam, path_scope }) => {
     const data = readMemory()
 
     // Delegate to graphRecallDetailed for both flat and graph modes
     // This avoids duplicating BM25 + ranking logic
     const sessionFiles = bias === "session" ? getCurrentSessionFiles() : undefined
-    const detail = graphRecallDetailed(data, query, { category, from_date, to_date, hops, sessionFiles })
+    const resolvedBudget = budgetParam || (compact ? "normal" : "deep")
+    const detail = graphRecallDetailed(data, query, { category, from_date, to_date, hops, sessionFiles, path_scope: path_scope || undefined })
     if (detail.entries.length === 0) {
       return { content: [{ type: "text" as const, text: `No results found for "${query}"` }] }
     }
     bumpAccessed(detail.entries.map((e) => e.id))
-    if (compact) {
+    if (resolvedBudget === "tiny" || resolvedBudget === "normal") {
       const formatted = renderCompact(detail.entries, {
         adjacency: detail.adjacency,
         seeds: detail.seeds,
         snippetLen: 90,
+        budget: resolvedBudget,
       })
       return { content: [{ type: "text" as const, text: formatted }] }
     }
@@ -168,7 +174,10 @@ server.registerTool(
       .map((r) => {
         const links = r.links.length ? `\n  links: ${r.links.join(", ")}` : ""
         const pin = r.priority > 0 ? (r.priority > 1 ? ` 📌${r.priority}` : " 📌") : ""
-        return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}`
+        const originInfo = r.origin !== "agent" ? ` | origin: ${r.origin}` : ""
+        const scopeInfo = r.path_scope ? ` | scope: ${r.path_scope}` : ""
+        const statusInfo = r.status !== "active" ? ` | status: ${r.status}` : ""
+        return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}${originInfo}${scopeInfo}${statusInfo}`
       })
       .join("\n\n")
     return { content: [{ type: "text" as const, text: formatted }] }
@@ -184,9 +193,10 @@ server.registerTool(
     description: "Delete a memory entry by its key or id.",
     inputSchema: {
       key: z.string().describe("Key or id of the entry to delete"),
+      hard: z.boolean().optional().default(false).describe("If true, permanently remove the entry. If false (default), softly marks as obsolete (status=obsolete) so it can be resolved or restored later."),
     },
   },
-  async ({ key }) => {
+  async ({ key, hard }) => {
     const data = readMemory()
     const lines = data.split("\n")
     const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
@@ -195,28 +205,58 @@ server.registerTool(
       return { content: [{ type: "text" as const, text: "No entries in memory" }] }
     }
 
-    const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
-    const filtered = entryLines.filter((l) => {
-      const parts = l.trim().split("|")
-      return parts[0] !== key && parts[2] !== key
-    })
+    if (hard) {
+      const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
+      const filtered = entryLines.filter((l) => {
+        const parts = l.trim().split("|")
+        return parts[0] !== key && parts[2] !== key
+      })
 
-    const removed = entryLines.length - filtered.length
-    const match = lines[headerIdx].match(/\[(\d+)\|/)
-    const count = match ? parseInt(match[1]) : 0
-    lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count - removed}|`)
-    lines.splice(headerIdx + 1, entryLines.length, ...filtered.map((l) => `  ${l.trim()}`))
+      const removed = entryLines.length - filtered.length
+      const match = lines[headerIdx].match(/\[(\d+)\|/)
+      const count = match ? parseInt(match[1]) : 0
+      lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count - removed}|`)
+      lines.splice(headerIdx + 1, entryLines.length, ...filtered.map((l) => `  ${l.trim()}`))
+
+      writeMemory(lines.join("\n"))
+
+      if (removed === 0) {
+        return {
+          content: [{ type: "text" as const, text: `"${key}" not found in memory.` }],
+        }
+      }
+
+      return {
+        content: [{ type: "text" as const, text: `"${key}" permanently deleted. ${count - removed} entries remaining.` }],
+      }
+    }
+
+    // Soft-delete: mark status as "obsolete"
+    let found = false
+    for (let i = headerIdx + 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line.startsWith("  ") || !line.includes("|")) continue
+      if (line.startsWith("  summaries:")) break
+      const parts = line.trim().split("|")
+      if (parts[0] === key || parts[2] === key) {
+        while (parts.length < 17) parts.push("")
+        parts[16] = "obsolete"
+        lines[i] = `  ${parts.join("|")}`
+        found = true
+        break
+      }
+    }
 
     writeMemory(lines.join("\n"))
 
-    if (removed === 0) {
+    if (!found) {
       return {
         content: [{ type: "text" as const, text: `"${key}" not found in memory.` }],
       }
     }
 
     return {
-      content: [{ type: "text" as const, text: `"${key}" deleted. ${count - removed} entries remaining.` }],
+      content: [{ type: "text" as const, text: `"${key}" marked as obsolete. Use memory_resolve(key: "${key}") to restore.` }],
     }
   }
 )
@@ -235,7 +275,7 @@ server.registerTool(
     const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
     const entries = lines.map((l) => {
       const parts = l.trim().split("|")
-      return { category: parts[1] || "unknown", ttl: parts[7] || "", quality: parts[10] || "" }
+      return { category: parts[1] || "unknown", ttl: parts[7] || "", quality: parts[10] || "", origin: parts.length > 15 ? parts[15] || "" : "", status: parts.length > 16 ? parts[16] || "" : "" }
     })
 
     const byCategory: Record<string, number> = {}
@@ -251,12 +291,25 @@ server.registerTool(
       : "N/A"
 
     const summaryLines = data.split("\n").filter((l) => l.includes(":") && !l.startsWith("  ") && !l.startsWith("version") && !l.startsWith("entries") && !/^\[\d+\|]/.test(l))
+    const byOrigin: Record<string, number> = {}
+    const byStatus: Record<string, number> = {}
+    for (const e of entries) {
+      byOrigin[e.origin || "agent"] = (byOrigin[e.origin || "agent"] || 0) + 1
+      byStatus[e.status || "active"] = (byStatus[e.status || "active"] || 0) + 1
+    }
+
     const stats = [
       `Total entries: ${entries.length}`,
       `File summaries: ${summaryLines.length}`,
       "",
       "By category:",
       ...Object.entries(byCategory).map(([k, v]) => `  ${k}: ${v}`),
+      "",
+      "By origin:",
+      ...Object.entries(byOrigin).map(([k, v]) => `  ${k}: ${v}`),
+      "",
+      "By status:",
+      ...Object.entries(byStatus).map(([k, v]) => `  ${k}: ${v}`),
       "",
       `TTL: ${withTtl} with expiration, ${expired} expired`,
       `Average quality: ${avgQuality} (${withQuality} with score)`,
@@ -267,7 +320,9 @@ server.registerTool(
         const ttlInfo = parts[7] ? ` | TTL: ${parts[7]}` : ""
         const qualityInfo = parts[10] ? ` | Q: ${parts[10]}` : ""
         const accessInfo = parts[8] && parseInt(parts[8]) > 0 ? ` | accessed: ${parts[8]}x` : ""
-        return `  [${parts[1]}] ${parts[2]} (${parts[0]})${ttlInfo}${qualityInfo}${accessInfo}`
+        const originInfo = parts.length > 15 && parts[15] && parts[15] !== "agent" ? ` | origin: ${parts[15]}` : ""
+        const statusInfo = parts.length > 16 && parts[16] && parts[16] !== "active" ? ` | status: ${parts[16]}` : ""
+        return `  [${parts[1]}] ${parts[2]} (${parts[0]})${ttlInfo}${qualityInfo}${accessInfo}${originInfo}${statusInfo}`
       }),
       "",
       `Most accessed:`,
@@ -1812,14 +1867,17 @@ server.registerTool(
       mode: z.enum(["flat", "graph"]).optional().default("flat").describe("'flat' = keyword search (default). 'graph' = graph-based recall."),
       hops: z.number().optional().default(1).describe("Graph depth in 'graph' mode (1 or 2). Default 1."),
       compact: z.boolean().optional().default(false).describe("Token-efficient output"),
+      budget: z.enum(["tiny", "normal", "deep"]).optional().default("deep").describe("'tiny': key+1 line (~50 tokens). 'normal': compact with tags/edges. 'deep': all fields (default). Overrides 'compact'."),
       bias: z.enum(["none", "session"]).optional().default("none").describe("'session': boost entries whose file matches current session files. 'none': no bias (default)."),
+      path_scope: z.string().optional().default("").describe("Glob pattern to filter entries by path scope (e.g. 'src/**.ts')."),
     },
   },
-  async ({ query, category, tags, from_date, to_date, limit, mode, hops, compact, bias }) => {
+  async ({ query, category, tags, from_date, to_date, limit, mode, hops, compact, bias, budget: budgetParam, path_scope }) => {
     const data = readMemory()
 
     const resolvedFrom = from_date ? parseRelativeDate(from_date) : ""
     const sessionFiles = bias === "session" ? getCurrentSessionFiles() : undefined
+    const resolvedBudget = budgetParam || (compact ? "normal" : "deep")
     const detail = graphRecallDetailed(data, query, {
       category: category || undefined,
       tags: tags || undefined,
@@ -1828,6 +1886,7 @@ server.registerTool(
       hops,
       limit,
       sessionFiles,
+      path_scope: path_scope || undefined,
     })
 
     if (detail.entries.length === 0) {
@@ -1836,11 +1895,12 @@ server.registerTool(
 
     bumpAccessed(detail.entries.map((e) => e.id))
 
-    if (compact) {
+    if (resolvedBudget === "tiny" || resolvedBudget === "normal") {
       const formatted = renderCompact(detail.entries, {
         adjacency: detail.adjacency,
         seeds: detail.seeds,
         snippetLen: 90,
+        budget: resolvedBudget,
       })
       return { content: [{ type: "text" as const, text: `🔍 Search: "${query}"\n\n${formatted}` }] }
     }
@@ -1849,7 +1909,10 @@ server.registerTool(
       .map((r) => {
         const links = r.links.length ? `\n  links: ${r.links.join(", ")}` : ""
         const pin = r.priority > 0 ? (r.priority > 1 ? ` 📌${r.priority}` : " 📌") : ""
-        return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}`
+        const originInfo = r.origin !== "agent" ? ` | origin: ${r.origin}` : ""
+        const scopeInfo = r.path_scope ? ` | scope: ${r.path_scope}` : ""
+        const statusInfo = r.status !== "active" ? ` | status: ${r.status}` : ""
+        return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}${originInfo}${scopeInfo}${statusInfo}`
       })
       .join("\n\n")
 
@@ -1938,6 +2001,98 @@ server.registerTool(
         text: `🏷️ ${actionLabel} tags on ${modified} entries:\n  Tags: ${tagsToApply.join(";")}\n  Entries: ${modifiedKeys.join(", ")}`,
       }],
     }
+  }
+)
+
+// ── memory_resolve ───────────────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_resolve",
+  {
+    title: "Resolve Entry",
+    description: "Restore an obsolete entry back to active status, or mark an entry as resolved. Reverses soft-delete.",
+    inputSchema: {
+      key: z.string().describe("Key or id of the entry to resolve/restore"),
+    },
+  },
+  async ({ key }) => {
+    const data = readMemory()
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+
+    if (headerIdx === -1) {
+      return { content: [{ type: "text" as const, text: "No entries in memory" }] }
+    }
+
+    let found = false
+    let wasObsolete = false
+    for (let i = headerIdx + 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line.startsWith("  ") || !line.includes("|")) continue
+      if (line.startsWith("  summaries:")) break
+      const parts = line.trim().split("|")
+      if (parts[0] === key || parts[2] === key) {
+        while (parts.length < 17) parts.push("")
+        wasObsolete = parts[16] === "obsolete"
+        parts[16] = "active"
+        lines[i] = `  ${parts.join("|")}`
+        found = true
+        break
+      }
+    }
+
+    if (!found) {
+      return { content: [{ type: "text" as const, text: `"${key}" not found in memory.` }] }
+    }
+
+    writeMemory(lines.join("\n"))
+
+    const msg = wasObsolete ? `"${key}" restored to active status.` : `"${key}" marked as resolved.`
+    return { content: [{ type: "text" as const, text: `✅ ${msg}` }] }
+  }
+)
+
+// ── memory_suppress ──────────────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_suppress",
+  {
+    title: "Suppress Entry",
+    description: "Suppress a memory entry so it's hidden from normal recalls. Sets status to 'obsolete'. Use memory_resolve to restore.",
+    inputSchema: {
+      key: z.string().describe("Key or id of the entry to suppress"),
+    },
+  },
+  async ({ key }) => {
+    const data = readMemory()
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+
+    if (headerIdx === -1) {
+      return { content: [{ type: "text" as const, text: "No entries in memory" }] }
+    }
+
+    let found = false
+    for (let i = headerIdx + 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line.startsWith("  ") || !line.includes("|")) continue
+      if (line.startsWith("  summaries:")) break
+      const parts = line.trim().split("|")
+      if (parts[0] === key || parts[2] === key) {
+        while (parts.length < 17) parts.push("")
+        parts[16] = "obsolete"
+        lines[i] = `  ${parts.join("|")}`
+        found = true
+        break
+      }
+    }
+
+    if (!found) {
+      return { content: [{ type: "text" as const, text: `"${key}" not found in memory.` }] }
+    }
+
+    writeMemory(lines.join("\n"))
+    return { content: [{ type: "text" as const, text: `"${key}" suppressed. Use memory_resolve(key: "${key}") to restore.` }] }
   }
 )
 
