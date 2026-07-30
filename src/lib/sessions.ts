@@ -226,6 +226,14 @@ export function detectConflicts(active: ActiveSessionView[] = listSessions().fil
   return conflicts
 }
 
+/** Get files touched by the current session. Returns empty array if no heartbeat record. */
+export function getCurrentSessionFiles(): string[] {
+  const id = resolveSessionId({})
+  const all = listSessions()
+  const mine = all.find((s) => s.id === id)
+  return mine ? Object.keys(mine.files) : []
+}
+
 /** Convenience: list active sessions + conflicts in one call. */
 export function coordinationView(selfId?: string) {
   const all = listSessions()

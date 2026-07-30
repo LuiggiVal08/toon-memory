@@ -15,7 +15,7 @@ import { encrypt, decrypt } from "./crypto"
 import { graphRecallDetailed, renderCompact, parseEntries, buildGraph } from "../lib/graph"
 import { qualityScore, mergeEntries, generateSmartRecall } from "../lib/quality"
 import { generateContextBrief, generateContextGenerate, generateContextDiff, generateContextFocus, generateContextHealth, generateContextExport } from "../lib/context"
-import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } from "../lib/sessions"
+import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS, getCurrentSessionFiles } from "../lib/sessions"
 import { fileMtimes } from "../lib/git"
 import { normalize, isExpiredLocal, tokenize, importance } from "../lib/utils"
 import { expandSynonyms } from "../lib/synonyms"
@@ -142,14 +142,16 @@ server.registerTool(
       mode: z.enum(["flat", "graph"]).optional().default("flat").describe("'flat' = keyword search (default). 'graph' = graph-based recall: expands the related-entry subgraph from matches (more precise, fewer tokens)."),
       hops: z.number().optional().default(1).describe("Graph depth in 'graph' mode (1 or 2). Default 1."),
       compact: z.boolean().optional().default(false).describe("Token-efficient output: numeric indices (1, 2), omits id/date/file (keeps tags), edges as '->2', truncates graph neighbors to a snippet. Does not mutate .toon file."),
+      bias: z.enum(["none", "session"]).optional().default("none").describe("'session': boost entries whose file matches current session files. 'none': no bias (default)."),
     },
   },
-  async ({ query, category, from_date, to_date, mode, hops, compact }) => {
+  async ({ query, category, from_date, to_date, mode, hops, compact, bias }) => {
     const data = readMemory()
 
     // Delegate to graphRecallDetailed for both flat and graph modes
     // This avoids duplicating BM25 + ranking logic
-    const detail = graphRecallDetailed(data, query, { category, from_date, to_date, hops })
+    const sessionFiles = bias === "session" ? getCurrentSessionFiles() : undefined
+    const detail = graphRecallDetailed(data, query, { category, from_date, to_date, hops, sessionFiles })
     if (detail.entries.length === 0) {
       return { content: [{ type: "text" as const, text: `No results found for "${query}"` }] }
     }
@@ -165,7 +167,8 @@ server.registerTool(
     const formatted = detail.entries
       .map((r) => {
         const links = r.links.length ? `\n  links: ${r.links.join(", ")}` : ""
-        return `[${r.category}] ${r.key} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}`
+        const pin = r.priority > 0 ? (r.priority > 1 ? ` 📌${r.priority}` : " 📌") : ""
+        return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}`
       })
       .join("\n\n")
     return { content: [{ type: "text" as const, text: formatted }] }
@@ -280,6 +283,44 @@ server.registerTool(
         .map((e) => `  ${e.key}: ${e.accessed}x (Q: ${e.quality})`),
     ]
 
+    // Cold memories: high quality but rarely accessed
+    const coldEntries = lines
+      .filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
+      .map((l) => {
+        const p = l.trim().split("|")
+        return {
+          key: p[2],
+          cat: p[1],
+          quality: parseFloat(p[10]) || 0,
+          accessed: p.length > 8 ? parseInt(p[8]) || 0 : 0,
+          lastAccessed: p.length > 12 ? p[12] || "" : "",
+          date: p[6] || "",
+        }
+      })
+      .filter((e) => {
+        if (e.accessed >= 2) return false
+        if (e.quality < 0.7) return false
+        const lastDate = e.lastAccessed || e.date
+        if (!lastDate) return false
+        const daysSinceLastAccess = (Date.now() - new Date(lastDate).getTime()) / 86400000
+        return daysSinceLastAccess > 30
+      })
+      .sort((a, b) => b.quality - a.quality)
+
+    if (coldEntries.length > 0) {
+      stats.push(
+        "",
+        `Cold memories (${coldEntries.length}):`,
+        ...coldEntries.slice(0, 5).map((e) => {
+          const lastDate = e.lastAccessed || e.date
+          const daysSince = Math.round((Date.now() - new Date(lastDate).getTime()) / 86400000)
+          return `  ${e.key} (Q: ${e.quality.toFixed(2)}) — ${daysSince}d since last access`
+        }),
+        "",
+        "💡 Run memory_archive() to archive cold entries."
+      )
+    }
+
     return { content: [{ type: "text" as const, text: stats.join("\n") }] }
   }
 )
@@ -382,12 +423,14 @@ server.registerTool(
       intent: z.string().describe("Describe what you need to know (e.g. 'database schema for backend')"),
       limit: z.number().optional().default(8).describe("Maximum entries to return"),
       category: z.string().optional().default("").describe("Filter by category (empty = all)"),
+      bias: z.enum(["none", "session"]).optional().default("none").describe("'session': boost entries whose file matches current session files. 'none': no bias (default)."),
     },
   },
-  async ({ intent, limit, category }) => {
+  async ({ intent, limit, category, bias }) => {
     const data = readMemory()
     const mtimes = fileMtimes()
-    const result = generateSmartRecall(data, intent, { limit, category, fileMtimes: mtimes })
+    const sessionFiles = bias === "session" ? getCurrentSessionFiles() : undefined
+    const result = generateSmartRecall(data, intent, { limit, category, fileMtimes: mtimes, sessionFiles })
     return { content: [{ type: "text" as const, text: result }] }
   }
 )
@@ -1450,10 +1493,31 @@ server.registerTool(
     }
 
     if (dryRun) {
+      // Detailed preview: show what each merge produces
+      const previewLines: string[] = [
+        `🔍 Dry run — ${mergePairs.length} merge candidate(s) found:`,
+        "",
+      ]
+      for (const pair of mergePairs) {
+        const a = parsed[pair.a], b = parsed[pair.b]
+        const mergedTags = [...new Set([...a.tags.split(";"), ...b.tags.split(";")])].filter(Boolean).join(";")
+        const longer = a.content.length >= b.content.length ? a : b
+        const shorter = a.content.length < b.content.length ? a : b
+        previewLines.push(`  ── Pair: [${a.cat}] ${a.key}  ↔  [${b.cat}] ${b.key}`)
+        previewLines.push(`     Similarity: ${(pair.similarity * 100).toFixed(0)}%`)
+        previewLines.push(`     A tags: ${a.tags || "(none)"}`)
+        previewLines.push(`     B tags: ${b.tags || "(none)"}`)
+        previewLines.push(`     → Merged tags: ${mergedTags || "(none)"}`)
+        previewLines.push(`     → Content winner: "${longer.key}" (${longer.content.length} chars vs ${shorter.content.length})`)
+        previewLines.push(`     → Result content: ${longer.content.slice(0, 120)}${longer.content.length > 120 ? "…" : ""}`)
+        previewLines.push("")
+      }
+      previewLines.push(`Would merge ${merged.size} entries into ${entries.length - merged.size} entries.`)
+      previewLines.push("Run with dryRun: false to apply.")
       return {
         content: [{
           type: "text" as const,
-          text: `🔍 Dry run — would merge ${merged.size} entries:\n\n${mergeActions.join("\n")}\n\nRun with dryRun: false to apply.`
+          text: previewLines.join("\n"),
         }],
       }
     }
@@ -1551,18 +1615,107 @@ server.registerTool(
   }
 )
 
+// ── memory_checkpoint ─────────────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_checkpoint",
+  {
+    title: "Session Checkpoint",
+    description: "Save or update a session checkpoint with 7-day TTL. Creates a knowledge entry snapshot of the current session state. Same session = upsert (single checkpoint per session). Auto-expires.",
+    inputSchema: {
+      note: z.string().optional().default("").describe("Optional summary of what was accomplished in this session."),
+    },
+  },
+  async ({ note }) => {
+    const data = readMemory()
+    const lines = data.split("\n")
+
+    let headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+    if (headerIdx === -1) {
+      lines.push(`[0|]`)
+      headerIdx = lines.length - 1
+    }
+
+    const sessionId = resolveSessionId({})
+    const shortId = sessionId.replace(/^proc-/, "").slice(0, 8)
+    const key = `checkpoint-${shortId}`
+    const now = new Date()
+    const date = now.toISOString().split("T")[0]
+    const ttl7d = new Date(now.getTime() + 7 * 86400000).toISOString().split("T")[0]
+
+    // Gather session context: branch, files touched, agent
+    const sessions = await import("../lib/sessions")
+    const allSessions = sessions.listSessions()
+    const mySession = allSessions.find((s) => s.id === sessionId)
+    const branch = mySession?.branch || currentBranch()
+    const files = mySession ? Object.keys(mySession.files) : []
+    const fileList = files.length > 0 ? `\nFiles touched: ${files.slice(0, 10).join(", ")}${files.length > 10 ? ` (+${files.length - 10} more)` : ""}` : ""
+
+    const content = `Session checkpoint (${date})${note ? `\nNote: ${note}` : ""}\nBranch: ${branch}${fileList}`
+
+    // Check for existing checkpoint with same key
+    let existingIdx = -1
+    let existingId = ""
+    for (let i = headerIdx + 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line.startsWith("  ") || !line.includes("|")) continue
+      if (line.startsWith("  summaries:")) break
+      const parts = line.trim().split("|")
+      if (parts[2] === key) {
+        existingIdx = i
+        existingId = parts[0]
+        break
+      }
+    }
+
+    if (existingIdx !== -1) {
+      // Update existing checkpoint
+      const parts = lines[existingIdx].trim().split("|")
+      parts[3] = content
+      parts[6] = date
+      parts[7] = ttl7d
+      while (parts.length < 14) parts.push("")
+      parts[13] = "0"
+      lines[existingIdx] = `  ${parts.join("|")}`
+      writeMemory(lines.join("\n"))
+      return {
+        content: [{ type: "text" as const, text: `📝 Checkpoint updated: ${key}\n⏰ TTL: ${ttl7d} (7d)\n${note ? `\n${note}` : ""}` }],
+      }
+    }
+
+    // Create new checkpoint entry
+    const newId = `cp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+    const quality = qualityScore("checkpoint", "", content, date)
+    const newEntry = `${newId}|knowledge|${key}|${content}||checkpoint|${date}|${ttl7d}|0||${quality.toFixed(2)}|1|${now.toISOString()}|0`
+
+    const match = lines[headerIdx].match(/\[(\d+)\|/)
+    const count = match ? parseInt(match[1]) : 0
+    lines.splice(headerIdx + 1, 0, `  ${newEntry}`)
+    lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count + 1}|`)
+    writeMemory(lines.join("\n"))
+
+    return {
+      content: [{
+        type: "text" as const,
+        text: `📝 Checkpoint saved: ${key} (${newId})\n⏰ TTL: ${ttl7d} (7d)${note ? `\n\n${note}` : ""}`,
+      }],
+    }
+  }
+)
+
 // ── memory_pin ───────────────────────────────────────────────────────────────
 
 server.registerTool(
   "memory_pin",
   {
     title: "Pin Entry",
-    description: "Pin a memory entry so it always appears first in recalls. Useful for critical decisions, project rules, or frequently-needed context.",
+    description: "Pin a memory entry with priority level (1-5). Higher priority entries appear first in recalls. Default: 1. Useful for critical decisions, project rules, or frequently-needed context.",
     inputSchema: {
       key: z.string().describe("Key or id of the entry to pin"),
+      priority: z.number().optional().default(1).describe("Priority level 1-5 (5 = highest). Default: 1."),
     },
   },
-  async ({ key }) => {
+  async ({ key, priority }) => {
     const data = readMemory()
     const lines = data.split("\n")
     const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
@@ -1571,6 +1724,8 @@ server.registerTool(
       return { content: [{ type: "text" as const, text: "No entries in memory" }] }
     }
 
+    const clampedPriority = Math.max(1, Math.min(5, Math.round(priority)))
+
     let found = false
     for (let i = headerIdx + 1; i < lines.length; i++) {
       const line = lines[i]
@@ -1578,9 +1733,8 @@ server.registerTool(
       if (line.startsWith("  summaries:")) break
       const parts = line.trim().split("|")
       if (parts[0] === key || parts[2] === key) {
-        // Set pinned field at position 13
         while (parts.length < 14) parts.push("")
-        parts[13] = "1"
+        parts[13] = String(clampedPriority)
         lines[i] = `  ${parts.join("|")}`
         found = true
         break
@@ -1592,7 +1746,7 @@ server.registerTool(
     }
 
     writeMemory(lines.join("\n"))
-    return { content: [{ type: "text" as const, text: `📌 Pinned "${key}". It will now appear first in recalls.` }] }
+    return { content: [{ type: "text" as const, text: `📌${clampedPriority > 1 ? clampedPriority : ""} Pinned "${key}" at priority ${clampedPriority}. It will now appear first in recalls.` }] }
   }
 )
 
@@ -1637,7 +1791,7 @@ server.registerTool(
     }
 
     writeMemory(lines.join("\n"))
-    return { content: [{ type: "text" as const, text: `📌 Unpinned "${key}". It will now use normal ranking.` }] }
+    return { content: [{ type: "text" as const, text: `Unpinned "${key}". It will now use normal ranking.` }] }
   }
 )
 
@@ -1658,12 +1812,14 @@ server.registerTool(
       mode: z.enum(["flat", "graph"]).optional().default("flat").describe("'flat' = keyword search (default). 'graph' = graph-based recall."),
       hops: z.number().optional().default(1).describe("Graph depth in 'graph' mode (1 or 2). Default 1."),
       compact: z.boolean().optional().default(false).describe("Token-efficient output"),
+      bias: z.enum(["none", "session"]).optional().default("none").describe("'session': boost entries whose file matches current session files. 'none': no bias (default)."),
     },
   },
-  async ({ query, category, tags, from_date, to_date, limit, mode, hops, compact }) => {
+  async ({ query, category, tags, from_date, to_date, limit, mode, hops, compact, bias }) => {
     const data = readMemory()
 
     const resolvedFrom = from_date ? parseRelativeDate(from_date) : ""
+    const sessionFiles = bias === "session" ? getCurrentSessionFiles() : undefined
     const detail = graphRecallDetailed(data, query, {
       category: category || undefined,
       tags: tags || undefined,
@@ -1671,6 +1827,7 @@ server.registerTool(
       to_date: to_date || undefined,
       hops,
       limit,
+      sessionFiles,
     })
 
     if (detail.entries.length === 0) {
@@ -1691,7 +1848,7 @@ server.registerTool(
     const formatted = detail.entries
       .map((r) => {
         const links = r.links.length ? `\n  links: ${r.links.join(", ")}` : ""
-        const pin = r.pinned ? " 📌" : ""
+        const pin = r.priority > 0 ? (r.priority > 1 ? ` 📌${r.priority}` : " 📌") : ""
         return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}`
       })
       .join("\n\n")

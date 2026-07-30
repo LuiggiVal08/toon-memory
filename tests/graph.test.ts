@@ -138,16 +138,16 @@ describe("graphRecallDetailed (decay + scoring)", () => {
     expect(seed).toBeGreaterThan(neighbor)
   })
 
-  it("puts pinned entries first regardless of score", () => {
+  it("puts pinned entries first sorted by priority descending", () => {
     const pinnedSample =
       "version: 1\n" +
-      'entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|pinned}:\n' +
+      'entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority}:\n' +
       "  a1|decision|pinned-rule|Critical project rule.|.clinerule|rule|2026-07-01||0||0.9|1|2026-07-01|1\n" +
       "  a2|knowledge|redis-cache|Usamos redis para cache.|cache.ts|redis|2026-07-01||0||0.5|1|\n" +
       "  a3|knowledge|postgres-db|Postgres guarda el estado.|db.ts|db|2026-07-01||0||0.5|1|\n"
     const d = graphRecallDetailed(pinnedSample, "redis cache")
     expect(d.entries[0].key).toBe("pinned-rule")
-    expect(d.entries[0].pinned).toBe(true)
+    expect(d.entries[0].priority).toBe(1)
   })
 })
 

@@ -139,9 +139,14 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 	const newLastAccessed = np.length > 12 ? np[12] || "" : ""
 	const lastAccessed = newLastAccessed > existingLastAccessed ? newLastAccessed : existingLastAccessed
 
+	// Take max priority (field 13)
+	const existingPriority = ep.length > 13 ? parseInt(ep[13]) || 0 : 0
+	const newPriority = np.length > 13 ? parseInt(np[13]) || 0 : 0
+	const priority = Math.max(existingPriority, newPriority)
+
 	const quality = qualityScore(mergedTags, mergedLinks, content, date, accessed, lastAccessed)
 
-	return `${id}|${category}|${key}|${content}|${file}|${mergedTags}|${date}|${ttl}|${accessed}|${mergedLinks}|${quality.toFixed(2)}|${confidence}|${lastAccessed}`
+	return `${id}|${category}|${key}|${content}|${file}|${mergedTags}|${date}|${ttl}|${accessed}|${mergedLinks}|${quality.toFixed(2)}|${confidence}|${lastAccessed}|${priority}`
 }
 
 /**
@@ -151,7 +156,7 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 export function generateSmartRecall(
 	data: string,
 	intent: string,
-	opts: { limit?: number; category?: string; bumpAccess?: (ids: string[]) => void; fileMtimes?: Map<string, string> } = {}
+	opts: { limit?: number; category?: string; bumpAccess?: (ids: string[]) => void; fileMtimes?: Map<string, string>; sessionFiles?: string[] } = {}
 ): string {
 	const entries = parseEntries(data)
 	if (entries.length === 0) return "Empty memory."
@@ -190,32 +195,42 @@ export function generateSmartRecall(
 				const fileDate = mtimes.get(filePath)
 				if (fileDate && e.date && fileDate > e.date) drift = 0.3
 			}
+			// Session bias: boost entries matching current session files
+			let sessionBias = 0
+			if (opts.sessionFiles && opts.sessionFiles.length > 0 && e.file) {
+				const entryFile = e.file.split(":")[0]
+				if (opts.sessionFiles.some((f) => f === entryFile)) {
+					sessionBias = 0.15
+				}
+			}
 			const combined =
-				bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift
-			return { entry: e, score: combined, matchesQuery, pinned: e.pinned }
+				bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift + sessionBias
+			return { entry: e, score: combined, matchesQuery, priority: e.priority }
 		})
 		.filter((x) => x.score > 0 || x.matchesQuery)
 		.sort((a, b) => {
-			if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+			if (a.priority !== b.priority) return b.priority - a.priority
 			return b.score - a.score
 		})
 		.slice(0, limit)
 
-	// Inject pinned entries not already in the result set.
-	const pinnedKeys = new Set(entries.filter((e) => e.pinned).map((e) => e.key))
+	// Inject pinned entries not already in the result set, sorted by priority desc.
+	const pinnedKeys = new Set(entries.filter((e) => e.priority > 0).map((e) => e.key))
 	const inResult = new Set(scored.map((x) => x.entry.key))
-	for (const pKey of pinnedKeys) {
-		if (!inResult.has(pKey)) {
-			const e = entries.find((en) => en.key === pKey)
-			if (e) scored.unshift({ entry: e, score: 999, matchesQuery: false, pinned: true })
-		}
+	const toInject = [...pinnedKeys]
+		.filter((k) => !inResult.has(k))
+		.map((k) => entries.find((en) => en.key === k)!)
+		.filter(Boolean)
+		.sort((a, b) => b.priority - a.priority)
+	for (const e of toInject) {
+		scored.unshift({ entry: e, score: 999, matchesQuery: false, priority: e.priority })
 	}
 
 	if (scored.length === 0) {
 		const top = entries
 			.filter((e) => !category || e.category === category)
 			.sort((a, b) => {
-				if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+				if (a.priority !== b.priority) return b.priority - a.priority
 				return importance(b) - importance(a)
 			})
 			.slice(0, limit)
@@ -252,7 +267,7 @@ export function generateSystemPrimer(data: string): string {
 	const top = [...entries]
 		.filter((e) => !isPrivate(e))
 		.sort((a, b) => {
-			if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+			if (a.priority !== b.priority) return b.priority - a.priority
 			return importance(b) - importance(a)
 		})
 		.slice(0, 5)
@@ -267,7 +282,7 @@ export function generateSystemPrimer(data: string): string {
 			e.lastAccessed
 		)
 		const conf = quality >= 0.5 ? "high" : quality >= 0.3 ? "medium" : "low"
-		const pin = e.pinned ? " 📌" : ""
+		const pin = e.priority > 0 ? (e.priority > 1 ? ` 📌${e.priority}` : " 📌") : ""
 		lines.push(
 			`  [${e.category}] ${e.key}${pin} — ${e.content.slice(0, 80)} (quality: ${conf})`
 		)

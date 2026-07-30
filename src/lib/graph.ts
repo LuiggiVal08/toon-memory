@@ -32,8 +32,8 @@ export interface GraphEntry {
 	links: string[]
 	/** ISO timestamp of last recall/access. Empty if never accessed. */
 	lastAccessed: string
-	/** Whether the entry is pinned (always appears first in recall). */
-	pinned: boolean
+	/** Priority level 0-5. 0 = normal, 1-5 = pinned with priority (5 = highest). */
+	priority: number
 }
 
 export interface MemoryGraph {
@@ -80,7 +80,7 @@ export function parseEntries(data: string): GraphEntry[] {
 				.map((t) => t.trim())
 				.filter(Boolean),
 			lastAccessed: parts.length > 12 ? parts[12] || "" : "",
-			pinned: parts.length > 13 && parts[13] === "1",
+			priority: parts.length > 13 ? parseInt(parts[13]) || 0 : 0,
 		})
 	}
 	return out
@@ -143,6 +143,8 @@ export interface GraphRecallOpts {
 	hops?: number
 	/** Max entries returned (keeps token cost low). Default 6. */
 	limit?: number
+	/** Session bias: boost entries whose file matches current session files. */
+	sessionFiles?: string[]
 }
 
 /**
@@ -262,7 +264,7 @@ export function graphRecallDetailed(
 		scored.push(
 			...[...entries]
 				.sort((a, b) => {
-					if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+					if (a.priority !== b.priority) return b.priority - a.priority
 					return importance(b) - importance(a)
 				})
 				.slice(0, opts.limit ?? 6)
@@ -291,11 +293,17 @@ export function graphRecallDetailed(
 					const decay = Math.pow(DECAY, dist)
 					let s = (bm25.get(k) || 0) + W_CENT * cent.get(k)! + W_IMP * importance(e)
 					if (seedKeys.has(k)) s += SEED_BONUS
+					if (opts.sessionFiles && opts.sessionFiles.length > 0 && e.file) {
+						const entryFile = e.file.split(":")[0]
+						if (opts.sessionFiles.some((f) => f === entryFile)) {
+							s *= 1.15
+						}
+					}
 					s *= decay
-					return { e, s, pinned: e.pinned }
+					return { e, s, priority: e.priority }
 				})
 				.sort((a, b) => {
-					if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+					if (a.priority !== b.priority) return b.priority - a.priority
 					return b.s - a.s
 				})
 				.slice(0, opts.limit ?? 6)
@@ -304,15 +312,16 @@ export function graphRecallDetailed(
 
 	selected = scored.map((x) => x.e)
 
-	// Inject pinned entries that aren't already in the result set, always at top.
-	const pinnedKeys = new Set(entries.filter((e) => e.pinned).map((e) => e.key))
+	// Inject pinned entries that aren't already in the result set, sorted by priority desc.
+	const pinnedKeys = new Set(entries.filter((e) => e.priority > 0).map((e) => e.key))
 	const inResult = new Set(selected.map((e) => e.key))
-	for (const pKey of pinnedKeys) {
-		if (!inResult.has(pKey) && byKey.has(pKey)) {
-			const e = byKey.get(pKey)!
-			selected.unshift(e)
-			scored.unshift({ e, s: 999 })
-		}
+	const toInject = [...pinnedKeys]
+		.filter((k) => !inResult.has(k) && byKey.has(k))
+		.map((k) => byKey.get(k)!)
+		.sort((a, b) => b.priority - a.priority)
+	for (const e of toInject) {
+		selected.unshift(e)
+		scored.unshift({ e, s: 999 })
 	}
 
 	// Restrict adjacency to the selected entries for compact edge rendering.
@@ -372,7 +381,7 @@ export function renderCompact(entries: GraphEntry[], opts: RenderCompactOpts = {
 			if (!isSeed && e.content.length > snippetLen) {
 				body = e.content.slice(0, snippetLen).trimEnd() + "…"
 			}
-			const tag = e.pinned ? " 📌" : ""
+			const tag = e.priority > 0 ? (e.priority > 1 ? ` 📌${e.priority}` : " 📌") : ""
 			const tags = e.tags.length ? ` · tags: ${e.tags.join(";")}` : ""
 			let edges = ""
 			if (opts.adjacency) {

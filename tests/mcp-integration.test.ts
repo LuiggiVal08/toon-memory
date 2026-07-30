@@ -146,9 +146,9 @@ describe("MCP Integration", () => {
 
 	// ── Tool listing ──────────────────────────────────────────────
 
-  it("lists all 34 tools", async () => {
+  it("lists all 35 tools", async () => {
     const tools = await client.listTools()
-    expect(tools.length).toBe(34)
+    expect(tools.length).toBe(35)
     expect(tools).toContain("memory_remember")
     expect(tools).toContain("memory_recall")
     expect(tools).toContain("memory_forget")
@@ -183,6 +183,7 @@ describe("MCP Integration", () => {
     expect(tools).toContain("memory_unpin")
     expect(tools).toContain("memory_search")
     expect(tools).toContain("memory_tag")
+    expect(tools).toContain("memory_checkpoint")
 	})
 
 	// ── Resource listing ──────────────────────────────────────────
