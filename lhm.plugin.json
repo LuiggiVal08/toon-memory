@@ -1,0 +1,160 @@
+{
+  "identifier": "luiggival08-toon-memory",
+  "name": "toon-memory",
+  "description": "MCP server giving AI coding agents offline, token-efficient persistent memory — 29 tools, 80% fewer tool calls, recall decisions, patterns, and bugs across sessions. No LLM, no server; works with 15+ agents.",
+  "version": "3.3.1",
+  "author": "LuiggiVal08",
+  "authorUrl": "https://github.com/LuiggiVal08",
+  "homepage": "https://github.com/LuiggiVal08/toon-memory",
+  "category": "developer",
+  "tags": [
+    "memory",
+    "mcp",
+    "ai-agent",
+    "toon",
+    "token-efficiency",
+    "persistent-memory",
+    "knowledge-graph"
+  ],
+  "tools": [
+    {
+      "name": "memory_remember",
+      "description": "Save a fact to the project's persistent memory (decisions, patterns, bugs, knowledge). Persists between sessions. Supports TTL, auto-tag inference, and links to build a memory graph."
+    },
+    {
+      "name": "memory_recall",
+      "description": "Search the project's persistent memory. Returns relevant entries using BM25 + graph centrality ranking. Supports flat keyword search or graph-based expansion with per-hop decay."
+    },
+    {
+      "name": "memory_forget",
+      "description": "Delete a memory entry by its key or id."
+    },
+    {
+      "name": "memory_stats",
+      "description": "Show project memory statistics: total entries, category counts, TTL info, quality scores, most-accessed entries."
+    },
+    {
+      "name": "memory_diff",
+      "description": "Show what changed in memory since a date. Useful for seeing what was learned since the last session."
+    },
+    {
+      "name": "memory_suggest",
+      "description": "Suggest memory entries related to a given context. Useful for gathering context before a task."
+    },
+    {
+      "name": "memory_smart_recall",
+      "description": "Unified retrieval combining BM25 + graph + decay + quality in a single call. Use at the start of each task."
+    },
+    {
+      "name": "memory_summary",
+      "description": "Save or retrieve a summary of a large file to save tokens in agent context."
+    },
+    {
+      "name": "memory_archive",
+      "description": "Move old entries (>30 days) to archive.toon to keep memory clean. Also archives expired TTL entries."
+    },
+    {
+      "name": "memory_encrypt",
+      "description": "Enable AES-256-GCM encryption for the entire memory file."
+    },
+    {
+      "name": "memory_decrypt",
+      "description": "Disable encryption and decode memory using a provided key."
+    },
+    {
+      "name": "memory_captured",
+      "description": "Show activity log captured automatically by hooks. Useful for promoting observations to memory entries."
+    },
+    {
+      "name": "memory_consolidate",
+      "description": "Consolidate memory by removing entries with identical content. Deterministic, no LLM."
+    },
+    {
+      "name": "memory_sessions",
+      "description": "Show active agent sessions (git branch, files touched, last-seen) and detect soft conflicts between parallel sessions."
+    },
+    {
+      "name": "context_brief",
+      "description": "Generate a compact context briefing: relevant memory + active sessions + project health. Single call instead of 5-6 separate calls."
+    },
+    {
+      "name": "context_generate",
+      "description": "Generate a full system prompt: project info + git state + memory + sessions. Single call to prepare the agent. Zero LLM."
+    },
+    {
+      "name": "context_diff",
+      "description": "What changed since the last session: git commits + modified files + new/updated memory entries. Zero LLM."
+    },
+    {
+      "name": "context_focus",
+      "description": "Hyper-focused context for a specific task: relevant entries + related files + code referencing the symbol + existing tests."
+    },
+    {
+      "name": "context_health",
+      "description": "Full memory health audit: orphan links, duplicates, broken refs, expired TTL, quality, stale sessions. Score 0-100."
+    },
+    {
+      "name": "context_export",
+      "description": "Export all memory as markdown injectable for other agents or sessions. Full (detailed) or compact format."
+    },
+    {
+      "name": "memory_backup",
+      "description": "Create a timestamped backup of the memory file. Use before major operations or to preserve state."
+    },
+    {
+      "name": "memory_primer",
+      "description": "Generate a compact system primer: always-current knowledge map for auto-injection into agent context."
+    },
+    {
+      "name": "memory_compress",
+      "description": "LLM-powered compression: select entries to compress into one concise entry. Two-step dance: tool provides context, agent provides intelligence."
+    },
+    {
+      "name": "memory_compress_all",
+      "description": "Compress all low-quality entries (no tags, low quality score) in one pass. Deterministic, no LLM."
+    },
+    {
+      "name": "memory_export_gist",
+      "description": "Export memory to a private GitHub Gist for cloud sync. Requires GITHUB_TOKEN env var."
+    },
+    {
+      "name": "memory_import_gist",
+      "description": "Import memory from a GitHub Gist. Merges entries (keeps newer dates, combines tags)."
+    },
+    {
+      "name": "memory_merge_sessions",
+      "description": "Merge observations from multiple sessions/branches into a consolidated view. Deduplicates and suggests entries to promote."
+    },
+    {
+      "name": "memory_merge_similar",
+      "description": "Find entries with overlapping content (>50% word similarity) and merge them. Deterministic, no LLM."
+    },
+    {
+      "name": "memory_graph_path",
+      "description": "Find the shortest path between two memory entries in the knowledge graph. Shows how two concepts are connected."
+    }
+  ],
+  "resources": [
+    {
+      "name": "memory-entries",
+      "uri": "toon://memory/entries",
+      "description": "Full memory dump in TOON format — all entries, summaries, and metadata from the project's persistent memory."
+    },
+    {
+      "name": "memory-stats",
+      "uri": "toon://memory/stats",
+      "description": "Aggregated memory statistics: total entries, category counts, TTL expiration info."
+    },
+    {
+      "name": "memory-summaries",
+      "uri": "toon://memory/summaries",
+      "description": "System primer with project knowledge map, top memories by importance, categories, and patterns."
+    }
+  ],
+  "prompts": [
+    {
+      "name": "summarize_project_context",
+      "description": "Analyze the current TOON memory state and generate a compact summary of project knowledge by category. Can filter by intent (e.g. 'auth', 'database')."
+    }
+  ]
+}
