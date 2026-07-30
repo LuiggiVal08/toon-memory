@@ -41,8 +41,8 @@ export const content = {
 			cards: [
 			{
 				icon: '🧩',
-				title: '32 MCP Tools + 4 Resources',
-				body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, promote, promote_all, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export, context_rebuild, graph_path, visualize. Plus resources for direct context reading including an interactive graph viewer.',
+				title: '34 MCP Tools + 4 Resources',
+				body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, merge_similar, graph_path, context_brief, context_generate, context_diff, context_focus, context_health, context_export, visualize, pin, unpin, search, tag. Plus resources for direct context reading including an interactive graph viewer.',
 				tags: ['remember', 'recall', 'context', 'diff'],
 				wide: true,
 			},
@@ -108,7 +108,7 @@ export const content = {
 		},
 		stats: {
 			items: [
-				{ number: '32', label: 'MCP Tools' },
+				{ number: '34', label: 'MCP Tools' },
 				{ number: '15', label: 'Agents' },
 				{ number: '80%', label: 'Fewer Tool Calls / session' },
 				{ number: '0', label: 'Config Needed' },
@@ -274,7 +274,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Auto-loading benchmark: OpenCode plugin injects only file-relevant memory instead of dumping all entries. Full session: start → debug → implement → review → wrap-up. Reproducible: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 		},
 		tools: {
-			title: '32 MCP tools, 4 resources',
+			title: '34 MCP tools, 4 resources',
 			subtitle: 'Everything your agent needs to remember, recall, and reason',
 			resourcesLabel: 'Resources:',
 			groups: {
@@ -316,6 +316,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'memory_decrypt', title: 'Disable Encryption', desc: 'Decrypt and disable encryption.', group: 'sync' },
 				{ name: 'memory_backup', title: 'Backup Memory', desc: 'Create timestamped backup of memory file. Auto-prunes to 10 most recent.', group: 'sync' },
 				{ name: 'memory_visualize', title: 'Open Graph Viewer', desc: 'Render the interactive memory graph inline in MCP Apps–compatible hosts. Force-directed graph, stats, timeline, detail panel.', group: 'core' },
+				{ name: 'memory_pin', title: 'Pin Entry', desc: 'Pin important entries so they always appear at the top of recall results, even without a keyword match.', group: 'core' },
+				{ name: 'memory_unpin', title: 'Unpin Entry', desc: 'Remove the pinned flag from an entry.', group: 'core' },
+				{ name: 'memory_search', title: 'Unified Search', desc: 'Search memory with category, tags, and date range filters. Tag filter uses AND logic — all specified tags must match.', group: 'search' },
+				{ name: 'memory_tag', title: 'Batch Tag Ops', desc: 'Add, remove, or set tags on one or more entries by key or id in a single call.', group: 'core' },
 			],
 		},
 		graphSection: {
@@ -369,7 +373,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			items: [
 				{
 					q: 'What is toon-memory?',
-					a: 'A persistent memory layer for AI coding agents with 31 MCP tools. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions — with 80% fewer tool calls per session.',
+					a: 'A persistent memory layer for AI coding agents with 34 MCP tools. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions — with 80% fewer tool calls per session.',
 				},
 				{
 					q: 'Which agents are supported?',
@@ -453,7 +457,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				},
 				{
 					icon: '🧩',
-					title: '32 MCP Tools + 4 Resources',
+					title: '34 MCP Tools + 4 Resources',
 					body: 'Added memory_visualize tool and ui://viewer resource for MCP Apps inline rendering. Total: 32 tools + 4 resources.',
 					stats: ['+1 tool', '+1 resource'],
 				},
@@ -511,8 +515,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			cards: [
 			{
 				icon: '🧩',
-				title: '31 herramientas MCP + 3 recursos',
-				body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export, merge_similar, graph_path. Más recursos para lectura directa de contexto.',
+				title: '34 herramientas MCP + 4 recursos',
+				body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, merge_similar, graph_path, context_brief, context_generate, context_diff, context_focus, context_health, context_export, visualize, pin, unpin, search, tag. Más recursos para lectura directa de contexto.',
 				tags: ['remember', 'recall', 'context', 'diff'],
 				wide: true,
 			},
@@ -733,7 +737,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			note: 'Benchmark de auto-carga: el plugin de OpenCode inyecta solo memoria relevante al file path en vez de volcar todas las entradas. Sesión completa: inicio → debug → implementar → revisar → cerrar. Reproducible: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 		},
 	tools: {
-		title: '31 herramientas MCP, 3 recursos',
+		title: '34 herramientas MCP, 4 recursos',
 		subtitle: 'Todo lo que tu agente necesita para recordar, recuperar y razonar',
 		resourcesLabel: 'Recursos:',
 		groups: {
@@ -775,6 +779,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_decrypt', title: 'Deshabilitar encriptación', desc: 'Desencripta y deshabilita la encriptación.', group: 'sync' },
 			{ name: 'memory_backup', title: 'Backup de memoria', desc: 'Crea backup con timestamp del archivo de memoria. Auto-limpia a los 10 más recientes.', group: 'sync' },
 			{ name: 'memory_visualize', title: 'Abrir visor del grafo', desc: 'Renderiza el grafo de memoria interactivo inline en hosts compatibles con MCP Apps. Grafo de fuerza dirigida, estadísticas, línea de tiempo, panel de detalles.', group: 'core' },
+			{ name: 'memory_pin', title: 'Fijar entrada', desc: 'Fija entradas importantes para que siempre aparezcan al inicio de los resultados, incluso sin coincidencia de palabras clave.', group: 'core' },
+			{ name: 'memory_unpin', title: 'Desfijar entrada', desc: 'Elimina la marca de fijado de una entrada.', group: 'core' },
+			{ name: 'memory_search', title: 'Búsqueda unificada', desc: 'Busca en la memoria con filtros de categoría, etiquetas y rango de fechas. Filtro de etiquetas usa lógica AND.', group: 'search' },
+			{ name: 'memory_tag', title: 'Operaciones por lotes', desc: 'Añade, elimina o establece etiquetas en una o más entradas por key o id en una sola llamada.', group: 'core' },
 		],
 	},
 		graphSection: {
@@ -955,7 +963,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	features: {
 		cards: [
-			{ icon: '🧩', title: '31 个 MCP 工具 + 3 个资源', body: '通过 MCP 实现完整的记忆管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、promote、promote_all、compress、compress_all、primer、merge_sessions、export_gist、import_gist、context_brief、context_generate、context_diff、context_focus、context_health、context_export、context_rebuild、graph_path。外加直接上下文读取的资源。', tags: ['remember', 'recall', 'context', 'diff'] },
+			{ icon: '🧩', title: '34 个 MCP 工具 + 4 个资源', body: '通过 MCP 实现完整的记忆管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、compress、compress_all、primer、merge_sessions、export_gist、import_gist、merge_similar、graph_path、context_brief、context_generate、context_diff、context_focus、context_health、context_export、visualize、pin、unpin、search、tag。外加直接上下文读取的资源。', tags: ['remember', 'recall', 'context', 'diff'] },
 			{ icon: '⭐', title: '多代理', body: '支持所有主流 AI 编程代理。OpenCode、VS Code、Claude、Cursor、Windsurf、Cline、Continue — 零配置。', tags: ['OpenCode', 'Claude', 'Cursor'] },
 			{ icon: '📄', title: 'TOON 格式', body: '比 JSON 减少 22% 的 token（实测）。自定义编码专为 LLM 理解和 token 效率设计。', stats: ['减少 22% token', '解析速度提升 1.3x'] },
 			{ icon: '🔎', title: '智能召回', body: '基于图的召回按 BM25 相关性和图中心性重新排序（中心节点即使不包含查询词也会浮现）。按跳数衰减保持远距离上下文较低。Token 高效的 `compact` 模式返回数字索引、片段截断的结果。', stats: ['BM25', '中心性', 'compact'] },
@@ -1011,7 +1019,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: '完整会话基准测试：启动 → 调试 → 实现 → 审查 → 完成。<code>context_*</code> 工具以约 318 个额外令牌换取 7 次更少调用——更丰富的上下文意味着更少的重新阅读。可复现：<code>npm run bench:full</code>、<code>npm run bench:primer</code>、<code>npm run bench:compress-all</code>。',
 	},
 	tools: {
-		title: '31 个 MCP 工具，3 个资源', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
+		title: '34 个 MCP 工具，4 个资源', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
 		groups: {
 			core: '核心记忆',
 			search: '搜索与智能',
@@ -1049,6 +1057,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_decrypt', title: '禁用加密', desc: '解密并禁用加密。', group: 'sync' },
 			{ name: 'memory_backup', title: '备份记忆', desc: '创建带时间戳的记忆文件备份。自动修剪至最近 10 条。', group: 'sync' },
 			{ name: 'memory_visualize', title: '打开图谱查看器', desc: '在兼容 MCP Apps 的主机中内联渲染交互式记忆图谱。力导向图、统计、时间线、详情面板。', group: 'core' },
+			{ name: 'memory_pin', title: '固定条目', desc: '固定重要条目，使其始终出现在召回结果顶部，即使没有关键字匹配。', group: 'core' },
+			{ name: 'memory_unpin', title: '取消固定', desc: '移除条目的固定标记。', group: 'core' },
+			{ name: 'memory_search', title: '统一搜索', desc: '使用类别、标签和日期范围过滤器搜索记忆。标签过滤使用 AND 逻辑。', group: 'search' },
+			{ name: 'memory_tag', title: '批量标签操作', desc: '在单次调用中按 key 或 id 对一个或多个条目添加、删除或设置标签。', group: 'core' },
 		],
 	},
 	graphSection: {
@@ -1068,7 +1080,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	faq: {
 		title: '常见问题', subtitle: '关于为你的代理提供记忆你需要知道的一切',
 		items: [
-			{ q: '什么是 toon-memory？', a: '面向 AI 编程代理的持久记忆层，包含 31 个 MCP 工具。它以紧凑的 TOON 格式存储决策、模式、bug 和上下文，让你的代理在会话之间记住一切 — 每次会话减少 80% 的工具调用。' },
+			{ q: '什么是 toon-memory？', a: '面向 AI 编程代理的持久记忆层，包含 34 个 MCP 工具。它以紧凑的 TOON 格式存储决策、模式、bug 和上下文，让你的代理在会话之间记住一切 — 每次会话减少 80% 的工具调用。' },
 			{ q: '支持哪些代理？', a: 'OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex、Gemini、Zed、Antigravity、Aider、KiloCode、OpenClaw 和 Kiro — 通过 MCP 服务器零配置支持 15+ 个代理。' },
 			{ q: '我的数据如何存储？', a: '条目写入本地 TOON 文件（一种 token 高效的格式，比 JSON 小约 22%，实测）。你拥有该文件，可以像任何其他源文件一样提交、diff 或备份。' },
 			{ q: '我的记忆是加密的吗？', a: '是的。使用 memory_encrypt 工具启用加密，通过 AES-256-GCM 保护敏感条目。密钥自动生成并保持在本地。' },
@@ -1085,36 +1097,36 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ q: '可以在机器之间同步记忆吗？', a: '可以。使用 memory_export_gist 将条目推送到 GitHub Gist，然后在另一台机器上使用 memory_import_gist。条目会自动合并（标签并集、最大置信度）。' },
 		],
 	},
- 	whatNew: {
- 		title: 'v3.1.0 新功能',
- 		subtitle: '智能自动加载、新工具和全面的质量改进',
- 		cards: [
- 			{
- 				icon: '⚡',
- 				title: '智能自动加载',
- 				body: 'OpenCode 插件在每次工具执行时通过文件路径自动检索相关记忆 — 无全量转储、无上下文浪费。通过 setContext() 仅注入相关内容。',
- 				stats: ['~90% 令牌节省', '文件路径召回'],
- 			},
- 			{
- 				icon: '📉',
- 				title: '过期衰减',
- 				body: '质量评分现在会对超过30天未访问的条目进行惩罚（最高-0.2）。最新鲜、最相关的知识首先出现在召回结果中。',
- 				stats: ['30天渐进', '自动质量提升'],
- 			},
- 			{
- 				icon: '🔀',
- 				title: 'Jaccard 合并与图路径',
- 				body: 'memory_merge_similar 通过 Jaccard 相似度（>50%）确定性地查找和合并近似重复项。memory_graph_path 在任意两个条目之间找到 BFS 最短路径。',
- 				stats: ['无需 LLM', 'BFS 路径查找'],
- 			},
- 			{
- 				icon: '🤖',
- 				title: '15 个代理已配置',
- 				body: '添加了 Continue、Zed、Antigravity、KiloCode 和 OpenClaw，路径和格式正确。每个代理都获得正确的 MCP 配置、钩子和捕获钩子。',
- 				stats: ['5个新代理', '路径已修正'],
- 			},
- 		],
- 	},
+	whatNew: {
+		title: 'v3.3.0 新功能',
+		subtitle: '内联MCP Apps图谱查看器、D3.js本地打包、可视化指令',
+		cards: [
+			{
+				icon: '🖥️',
+				title: '内联MCP Apps图谱查看器',
+				body: '调用 memory_visualize() 以直接在兼容 MCP Apps 的主机中渲染交互式图谱 — 无需 HTTP 服务器。D3.js 已本地打包（无 CDN），附带 ResizeObserver 保护。',
+				stats: ['memory_visualize()', 'MCP Apps内联', '无需服务器'],
+			},
+			{
+				icon: '📦',
+				title: 'D3.js本地打包',
+				body: '移除了 npm 的 d3 依赖。D3 v7.9.0 现在已本地打包（280 KB），通过 readFileSync 读取。',
+				stats: ['280 KB 本地', '无 CDN', '无 npm 依赖'],
+			},
+			{
+				icon: '🤖',
+				title: '可视化指令',
+				body: 'toon-memory init 现在会在 AGENTS.md 中写入指令，以便代理在用户要求查看图谱时调用 memory_visualize()。',
+				stats: ['自动指令', '15+ 个代理'],
+			},
+			{
+				icon: '🧩',
+				title: '32个MCP工具 + 4个资源',
+				body: '新增 memory_visualize 和 ui://viewer 用于内联 MCP Apps 渲染。总计：32 个工具 + 4 个资源。',
+				stats: ['+1 工具', '+1 资源'],
+			},
+		],
+	},
 	cta: { title: '准备好为你的代理提供记忆了吗？', subtitle: '几秒钟内安装，再也不用向代理重复解释上下文。', getStarted: '快速开始', viewGithub: '在 GitHub 上查看' },
 	footer: { text: 'MIT 许可证 — ' },
 },
@@ -1228,6 +1240,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: '暗号化を有効にする', desc: '自動生成キーによる AES-256-GCM 暗号化。', group: 'sync' },
 			{ name: 'memory_decrypt', title: '暗号化を無効にする', desc: '復号化して暗号化を無効にします。', group: 'sync' },
 			{ name: 'memory_backup', title: 'メモリバックアップ', desc: 'タイムスタンプ付きメモリファイルバックアップを作成。最新 10 件に自動修剪。', group: 'sync' },
+			{ name: 'memory_pin', title: 'エントリをピン留め', desc: '重要なエントリをピン留めして、キーワード一致がなくても常にリコール結果の先頭に表示。', group: 'core' },
+			{ name: 'memory_unpin', title: 'ピン留めを解除', desc: 'エントリのピン留めフラグを削除。', group: 'core' },
+			{ name: 'memory_search', title: '統合検索', desc: 'カテゴリ、タグ、日付範囲フィルタでメモリを検索。タグフィルタは AND 論理 — 指定した全タグが一致する必要があります。', group: 'search' },
+			{ name: 'memory_tag', title: '一括タグ操作', desc: '1 回の呼び出しで key または id で 1 つ以上のエントリにタグを追加、削除、設定。', group: 'core' },
 		],
 	},
 	graphSection: {
@@ -1263,36 +1279,36 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ q: 'マシン間でメモリを同期できますか？', a: 'はい。memory_export_gistでGitHub Gistにエントリをプッシュし、別のマシンでmemory_import_gistを使用します。エントリは自動的にマージされます（タグの和集合、最大信頼度）。' },
 		],
 	},
- 	whatNew: {
- 		title: 'v3.1.0の新機能',
- 		subtitle: 'スマートな自動ロード、新しいツール、品質の全体的な改善',
- 		cards: [
- 			{
- 				icon: '⚡',
- 				title: 'スマート自動ロード',
- 				body: 'OpenCode プラグインがすべてのツール実行時にファイルパスで関連メモリを自動取得 — ダンプなし、コンテキストの浪費なし。setContext() 通过で必要なもののみを注入。',
- 				stats: ['~90%トークン削減', 'ファイルパスリコール'],
- 			},
- 			{
- 				icon: '📉',
- 				title: '鮮度デケイ',
- 				body: '品質スコアが30日以上アクセスされていないエントリにペナルティ（最大-0.2）。最新で最も関連性の高い知識がリコール結果の先頭に表示。',
- 				stats: ['30日ランプ', '自動品質ブースト'],
- 			},
- 			{
- 				icon: '🔀',
- 				title: 'Jaccard マージとグラフパス',
- 				body: 'memory_merge_similar は Jaccard 類似度（>50%）で類似重複を決定論的に検出・マージ。memory_graph_path は2つのエントリ間の BFS 最短パスを検出。',
- 				stats: ['LLM不要', 'BFS経路探索'],
- 			},
- 			{
- 				icon: '🤖',
- 				title: '15エージェント設定済み',
- 				body: 'Continue、Zed、Antigravity、KiloCode、OpenClaw を正しいパスとフォーマットで追加。各エージェントが適切な MCP 設定、フック、キャプチャフックを取得。',
- 				stats: ['5つの新エージェント', 'パス修正済み'],
- 			},
- 		],
- 	},
+	whatNew: {
+		title: 'v3.3.0 新機能',
+		subtitle: 'MCP Appsインライングラフビューア、D3.jsローカルバンドル、可視化手順',
+		cards: [
+			{
+				icon: '🖥️',
+				title: 'MCP Appsインライングラフビューア',
+				body: 'memory_visualize() を呼び出すと、MCP Apps互換ホストにインタラクティブなグラフが直接レンダリング — HTTPサーバー不要。D3.jsはローカルにバンドル（CDNなし）、ResizeObserverガード付き。',
+				stats: ['memory_visualize()', 'MCP Appsインライン', 'サーバー不要'],
+			},
+			{
+				icon: '📦',
+				title: 'D3.jsローカルバンドル',
+				body: 'npm依存のd3を削除。D3 v7.9.0がローカルにバンドル（280 KB）、readFileSyncで読み込み。',
+				stats: ['280 KB ローカル', 'CDNなし', 'npm依存なし'],
+			},
+			{
+				icon: '🤖',
+				title: '可視化手順',
+				body: 'toon-memory init が AGENTS.md に手順を書き込み、ユーザーがグラフ表示をリクエストした際にエージェントが memory_visualize() を呼び出せるようにします。',
+				stats: ['自動手順', '15+ エージェント'],
+			},
+			{
+				icon: '🧩',
+				title: '34 MCPツール + 4 リソース',
+				body: 'memory_visualize と ui://viewer を追加し、MCP Appsのインラインレンダリングに対応。合計：32ツール + 4リソース。',
+				stats: ['+1 ツール', '+1 リソース'],
+			},
+		],
+	},
 	cta: { title: 'エージェントにメモリを与える準備はできましたか？', subtitle: '数秒でインストールし、二度とエージェントにコンテキストを再説明することはありません。', getStarted: 'はじめに', viewGithub: 'GitHub で見る' },
 	footer: { text: 'MIT ライセンス — ' },
 },
@@ -1314,7 +1330,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	features: {
 		cards: [
-			{ icon: '🧩', title: '31개 MCP 도구 + 3개 리소스', body: 'MCP를 통한 완전한 메모리 관리 — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. 직접 컨텍스트 읽기를 위한 리소스 포함.', tags: ['remember', 'recall', 'context', 'diff'] },
+			{ icon: '🧩', title: '34개 MCP 도구 + 4개 리소스', body: 'MCP를 통한 완전한 메모리 관리 — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, merge_similar, graph_path, context_brief, context_generate, context_diff, context_focus, context_health, context_export, visualize, pin, unpin, search, tag. 직접 컨텍스트 읽기를 위한 리소스 포함.', tags: ['remember', 'recall', 'context', 'diff'] },
 			{ icon: '⭐', title: '멀티 에이전트', body: '모든 주요 AI 코딩 에이전트와 호환. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue — 제로 구성.', tags: ['OpenCode', 'Claude', 'Cursor'] },
 			{ icon: '📄', title: 'TOON 형식', body: 'JSON보다 22% 적은 토큰 (실측). LLM 이해와 토큰 효율성을 위해 설계된 맞춤 인코딩.', stats: ['토큰 22% 절감', '파싱 속도 1.3x 향상'] },
 			{ icon: '🔎', title: '스마트 리콜', body: '그래프 기반 리콜이 BM25 관련성과 그래프 중심성으로 재순위화됨 (쿼리 단어 없이도 허브가 부상). 홉당 감쇠로 먼 컨텍스트를 낮게 유지. 토큰 효율적인 `compact` 모드는 숫자 인덱스, 스니펫 잘린 결과를 반환.', stats: ['BM25', '중심성', 'compact'] },
@@ -1369,7 +1385,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: '전체 세션 벤치마크: 시작 → 디버그 → 구현 → 검토 → 마무리. <code>context_*</code> 도구는 추가 ~318 토큰으로 7번 fewer calls와 교환 — 더 풍부한 컨텍스트는 fewer 재읽기를 의미합니다. 재현 가능: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 	},
 	tools: {
-		title: '31개 MCP 도구, 3개 리소스', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
+		title: '34개 MCP 도구, 4개 리소스', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
 		groups: {
 			core: '핵심 메모리',
 			search: '검색 및 인텔리전스',
@@ -1406,6 +1422,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: '암호화 활성화', desc: '자동 생성 키로 AES-256-GCM 암호화.', group: 'sync' },
 			{ name: 'memory_decrypt', title: '암호화 비활성화', desc: '복호화하고 암호화를 비활성화.', group: 'sync' },
 			{ name: 'memory_backup', title: '메모리 백업', desc: '타임스탬프가 있는 메모리 파일 백업 생성. 최신 10개로 자동 정리.', group: 'sync' },
+			{ name: 'memory_pin', title: '항목 고정', desc: '중요한 항목을 고정하여 키워드 일치가 없어도 항상 리콜 결과의 상단에 표시.', group: 'core' },
+			{ name: 'memory_unpin', title: '고정 해제', desc: '항목의 고정 플래그를 제거.', group: 'core' },
+			{ name: 'memory_search', title: '통합 검색', desc: '카테고리, 태그, 날짜 범위 필터로 메모리 검색. 태그 필터는 AND 로직 사용 — 지정된 모든 태그가 일치해야 함.', group: 'search' },
+			{ name: 'memory_tag', title: '일괄 태그 작업', desc: '한 번의 호출로 key 또는 id로 하나 이상의 항목에 태그 추가, 제거 또는 설정.', group: 'core' },
 		],
 	},
 	graphSection: {
@@ -1424,7 +1444,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	faq: {
 		title: '자주 묻는 질문', subtitle: '에이전트에 메모리를 부여하기 위해 알아야 할 모든 것',
 		items: [
-			{ q: 'toon-memory란?', a: '31개 MCP 도구를 갖춘 AI 코딩 에이전트용 지속적 메모리 레이어. 결정, 패턴, 버그, 컨텍스트를 컴팩트 TOON 형식으로 저장하여 에이전트가 세션 간에 모든 것을 기억 — 세션당 80% 도구 호출 절감.' },
+			{ q: 'toon-memory란?', a: '34개 MCP 도구를 갖춘 AI 코딩 에이전트용 지속적 메모리 레이어. 결정, 패턴, 버그, 컨텍스트를 컴팩트 TOON 형식으로 저장하여 에이전트가 세션 간에 모든 것을 기억 — 세션당 80% 도구 호출 절감.' },
 			{ q: '지원되는 에이전트는?', a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro — MCP 서버를 통한 제로 구성의 15개 이상 에이전트.' },
 			{ q: '데이터는 어떻게 저장되나요?', a: '항목은 로컬 TOON 파일 (JSON보다 ~22% 작은 토큰 효율 형식, 실측)에 기록됩니다. 파일은 귀하의 것이며 다른 소스 파일처럼 커밋, diff, 백업이 가능합니다.' },
 			{ q: '메모리가 암호화되나요?', a: '네. memory_encrypt 도구로 암호화를 활성화하여 AES-256-GCM로 민감한 항목을 보호합니다. 키는 자동 생성되고 로컬에 유지됩니다.' },
@@ -1441,36 +1461,36 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ q: '머신 간에 메모리를 동기화할 수 있나요?', a: '네. memory_export_gist로 GitHub Gist에 항목을 푸시한 다음 다른 머신에서 memory_import_gist를 사용합니다. 항목은 자동으로 병합됩니다(태그 합집합, 최대 신뢰도).' },
 		],
 	},
- 	whatNew: {
- 		title: 'v3.1.0의 신 기능',
- 		subtitle: '스마트 자동 로딩, 새로운 도구, 전반적인 품질 개선',
- 		cards: [
- 			{
- 				icon: '⚡',
- 				title: '스마트 자동 로딩',
- 				body: 'OpenCode 플러그인이 모든 도구 실행 시 파일 경로별로 관련 메모리를 자동 회수 — 덤프 없음, 컨텍스트 낭비 없음. setContext()를 통해 필요한 것만 주입.',
- 				stats: ['~90% 토큰 절약', '파일 경로 리콜'],
- 			},
- 			{
- 				icon: '📉',
- 				title: '신선도 감쇠',
- 				body: '품질 점수가 30일 이상 접근되지 않은 항목에 페널티 (최대 -0.2). 가장 신선하고 관련성 높은 지식이 리콜 결과의 상위에 표시.',
- 			stats: ['30일 램프', '자동 품질 부스트'],
- 			},
- 			{
- 				icon: '🔀',
- 				title: 'Jaccard 병합 및 그래프 경로',
- 				body: 'memory_merge_similar는 Jaccard 유사도 (>50%)로 유사 중복을 결정적으로 찾아 병합. memory_graph_path는 두 항목 간의 BFS 최단 경로를 찾음.',
- 				stats: ['LLM 불필요', 'BFS 경로 탐색'],
- 			},
- 			{
- 				icon: '🤖',
- 				title: '15개 에이전트 구성 완료',
- 				body: 'Continue, Zed, Antigravity, KiloCode, OpenClaw를 올바른 경로와 형식으로 추가. 각 에이전트가 올바른 MCP 구성, 훅, 캡처 훅을 받음.',
- 				stats: ['5개 신규 에이전트', '경로 수정됨'],
- 			},
- 		],
- 	},
+	whatNew: {
+		title: 'v3.3.0 새로운 기능',
+		subtitle: 'MCP Apps 인라인 그래프 뷰어, D3.js 로컬 번들, 시각화 지침',
+		cards: [
+			{
+				icon: '🖥️',
+				title: 'MCP Apps 인라인 그래프 뷰어',
+				body: 'memory_visualize()를 호출하면 MCP Apps 호환 호스트에서 대화형 그래프가 직접 렌더링 — HTTP 서버 불필요. D3.js는 로컬에 번들됨(CDN 없음), ResizeObserver 가드 포함.',
+				stats: ['memory_visualize()', 'MCP Apps 인라인', '서버 불필요'],
+			},
+			{
+				icon: '📦',
+				title: 'D3.js 로컬 번들',
+				body: 'npm d3 의존성 제거. D3 v7.9.0이 로컬에 번들됨(280 KB), readFileSync로 읽음.',
+				stats: ['280 KB 로컬', 'CDN 없음', 'npm 의존성 없음'],
+			},
+			{
+				icon: '🤖',
+				title: '시각화 지침',
+				body: 'toon-memory init이 AGENTS.md에 지침을 작성하여 사용자가 그래프를 요청할 때 에이전트가 memory_visualize()를 호출하도록 함.',
+				stats: ['자동 지침', '15+ 에이전트'],
+			},
+			{
+				icon: '🧩',
+				title: '34개 MCP 도구 + 4개 리소스',
+				body: 'memory_visualize와 ui://viewer 추가로 MCP Apps 인라인 렌더링 지원. 총계: 32개 도구 + 4개 리소스.',
+				stats: ['+1 도구', '+1 리소스'],
+			},
+		],
+	},
 	cta: { title: '에이전트에 메모리를 부여할 준비가 되셨나요?', subtitle: '몇 초 만에 설치하고 에이전트에 컨텍스트를 재설명하지 마세요.', getStarted: '시작하기', viewGithub: 'GitHub에서 보기' },
 	footer: { text: 'MIT 라이선스 — ' },
 },
@@ -1516,8 +1536,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		cards: [
 			{
 			icon: '🧩',
-			title: '31 ferramentas MCP + 3 recursos',
-			body: 'Gerenciamento completo de memória via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export. Mais recursos para leitura direta de contexto.',
+			title: '34 ferramentas MCP + 4 recursos',
+			body: 'Gerenciamento completo de memória via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, merge_similar, graph_path, context_brief, context_generate, context_diff, context_focus, context_health, context_export, visualize, pin, unpin, search, tag. Mais recursos para leitura direta de contexto.',
 				tags: ['remember', 'recall', 'context', 'diff'],
 			},
 			{
@@ -1712,7 +1732,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: 'Benchmark de sessão completa: início → depuração → implementação → revisão → encerramento. As ferramentas <code>context_*</code> trocam ~318 tokens extras por 7 chamadas a menos — contexto mais rico significa menos re-leituras. Reprodutível: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 	},
 	tools: {
-		title: '31 ferramentas MCP, 3 recursos',
+		title: '34 ferramentas MCP, 4 recursos',
 		subtitle: 'Tudo que seu agente precisa para lembrar, recuperar e raciocinar',
 		resourcesLabel: 'Recursos:',
 		groups: {
@@ -1751,6 +1771,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: 'Ativar criptografia', desc: 'Criptografia AES-256-GCM com chave auto-gerada.', group: 'sync' },
 			{ name: 'memory_decrypt', title: 'Desativar criptografia', desc: 'Descriptografa e desativa a criptografia.', group: 'sync' },
 			{ name: 'memory_backup', title: 'Backup da memória', desc: 'Cria backup com timestamp do arquivo de memória. Auto-poduz para os 10 mais recentes.', group: 'sync' },
+			{ name: 'memory_pin', title: 'Fixar entrada', desc: 'Fixa entradas importantes para que apareçam sempre no topo dos resultados, mesmo sem correspondência de palavras-chave.', group: 'core' },
+			{ name: 'memory_unpin', title: 'Desfixar entrada', desc: 'Remove a marca de fixação de uma entrada.', group: 'core' },
+			{ name: 'memory_search', title: 'Busca unificada', desc: 'Pesquisa na memória com filtros de categoria, tags e intervalo de datas. Filtro de tags usa lógica AND.', group: 'search' },
+			{ name: 'memory_tag', title: 'Operações em lote', desc: 'Adiciona, remove ou define tags em uma ou mais entradas por key ou id em uma única chamada.', group: 'core' },
 		],
 	},
 	graphSection: {
@@ -1791,7 +1815,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		items: [
 			{
 				q: 'O que é toon-memory?',
-				a: 'Uma camada de memória persistente para agentes de IA com 31 ferramentas MCP. Armazena decisões, padrões, bugs e contexto em um formato TOON compacto para que seu agente lembre tudo entre sessões — com 80% menos chamadas de ferramenta por sessão.',
+				a: 'Uma camada de memória persistente para agentes de IA com 34 ferramentas MCP. Armazena decisões, padrões, bugs e contexto em um formato TOON compacto para que seu agente lembre tudo entre sessões — com 80% menos chamadas de ferramenta por sessão.',
 			},
 			{
 				q: 'Quais agentes são suportados?',
@@ -1852,32 +1876,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	whatNew: {
-		title: 'Novidades na v3.1.0',
-		subtitle: 'Carregamento inteligente, novas ferramentas e melhorias de qualidade',
+		title: 'Novidades na v3.3.0',
+		subtitle: 'Visualizador de Grafo Inline MCP Apps, D3.js Empacotado, Instruções para Visualizar',
 		cards: [
 			{
-				icon: '⚡',
-				title: 'Carregamento inteligente',
-				body: 'O plugin do OpenCode recupera automaticamente a memória relevante por caminho de arquivo em cada execução de ferramenta — sem despejo completo, sem desperdício de contexto. Injeta apenas o que importa via setContext().',
-				stats: ['~90% menos tokens', 'Recall por arquivo'],
+				icon: '🖥️',
+				title: 'Visualizador de Grafo Inline MCP Apps',
+				body: 'Chame memory_visualize() para renderizar o grafo interativo diretamente em hosts compatíveis com MCP Apps — sem servidor HTTP. D3.js empacotado localmente (sem CDN) com guarda ResizeObserver.',
+				stats: ['memory_visualize()', 'MCP Apps inline', 'Sem servidor'],
 			},
 			{
-				icon: '📉',
-				title: 'Decaimento de obsolescência',
-				body: 'A pontuação de qualidade agora penaliza entradas não acessadas há 30+ dias (até -0.2). O conhecimento mais recente e relevante aparece primeiro nos resultados.',
-				stats: ['Rampa de 30 dias', 'Boost de qualidade'],
-			},
-			{
-				icon: '🔀',
-				title: 'Merge Jaccard e Graph Path',
-				body: 'memory_merge_similar encontra e mescla quase-duplicatas determinísticamente (Jaccard >50%). memory_graph_path encontra o caminho BFS mais curto entre duas entradas.',
-				stats: ['Sem LLM', 'Pathfinding BFS'],
+				icon: '📦',
+				title: 'D3.js Empacotado',
+				body: 'A dependência npm do d3 foi removida. D3 v7.9.0 agora está empacotado localmente (280 KB), lido com readFileSync.',
+				stats: ['280 KB local', 'Sem CDN', 'Sem npm dep'],
 			},
 			{
 				icon: '🤖',
-				title: '15 agentes configurados',
-				body: 'Adicionados Continue, Zed, Antigravity, KiloCode e OpenClaw com caminhos e formatos corretos. Cada agente recebe config MCP, hooks e capture hooks adequados.',
-				stats: ['5 novos agentes', 'Caminhos corrigidos'],
+				title: 'Instruções para Visualizar',
+				body: 'toon-memory init agora escreve instruções no AGENTS.md para que o agente chame memory_visualize() quando o usuário pedir para ver o grafo.',
+				stats: ['Auto-instruções', '15+ agentes'],
+			},
+			{
+				icon: '🧩',
+				title: '32 Ferramentas MCP + 4 Recursos',
+				body: 'Adicionados memory_visualize e ui://viewer para renderização inline MCP Apps. Total: 32 ferramentas + 4 recursos.',
+				stats: ['+1 ferramenta', '+1 recurso'],
 			},
 		],
 	},
@@ -1933,8 +1957,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		cards: [
 			{
 			icon: '🧩',
-			title: '31 MCP-Tools + 3 Ressourcen',
-			body: 'Vollständiges Speicher-Management über MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, promote, promote_all, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export, context_rebuild, graph_path. Plus Ressourcen für direktes Kontext-Lesen.',
+			title: '34 MCP-Tools + 4 Ressourcen',
+			body: 'Vollständiges Speicher-Management über MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, merge_similar, graph_path, context_brief, context_generate, context_diff, context_focus, context_health, context_export, visualize, pin, unpin, search, tag. Plus Ressourcen für direktes Kontext-Lesen.',
 				tags: ['remember', 'recall', 'context', 'diff'],
 			},
 			{
@@ -2129,7 +2153,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: 'Vollständiger Sitzungs-Benchmark: Start → Debug → Implementierung → Review → Abschluss. <code>context_*</code>-Tools tauschen ~318 zusätzliche Tokens gegen 7 weniger Aufrufe — reicherer Kontext bedeutet weniger Nachlesevorgänge. Reproduzierbar: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 	},
 	tools: {
-		title: '31 MCP-Tools, 3 Ressourcen',
+		title: '34 MCP-Tools, 4 Ressourcen',
 		subtitle: 'Alles, was dein Agent zum Merken, Abrufen und Denken braucht',
 		resourcesLabel: 'Ressourcen:',
 		groups: {
@@ -2168,6 +2192,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: 'Verschlüsselung aktivieren', desc: 'AES-256-GCM-Verschlüsselung mit automatisch generiertem Schlüssel.', group: 'sync' },
 			{ name: 'memory_decrypt', title: 'Verschlüsselung deaktivieren', desc: 'Entschlüsselt und deaktiviert die Verschlüsselung.', group: 'sync' },
 			{ name: 'memory_backup', title: 'Speicher sichern', desc: 'Erstellt einen zeitgestempelten Backup der Speicherdatei. Automatisch auf die 10 neuesten gekürzt.', group: 'sync' },
+			{ name: 'memory_pin', title: 'Eintrag anheften', desc: 'Heftet wichtige Einträge an, sodass sie immer oben in den Ergebnissen erscheinen, auch ohne Keyword-Übereinstimmung.', group: 'core' },
+			{ name: 'memory_unpin', title: 'Eintrag lösen', desc: 'Entfernt die Anheft-Markierung eines Eintrags.', group: 'core' },
+			{ name: 'memory_search', title: 'Einheitliche Suche', desc: 'Durchsucht den Speicher mit Kategorie-, Tag- und Datumsbereichsfiltern. Tag-Filter verwendet UND-Logik.', group: 'search' },
+			{ name: 'memory_tag', title: 'Batch-Tag-Operationen', desc: 'Fügt Tags hinzu, entfernt oder setzt sie bei einem oder mehreren Einträgen per Key oder ID in einem Aufruf.', group: 'core' },
 		],
 	},
 	graphSection: {
@@ -2208,7 +2236,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		items: [
 			{
 				q: 'Was ist toon-memory?',
-				a: 'Eine persistente Speicherschicht für KI-Coding-Agenten mit 31 MCP-Tools. Es speichert Entscheidungen, Muster, Bugs und Kontext in einem kompakten TOON-Format, damit dein Agent sich an alles zwischen Sitzungen erinnert — mit 80% weniger Tool-Aufrufen pro Sitzung.',
+				a: 'Eine persistente Speicherschicht für KI-Coding-Agenten mit 34 MCP-Tools. Es speichert Entscheidungen, Muster, Bugs und Kontext in einem kompakten TOON-Format, damit dein Agent sich an alles zwischen Sitzungen erinnert — mit 80% weniger Tool-Aufrufen pro Sitzung.',
 			},
 			{
 				q: 'Welche Agenten werden unterstützt?',
@@ -2269,32 +2297,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	],
 },
 whatNew: {
-	title: 'Neu in v3.1.0',
-	subtitle: 'Intelligentes Auto-Loading, neue Tools und Qualitätsverbesserungen',
+	title: 'Neu in v3.3.0',
+	subtitle: 'Inline-MCP-Apps-Graph-Viewer, D3.js lokal gebündelt, Anweisungen zum Visualisieren',
 	cards: [
 		{
-			icon: '⚡',
-			title: 'Intelligentes Auto-Loading',
-			body: 'Das OpenCode-Plugin ruft bei jeder Tool-Ausführung automatisch relevanten Speicher über den Dateipfad ab — kein Dump-All, kein verschwendeter Kontext. Injiziert nur das Wesentliche via setContext().',
-			stats: ['~90% weniger Tokens', 'Recall nach Dateipfad'],
+			icon: '🖥️',
+			title: 'Inline-MCP-Apps-Graph-Viewer',
+			body: 'Rufe memory_visualize() auf, um den interaktiven Graphen direkt in MCP-Apps-kompatiblen Hosts zu rendern — kein HTTP-Server nötig. D3.js lokal gebündelt (kein CDN) mit ResizeObserver-Guard.',
+			stats: ['memory_visualize()', 'MCP Apps inline', 'Kein Server'],
 		},
 		{
-			icon: '📉',
-			title: 'Verfalls-Decay',
-			body: 'Der Qualitäts-Score bestraft jetzt Einträge, die seit 30+ Tagen nicht accessed wurden (bis zu -0.2). Das frischste und relevanteste Wissen taucht zuerst in Recall-Ergebnissen auf.',
-			stats: ['30-Tage-Rampe', 'Auto-Qualitäts-Boost'],
-		},
-		{
-			icon: '🔀',
-			title: 'Jaccard-Merge & Graph-Pfad',
-			body: 'memory_merge_similar findet und fusioniert fast-duplicates deterministisch (Jaccard >50%). memory_graph_path findet den kürzesten BFS-Pfad zwischen zwei Einträgen.',
-			stats: ['Kein LLM', 'BFS-Pfadfinding'],
+			icon: '📦',
+			title: 'D3.js lokal gebündelt',
+			body: 'Die npm-Abhängigkeit von d3 wurde entfernt. D3 v7.9.0 ist jetzt lokal gebündelt (280 KB), gelesen mit readFileSync.',
+			stats: ['280 KB lokal', 'Kein CDN', 'Keine npm dep'],
 		},
 		{
 			icon: '🤖',
-			title: '15 Agenten konfiguriert',
-			body: 'Continue, Zed, Antigravity, KiloCode und OpenClaw mit korrekten Pfaden und Formaten hinzugefügt. Jeder Agent erhält korrekte MCP-Konfiguration, Hooks und Capture-Hooks.',
-			stats: ['5 neue Agenten', 'Pfade korrigiert'],
+			title: 'Anweisungen zum Visualisieren',
+			body: 'toon-memory init schreibt jetzt Anweisungen in die AGENTS.md, damit der Agent memory_visualize() aufruft, wenn der Benutzer den Graphen sehen möchte.',
+			stats: ['Auto-Anweisungen', '15+ Agenten'],
+		},
+		{
+			icon: '🧩',
+			title: '34 MCP-Tools + 4 Ressourcen',
+			body: 'memory_visualize und ui://viewer für Inline-MCP-Apps-Rendering hinzugefügt. Gesamt: 32 Tools + 4 Ressourcen.',
+			stats: ['+1 Tool', '+1 Ressource'],
 		},
 	],
 },
@@ -2350,8 +2378,8 @@ cta: {
 		cards: [
 			{
 			icon: '🧩',
-			title: '31 outils MCP + 3 ressources',
-			body: 'Gestion complète de la mémoire via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, promote, promote_all, compress, compress_all, primer, merge_sessions, export_gist, import_gist, context_brief, context_generate, context_diff, context_focus, context_health, context_export, context_rebuild, graph_path. Plus des ressources pour la lecture directe du contexte.',
+			title: '34 outils MCP + 4 ressources',
+			body: 'Gestion complète de la mémoire via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, merge_similar, graph_path, context_brief, context_generate, context_diff, context_focus, context_health, context_export, visualize, pin, unpin, search, tag. Plus des ressources pour la lecture directe du contexte.',
 				tags: ['remember', 'recall', 'context', 'diff'],
 			},
 			{
@@ -2546,7 +2574,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		note: 'Benchmark de session complète : démarrage → débogage → implémentation → révision → clôture. Les outils <code>context_*</code> échangent ~318 tokens supplémentaires pour 7 appels en moins — un contexte plus riche signifie moins de re-lectures. Reproductible : <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 	},
 	tools: {
-		title: '31 outils MCP, 3 ressources',
+		title: '34 outils MCP, 4 ressources',
 		subtitle: 'Tout ce dont votre agent a besoin pour mémoriser, rappeler et raisonner',
 		resourcesLabel: 'Ressources :',
 		groups: {
@@ -2585,6 +2613,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: 'Activer le chiffrement', desc: 'Chiffrement AES-256-GCM avec clé auto-générée.', group: 'sync' },
 			{ name: 'memory_decrypt', title: 'Désactiver le chiffrement', desc: 'Déchiffre et désactive le chiffrement.', group: 'sync' },
 			{ name: 'memory_backup', title: 'Sauvegarder la mémoire', desc: 'Crée une sauvegarde horodatée du fichier mémoire. Auto-nettoyage aux 10 plus récents.', group: 'sync' },
+			{ name: 'memory_pin', title: 'Épingler une entrée', desc: 'Épingle les entrées importantes pour qu\'elles apparaissent toujours en haut des résultats, même sans correspondance de mot-clé.', group: 'core' },
+			{ name: 'memory_unpin', title: 'Détacher une entrée', desc: 'Supprime le marqueur d\'épingle d\'une entrée.', group: 'core' },
+			{ name: 'memory_search', title: 'Recherche unifiée', desc: 'Recherche dans la mémoire avec filtres par catégorie, tags et plage de dates. Le filtre de tags utilise la logique ET.', group: 'search' },
+			{ name: 'memory_tag', title: 'Opérations par lots', desc: 'Ajoute, supprime ou définit des tags sur une ou plusieurs entrées par key ou id en un seul appel.', group: 'core' },
 		],
 	},
 	graphSection: {
@@ -2625,7 +2657,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		items: [
 			{
 				q: 'Qu\'est-ce que toon-memory ?',
-				a: 'Une couche de mémoire persistante pour les agents de code IA avec 31 outils MCP. Elle stocke les décisions, motifs, bugs et contexte dans un format TOON compact pour que votre agent se souvienne de tout entre les sessions — avec 80% moins d\'appels d\'outil par session.',
+				a: 'Une couche de mémoire persistante pour les agents de code IA avec 34 outils MCP. Elle stocke les décisions, motifs, bugs et contexte dans un format TOON compact pour que votre agent se souvienne de tout entre les sessions — avec 80% moins d\'appels d\'outil par session.',
 			},
 			{
 				q: 'Quels agents sont supportés ?',
@@ -2690,32 +2722,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	],
 },
 whatNew: {
-	title: 'Nouveautés dans v3.1.0',
-	subtitle: 'Chargement intelligent, nouveaux outils et améliorations de qualité',
+	title: 'Nouveautés dans v3.3.0',
+	subtitle: 'Visualiseur de graphe MCP Apps intégré, D3.js empaqueté localement, Instructions de visualisation',
 	cards: [
 		{
-			icon: '⚡',
-			title: 'Chargement intelligent',
-			body: 'Le plugin OpenCode récupère automatiquement la mémoire pertinente par chemin de fichier à chaque exécution d\'outil — pas de dump complet, pas de contexte gaspillé. Injecte uniquement le nécessaire via setContext().',
-			stats: ['~90% moins de tokens', 'Recall par fichier'],
+			icon: '🖥️',
+			title: 'Visualiseur de graphe MCP Apps intégré',
+			body: 'Appelez memory_visualize() pour afficher le graphe interactif directement dans les hôtes compatibles MCP Apps — sans serveur HTTP. D3.js empaqueté localement (sans CDN) avec garde ResizeObserver.',
+			stats: ['memory_visualize()', 'MCP Apps intégré', 'Sans serveur'],
 		},
 		{
-			icon: '📉',
-			title: 'Décrémentation de fraîcheur',
-			body: 'Le score de qualité pénalise désormais les entrées non consultées depuis 30+ jours (jusqu\'à -0.2). Les connaissances les plus fraîches et pertinentes apparaissent en premier dans les résultats.',
-			stats: ['Rampe de 30 jours', 'Boost de qualité auto'],
-		},
-		{
-			icon: '🔀',
-			title: 'Merge Jaccard & chemin graphe',
-			body: 'memory_merge_similar trouve et fusionne les quasi-doublons de manière déterministe (Jaccard >50%). memory_graph_path trouve le plus court chemin BFS entre deux entrées.',
-			stats: ['Sans LLM', 'Pathfinding BFS'],
+			icon: '📦',
+			title: 'D3.js empaqueté localement',
+			body: 'La dépendance npm d3 a été supprimée. D3 v7.9.0 est désormais empaqueté localement (280 Ko), lu avec readFileSync.',
+			stats: ['280 Ko local', 'Sans CDN', 'Sans npm dep'],
 		},
 		{
 			icon: '🤖',
-			title: '15 agents configurés',
-			body: 'Ajout de Continue, Zed, Antigravity, KiloCode et OpenClaw avec les bons chemins et formats. Chaque agent reçoit la config MCP, hooks et capture hooks appropriés.',
-			stats: ['5 nouveaux agents', 'Chemins corrigés'],
+			title: 'Instructions de visualisation',
+			body: 'toon-memory init écrit désormais des instructions dans AGENTS.md pour que l\'agent appelle memory_visualize() lorsque l\'utilisateur demande à voir le graphe.',
+			stats: ['Auto-instructions', '15+ agents'],
+		},
+		{
+			icon: '🧩',
+			title: '32 Outils MCP + 4 Ressources',
+			body: 'Ajout de memory_visualize et ui://viewer pour le rendu intégré MCP Apps. Total : 32 outils + 4 ressources.',
+			stats: ['+1 outil', '+1 ressource'],
 		},
 	],
 },

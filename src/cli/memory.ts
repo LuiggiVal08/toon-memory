@@ -12,7 +12,7 @@ export function installMemoryDir(): void {
   if (!existsSync(MEMORY_DIR)) mkdirSync(MEMORY_DIR, { recursive: true })
 
   if (!existsSync(memoryFile)) {
-    writeFileSync(memoryFile, "version: 1\n[0|]\n")
+    writeFileSync(memoryFile, "version: 1\n[0|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|pinned}:\n")
     console.log("  Created .toon-memory/memory/data.toon")
   }
 }

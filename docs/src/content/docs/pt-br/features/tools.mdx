@@ -1,6 +1,6 @@
 ---
-title: "27 Ferramentas MCP para Memória Persistente de IA"
-description: "27 ferramentas MCP para memória persistente de agentes IA — memory_remember, memory_recall, memory_smart_recall, context_generate e mais. Recall eficiente em tokens e baseado em grafo para Claude, Cursor, OpenCode."
+title: "34 Ferramentas MCP para Memória Persistente de IA"
+description: "34 ferramentas MCP para memória persistente de agentes IA — memory_remember, memory_recall, memory_smart_recall, context_generate e mais. Recall eficiente em tokens e baseado em grafo para Claude, Cursor, OpenCode."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## Visão Geral
 
-O toon-memory fornece 27 ferramentas MCP e 3 recursos MCP para gerenciar memória persistente:
+O toon-memory fornece 34 ferramentas MCP e 4 recursos MCP para gerenciar memória persistente:
 
 ## Ferramentas
 
@@ -37,6 +37,10 @@ O toon-memory fornece 27 ferramentas MCP e 3 recursos MCP para gerenciar memóri
 | `context_health` | **Auditoria de saúde da memória**: links órfãos, duplicatas, referências quebradas a arquivos, TTL expirado, sessões obsoletas, pontuação 0–100 |
 | `context_export` | **Exporta memória como markdown**: contexto injetável para system prompts (completo ou compacto) |
 | `memory_smart_recall` | Busca unificada: BM25 + grafo + qualidade + atualidade + decaimento em uma chamada |
+| `memory_pin` | **Pin an entry**: pinned entries always appear at the top of recall results, even without a keyword match |
+| `memory_unpin` | **Unpin an entry**: remove the pinned flag |
+| `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
+| `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
 
 ## Recursos MCP
 

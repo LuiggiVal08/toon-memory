@@ -192,16 +192,32 @@ export function generateSmartRecall(
 			}
 			const combined =
 				bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift
-			return { entry: e, score: combined, matchesQuery }
+			return { entry: e, score: combined, matchesQuery, pinned: e.pinned }
 		})
 		.filter((x) => x.score > 0 || x.matchesQuery)
-		.sort((a, b) => b.score - a.score)
+		.sort((a, b) => {
+			if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+			return b.score - a.score
+		})
 		.slice(0, limit)
+
+	// Inject pinned entries not already in the result set.
+	const pinnedKeys = new Set(entries.filter((e) => e.pinned).map((e) => e.key))
+	const inResult = new Set(scored.map((x) => x.entry.key))
+	for (const pKey of pinnedKeys) {
+		if (!inResult.has(pKey)) {
+			const e = entries.find((en) => en.key === pKey)
+			if (e) scored.unshift({ entry: e, score: 999, matchesQuery: false, pinned: true })
+		}
+	}
 
 	if (scored.length === 0) {
 		const top = entries
 			.filter((e) => !category || e.category === category)
-			.sort((a, b) => importance(b) - importance(a))
+			.sort((a, b) => {
+				if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+				return importance(b) - importance(a)
+			})
 			.slice(0, limit)
 		if (top.length === 0) return "No entries in memory."
 		return renderCompact(top)
@@ -232,10 +248,13 @@ export function generateSystemPrimer(data: string): string {
 		"",
 	]
 
-	// Top entries by importance (global)
+	// Pinned entries first, then top by importance
 	const top = [...entries]
 		.filter((e) => !isPrivate(e))
-		.sort((a, b) => importance(b) - importance(a))
+		.sort((a, b) => {
+			if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+			return importance(b) - importance(a)
+		})
 		.slice(0, 5)
 	lines.push("Top memories:")
 	for (const e of top) {
@@ -248,8 +267,9 @@ export function generateSystemPrimer(data: string): string {
 			e.lastAccessed
 		)
 		const conf = quality >= 0.5 ? "high" : quality >= 0.3 ? "medium" : "low"
+		const pin = e.pinned ? " 📌" : ""
 		lines.push(
-			`  [${e.category}] ${e.key} — ${e.content.slice(0, 80)} (quality: ${conf})`
+			`  [${e.category}] ${e.key}${pin} — ${e.content.slice(0, 80)} (quality: ${conf})`
 		)
 	}
 	lines.push("")

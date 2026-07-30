@@ -1,6 +1,6 @@
 ---
-title: "AI 에이전트 영구 메모리를 위한 27개 MCP 도구"
-description: "AI 에이전트 영구 메모리를 위한 27개 MCP 도구 — memory_remember, memory_recall, memory_smart_recall, context_generate 등. Claude, Cursor, OpenCode를 위한 토큰 효율적이고 그래프 인식 검색."
+title: "AI 에이전트 영구 메모리를 위한 34개 MCP 도구"
+description: "AI 에이전트 영구 메모리를 위한 34개 MCP 도구 — memory_remember, memory_recall, memory_smart_recall, context_generate 등. Claude, Cursor, OpenCode를 위한 토큰 효율적이고 그래프 인식 검색."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## 개요
 
-toon-memory는 영구 메모리를 관리하기 위한 27개의 MCP 도구와 3개의 MCP 리소스를 제공합니다:
+toon-memory는 영구 메모리를 관리하기 위한 34개의 MCP 도구와 4개의 MCP 리소스를 제공합니다:
 
 ## 도구
 
@@ -37,6 +37,10 @@ toon-memory는 영구 메모리를 관리하기 위한 27개의 MCP 도구와 3�
 | `context_health` | **메모리 상태 감사**: 고아 링크, 중복, 깨진 파일 참조, 만료된 TTL, 오래된 세션, 점수 0-100 |
 | `context_export` | **메모리를 마크다운으로 내보내기**: 시스템 프롬프트용 주입 가능한 컨텍스트 (전체 또는 압축) |
 | `memory_smart_recall` | 통합 검색: BM25 + 그래프 + 품질 + 신선도 + 감쇠를 하나의 호출로 결합 |
+| `memory_pin` | **Pin an entry**: pinned entries always appear at the top of recall results, even without a keyword match |
+| `memory_unpin` | **Unpin an entry**: remove the pinned flag |
+| `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
+| `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
 
 ## MCP 리소스
 

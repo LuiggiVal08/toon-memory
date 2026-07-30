@@ -1,6 +1,6 @@
 ---
-title: "27 MCP Tools for Persistent AI Memory"
-description: "27 MCP tools for persistent AI agent memory — memory_remember, memory_recall, memory_smart_recall, context_generate, and more. Token-efficient, graph-aware recall for Claude, Cursor, OpenCode."
+title: "34 MCP Tools for Persistent AI Memory"
+description: "34 MCP tools for persistent AI agent memory — memory_remember, memory_recall, memory_smart_recall, context_generate, and more. Token-efficient, graph-aware recall for Claude, Cursor, OpenCode."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## Overview
 
-toon-memory provides 30+ MCP tools and 4 MCP resources for managing persistent memory:
+toon-memory provides 34 MCP tools and 4 MCP resources for managing persistent memory:
 
 ## Tools
 
@@ -38,6 +38,10 @@ toon-memory provides 30+ MCP tools and 4 MCP resources for managing persistent m
 | `context_export` | **Export memory as markdown**: injectable context for system prompts (full or compact) |
 | `memory_smart_recall` | Unified search: BM25 + graph + quality + freshness + decay in one call |
 | `memory_visualize` | **Open interactive graph viewer** inline in MCP Apps–compatible hosts. Force-directed graph, stats, timeline, detail panel |
+| `memory_pin` | **Pin an entry**: pinned entries always appear at the top of recall results, even without a keyword match |
+| `memory_unpin` | **Unpin an entry**: remove the pinned flag |
+| `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
+| `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
 
 ## MCP Resources
 

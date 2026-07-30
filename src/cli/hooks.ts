@@ -6,6 +6,8 @@ import { projectRoot, CAPTURE_JS, SESSION_START_JS, CAPTURE_CONFIG, ANTIGRAVITY_
 /** Hook script content for SessionStart reminder */
 export function sessionStartHookContent(agentName: string): string {
   return `#!/bin/bash
+# toon-memory session-start hook for ${agentName}
+# Registers this session so memory_sessions and context_* tools work.
 node "${SESSION_START_JS}" ${agentName}
 exit 0
 `
@@ -17,6 +19,8 @@ exit 0
  */
 export function captureHookContent(agentName: string): string {
   return `#!/bin/bash
+# toon-memory capture hook for ${agentName}
+# Logs tool calls to observations.toon (opt-in via TOON_MEMORY_CAPTURE env or config).
 CFG="${CAPTURE_CONFIG}"
 if [ -z "$TOON_MEMORY_CAPTURE" ]; then
   if [ ! -f "$CFG" ]; then exit 0; fi

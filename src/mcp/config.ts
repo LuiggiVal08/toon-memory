@@ -98,6 +98,6 @@ export function ensureMemoryDir(): void {
 export function ensureMemoryFile(): void {
   ensureMemoryDir()
   if (!existsSync(MEMORY_FILE)) {
-    writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:\n")
+    writeFileSync(MEMORY_FILE, "version: 1\nentries[0|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|pinned}:\n")
   }
 }

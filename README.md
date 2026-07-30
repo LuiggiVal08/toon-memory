@@ -65,7 +65,7 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 
 ## Features
 
-- **29 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall), `memory_sessions` for multi-session coordination, `context_*` tools for one-call context generation (briefing, diff, focus, health audit, export), `memory_compress` (LLM-powered compression), `memory_compress_all` (batch compression), `memory_primer` (auto-injected context), `memory_merge_sessions` (cross-session merge), and `memory_export_gist`/`memory_import_gist` (GitHub Gist sync)
+- **34 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall), `memory_sessions` for multi-session coordination, `context_*` tools for one-call context generation (briefing, diff, focus, health audit, export), `memory_compress` (LLM-powered compression), `memory_compress_all` (batch compression), `memory_primer` (auto-injected context), `memory_merge_sessions` (cross-session merge), `memory_pin`/`memory_unpin` (pin important entries), `memory_search` (unified search with tag filters), `memory_tag` (batch tag operations), and `memory_export_gist`/`memory_import_gist` (GitHub Gist sync)
 - **MCP Resources** — Read memory as context without tool invocations, including a System Primer (auto-generated knowledge map)
 - **15 agents supported** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Interactive installer** — Select which agents to configure from a menu
@@ -247,6 +247,10 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 | `context_focus` | **Hyper-focused briefing**: only relevant memory + related source files + callers + test files for a query |
 | `context_health` | **Memory health audit**: orphan links, duplicates, broken file refs, expired TTL, stale sessions, score 0–100 |
 | `context_export` | **Export memory as markdown**: injectable context for system prompts (full or compact) |
+| `memory_pin` | **Pin an entry**: pinned entries always appear at the top of recall results, even without a keyword match |
+| `memory_unpin` | **Unpin an entry**: remove the pinned flag |
+| `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
+| `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
 
 ### MCP Resources
 

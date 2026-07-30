@@ -1,6 +1,6 @@
 ---
-title: "永続AIメモリ向けの21個のMCPツール"
-description: "永続AIエージェントメモリ向けの21個のMCPツール — memory_remember、memory_recall、memory_smart_recall、context_generateなど。Claude、Cursor、OpenCode向けのトークン効率の高いグラフ対応リコール。"
+title: "永続AIメモリ向けの34個のMCPツール"
+description: "永続AIエージェントメモリ向けの34個のMCPツール — memory_remember、memory_recall、memory_smart_recall、context_generateなど。Claude、Cursor、OpenCode向けのトークン効率の高いグラフ対応リコール。"
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## 概要
 
-toon-memoryは永続メモリを管理するための21個のMCPツールと3つのMCPリソースを提供します：
+toon-memoryは永続メモリを管理するための34個のMCPツールと4つのMCPリソースを提供します：
 
 ## ツール
 
@@ -37,6 +37,10 @@ toon-memoryは永続メモリを管理するための21個のMCPツールと3つ
 | `context_health` | **メモリヘルス監査**: 孤立リンク、重複、壊れたファイル参照、期限切れTTL、古いセッション、スコア0-100 |
 | `context_export` | **メモリをMarkdownとしてエクスポート**: システムプロンプト用のインジェクタブルコンテキスト（完全版またはコンパクト版） |
 | `memory_smart_recall` | 統合検索: BM25+グラフ+品質+新鮮度+減衰を1回の呼び出しで |
+| `memory_pin` | **Pin an entry**: pinned entries always appear at the top of recall results, even without a keyword match |
+| `memory_unpin` | **Unpin an entry**: remove the pinned flag |
+| `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
+| `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
 
 ## MCPリソース
 

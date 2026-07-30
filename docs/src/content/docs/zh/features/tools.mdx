@@ -1,6 +1,6 @@
 ---
-title: "27 个 MCP 工具实现持久化 AI 记忆"
-description: "27 个 MCP 工具用于 AI 代理持久化记忆 — memory_remember、memory_recall、memory_smart_recall、context_generate 等。面向 Claude、Cursor、OpenCode 的 token 高效、图感知召回。"
+title: "34 个 MCP 工具实现持久化 AI 记忆"
+description: "34 个 MCP 工具用于 AI 代理持久化记忆 — memory_remember、memory_recall、memory_smart_recall、context_generate 等。面向 Claude、Cursor、OpenCode 的 token 高效、图感知召回。"
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## 概述
 
-toon-memory 提供 27 个 MCP 工具和 3 个 MCP 资源，用于管理持久化记忆：
+toon-memory 提供 34 个 MCP 工具和 4 个 MCP 资源，用于管理持久化记忆：
 
 ## 工具
 
@@ -37,6 +37,10 @@ toon-memory 提供 27 个 MCP 工具和 3 个 MCP 资源，用于管理持久化
 | `context_health` | **记忆健康审计**：孤儿链接、重复项、损坏的文件引用、过期 TTL、过期会话，评分 0-100 |
 | `context_export` | **导出记忆为 markdown**：可用于系统提示词的注入式上下文（完整或紧凑格式） |
 | `memory_smart_recall` | 统一搜索：BM25 + 图 + 质量 + 新鲜度 + 衰减，一次调用完成 |
+| `memory_pin` | **Pin an entry**: pinned entries always appear at the top of recall results, even without a keyword match |
+| `memory_unpin` | **Unpin an entry**: remove the pinned flag |
+| `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
+| `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
 
 ## MCP 资源
 

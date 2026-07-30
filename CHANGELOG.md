@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.4.0] - 2026-07-30
+
+### Added
+- **`memory_pin` / `memory_unpin` MCP tools** — Pin important entries so they always appear at the top of recall results, even without keyword matches. Unpin removes the flag
+- **`memory_search` MCP tool** — Unified search with `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match
+- **`memory_tag` MCP tool** — Batch tag operations: `add`, `remove`, or `set` tags on one or more entries by key or id in a single call
+- **Hook template comments** — `src/cli/hooks.ts` now includes explanatory comments for each hook script
+- **Format descriptors** — TOON format updated: `pinned` field (index 13) for pin/unpin support
+
+### Changed
+- Tool count: 32 → 34 MCP tools
+
 ## [3.3.0] - 2026-07-30
 
 ### Added

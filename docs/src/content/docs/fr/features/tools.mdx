@@ -1,6 +1,6 @@
 ---
-title: "27 outils MCP pour la mémoire IA persistante"
-description: "27 outils MCP pour la mémoire persistante des agents IA — memory_remember, memory_recall, memory_smart_recall, context_generate et plus encore. Rappel économe en tokens, basé sur le graphe, pour Claude, Cursor, OpenCode."
+title: "34 outils MCP pour la mémoire IA persistante"
+description: "34 outils MCP pour la mémoire persistante des agents IA — memory_remember, memory_recall, memory_smart_recall, context_generate et plus encore. Rappel économe en tokens, basé sur le graphe, pour Claude, Cursor, OpenCode."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## Présentation
 
-toon-memory fournit 27 outils MCP et 3 ressources MCP pour gérer la mémoire persistante :
+toon-memory fournit 34 outils MCP et 4 ressources MCP pour gérer la mémoire persistante :
 
 ## Outils
 
@@ -37,6 +37,10 @@ toon-memory fournit 27 outils MCP et 3 ressources MCP pour gérer la mémoire pe
 | `context_health` | **Audit santé mémoire** : liens orphelins, doublons, références fichiers cassées, TTL expirés, sessions obsolètes, score 0–100 |
 | `context_export` | **Exporter la mémoire en markdown** : contexte injectable pour les prompts système (complet ou compact) |
 | `memory_smart_recall` | Recherche unifiée : BM25 + graphe + qualité + fraîcheur + décroissance en un seul appel |
+| `memory_pin` | **Épingler une entrée**: les entrées épinglées apparaissent toujours en haut des résultats, même sans correspondance de mot-clé |
+| `memory_unpin` | **Détacher une entrée**: supprime le marqueur d'épingle d'une entrée |
+| `memory_search` | **Recherche unifiée avec filtres**: comme `memory_recall` plus filtres par catégorie, tags et plage de dates |
+| `memory_tag` | **Opérations par lots**: ajoute, supprime ou définit des tags sur une ou plusieurs entrées par key ou id |
 
 ## Ressources MCP
 

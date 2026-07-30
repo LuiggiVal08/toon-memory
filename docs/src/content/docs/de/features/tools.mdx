@@ -1,6 +1,6 @@
 ---
-title: "27 MCP-Tools für persistenen AI-Speicher"
-description: "27 MCP-Tools für persistenen AI-Agent-Speicher — memory_remember, memory_recall, memory_smart_recall, context_generate und mehr. Token-effizienter, graph-bewusster Abruf für Claude, Cursor, OpenCode."
+title: "34 MCP-Tools für persistenen AI-Speicher"
+description: "34 MCP-Tools für persistenen AI-Agent-Speicher — memory_remember, memory_recall, memory_smart_recall, context_generate und mehr. Token-effizienter, graph-bewusster Abruf für Claude, Cursor, OpenCode."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## Überblick
 
-toon-memory bietet 27 MCP-Tools und 3 MCP-Ressourcen zur Verwaltung des persistenten Speichers:
+toon-memory bietet 34 MCP-Tools und 4 MCP-Ressourcen zur Verwaltung des persistenten Speichers:
 
 ## Tools
 
@@ -37,6 +37,10 @@ toon-memory bietet 27 MCP-Tools und 3 MCP-Ressourcen zur Verwaltung des persiste
 | `context_health` | **Speicher-Gesundheitsaudit**: Verwaiste Verweise, Duplikate, defekte Dateiverweise, abgelaufene TTL, veraltete Sitzungen, Score 0–100 |
 | `context_export` | **Speicher als Markdown exportieren**: Injizierbarer Kontext für System-Prompts (vollständig oder kompakt) |
 | `memory_smart_recall` | Einheitliche Suche: BM25 + Graph + Qualität + Aktualität + Abfall in einem Aufruf |
+| `memory_pin` | **Eintrag anheften**: angeheftete Einträge erscheinen immer oben in den Ergebnissen, auch ohne Keyword-Übereinstimmung |
+| `memory_unpin` | **Eintrag lösen**: entfernt die Anheft-Markierung eines Eintrags |
+| `memory_search` | **Einheitliche Suche mit Filtern**: wie `memory_recall` plus Kategorie-, Tag- und Datumsbereichs-Filter |
+| `memory_tag` | **Batch-Tag-Operationen**: fügt Tags hinzu, entfernt oder setzt sie bei einem oder mehreren Einträgen per Key oder ID |
 
 ## MCP-Ressourcen
 

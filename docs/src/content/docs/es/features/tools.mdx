@@ -1,11 +1,11 @@
 ---
 title: Herramientas MCP
-description: Las 27 herramientas de memoria y contexto y 3 recursos para tu agente de IA
+description: Las 34 herramientas de memoria y contexto y 4 recursos para tu agente de IA
 ---
 
 ## Resumen
 
-toon-memory proporciona 27 herramientas MCP y 3 recursos MCP para gestionar la memoria persistente:
+toon-memory proporciona 34 herramientas MCP y 4 recursos MCP para gestionar la memoria persistente:
 
 ## Herramientas
 
@@ -32,6 +32,10 @@ toon-memory proporciona 27 herramientas MCP y 3 recursos MCP para gestionar la m
 | `context_health` | **Auditoría de salud**: links huérfanos, duplicados, referencias rotas, TTL expirados, sesiones obsoletas. Puntaje 0–100 |
 | `context_export` | **Exportar como Markdown**: exporta memoria como markdown inyectable para system prompts. Ahorra 82% tokens |
 | `memory_smart_recall` | Búsqueda unificada: BM25 + grafo + quality + freshness + decay en una sola llamada |
+| `memory_pin` | **Fijar entrada**: las entradas fijadas siempre aparecen al inicio de los resultados, incluso sin coincidencia de palabras clave |
+| `memory_unpin` | **Desfijar entrada**: elimina la marca de fijado de una entrada |
+| `memory_search` | **Búsqueda unificada con filtros**: igual que `memory_recall` más filtros de categoría, etiquetas y rango de fechas |
+| `memory_tag` | **Operaciones por lotes**: añade, elimina o establece etiquetas en una o más entradas por key o id |
 
 ## Recursos MCP
 

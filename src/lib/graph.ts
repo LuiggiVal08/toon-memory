@@ -32,6 +32,8 @@ export interface GraphEntry {
 	links: string[]
 	/** ISO timestamp of last recall/access. Empty if never accessed. */
 	lastAccessed: string
+	/** Whether the entry is pinned (always appears first in recall). */
+	pinned: boolean
 }
 
 export interface MemoryGraph {
@@ -78,6 +80,7 @@ export function parseEntries(data: string): GraphEntry[] {
 				.map((t) => t.trim())
 				.filter(Boolean),
 			lastAccessed: parts.length > 12 ? parts[12] || "" : "",
+			pinned: parts.length > 13 && parts[13] === "1",
 		})
 	}
 	return out
@@ -132,6 +135,8 @@ export function buildGraph(entries: GraphEntry[]): MemoryGraph {
 
 export interface GraphRecallOpts {
 	category?: string
+	/** Semicolon-separated; entry must have ALL specified tags to match. */
+	tags?: string
 	from_date?: string
 	to_date?: string
 	/** Graph traversal depth from matched seeds (1 or 2). Default 1. */
@@ -225,6 +230,7 @@ export function graphRecallDetailed(
 	const { adjacency, byKey } = buildGraph(entries)
 	const hops = Math.max(1, Math.min(2, opts.hops ?? 1))
 	const category = opts.category || ""
+	const tagsFilter = opts.tags ? opts.tags.split(";").map((t) => t.trim()).filter(Boolean) : []
 	const from_date = opts.from_date || ""
 	const to_date = opts.to_date || ""
 
@@ -236,6 +242,7 @@ export function graphRecallDetailed(
 	const seedKeys = new Set<string>()
 	for (const e of entries) {
 		if (category && e.category !== category) continue
+		if (tagsFilter.length > 0 && !tagsFilter.every((t) => e.tags.includes(t))) continue
 		if (from_date && e.date < from_date) continue
 		if (to_date && e.date > to_date) continue
 		if (e.ttl && isExpiredLocal(e.ttl)) continue
@@ -254,7 +261,10 @@ export function graphRecallDetailed(
 	if (seedKeys.size === 0) {
 		scored.push(
 			...[...entries]
-				.sort((a, b) => importance(b) - importance(a))
+				.sort((a, b) => {
+					if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+					return importance(b) - importance(a)
+				})
 				.slice(0, opts.limit ?? 6)
 				.map((e) => ({ e, s: importance(e) }))
 		)
@@ -282,14 +292,28 @@ export function graphRecallDetailed(
 					let s = (bm25.get(k) || 0) + W_CENT * cent.get(k)! + W_IMP * importance(e)
 					if (seedKeys.has(k)) s += SEED_BONUS
 					s *= decay
-					return { e, s }
+					return { e, s, pinned: e.pinned }
 				})
-				.sort((a, b) => b.s - a.s)
+				.sort((a, b) => {
+					if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+					return b.s - a.s
+				})
 				.slice(0, opts.limit ?? 6)
 		)
 	}
 
 	selected = scored.map((x) => x.e)
+
+	// Inject pinned entries that aren't already in the result set, always at top.
+	const pinnedKeys = new Set(entries.filter((e) => e.pinned).map((e) => e.key))
+	const inResult = new Set(selected.map((e) => e.key))
+	for (const pKey of pinnedKeys) {
+		if (!inResult.has(pKey) && byKey.has(pKey)) {
+			const e = byKey.get(pKey)!
+			selected.unshift(e)
+			scored.unshift({ e, s: 999 })
+		}
+	}
 
 	// Restrict adjacency to the selected entries for compact edge rendering.
 	const subAdj = new Map<string, string[]>()
@@ -348,6 +372,7 @@ export function renderCompact(entries: GraphEntry[], opts: RenderCompactOpts = {
 			if (!isSeed && e.content.length > snippetLen) {
 				body = e.content.slice(0, snippetLen).trimEnd() + "…"
 			}
+			const tag = e.pinned ? " 📌" : ""
 			const tags = e.tags.length ? ` · tags: ${e.tags.join(";")}` : ""
 			let edges = ""
 			if (opts.adjacency) {
@@ -356,7 +381,7 @@ export function renderCompact(entries: GraphEntry[], opts: RenderCompactOpts = {
 					.filter((x): x is number => typeof x === "number")
 				if (nb.length) edges = ` · edges: ->${nb.join(", ->")}`
 			}
-			return `[${n}] ${e.category}/${e.key}\n  ${body}${tags}${edges}`
+			return `[${n}] ${e.category}/${e.key}${tag}\n  ${body}${tags}${edges}`
 		})
 		.join("\n\n")
 }

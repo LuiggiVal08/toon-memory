@@ -1551,6 +1551,239 @@ server.registerTool(
   }
 )
 
+// ── memory_pin ───────────────────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_pin",
+  {
+    title: "Pin Entry",
+    description: "Pin a memory entry so it always appears first in recalls. Useful for critical decisions, project rules, or frequently-needed context.",
+    inputSchema: {
+      key: z.string().describe("Key or id of the entry to pin"),
+    },
+  },
+  async ({ key }) => {
+    const data = readMemory()
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+
+    if (headerIdx === -1) {
+      return { content: [{ type: "text" as const, text: "No entries in memory" }] }
+    }
+
+    let found = false
+    for (let i = headerIdx + 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line.startsWith("  ") || !line.includes("|")) continue
+      if (line.startsWith("  summaries:")) break
+      const parts = line.trim().split("|")
+      if (parts[0] === key || parts[2] === key) {
+        // Set pinned field at position 13
+        while (parts.length < 14) parts.push("")
+        parts[13] = "1"
+        lines[i] = `  ${parts.join("|")}`
+        found = true
+        break
+      }
+    }
+
+    if (!found) {
+      return { content: [{ type: "text" as const, text: `"${key}" not found in memory.` }] }
+    }
+
+    writeMemory(lines.join("\n"))
+    return { content: [{ type: "text" as const, text: `📌 Pinned "${key}". It will now appear first in recalls.` }] }
+  }
+)
+
+// ── memory_unpin ─────────────────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_unpin",
+  {
+    title: "Unpin Entry",
+    description: "Remove the pin from a memory entry so it returns to normal ranking.",
+    inputSchema: {
+      key: z.string().describe("Key or id of the entry to unpin"),
+    },
+  },
+  async ({ key }) => {
+    const data = readMemory()
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+
+    if (headerIdx === -1) {
+      return { content: [{ type: "text" as const, text: "No entries in memory" }] }
+    }
+
+    let found = false
+    for (let i = headerIdx + 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line.startsWith("  ") || !line.includes("|")) continue
+      if (line.startsWith("  summaries:")) break
+      const parts = line.trim().split("|")
+      if (parts[0] === key || parts[2] === key) {
+        if (parts.length > 13) {
+          parts[13] = "0"
+          lines[i] = `  ${parts.join("|")}`
+        }
+        found = true
+        break
+      }
+    }
+
+    if (!found) {
+      return { content: [{ type: "text" as const, text: `"${key}" not found in memory.` }] }
+    }
+
+    writeMemory(lines.join("\n"))
+    return { content: [{ type: "text" as const, text: `📌 Unpinned "${key}". It will now use normal ranking.` }] }
+  }
+)
+
+// ── memory_search ────────────────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_search",
+  {
+    title: "Unified Search",
+    description: "Search memory with combined filters: text query, category, tags, and date range. Returns ranked results.",
+    inputSchema: {
+      query: z.string().describe("Text to search for"),
+      category: z.string().optional().default("").describe("Filter by category (empty = all)"),
+      tags: z.string().optional().default("").describe("Semicolon-separated tags; entry must have ALL specified tags"),
+      from_date: z.string().optional().default("").describe("Start date filter (YYYY-MM-DD or relative like 7d)"),
+      to_date: z.string().optional().default("").describe("End date filter (YYYY-MM-DD)"),
+      limit: z.number().optional().default(6).describe("Maximum entries to return"),
+      mode: z.enum(["flat", "graph"]).optional().default("flat").describe("'flat' = keyword search (default). 'graph' = graph-based recall."),
+      hops: z.number().optional().default(1).describe("Graph depth in 'graph' mode (1 or 2). Default 1."),
+      compact: z.boolean().optional().default(false).describe("Token-efficient output"),
+    },
+  },
+  async ({ query, category, tags, from_date, to_date, limit, mode, hops, compact }) => {
+    const data = readMemory()
+
+    const resolvedFrom = from_date ? parseRelativeDate(from_date) : ""
+    const detail = graphRecallDetailed(data, query, {
+      category: category || undefined,
+      tags: tags || undefined,
+      from_date: resolvedFrom || undefined,
+      to_date: to_date || undefined,
+      hops,
+      limit,
+    })
+
+    if (detail.entries.length === 0) {
+      return { content: [{ type: "text" as const, text: `No results found for "${query}"` }] }
+    }
+
+    bumpAccessed(detail.entries.map((e) => e.id))
+
+    if (compact) {
+      const formatted = renderCompact(detail.entries, {
+        adjacency: detail.adjacency,
+        seeds: detail.seeds,
+        snippetLen: 90,
+      })
+      return { content: [{ type: "text" as const, text: `🔍 Search: "${query}"\n\n${formatted}` }] }
+    }
+
+    const formatted = detail.entries
+      .map((r) => {
+        const links = r.links.length ? `\n  links: ${r.links.join(", ")}` : ""
+        const pin = r.pinned ? " 📌" : ""
+        return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}`
+      })
+      .join("\n\n")
+
+    let filterInfo = ""
+    if (category) filterInfo += ` category: ${category}`
+    if (tags) filterInfo += ` tags: ${tags}`
+    if (from_date) filterInfo += ` from: ${from_date}`
+    if (to_date) filterInfo += ` to: ${to_date}`
+
+    return {
+      content: [{ type: "text" as const, text: `🔍 Search results${filterInfo}:\n\n${formatted}` }],
+    }
+  }
+)
+
+// ── memory_tag ───────────────────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_tag",
+  {
+    title: "Batch Tag Operations",
+    description: "Batch add, remove, or set tags on one or more memory entries by key or id.",
+    inputSchema: {
+      action: z.enum(["add", "remove", "set"]).describe("'add': merge tags (union). 'remove': remove specified tags. 'set': replace all tags."),
+      tags: z.string().describe("Semicolon-separated tags to apply"),
+      ids: z.string().describe("Comma or space-separated entry keys or IDs to modify"),
+    },
+  },
+  async ({ action, tags, ids }) => {
+    const data = readMemory()
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+
+    if (headerIdx === -1) {
+      return { content: [{ type: "text" as const, text: "No entries in memory." }] }
+    }
+
+    const targetIds = ids.split(/[\s,]+/).filter(Boolean)
+    const targetSet = new Set(targetIds)
+    const tagsToApply = tags.split(";").map((t) => t.trim()).filter(Boolean)
+
+    if (tagsToApply.length === 0) {
+      return { content: [{ type: "text" as const, text: "No tags provided." }] }
+    }
+
+    let modified = 0
+    const modifiedKeys: string[] = []
+
+    for (let i = headerIdx + 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line.startsWith("  ") || !line.includes("|")) continue
+      if (line.startsWith("  summaries:")) break
+      const parts = line.trim().split("|")
+      const entryId = parts[0]
+      const entryKey = parts[2]
+
+      if (!targetSet.has(entryId) && !targetSet.has(entryKey)) continue
+
+      const currentTags = (parts[5] || "").split(";").map((t) => t.trim()).filter(Boolean)
+      let newTags: string[]
+
+      if (action === "add") {
+        newTags = [...new Set([...currentTags, ...tagsToApply])]
+      } else if (action === "remove") {
+        newTags = currentTags.filter((t) => !tagsToApply.includes(t))
+      } else {
+        newTags = [...tagsToApply]
+      }
+
+      parts[5] = newTags.join(";")
+      lines[i] = `  ${parts.join("|")}`
+      modified++
+      modifiedKeys.push(entryKey)
+    }
+
+    if (modified === 0) {
+      return { content: [{ type: "text" as const, text: `No entries found matching: ${targetIds.join(", ")}` }] }
+    }
+
+    writeMemory(lines.join("\n"))
+
+    const actionLabel = action === "add" ? "Added" : action === "remove" ? "Removed" : "Set"
+    return {
+      content: [{
+        type: "text" as const,
+        text: `🏷️ ${actionLabel} tags on ${modified} entries:\n  Tags: ${tagsToApply.join(";")}\n  Entries: ${modifiedKeys.join(", ")}`,
+      }],
+    }
+  }
+)
+
 // ── memory_visualize (MCP Apps) ──────────────────────────────────────────────
 
 registerAppTool(
