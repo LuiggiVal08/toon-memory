@@ -1,0 +1,57 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.LuiggiVal08/toon-memory",
+  "description": "Offline, token-efficient persistent memory for AI coding agents — 35+ tools, 80% fewer calls, recall decisions and patterns across sessions. No LLM, no server.",
+  "title": "Toon Memory",
+  "websiteUrl": "https://github.com/LuiggiVal08/toon-memory#readme",
+  "repository": {
+    "url": "https://github.com/LuiggiVal08/toon-memory",
+    "source": "github"
+  },
+  "version": "3.5.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "toon-memory",
+      "version": "3.5.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "TOON_MEMORY_KEY",
+          "description": "Encryption key for AES-256-GCM memory encryption",
+          "isSecret": true
+        },
+        {
+          "name": "TOON_MEMORY_CAPTURE",
+          "description": "Set to 'true' to enable activity capture hooks"
+        },
+        {
+          "name": "TOON_MEMORY_SESSION_ID",
+          "description": "Override the auto-detected session ID"
+        },
+        {
+          "name": "TOON_MEMORY_BRANCH",
+          "description": "Override the auto-detected git branch name"
+        },
+        {
+          "name": "TOON_MEMORY_NO_SESSION",
+          "description": "Set to disable session heartbeat tracking"
+        },
+        {
+          "name": "GITHUB_TOKEN",
+          "description": "GitHub personal access token for exporting/importing memory to Gist",
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
