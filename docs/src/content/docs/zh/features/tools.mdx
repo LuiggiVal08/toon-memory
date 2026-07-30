@@ -1,6 +1,6 @@
 ---
-title: "34 个 MCP 工具实现持久化 AI 记忆"
-description: "34 个 MCP 工具用于 AI 代理持久化记忆 — memory_remember、memory_recall、memory_smart_recall、context_generate 等。面向 Claude、Cursor、OpenCode 的 token 高效、图感知召回。"
+title: "35 个 MCP 工具实现持久化 AI 记忆"
+description: "35 个 MCP 工具用于 AI 代理持久化记忆 — memory_remember、memory_recall、memory_smart_recall、context_generate 等。面向 Claude、Cursor、OpenCode 的 token 高效、图感知召回。"
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## 概述
 
-toon-memory 提供 34 个 MCP 工具和 4 个 MCP 资源，用于管理持久化记忆：
+toon-memory 提供 35 个 MCP 工具和 4 个 MCP 资源，用于管理持久化记忆：
 
 ## 工具
 
@@ -25,6 +25,7 @@ toon-memory 提供 34 个 MCP 工具和 4 个 MCP 资源，用于管理持久化
 | `memory_diff` | 显示自某日期以来的更改（24h、7d 或具体日期） |
 | `memory_suggest` | 为给定上下文查找相关条目 |
 | `memory_captured` | 列出钩子自动捕获的活动（需启用）或清除日志 |
+| `memory_checkpoint` | **会话检查点**：创建当前内存状态的快照，TTL为7天。在长时间会话中可用于回滚参考 |
 | `memory_consolidate` | 合并去重相同内容的条目并合并属性（确定性，无 LLM） |
 | `memory_encrypt` | 启用 AES-256-GCM 加密 |
 | `memory_decrypt` | 禁用加密 |

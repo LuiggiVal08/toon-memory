@@ -1,6 +1,6 @@
 ---
-title: "34 outils MCP pour la mémoire IA persistante"
-description: "34 outils MCP pour la mémoire persistante des agents IA — memory_remember, memory_recall, memory_smart_recall, context_generate et plus encore. Rappel économe en tokens, basé sur le graphe, pour Claude, Cursor, OpenCode."
+title: "35 outils MCP pour la mémoire IA persistante"
+description: "35 outils MCP pour la mémoire persistante des agents IA — memory_remember, memory_recall, memory_smart_recall, context_generate et plus encore. Rappel économe en tokens, basé sur le graphe, pour Claude, Cursor, OpenCode."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## Présentation
 
-toon-memory fournit 34 outils MCP et 4 ressources MCP pour gérer la mémoire persistante :
+toon-memory fournit 35 outils MCP et 4 ressources MCP pour gérer la mémoire persistante :
 
 ## Outils
 
@@ -25,6 +25,7 @@ toon-memory fournit 34 outils MCP et 4 ressources MCP pour gérer la mémoire pe
 | `memory_diff` | Afficher les changements depuis une date (24h, 7d ou date précise) |
 | `memory_suggest` | Trouver des entrées liées pour un contexte donné |
 | `memory_captured` | Lister l'activité capturée automatiquement par les hooks (opt-in) ou vider le journal |
+| `memory_checkpoint` | **Point de contrôle** : crée un instantané de l'état actuel de la mémoire avec TTL de 7j. Utile pour référence de restauration pendant les longues sessions |
 | `memory_consolidate` | Dédupliquer les entrées avec un contenu identique et fusionner les attributs (déterministe, pas de LLM) |
 | `memory_encrypt` | Activer le chiffrement AES-256-GCM |
 | `memory_decrypt` | Désactiver le chiffrement |

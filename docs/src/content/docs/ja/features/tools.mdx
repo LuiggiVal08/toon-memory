@@ -1,6 +1,6 @@
 ---
-title: "永続AIメモリ向けの34個のMCPツール"
-description: "永続AIエージェントメモリ向けの34個のMCPツール — memory_remember、memory_recall、memory_smart_recall、context_generateなど。Claude、Cursor、OpenCode向けのトークン効率の高いグラフ対応リコール。"
+title: "永続AIメモリ向けの35個のMCPツール"
+description: "永続AIエージェントメモリ向けの35個のMCPツール — memory_remember、memory_recall、memory_smart_recall、context_generateなど。Claude、Cursor、OpenCode向けのトークン効率の高いグラフ対応リコール。"
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## 概要
 
-toon-memoryは永続メモリを管理するための34個のMCPツールと4つのMCPリソースを提供します：
+toon-memoryは永続メモリを管理するための35個のMCPツールと4つのMCPリソースを提供します：
 
 ## ツール
 
@@ -25,6 +25,7 @@ toon-memoryは永続メモリを管理するための34個のMCPツールと4つ
 | `memory_diff` | 指定日以降の変更を表示（24h、7d、または正確な日付） |
 | `memory_suggest` | 特定のコンテキストに関連するエントリを検索 |
 | `memory_captured` | フックによって自動キャプチャされたアクティビティを一覧表示（オプトイン）またはログをクリア |
+| `memory_checkpoint` | **セッションチェックポイント**: 現在のメモリ状態のスナップショットを7d TTLで作成。長時間セッション中のロールバック参照に便利 |
 | `memory_consolidate` | 同一内容のエントリを重複排除して属性をマージ（決定論的、LLM不使用） |
 | `memory_encrypt` | AES-256-GCM暗号化を有効化 |
 | `memory_decrypt` | 暗号化を無効化 |

@@ -1,6 +1,6 @@
 ---
-title: "AI 에이전트 영구 메모리를 위한 34개 MCP 도구"
-description: "AI 에이전트 영구 메모리를 위한 34개 MCP 도구 — memory_remember, memory_recall, memory_smart_recall, context_generate 등. Claude, Cursor, OpenCode를 위한 토큰 효율적이고 그래프 인식 검색."
+title: "AI 에이전트 영구 메모리를 위한 35개 MCP 도구"
+description: "AI 에이전트 영구 메모리를 위한 35개 MCP 도구 — memory_remember, memory_recall, memory_smart_recall, context_generate 등. Claude, Cursor, OpenCode를 위한 토큰 효율적이고 그래프 인식 검색."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## 개요
 
-toon-memory는 영구 메모리를 관리하기 위한 34개의 MCP 도구와 4개의 MCP 리소스를 제공합니다:
+toon-memory는 영구 메모리를 관리하기 위한 35개의 MCP 도구와 4개의 MCP 리소스를 제공합니다:
 
 ## 도구
 
@@ -25,6 +25,7 @@ toon-memory는 영구 메모리를 관리하기 위한 34개의 MCP 도구와 4�
 | `memory_diff` | 특정 날짜 이후 변경 사항 표시 (24h, 7d 또는 정확한 날짜) |
 | `memory_suggest` | 주어진 컨텍스트와 관련된 항목 검색 |
 | `memory_captured` | 훅이 자동으로 캡처한 활동 목록 (선택 사항) 또는 로그 지우기 |
+| `memory_checkpoint` | **세션 체크포인트**: 7d TTL로 현재 메모리 상태의 스냅샷 생성. 긴 세션 중 롤백 참조에 유용 |
 | `memory_consolidate` | 동일한 내용의 항목 중복 제거 및 속성 병합 (결정론적, LLM 없음) |
 | `memory_encrypt` | AES-256-GCM 암호화 활성화 |
 | `memory_decrypt` | 암호화 비활성화 |

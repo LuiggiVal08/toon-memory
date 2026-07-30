@@ -165,10 +165,10 @@ memory_remember   # Sauvegarder les décisions importantes
 | Outil | Description |
 |------|-------------|
 | `memory_remember` | Sauvegarde une décision, un motif, un bogue ou une connaissance (TTL optionnel, inférence automatique de tags, `links` pour construire le graphe mémoire, fusion-dédoublonnage sur même clé, score de qualité et confiance automatiques) |
-| `memory_recall` | Recherche dans la mémoire (utilisez AVANT de lire les fichiers, filtre les TTL expirés). `mode: "graph"` étend un sous-graphe relationnel pour plus de précision. `compact: true` retourne un format économe en tokens, indexé numériquement. Classement pondéré par la qualité |
-| `memory_smart_recall` | **Rappel unifié** : BM25 + graphe + décroissance + qualité en un seul appel. Utilisez au DÉBUT de chaque tâche. Retourne une sortie compacte et économe en tokens |
+| `memory_recall` | Recherche dans la mémoire (utilisez AVANT de lire les fichiers, filtre les TTL expirés). `mode: "graph"` étend un sous-graphe relationnel pour plus de précision. `compact: true` retourne un format économe en tokens, indexé numériquement. `sessionBias` booste les entrées de la branche git actuelle. Classement pondéré par la qualité |
+| `memory_smart_recall` | **Rappel unifié** : BM25 + graphe + décroissance + qualité en un seul appel. `sessionBias` booste les entrées de la branche git actuelle. Utilisez au DÉBUT de chaque tâche. Retourne une sortie compacte et économe en tokens |
 | `memory_forget` | Supprime une entrée par clé ou id |
-| `memory_stats` | Affiche l'état de la mémoire (y compris les stats TTL et la distribution de qualité) |
+| `memory_stats` | Affiche l'état de la mémoire (y compris les stats TTL et la distribution de qualité) et les mémoire froides en dessous des seuils de qualité/accès |
 | `memory_summary` | Sauvegarde/récupère les résumés de fichiers |
 | `memory_archive` | Archive les anciennes entrées (>30 jours) et les entrées TTL expirées |
 | `memory_diff` | Affiche les changements depuis une date (24h, 7j, ou date précise) |
@@ -177,6 +177,7 @@ memory_remember   # Sauvegarder les décisions importantes
 | `memory_decrypt` | Désactive le chiffrement |
 | `memory_backup` | Crée une sauvegarde horodatée du fichier mémoire (auto-nettoyage aux 10 plus récentes) |
 | `memory_captured` | Liste les activités capturées automatiquement par les hooks (opt-in) ou vide le journal |
+| `memory_checkpoint` | **Point de contrôle** : crée un instantané de l'état actuel de la mémoire avec TTL de 7j. Utile pour référence de restauration pendant les longues sessions |
 | `memory_consolidate` | Fusionne-dédoublonne les entrées : les entrées de même clé sont fusionnées (union des tags, confiance max, date la plus récente), puis les doublons exacts sont supprimés (déterministe, sans LLM) |
 | `memory_sessions` | Affiche les sessions d'agents actives (branche, fichiers, dernière présence) et les conflits doux pour le travail en parallèle |
 | `memory_compress` | Compression LLM en deux étapes : résumer + écraser. Utilise Anthropic/OpenAI CLI si disponible |
@@ -185,7 +186,7 @@ memory_remember   # Sauvegarder les décisions importantes
 | `memory_merge_sessions` | Fusionne les observations entre sessions parallèles pour un fichier. Déduplique et promeut automatiquement |
 | `memory_export_gist` | Exporte les entrées vers un GitHub Gist (public ou privé). Utilise GITHUB_TOKEN ou gh CLI |
 | `memory_import_gist` | Importe les entrées depuis un GitHub Gist. Fusionne avec les entrées existantes (union de tags, confiance max) |
-| `memory_merge_similar` | Trouver les entrées avec >50% de similarité de mots (Jaccard) et les fusionner de manière déterministe |
+| `memory_merge_similar` | Trouver les entrées avec >50% de similarité de mots (Jaccard) et les fusionner de manière déterministe. `dryRun: true` affiche un aperçu détaillé de la fusion |
 | `memory_graph_path` | Plus court chemin BFS entre deux entrées dans le graphe de connaissances |
 | `context_brief` | **Briefing de contexte en un appel** : mémoire + sessions + santé en markdown compact. Remplace 5-6 appels mémoire_* séparés. Zéro LLM, pure agrégation déterministe |
 | `context_generate` | **Briefing projet complet** : combine la structure du projet, l'état git, les entrées mémoire et les sessions actives en un seul appel. Remplace 5-6 appels d'outils manuels |
@@ -193,6 +194,10 @@ memory_remember   # Sauvegarder les décisions importantes
 | `context_focus` | **Briefing ciblé** : uniquement la mémoire pertinente + fichiers source liés + appelants + fichiers de test pour une requête |
 | `context_health` | **Audit de santé mémoire** : liens orphelins, doublons, références fichiers cassées, TTL expirés, sessions obsolètes, score 0–100 |
 | `context_export` | **Export mémoire en markdown** : contexte injectable pour les prompts système (complet ou compact) |
+| `memory_pin` | **Épingler une entrée avec priorité 1-5** : les entrées épinglées apparaissent toujours en premier dans les résultats de rappel, triées par priorité, même sans correspondance de mot-clé |
+| `memory_unpin` | **Désépingler une entrée** : supprimer la marque de priorité |
+| `memory_search` | **Recherche unifiée avec filtres** : identique à `memory_recall` plus les filtres `category`, `tags`, `from_date`, `to_date`. Le filtre de tags utilise la logique ET — tous les tags spécifiés doivent correspondre. `sessionBias` booste les entrées de la branche git actuelle |
+| `memory_tag` | **Opérations de tags par lot** : `add`, `remove` ou `set` des tags sur une ou plusieurs entrées par clé ou id |
 
 ### Ressources MCP
 

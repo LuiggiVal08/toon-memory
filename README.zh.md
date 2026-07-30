@@ -165,10 +165,10 @@ memory_remember   # 保存重要决策
 | 工具 | 说明 |
 |------|------|
 | `memory_remember` | 保存决策、模式、Bug 或知识（可选 TTL、自动标签推断、`links` 构建记忆图谱、同 key 自动合并去重、自动质量评分和置信度） |
-| `memory_recall` | 搜索记忆（应在读取文件前使用，自动过滤已过期 TTL）。`mode: "graph"` 展开关系感知子图以提高精度。`compact: true` 返回 token 高效的数字索引格式。按质量加权排序 |
-| `memory_smart_recall` | **统一召回**：一次调用融合 BM25 + 图谱 + 衰减 + 质量。在每次任务开始时使用。返回紧凑、token 高效的输出 |
+| `memory_recall` | 搜索记忆（应在读取文件前使用，自动过滤已过期 TTL）。`mode: "graph"` 展开关系感知子图以提高精度。`compact: true` 返回 token 高效的数字索引格式。按质量加权排序。`sessionBias`提升当前git分支的条目 |
+| `memory_smart_recall` | **统一召回**：一次调用融合 BM25 + 图谱 + 衰减 + 质量。在每次任务开始时使用。`sessionBias`提升当前git分支的条目。返回紧凑、token 高效的输出 |
 | `memory_forget` | 按 key 或 id 删除条目 |
-| `memory_stats` | 查看记忆状态（包括 TTL 统计和质量分布） |
+| `memory_stats` | 查看记忆状态（包括 TTL 统计和质量分布、以及低于质量/访问阈值的冷记忆） |
 | `memory_summary` | 保存/读取文件摘要 |
 | `memory_archive` | 归档旧条目（>30 天）和已过期 TTL 的条目 |
 | `memory_diff` | 显示自某个日期以来的变化（24 小时、7 天或精确日期） |
@@ -177,6 +177,7 @@ memory_remember   # 保存重要决策
 | `memory_decrypt` | 禁用加密 |
 | `memory_backup` | 创建带时间戳的记忆文件备份（自动保留最近 10 份） |
 | `memory_captured` | 列出由钩子自动捕获的活动日志（需启用）或清除日志 |
+| `memory_checkpoint` | **会话检查点**：创建当前内存状态的快照，TTL为7天。在长时间会话中可用于回滚参考 |
 | `memory_consolidate` | 合并去重：相同 key 的条目合并（标签取并集、置信度取最大值、日期取最新），然后移除内容完全相同的重复条目（确定性处理，无需 LLM） |
 | `memory_sessions` | 显示活跃的 Agent 会话（分支、文件、最后活跃时间）和并行工作时的软冲突 |
 | `memory_compress` | LLM 驱动的两步压缩：摘要 + 覆盖。如果可用则使用 Anthropic/OpenAI CLI |
@@ -185,7 +186,7 @@ memory_remember   # 保存重要决策
 | `memory_merge_sessions` | 合并文件的并行会话中的观察。去重并自动提升 |
 | `memory_export_gist` | 将条目导出到 GitHub Gist（公开或私有）。使用 GITHUB_TOKEN 或 gh CLI |
 | `memory_import_gist` | 从 GitHub Gist 导入条目。与现有条目合并（标签联合，最大置信度） |
-| `memory_merge_similar` | 查找词汇相似度>50%（Jaccard）的条目并确定性合并 |
+| `memory_merge_similar` | 查找词汇相似度>50%（Jaccard）的条目并确定性合并。`dryRun: true`显示详细的合并预览 |
 | `memory_graph_path` | 知识图谱中两个条目之间的BFS最短路径 |
 | `context_brief` | **一键上下文简报**：紧凑 markdown 格式的记忆 + 会话 + 健康状态。替代 5-6 次独立 memory_* 调用。零 LLM 开销，纯确定性聚合 |
 | `context_generate` | **完整项目简报**：一次调用整合项目结构、git 状态、记忆条目和活跃会话。替代 5-6 次手动调用 |
@@ -193,6 +194,10 @@ memory_remember   # 保存重要决策
 | `context_focus` | **精准简报**：仅返回与查询相关的记忆 + 关联源文件 + 调用方 + 测试文件 |
 | `context_health` | **记忆健康审计**：孤立链接、重复项、损坏的文件引用、过期 TTL、过期会话，评分 0–100 |
 | `context_export` | **导出记忆为 markdown**：可注入系统提示词的上下文（完整或紧凑格式） |
+| `memory_pin` | **使用优先级1-5固定条目**：固定后的条目即使没有关键词匹配，也会在召回结果中按优先级排序始终优先显示 |
+| `memory_unpin` | **取消固定条目**：移除优先级标记 |
+| `memory_search` | **带过滤器的统一搜索**：与 `memory_recall` 相同，加上 `category`、`tags`、`from_date`、`to_date` 过滤器。标签过滤器使用 AND 逻辑 — 所有指定的标签必须匹配。`sessionBias`提升当前git分支的条目 |
+| `memory_tag` | **批量标签操作**：按 key 或 id 在一个或多个条目上添加、删除或设置标签 |
 
 ### MCP 资源
 

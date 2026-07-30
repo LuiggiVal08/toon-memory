@@ -165,10 +165,10 @@ memory_remember   # Salve decisões importantes
 | Ferramenta | Descrição |
 |------------|-----------|
 | `memory_remember` | Salve uma decisão, padrão, bug ou conhecimento (TTL opcional, inferência automática de tags, `links` para construir o grafo de memória, merge-dedup na mesma chave, pontuação automática de qualidade e confiança) |
-| `memory_recall` | Busque na memória (use ANTES de ler arquivos, filtra TTL expirado). `mode: "graph"` expande um subgrafo consciente de relacionamentos para maior precisão. `compact: true` retorna um formato eficiente em tokens com índice numérico. Ranking ponderado por qualidade |
-| `memory_smart_recall` | **Recall unificado**: BM25 + grafo + decaimento + qualidade em uma chamada. Use no INÍCIO de cada tarefa. Retorna saída compacta e eficiente em tokens |
+| `memory_recall` | Busque na memória (use ANTES de ler arquivos, filtra TTL expirado). `mode: "graph"` expande um subgrafo consciente de relacionamentos para maior precisão. `compact: true` retorna um formato eficiente em tokens com índice numérico. Ranking ponderado por qualidade. `sessionBias` impulsiona entradas da branch git atual |
+| `memory_smart_recall` | **Recall unificado**: BM25 + grafo + decaimento + qualidade em uma chamada. Use no INÍCIO de cada tarefa. `sessionBias` impulsiona entradas da branch git atual. Retorna saída compacta e eficiente em tokens |
 | `memory_forget` | Remova uma entrada por chave ou id |
-| `memory_stats` | Veja o estado da memória (incluindo estatísticas de TTL e distribuição de qualidade) |
+| `memory_stats` | Veja o estado da memória (incluindo estatísticas de TTL e distribuição de qualidade e memórias frias abaixo dos limiares de qualidade/acesso) |
 | `memory_summary` | Salve/recupere resumos de arquivos |
 | `memory_archive` | Arquive entradas antigas (>30 dias) e entradas com TTL expirado |
 | `memory_diff` | Mostre mudanças desde uma data (24h, 7d, ou data exata) |
@@ -177,6 +177,7 @@ memory_remember   # Salve decisões importantes
 | `memory_decrypt` | Desative a criptografia |
 | `memory_backup` | Crie backup com timestamp do arquivo de memória (poda automática para os 10 mais recentes) |
 | `memory_captured` | Liste atividade capturada automaticamente por hooks (opt-in) ou limpe o log |
+| `memory_checkpoint` | **Ponto de verificação**: cria um snapshot do estado atual da memória com TTL de 7d. Útil para referência de rollback durante sessões longas |
 | `memory_consolidate` | Merge-dedup de entradas: entradas com a mesma chave são mescladas (união de tags, confiança máxima, data mais recente), depois duplicatas com conteúdo exato são removidas (determinístico, sem LLM) |
 | `memory_sessions` | Mostre sessões ativas do agente (branch, arquivos, último acesso) e conflitos suaves para trabalho paralelo |
 | `memory_compress` | Compressão com LLM em dois passos: resumir + sobrescrever. Usa Anthropic/OpenAI CLI se disponível |
@@ -185,7 +186,7 @@ memory_remember   # Salve decisões importantes
 | `memory_merge_sessions` | Mescla observações entre sessões paralelas para um arquivo. Deduplica e promove automaticamente |
 | `memory_export_gist` | Exporta entradas para um GitHub Gist (público ou privado). Usa GITHUB_TOKEN ou gh CLI |
 | `memory_import_gist` | Importa entradas de um GitHub Gist. Mescla com entradas existentes (união de tags, confiança máxima) |
-| `memory_merge_similar` | Encontrar entradas com >50% de similaridade de palavras (Jaccard) e mesclá-las deterministamente |
+| `memory_merge_similar` | Encontrar entradas com >50% de similaridade de palavras (Jaccard) e mesclá-las deterministamente. `dryRun: true` mostra uma prévia detalhada da mesclagem |
 | `memory_graph_path` | Caminho BFS mais curto entre duas entradas no grafo de conhecimento |
 | `context_brief` | **Briefing de contexto em uma chamada**: memória + sessões + saúde em markdown compacto. Use no lugar de 5-6 chamadas separadas de memory_*. Zero LLM, pura agregação determinística |
 | `context_generate` | **Briefing completo do projeto**: combina estrutura do projeto, estado do git, entradas de memória e sessões ativas em uma chamada. Substitui 5-6 chamadas manuais de ferramentas |
@@ -193,6 +194,10 @@ memory_remember   # Salve decisões importantes
 | `context_focus` | **Briefing hiper-focado**: apenas memória relevante + arquivos fonte relacionados + chamadores + arquivos de teste para uma consulta |
 | `context_health` | **Auditoria de saúde da memória**: links órfãos, duplicatas, refs de arquivo quebradas, TTL expirado, sessões obsoletas, pontuação 0–100 |
 | `context_export` | **Exporte memória como markdown**: contexto injetável para system prompts (completo ou compacto) |
+| `memory_pin` | **Fixar entrada com prioridade 1-5**: entradas fixadas sempre aparecem primeiro nos resultados de recall, classificadas por prioridade, mesmo sem correspondência de palavra-chave |
+| `memory_unpin` | **Desafixar entrada**: remove a flag de prioridade |
+| `memory_search` | **Pesquisa unificada com filtros**: mesmo que `memory_recall` mais filtros `category`, `tags`, `from_date`, `to_date`. O filtro de tags usa lógica AND — todas as tags especificadas devem corresponder. `sessionBias` impulsiona entradas da branch git atual |
+| `memory_tag` | **Operações em lote de tags**: `add`, `remove` ou `set` tags em uma ou mais entradas por key ou id |
 
 ### Recursos MCP
 

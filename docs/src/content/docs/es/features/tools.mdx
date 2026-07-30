@@ -1,25 +1,26 @@
 ---
 title: Herramientas MCP
-description: Las 34 herramientas de memoria y contexto y 4 recursos para tu agente de IA
+description: Las 35 herramientas de memoria y contexto y 4 recursos para tu agente de IA
 ---
 
 ## Resumen
 
-toon-memory proporciona 34 herramientas MCP y 4 recursos MCP para gestionar la memoria persistente:
+toon-memory proporciona 35 herramientas MCP y 4 recursos MCP para gestionar la memoria persistente:
 
 ## Herramientas
 
 | Herramienta | Descripción |
 |------|-------------|
 | `memory_remember` | Guarda una decisión, patrón, bug o conocimiento (con TTL opcional, inferencia automática de etiquetas, `links`, quality score automático, merge-dedup, confidence) |
-| `memory_recall` | Busca en la memoria (úsalo ANTES de leer archivos, filtra entradas con TTL expirado). `mode: "graph"` expande un subgrafo con relaciones para mayor precisión. Ranking con quality scoring |
+| `memory_recall` | Busca en la memoria (úsalo ANTES de leer archivos, filtra entradas con TTL expirado). `mode: "graph"` expande un subgrafo con relaciones para mayor precisión. `sessionBias` potencia entradas de la rama git actual. Ranking con quality scoring |
 | `memory_forget` | Elimina una entrada por key o id |
-| `memory_stats` | Ver el estado de la memoria (incluyendo estadísticas de TTL y distribución de calidad) |
+| `memory_stats` | Ver el estado de la memoria (incluyendo estadísticas de TTL, distribución de calidad y memorias frías por debajo de umbrales) |
 | `memory_summary` | Guardar/recuperar resúmenes de archivos |
 | `memory_archive` | Archiva entradas antiguas (>30 días) y entradas con TTL expirado |
 | `memory_diff` | Muestra cambios desde una fecha (24h, 7d, o fecha exacta) |
 | `memory_suggest` | Encuentra entradas relacionadas para un contexto dado |
 | `memory_captured` | Lista actividad auto-capturada por hooks (opt-in) o limpia el log |
+| `memory_checkpoint` | **Punto de control**: crea una instantánea del estado actual de memoria con TTL de 7d. Útil para referencia de restauración durante sesiones largas |
 | `memory_consolidate` | De-duplica entradas con contenido idéntico y merge de atributos (determinístico, sin LLM) |
 | `memory_encrypt` | Habilita encriptación AES-256-GCM |
 | `memory_decrypt` | Deshabilita la encriptación |
@@ -31,10 +32,10 @@ toon-memory proporciona 34 herramientas MCP y 4 recursos MCP para gestionar la m
 | `context_focus` | **Briefing dirigido**: memoria relevante + archivos relacionados + callers + archivos de test para una query específica |
 | `context_health` | **Auditoría de salud**: links huérfanos, duplicados, referencias rotas, TTL expirados, sesiones obsoletas. Puntaje 0–100 |
 | `context_export` | **Exportar como Markdown**: exporta memoria como markdown inyectable para system prompts. Ahorra 82% tokens |
-| `memory_smart_recall` | Búsqueda unificada: BM25 + grafo + quality + freshness + decay en una sola llamada |
-| `memory_pin` | **Fijar entrada**: las entradas fijadas siempre aparecen al inicio de los resultados, incluso sin coincidencia de palabras clave |
-| `memory_unpin` | **Desfijar entrada**: elimina la marca de fijado de una entrada |
-| `memory_search` | **Búsqueda unificada con filtros**: igual que `memory_recall` más filtros de categoría, etiquetas y rango de fechas |
+| `memory_smart_recall` | Búsqueda unificada: BM25 + grafo + quality + freshness + decay + sesgo de sesión en una sola llamada |
+| `memory_pin` | **Fijar entrada**: las entradas fijadas siempre aparecen al inicio de los resultados, incluso sin coincidencia de palabras clave. Soporta prioridad 1-5 (1=más alta), ordenadas por prioridad |
+| `memory_unpin` | **Desfijar entrada**: elimina la marca de prioridad de una entrada |
+| `memory_search` | **Búsqueda unificada con filtros**: igual que `memory_recall` más filtros de categoría, etiquetas y rango de fechas. `sessionBias` potencia entradas de la rama git actual |
 | `memory_tag` | **Operaciones por lotes**: añade, elimina o establece etiquetas en una o más entradas por key o id |
 
 ## Recursos MCP

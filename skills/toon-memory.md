@@ -43,6 +43,26 @@ A persistent memory system for AI coding agents. It remembers decisions, pattern
 | `context_brief` | One-call context briefing: memory + sessions + health in compact markdown |
 | `memory_encrypt` | Enable AES-256-GCM encryption |
 | `memory_decrypt` | Disable encryption and decode memory |
+| `memory_backup` | Create timestamped backup of memory file |
+| `context_generate` | Full project briefing: project + git + memory + sessions |
+| `context_diff` | Incremental briefing since last session |
+| `context_focus` | Hyper-focused briefing for a specific task |
+| `context_health` | Memory health audit with score 0-100 |
+| `context_export` | Export memory as markdown for system prompts |
+| `memory_compress` | LLM-powered compression of selected entries |
+| `memory_compress_all` | Batch compression of low-quality entries |
+| `memory_primer` | Auto-generated knowledge map for session start |
+| `memory_merge_sessions` | Merge observations across parallel sessions |
+| `memory_export_gist` | Export memory to a private GitHub Gist |
+| `memory_import_gist` | Import memory from a GitHub Gist |
+| `memory_merge_similar` | Find and merge near-duplicates by Jaccard similarity |
+| `memory_graph_path` | BFS shortest path between two entries |
+| `memory_visualize` | Open interactive memory graph viewer |
+| `memory_pin` | Pin entry with priority 1-5 for top recall placement |
+| `memory_unpin` | Remove the priority flag from an entry |
+| `memory_search` | Search with category, tags, and date range filters |
+| `memory_tag` | Batch tag operations (add, remove, set) |
+| `memory_checkpoint` | Create session snapshot with 7d TTL |
 
 ## MCP Resources
 

@@ -165,10 +165,10 @@ memory_remember   # 중요한 결정 저장
 | 도구 | 설명 |
 |------|-------------|
 | `memory_remember` | 결정, 패턴, 버그, 또는 지식 저장 (선택적 TTL, 자동 태그 추론, 메모리 그래프 구축을 위한 `links`, 같은 키에서 병합-중복제거, 자동 품질 점수 및 신뢰도) |
-| `memory_recall` | 메모리 검색 (파일 읽기 전 사용, 만료된 TTL 필터링). `mode: "graph"`는 더 정확한 관계 인식 서브그래프를 확장. `compact: true`는 토큰 효율적 숫자 인덱스 형식 반환. 품질 가중 순위 |
-| `memory_smart_recall` | **통합 리콜**: BM25 + 그래프 + 감쇠 + 품질을 하나의 호출로 결합. 모든 작업 시작 시 사용. 컴팩트하고 토큰 효율적인 출력 |
+| `memory_recall` | 메모리 검색 (파일 읽기 전 사용, 만료된 TTL 필터링). `mode: "graph"`는 더 정확한 관계 인식 서브그래프를 확장. `compact: true`는 토큰 효율적 숫자 인덱스 형식 반환. 품질 가중 순위. `sessionBias`로 현재 git 브랜치의 항목 부스트 |
+| `memory_smart_recall` | **통합 리콜**: BM25 + 그래프 + 감쇠 + 품질을 하나의 호출로 결합. 모든 작업 시작 시 사용. `sessionBias`로 현재 git 브랜치의 항목 부스트. 컴팩트하고 토큰 효율적인 출력 |
 | `memory_forget` | 키 또는 ID로 항목 삭제 |
-| `memory_stats` | 메모리 상태 확인 (TTL 통계 및 품질 분포 포함) |
+| `memory_stats` | 메모리 상태 확인 (TTL 통계 및 품질 분포 포함, 품질/액세스 임계값 미만의 콜드 메모리) |
 | `memory_summary` | 파일 요약 저장/조회 |
 | `memory_archive` | 오래된 항목(30일 초과) 및 만료된 TTL 항목 아카이브 |
 | `memory_diff` | 특정 날짜 이후 변경사항 표시 (24h, 7d, 또는 정확한 날짜) |
@@ -177,6 +177,7 @@ memory_remember   # 중요한 결정 저장
 | `memory_decrypt` | 암호화 비활성화 |
 | `memory_backup` | 메모리 파일의 타임스탬프 백업 생성 (최근 10개로 자동 정리) |
 | `memory_captured` | 훅에 의해 자동 캡처된 활동 목록 (선택적) 또는 로그 지우기 |
+| `memory_checkpoint` | **세션 체크포인트**: 7d TTL로 현재 메모리 상태의 스냅샷 생성. 긴 세션 중 롤백 참조에 유용 |
 | `memory_consolidate` | 병합-중복제거: 같은 키의 항목 병합 (태그 합집합, 최대 신뢰도, 최신 날짜), 그런 다음 동일한 콘텐츠의 중복 제거 (결정론적, LLM 불필요) |
 | `memory_sessions` | 활성 에이전트 세션(브랜치, 파일, 마지막 확인) 및 병렬 작업 시 소프트 충돌 표시 |
 | `memory_compress` | LLM 기반 2단계 압축: 요약 + 덮어쓰기. Anthropic/OpenAI CLI 사용 가능 시 사용 |
@@ -185,7 +186,7 @@ memory_remember   # 중요한 결정 저장
 | `memory_merge_sessions` | 파일의 병렬 세션 간 관찰 병합. 중복 제거 및 자동 승격 |
 | `memory_export_gist` | 항목을 GitHub Gist(공개/비공개)로 내보내기. GITHUB_TOKEN 또는 gh CLI 사용 |
 | `memory_import_gist` | GitHub Gist에서 항목 가져오기. 기존 항목과 병합(태그 합집합, 최대 신뢰도) |
-| `memory_merge_similar` | 어휘 유사도 >50% (Jaccard)인 항목을 찾아 결정론적으로 병합 |
+| `memory_merge_similar` | 어휘 유사도 >50% (Jaccard)인 항목을 찾아 결정론적으로 병합. `dryRun: true`로 상세 병합 미리보기 표시 |
 | `memory_graph_path` | 지식 그래프에서 두 항목 간의 BFS 최단 경로 |
 | `context_brief` | **원 호출 컨텍스트 브리핑**: 컴팩트 마크다운에 메모리 + 세션 + 건강 상태. 별도의 5-6개 memory_* 호출 대신 사용. LLM 불필요, 순수 결정론적 집계 |
 | `context_generate` | **전체 프로젝트 브리핑**: 프로젝트 구조, git 상태, 메모리 항목, 활성 세션을 하나의 호출로 결합. 5-6개의 수동 도구 호출 대체 |
@@ -193,6 +194,10 @@ memory_remember   # 중요한 결정 저장
 | `context_focus` | **집중 브리핑**: 쿼리에 관련된 메모리 + 소스 파일 + 호출자 + 테스트 파일만 반환 |
 | `context_health` | **메모리 건강 감사**: 고아 링크, 중복, 깨진 파일 참조, 만료된 TTL, 오래된 세션, 점수 0–100 |
 | `context_export` | **메모리를 마크다운으로 내보내기**: 시스템 프롬프트용 주입 가능한 컨텍스트 (전체 또는 컴팩트) |
+| `memory_pin` | **우선순위 1-5로 항목 핀 고정**: 핀 고정된 항목은 키워드 일치가 없어도 항상 리콜 결과에서 우선순위별로 정렬되어 먼저 표시됨 |
+| `memory_unpin` | **항목 핀 해제**: 우선순위 플래그 제거 |
+| `memory_search` | **필터가 있는 통합 검색**: `memory_recall`과 동일한 기능에 `category`, `tags`, `from_date`, `to_date` 필터 추가. 태그 필터는 AND 논리 사용 — 지정된 모든 태그가 일치해야 함. `sessionBias`로 현재 git 브랜치의 항목 부스트 |
+| `memory_tag` | **일괄 태그 작업**: 키 또는 ID로 하나 이상의 항목에 태그 추가, 제거 또는 설정 |
 
 ### MCP 리소스
 
