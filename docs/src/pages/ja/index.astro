@@ -5,7 +5,6 @@ import Hero from '../../components/Hero.astro';
 import Problem from '../../components/Problem.astro';
 import FeatureGrid from '../../components/FeatureGrid.astro';
 import MemoryGraphShowcase from '../../components/MemoryGraphShowcase.astro';
-import ViewerShowcase from '../../components/ViewerShowcase.astro';
 import SmartRecallShowcase from '../../components/SmartRecallShowcase.astro';
 import Tools from '../../components/Tools.astro';
 import ImpactShowcase from '../../components/ImpactShowcase.astro';
@@ -20,7 +19,7 @@ import WhatNew from '../../components/WhatNew.astro';
 import '../../styles/home.css';
 
 const description =
-  'AIコーディングエージェント向けMCPメモリサーバー — 27ツール、セッションあたりツール呼び出し80%削減。セッション間で意思決定、パターン、バグを記憶。';
+  'AIコーディングエージェント向けMCPメモリサーバー — 40ツール、セッションあたりツール呼び出し80%削減。セッション間で意思決定、パターン、バグを記憶。';
 ---
 
 <!doctype html>
@@ -47,11 +46,10 @@ const description =
     <main>
       <Hero lang="ja" />
       <Problem lang="ja" />
+      <MemoryGraphShowcase lang="ja" />
       <ImpactShowcase lang="ja" />
       <TokenSavings lang="ja" />
       <FeatureGrid lang="ja" />
-      <MemoryGraphShowcase lang="ja" />
-      <ViewerShowcase lang="ja" />
       <SmartRecallShowcase lang="ja" />
       <Tools lang="ja" />
       <WhatNew lang="ja" />

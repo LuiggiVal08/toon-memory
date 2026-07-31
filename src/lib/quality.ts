@@ -7,7 +7,17 @@
  * primer (auto-generated knowledge map).
  */
 
-import { parseEntries, buildGraph, bm25Scores, centrality, renderCompact, type GraphEntry } from "./graph"
+import {
+	parseEntries,
+	buildGraph,
+	bm25Scores,
+	centrality,
+	renderCompact,
+	rankBy,
+	rrfFuse,
+	rrfK,
+	type GraphEntry,
+} from "./graph"
 import { normalize, isExpiredLocal, tokenize, importance, isPrivate } from "./utils"
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
@@ -165,7 +175,10 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 	const newStatus = np.length > 16 ? np[16] || "" : ""
 	const status = newStatus === "active" || existingStatus === "active" ? "active" : newStatus || existingStatus || "active"
 
-	return `${id}|${category}|${key}|${content}|${file}|${mergedTags}|${date}|${ttl}|${accessed}|${mergedLinks}|${quality.toFixed(2)}|${confidence}|${lastAccessed}|${priority}|${path_scope}|${origin}|${status}`
+	// Preserve superseded_on (field 17) from the existing entry.
+	const existingSupersededOn = ep.length > 17 ? ep[17] || "" : ""
+
+	return `${id}|${category}|${key}|${content}|${file}|${mergedTags}|${date}|${ttl}|${accessed}|${mergedLinks}|${quality.toFixed(2)}|${confidence}|${lastAccessed}|${priority}|${path_scope}|${origin}|${status}|${existingSupersededOn}`
 }
 
 /**
@@ -175,7 +188,7 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 export function generateSmartRecall(
 	data: string,
 	intent: string,
-	opts: { limit?: number; category?: string; bumpAccess?: (ids: string[]) => void; fileMtimes?: Map<string, string>; sessionFiles?: string[] } = {}
+	opts: { limit?: number; category?: string; bumpAccess?: (ids: string[]) => void; fileMtimes?: Map<string, string>; sessionFiles?: string[]; rrf?: boolean } = {}
 ): string {
 	const entries = parseEntries(data)
 	if (entries.length === 0) return "Empty memory."
@@ -190,12 +203,24 @@ export function generateSmartRecall(
 	const qTokens = tokenize(intent)
 	const expandedTokens = expandSynonyms(qTokens)
 
-	const scored = entries
-		.filter((e) => {
-			if (category && e.category !== category) return false
-			if (e.ttl && isExpiredLocal(e.ttl)) return false
-			return true
-		})
+	const eligible = entries.filter((e) => {
+		if (category && e.category !== category) return false
+		if (e.ttl && isExpiredLocal(e.ttl)) return false
+		if (e.status === "obsolete" || e.status === "draft") return false
+		return true
+	})
+
+	// RRF mode: fuse per-signal rankers instead of the weighted linear score.
+	// BM25 (the only real retriever on a small memory graph) is fused three times;
+	// centrality contributes once as the graph signal. Importance is dropped from the
+	// fusion (recency-dominated noise on small graphs; validated on scripts/bench-rrf.mjs).
+	// k is adaptive (sqrt of candidate count) — the textbook k=60 flattens rank
+	// differences on small memory graphs.
+	const bm25Rank = rankBy(new Map([...bm25].filter(([k]) => eligible.some((e) => e.key === k))))
+	const centRank = rankBy(new Map([...cent].filter(([k]) => eligible.some((e) => e.key === k))))
+	const fused = opts.rrf ? rrfFuse([bm25Rank, bm25Rank, bm25Rank, centRank], rrfK(bm25Rank.size)) : null
+
+	const scored = eligible
 		.map((e) => {
 			const text = normalize(
 				`${e.id} ${e.category} ${e.key} ${e.content} ${e.file} ${e.tags.join(" ")}`
@@ -222,8 +247,13 @@ export function generateSmartRecall(
 					sessionBias = 0.15
 				}
 			}
-			const combined =
-				bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift + sessionBias
+			let combined: number
+			if (opts.rrf) {
+				combined = (fused?.get(e.key) ?? 0) - drift + sessionBias
+			} else {
+				combined =
+					bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift + sessionBias
+			}
 			return { entry: e, score: combined, matchesQuery, priority: e.priority }
 		})
 		.filter((x) => x.score > 0 || x.matchesQuery)
@@ -234,11 +264,11 @@ export function generateSmartRecall(
 		.slice(0, limit)
 
 	// Inject pinned entries not already in the result set, sorted by priority desc.
-	const pinnedKeys = new Set(entries.filter((e) => e.priority > 0).map((e) => e.key))
+	const pinnedKeys = new Set(eligible.filter((e) => e.priority > 0).map((e) => e.key))
 	const inResult = new Set(scored.map((x) => x.entry.key))
 	const toInject = [...pinnedKeys]
 		.filter((k) => !inResult.has(k))
-		.map((k) => entries.find((en) => en.key === k)!)
+		.map((k) => eligible.find((en) => en.key === k)!)
 		.filter(Boolean)
 		.sort((a, b) => b.priority - a.priority)
 	for (const e of toInject) {
@@ -246,8 +276,7 @@ export function generateSmartRecall(
 	}
 
 	if (scored.length === 0) {
-		const top = entries
-			.filter((e) => !category || e.category === category)
+		const top = eligible
 			.sort((a, b) => {
 				if (a.priority !== b.priority) return b.priority - a.priority
 				return importance(b) - importance(a)

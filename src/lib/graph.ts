@@ -38,8 +38,45 @@ export interface GraphEntry {
 	path_scope: string
 	/** Who created this entry. */
 	origin: "human" | "agent" | "inferred"
-	/** Lifecycle status. Obsolete entries are filtered from normal recalls. */
-	status: "active" | "obsolete" | "resolved"
+	/** Lifecycle status. Obsolete/draft entries are filtered from normal recalls. */
+	status: "active" | "obsolete" | "resolved" | "draft"
+	/** ISO date when this entry was superseded (set by memory_supersede). Empty if never superseded. */
+	supersededOn: string
+}
+
+/** Edge type labels used in typed links (`type:key`). */
+export const EDGE_TYPES = ["related", "supersedes", "superseded_by", "implements", "blocks", "depends_on", "references", "applies_to"] as const
+
+/** Default edge type when a link token has no `type:` prefix. */
+export const DEFAULT_EDGE_TYPE = "related"
+
+/**
+ * Parse a link token into its edge type and target key.
+ * Tolerant: a plain key (`risk-spec`) gets the default `related` type,
+ * while `type:key` (e.g. `supersedes:engine-arch`) carries its declared type.
+ * Keys are kebab-case and never contain colons, so the LAST `:` is the split point.
+ */
+export function parseLinkToken(token: string): { type: string; key: string } {
+	const idx = token.lastIndexOf(":")
+	if (idx === -1) return { type: DEFAULT_EDGE_TYPE, key: token }
+	const type = token.slice(0, idx)
+	const key = token.slice(idx + 1)
+	return { type: type || DEFAULT_EDGE_TYPE, key: key || token }
+}
+
+/** Key part of a link token (strips any `type:` prefix). */
+export function linkKey(token: string): string {
+	return parseLinkToken(token).key
+}
+
+/** Render a typed link token. Plain keys stay as-is (backward compatible). */
+export function formatLink(type: string, key: string): string {
+	return type && type !== DEFAULT_EDGE_TYPE ? `${type}:${key}` : key
+}
+
+/** Expand raw link tokens into typed edges. */
+export function typedLinks(links: string[]): Array<{ type: string; key: string }> {
+	return links.map(parseLinkToken)
 }
 
 export interface MemoryGraph {
@@ -89,7 +126,8 @@ export function parseEntries(data: string): GraphEntry[] {
 			priority: parts.length > 13 ? parseInt(parts[13]) || 0 : 0,
 			path_scope: parts.length > 14 ? parts[14] || "" : "",
 			origin: parts.length > 15 && parts[15] ? parts[15] as "human" | "agent" | "inferred" : "agent",
-			status: parts.length > 16 && parts[16] ? parts[16] as "active" | "obsolete" | "resolved" : "active",
+			status: parts.length > 16 && parts[16] ? parts[16] as "active" | "obsolete" | "resolved" | "draft" : "active",
+			supersededOn: parts.length > 17 ? parts[17] || "" : "",
 		})
 	}
 	return out
@@ -116,7 +154,7 @@ export function buildGraph(entries: GraphEntry[]): MemoryGraph {
 	}
 
 	for (const e of entries) {
-		for (const l of e.links) link(e.key, l)
+		for (const l of e.links) link(e.key, linkKey(l))
 		const refs = e.content.match(/\[\[([\w-]+)\]\]/g) || []
 		for (const r of refs) link(e.key, r.slice(2, -2))
 	}
@@ -156,6 +194,44 @@ export interface GraphRecallOpts {
 	sessionFiles?: string[]
 	/** Path scope glob filter: only return entries whose path_scope matches. */
 	path_scope?: string
+	/** Use Reciprocal Rank Fusion instead of weighted linear scoring. */
+	rrf?: boolean
+	/** Temporal view (YYYY-MM-DD): include entries valid on that date.
+	 *  Entries superseded AFTER `asOf` still count; entries created after `asOf` are excluded. */
+	asOf?: string
+}
+
+/**
+ * Reciprocal Rank Fusion of several rankers (BM25 fused multiple times, centrality).
+ * k is the RRF smoothing constant. Ranks are 0-based.
+ */
+export function rrfFuse(rankers: Array<Map<string, number>>, k = 60): Map<string, number> {
+	const out = new Map<string, number>()
+	for (const ranker of rankers) {
+		for (const [key, rank] of ranker) {
+			out.set(key, (out.get(key) || 0) + 1 / (k + rank))
+		}
+	}
+	return out
+}
+
+/**
+ * Adaptive RRF smoothing constant. The textbook k=60 is tuned for large candidate
+ * sets from independent retrievers; on a small memory graph it flattens every rank
+ * into a narrow score band. Scaling with sqrt(candidateCount) keeps the top ranks
+ * distinguishable while remaining stable as memory grows.
+ */
+export function rrfK(candidateCount: number): number {
+	return Math.max(3, Math.min(60, Math.round(Math.sqrt(candidateCount))))
+}
+
+/** Build a 0-based rank map from a score map (higher score = lower rank). */
+export function rankBy(score: Map<string, number>): Map<string, number> {
+	const out = new Map<string, number>()
+	;[...score.entries()]
+		.sort((a, b) => b[1] - a[1])
+		.forEach(([key], i) => out.set(key, i))
+	return out
 }
 
 /**
@@ -253,8 +329,13 @@ export function graphRecallDetailed(
 	const cent = centrality(adjacency)
 
 	const seedKeys = new Set<string>()
+	const asOf = opts.asOf || ""
 	for (const e of entries) {
-		if (e.status === "obsolete") continue
+		if (e.status === "obsolete" || e.status === "draft") {
+			// Temporal view: a superseded entry was still valid until its supersededOn date.
+			if (!(asOf && e.status === "obsolete" && e.supersededOn && e.supersededOn > asOf)) continue
+		}
+		if (asOf && e.date && e.date > asOf) continue
 		if (category && e.category !== category) continue
 		if (tagsFilter.length > 0 && !tagsFilter.every((t) => e.tags.includes(t))) continue
 		if (from_date && e.date < from_date) continue
@@ -273,10 +354,16 @@ export function graphRecallDetailed(
 
 	let selected: GraphEntry[]
 	const scored: Array<{ e: GraphEntry; s: number }> = []
+	const visibleEntries = entries.filter((e) => {
+		if (e.status === "obsolete" || e.status === "draft") {
+			return !!(asOf && e.status === "obsolete" && e.supersededOn && e.supersededOn > asOf)
+		}
+		return !(asOf && e.date && e.date > asOf)
+	})
+	const isVisible = new Set(visibleEntries.map((e) => e.key))
 	if (seedKeys.size === 0) {
 		scored.push(
-			...[...entries]
-				.filter((e) => e.status !== "obsolete")
+			...visibleEntries
 				.sort((a, b) => {
 					if (a.priority !== b.priority) return b.priority - a.priority
 					return importance(b) - importance(a)
@@ -295,9 +382,22 @@ export function graphRecallDetailed(
 			best.set(key, dist)
 			if (dist >= hops) continue
 			for (const nb of adjacency.get(key) || []) {
+				if (!isVisible.has(nb)) continue
 				queue.push({ key: nb, dist: dist + 1 })
 			}
 		}
+
+		// RRF mode: fuse per-signal rankers instead of the weighted linear score.
+		// BM25 (the only real retriever on a small memory graph) is fused three times;
+		// centrality contributes once as the graph signal. Importance is dropped from
+		// the fusion — on small graphs its rank is dominated by recency noise and
+		// including it drags nDCG down (validated on scripts/bench-rrf.mjs). k is
+		// adaptive: the textbook k=60 flattens rank differences on small graphs, so it
+		// scales with sqrt(candidate count).
+		const sub = (m: Map<string, number>) => new Map([...m].filter(([k]) => isVisible.has(k)))
+		const bm25Rank = rankBy(sub(bm25))
+		const centRank = rankBy(sub(cent))
+		const fused = opts.rrf ? rrfFuse([bm25Rank, bm25Rank, bm25Rank, centRank], rrfK(bm25Rank.size)) : null
 
 		scored.push(
 			...[...best.keys()]
@@ -305,8 +405,10 @@ export function graphRecallDetailed(
 					const e = byKey.get(k)!
 					const dist = best.get(k)!
 					const decay = Math.pow(DECAY, dist)
-					let s = (bm25.get(k) || 0) + W_CENT * cent.get(k)! + W_IMP * importance(e)
-					if (seedKeys.has(k)) s += SEED_BONUS
+					let s = fused
+						? fused.get(k) || 0
+						: (bm25.get(k) || 0) + W_CENT * (cent.get(k) || 0) + W_IMP * importance(e)
+					if (!fused && seedKeys.has(k)) s += SEED_BONUS
 					if (opts.sessionFiles && opts.sessionFiles.length > 0 && e.file) {
 						const entryFile = e.file.split(":")[0]
 						if (opts.sessionFiles.some((f) => f === entryFile)) {
@@ -327,7 +429,7 @@ export function graphRecallDetailed(
 	selected = scored.map((x) => x.e)
 
 	// Inject pinned entries that aren't already in the result set, sorted by priority desc.
-	const pinnedKeys = new Set(entries.filter((e) => e.priority > 0 && e.status !== "obsolete").map((e) => e.key))
+	const pinnedKeys = new Set(visibleEntries.filter((e) => e.priority > 0).map((e) => e.key))
 	const inResult = new Set(selected.map((e) => e.key))
 	const toInject = [...pinnedKeys]
 		.filter((k) => !inResult.has(k) && byKey.has(k))
@@ -440,7 +542,8 @@ export function renderCompact(entries: GraphEntry[], opts: RenderCompactOpts = {
 				const originInfo = e.origin !== "agent" ? ` · origin: ${e.origin}` : ""
 				const scopeInfo = e.path_scope ? ` · scope: ${e.path_scope}` : ""
 				const statusInfo = e.status !== "active" ? ` · status: ${e.status}` : ""
-				return `[${n}] ${e.category}/${e.key}${pin} (${e.id})\n  ${e.content}\n  File: ${e.file} | Tags: ${e.tags.join(";")} | Date: ${e.date}${ttlInfo}${accessInfo}${lastAccess}${originInfo}${scopeInfo}${statusInfo}${links}`
+				const supersededInfo = e.supersededOn ? ` · superseded: ${e.supersededOn}` : ""
+				return `[${n}] ${e.category}/${e.key}${pin} (${e.id})\n  ${e.content}\n  File: ${e.file} | Tags: ${e.tags.join(";")} | Date: ${e.date}${ttlInfo}${accessInfo}${lastAccess}${originInfo}${scopeInfo}${statusInfo}${supersededInfo}${links}`
 			}
 
 			// "normal" budget (default)

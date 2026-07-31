@@ -1,18 +1,18 @@
 ---
 title: Herramientas MCP
-description: Las 37 herramientas de memoria y contexto y 4 recursos para tu agente de IA
+description: Las 40 herramientas de memoria y contexto y 4 recursos para tu agente de IA
 ---
 
 ## Resumen
 
-toon-memory proporciona 37 herramientas MCP y 4 recursos MCP para gestionar la memoria persistente:
+toon-memory proporciona 40 herramientas MCP y 4 recursos MCP para gestionar la memoria persistente:
 
 ## Herramientas
 
 | Herramienta | Descripción |
 |------|-------------|
 | `memory_remember` | Guarda una decisión, patrón, bug o conocimiento (con TTL opcional, inferencia automática de etiquetas, `links`, quality score automático, merge-dedup, confidence) |
-| `memory_recall` | Busca en la memoria (úsalo ANTES de leer archivos, filtra entradas con TTL expirado). `mode: "graph"` expande un subgrafo con relaciones para mayor precisión. `sessionBias` potencia entradas de la rama git actual. Ranking con quality scoring |
+| `memory_recall` | Busca en la memoria (úsalo ANTES de leer archivos, filtra entradas con TTL expirado). `mode: "graph"` expande un subgrafo con relaciones para mayor precisión. El ranking usa fusión RRF (BM25×3 + centralidad del grafo, k adaptativo); pasa `rrf: false` para el score lineal legacy. `sessionBias` potencia entradas de la rama git actual. `as_of` re-incluye entradas superseded después de una fecha puntual |
 | `memory_forget` | Elimina una entrada por key o id |
 | `memory_stats` | Ver el estado de la memoria (incluyendo estadísticas de TTL, distribución de calidad y memorias frías por debajo de umbrales) |
 | `memory_summary` | Guardar/recuperar resúmenes de archivos |
@@ -37,6 +37,11 @@ toon-memory proporciona 37 herramientas MCP y 4 recursos MCP para gestionar la m
 | `memory_unpin` | **Desfijar entrada**: elimina la marca de prioridad de una entrada |
 | `memory_search` | **Búsqueda unificada con filtros**: igual que `memory_recall` más filtros de categoría, etiquetas y rango de fechas. `sessionBias` potencia entradas de la rama git actual |
 | `memory_tag` | **Operaciones por lotes**: añade, elimina o establece etiquetas en una o más entradas por key o id |
+| `memory_resolve` | **Restaurar entrada**: restaura una entrada con soft-delete (obsolete) a estado activo |
+| `memory_suppress` | **Ocultar entrada**: oculta una entrada de los resultados de recall sin borrarla (status=suppressed) |
+| `memory_reflect` | **Reflexión de memoria**: clasifica de forma determinista las entradas por obsolescencia, calidad y sobre-conexión para revelar lo que necesita atención o limpieza. Cero LLM |
+| `memory_supersede` | **Reemplazar entrada**: márcala como reemplazada por una más nueva (`status=obsolete`, links `superseded_by`/`supersedes`, fecha `supersededOn`). Las antiguas reaparecen solo en consultas `as_of` anteriores a su reemplazo |
+| `memory_promote` | **Auto-promover borradores**: promueve entradas de baja confianza a activas de forma determinista (umbral 0.65, dedup Jaccard > 0.5, `dryRun` por defecto) |
 
 ## Recursos MCP
 

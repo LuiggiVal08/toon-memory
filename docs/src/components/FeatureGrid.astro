@@ -9,7 +9,7 @@ const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 ---
 
-<div class="feature-cards">
+<div id="features" class="feature-cards">
   {
     c.features.cards.map((f, i) => (
       <div class={`card${i === 0 ? ' featured' : ''}${f.wide ? ' card-wide' : ''}`}>

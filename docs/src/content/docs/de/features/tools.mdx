@@ -1,6 +1,6 @@
 ---
-title: "37 MCP-Tools für persistenen AI-Speicher"
-description: "37 MCP-Tools für persistenen AI-Agent-Speicher — memory_remember, memory_recall, memory_smart_recall, context_generate und mehr. Token-effizienter, graph-bewusster Abruf für Claude, Cursor, OpenCode."
+title: "40 MCP-Tools für persistenen AI-Speicher"
+description: "40 MCP-Tools für persistenen AI-Agent-Speicher — memory_remember, memory_recall, memory_smart_recall, context_generate und mehr. Token-effizienter, graph-bewusster Abruf für Claude, Cursor, OpenCode."
 head:
   - tag: meta
     attrs:
@@ -10,14 +10,14 @@ head:
 
 ## Überblick
 
-toon-memory bietet 37 MCP-Tools und 4 MCP-Ressourcen zur Verwaltung des persistenten Speichers:
+toon-memory bietet 40 MCP-Tools und 4 MCP-Ressourcen zur Verwaltung des persistenten Speichers:
 
 ## Tools
 
 | Tool | Beschreibung |
 |------|-------------|
 | `memory_remember` | Speichere eine Entscheidung, ein Muster, einen Bug oder Wissen (optionales TTL, automatische Tag-Inferenz, `links`, automatischer Qualitätsscore, Merge-Deduplizierung, Konfidenz) |
-| `memory_recall` | Durchsuche den Speicher (VOR dem Lesen von Dateien verwenden, filtert abgelaufene TTL). `mode: "graph"` erweitert einen beziehungsbewussten Subgraphen für höhere Präzision. Qualitätsgewichtete Rangfolge |
+| `memory_recall` | Durchsuche den Speicher (VOR dem Lesen von Dateien verwenden, filtert abgelaufene TTL). `mode: "graph"` erweitert einen beziehungsbewussten Subgraphen für höhere Präzision. Die Rangfolge nutzt RRF-Fusion (BM25×3 + Graph-Zentralität, adaptives k); mit `rrf: false` wird der alte lineare Score verwendet. `as_of` schließt Einträge wieder ein, die nach einem bestimmten Datum superseded wurden |
 | `memory_forget` | Entferne einen Eintrag per Schlüssel oder ID |
 | `memory_stats` | Zeige den Speicherzustand an (einschließlich TTL-Statistiken und Qualitätsverteilung) |
 | `memory_summary` | Speichere/rufe Dateizusammenfassungen ab |
@@ -42,6 +42,11 @@ toon-memory bietet 37 MCP-Tools und 4 MCP-Ressourcen zur Verwaltung des persiste
 | `memory_unpin` | **Eintrag lösen**: entfernt die Anheft-Markierung eines Eintrags |
 | `memory_search` | **Einheitliche Suche mit Filtern**: wie `memory_recall` plus Kategorie-, Tag- und Datumsbereichs-Filter |
 | `memory_tag` | **Batch-Tag-Operationen**: fügt Tags hinzu, entfernt oder setzt sie bei einem oder mehreren Einträgen per Key oder ID |
+| `memory_resolve` | **Eintrag wiederherstellen**: stellt einen soft-gelöschten (obsoleten) Eintrag wieder auf aktiv |
+| `memory_suppress` | **Eintrag ausblenden**: blendet einen Eintrag aus den Abrufergebnissen aus, ohne ihn zu löschen (status=suppressed) |
+| `memory_reflect` | **Speicher-Reflexion**: ordnet Einträge deterministisch nach Veraltung, Qualität und Überverbindung, um aufzuzeigen, was Aufmerksamkeit oder Bereinigung braucht. Kein LLM |
+| `memory_supersede` | **Eintrag ersetzen**: markiert ihn als durch einen neueren ersetzt (`status=obsolete`, `superseded_by`/`supersedes`-Links, `supersededOn`-Datum). Alte Einträge erscheinen nur bei `as_of`-Abfragen vor ihrem Ersatzdatum wieder |
+| `memory_promote` | **Entwürfe automatisch promoten**: befördert Einträge mit niedriger Konfidenz deterministisch in den aktiven Status (Schwelle 0.65, Jaccard-Dedup > 0.5, `dryRun` standardmäßig) |
 
 ## MCP-Ressourcen
 

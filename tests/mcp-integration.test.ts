@@ -103,10 +103,10 @@ class McpClient {
 		return result.tools.map((t) => t.name)
 	}
 
-	async getToolDefinitions(): Promise<Array<{ name: string; _meta?: Record<string, unknown> }>> {
+	async getToolDefinitions(): Promise<Array<{ name: string; annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean; idempotentHint?: boolean }; _meta?: Record<string, unknown> }>> {
 		const res = await this.request("tools/list")
 		expect(res.result).toBeDefined()
-		return (res.result as { tools: Array<{ name: string; _meta?: Record<string, unknown> }> }).tools
+		return (res.result as { tools: Array<{ name: string; annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean; idempotentHint?: boolean }; _meta?: Record<string, unknown> }> }).tools
 	}
 
 	async readResource(uri: string): Promise<string> {
@@ -146,9 +146,9 @@ describe("MCP Integration", () => {
 
 	// ── Tool listing ──────────────────────────────────────────────
 
-  it("lists all 37 tools", async () => {
+  it("lists all 40 tools", async () => {
     const tools = await client.listTools()
-    expect(tools.length).toBe(37)
+    expect(tools.length).toBe(40)
     expect(tools).toContain("memory_remember")
     expect(tools).toContain("memory_recall")
     expect(tools).toContain("memory_forget")
@@ -186,7 +186,34 @@ describe("MCP Integration", () => {
     expect(tools).toContain("memory_checkpoint")
     expect(tools).toContain("memory_resolve")
     expect(tools).toContain("memory_suppress")
-	})
+    expect(tools).toContain("memory_supersede")
+    expect(tools).toContain("memory_reflect")
+    expect(tools).toContain("memory_promote")
+  })
+
+  it("annotates tools with readOnly/destructive/idempotent hints", async () => {
+    const defs = await client.getToolDefinitions()
+    const byName = new Map(defs.map((t) => [t.name, t]))
+    // Destructive tools must be flagged
+    expect(byName.get("memory_forget")!.annotations?.destructiveHint).toBe(true)
+    expect(byName.get("memory_archive")!.annotations?.destructiveHint).toBe(true)
+    expect(byName.get("memory_encrypt")!.annotations?.destructiveHint).toBe(true)
+    expect(byName.get("memory_decrypt")!.annotations?.destructiveHint).toBe(true)
+    expect(byName.get("memory_import_gist")!.annotations?.destructiveHint).toBe(true)
+    expect(byName.get("memory_compress_all")!.annotations?.destructiveHint).toBe(true)
+    expect(byName.get("memory_consolidate")!.annotations?.destructiveHint).toBe(true)
+    expect(byName.get("memory_merge_similar")!.annotations?.destructiveHint).toBe(true)
+    expect(byName.get("memory_supersede")!.annotations?.destructiveHint).toBe(true)
+    // Read-only tools must be flagged
+    for (const name of ["memory_stats", "memory_diff", "memory_suggest", "memory_primer", "context_brief", "context_health", "context_export", "context_diff", "context_focus", "context_generate", "memory_graph_path", "memory_sessions", "memory_compress", "memory_reflect", "memory_visualize"]) {
+      expect(byName.get(name)!.annotations?.readOnlyHint).toBe(true)
+    }
+    // Every tool carries the annotations object
+    for (const t of defs) {
+      expect(t.annotations).toBeDefined()
+      expect(typeof t.annotations?.readOnlyHint).toBe("boolean")
+    }
+  })
 
 	// ── Resource listing ──────────────────────────────────────────
 
@@ -432,5 +459,77 @@ describe("MCP Integration", () => {
 			context: "validation types",
 		})
 		expect(result.length).toBeGreaterThan(0)
+	})
+
+	// ── memory_supersede + as_of ──────────────────────────────────
+
+	it("memory_supersede marks old entry obsolete and as_of recalls it", async () => {
+		// Seed controlled entries: use-joi created 2026-07-01, superseded today.
+		const dataFile = join(testDir, ".toon-memory", "memory", "data.toon")
+		writeFileSync(
+			dataFile,
+			`version: 1\nentries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:\n  abc12345|decision|use-zod|Use Zod for validation|src/types.ts|types;validation|2026-07-25||0||0.70|1.0\n  e1|decision|use-joi|Use Joi for validation|t.ts|validation;superseded|2026-07-01||0||0.5|1.0\n  e2|decision|use-zod-fresh|Use Zod 2 for validation|t.ts|validation|2026-07-01||0||0.9|1.0\n`
+		)
+
+		const result = await client.callTool("memory_supersede", { old_key: "use-joi", new_key: "use-zod-fresh", reason: "Zod is better" })
+		expect(result).toContain("superseded")
+		expect(result).toContain("use-zod-fresh")
+
+		// Hidden from normal recall (content gone; only the supersedes link may echo the key)
+		const recall = await client.callTool("memory_recall", { query: "joi" })
+		expect(recall).not.toContain("Use Joi for validation")
+
+		// Visible in the temporal as_of view (was still active on 2026-07-05)
+		const asOf = await client.callTool("memory_recall", { query: "joi", as_of: "2026-07-05" })
+		expect(asOf).toContain("Use Joi for validation")
+
+		// Still restorable
+		const resolveResult = await client.callTool("memory_resolve", { key: "use-joi" })
+		expect(resolveResult).toContain("restored")
+	})
+
+	// ── memory_reflect ─────────────────────────────────────────────
+
+	it("memory_reflect returns a deterministic audit", async () => {
+		const result = await client.callTool("memory_reflect")
+		expect(result).toContain("Memory reflect")
+		expect(result).toContain("entries")
+	})
+
+	it("memory_reflect supports category scoping", async () => {
+		const result = await client.callTool("memory_reflect", { category: "decision", limit: 3 })
+		expect(result).toContain("Memory reflect")
+	})
+
+	// ── memory_promote ─────────────────────────────────────────────
+
+	it("memory_promote previews and promotes observations from the capture log", async () => {
+		const obsDir = join(testDir, ".toon-memory", "memory")
+		const now = new Date().toISOString()
+		writeFileSync(
+			join(obsDir, "observations.toon"),
+			`version: 1\nobservations[2|]{ts|session|agent|branch|tool|hash|file|summary}:\n  ${now}|s1|code|main|edit|h1|src/lib/graph.ts|Added typed link parsing to graph.ts with superseded_by edges\n  ${now}|s1|code|main|read|h2||Viewed README to check docs\n`
+		)
+
+		// Dry run: no writes
+		const dry = await client.callTool("memory_promote", { dryRun: true, max: 5 })
+		expect(dry).toContain("Dry run")
+
+		const res = await client.callTool("memory_promote", { dryRun: false, max: 5, minConfidence: 0.65 })
+		expect(res).toContain("Promoted")
+		// The edit observation is high confidence (active); the read is low (draft)
+		expect(res).toContain("active")
+		expect(res).toContain("draft")
+	})
+
+	it("memory_promote does not duplicate existing entries", async () => {
+		const obsDir = join(testDir, ".toon-memory", "memory")
+		const now = new Date().toISOString()
+		writeFileSync(
+			join(obsDir, "observations.toon"),
+			`version: 1\nobservations[1|]{ts|session|agent|branch|tool|hash|file|summary}:\n  ${now}|s1|code|main|edit|h1||Use Zod for validation\n`
+		)
+		const res = await client.callTool("memory_promote", { dryRun: false, max: 5 })
+		expect(res).toContain("Nothing new to promote")
 	})
 })

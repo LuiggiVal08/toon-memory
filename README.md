@@ -65,7 +65,7 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 
 ## Features
 
-- **37 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall with session bias), `memory_sessions` for multi-session coordination, `context_*` tools for one-call context generation (briefing, diff, focus, health audit, export), `memory_compress` (LLM-powered compression), `memory_compress_all` (batch compression), `memory_primer` (auto-injected context), `memory_merge_sessions` (cross-session merge), `memory_pin`/`memory_unpin` (pin important entries with priority 1-5), `memory_checkpoint` (session snapshot with 7d TTL), `memory_search` (unified search with tag filters + session bias), `memory_tag` (batch tag operations), `memory_export_gist`/`memory_import_gist` (GitHub Gist sync), `memory_resolve` (restore soft-deleted entries), and `memory_suppress` (mark entries as obsolete)
+- **40 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall with session bias), `memory_sessions` for multi-session coordination, `context_*` tools for one-call context generation (briefing, diff, focus, health audit, export), `memory_compress` (LLM-powered compression), `memory_compress_all` (batch compression), `memory_primer` (auto-injected context), `memory_merge_sessions` (cross-session merge), `memory_pin`/`memory_unpin` (pin important entries with priority 1-5), `memory_checkpoint` (session snapshot with 7d TTL), `memory_search` (unified search with tag filters + session bias), `memory_tag` (batch tag operations), `memory_export_gist`/`memory_import_gist` (GitHub Gist sync), `memory_resolve` (restore soft-deleted entries), `memory_suppress` (mark entries as obsolete), `memory_reflect` (staleness/quality reflection), `memory_supersede` (replace an entry with a newer one, with `as_of` point-in-time recall), and `memory_promote` (auto-promote low-confidence drafts)
 - **MCP Resources** — Read memory as context without tool invocations, including a System Primer (auto-generated knowledge map)
 - **15 agents supported** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Interactive installer** — Select which agents to configure from a menu
@@ -102,6 +102,11 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 - **Origin Tracking** — Each entry tracks its origin (`human`, `agent`, `inferred`); human assertions get a quality boost
 - **Soft Delete** — `memory_forget` soft-deletes by default (sets `status=obsolete`). Use `memory_resolve` to restore, `memory_suppress` to hide. Permanent deletion via `hard: true`
 - **Enhanced Health Audit** — `context_health` now detects missing-evidence (path_scope without file) and stale-claims (overlapping content in same category)
+- **Typed graph edges** — Edges carry types (`superseded_by`, `supersedes`, `relates`), written as `type:key` in the graph. Explicit `links` become `relates:key`, so you can tell *how* entries are related, not just that they are
+- **RRF ranking** — Recall fuses BM25 (×3) and graph-centrality ranks with Reciprocal Rank Fusion and an adaptive `k = clamp(3..60, round(sqrt(n)))`. Benchmark (8 gold queries): nDCG 0.776, MRR 0.917 — exact parity with the previous linear scoring. Pass `rrf: false` to fall back
+- **Memory reflect** — `memory_reflect` ranks entries by staleness, quality, and over-connection to surface what needs attention or cleanup. Deterministic, zero LLM
+- **Memory supersede** — `memory_supersede` marks an entry as replaced by a newer one (`superseded_by` link + `supersededOn` date). `memory_recall({ as_of })` re-includes old entries for point-in-time queries before their supersession
+- **Auto-promote** — `memory_promote` promotes low-confidence drafts to active entries deterministically (threshold 0.65, Jaccard dedup), with `dryRun` by default
 
 ---
 
@@ -1203,6 +1208,19 @@ Measured with `gpt-tokenizer` (cl100k_base) — see `scripts/bench-full-impact.m
 
 > **Tip:** `memory_smart_recall` combines BM25 + graph + quality in one call, saving both tokens and tool-call overhead. Use it at the start of every task.
 
+### RRF ranking benchmark (measured)
+
+Since v3.7.0, recall ranks results with **Reciprocal Rank Fusion** over BM25 (×3) and graph-centrality ranks, with an adaptive `k = clamp(3..60, round(sqrt(n)))`. Measured over 8 gold-standard queries with hand-labeled relevance (see `scripts/bench-rrf.mjs`, `npm run bench:rrf`):
+
+```
+Metric        linear (v3.6.x)     RRF (v3.7.0)
+────────────  ─────────────────   ────────────────
+nDCG@10       0.776               0.776   (parity)
+MRR           0.917               0.917   (parity)
+```
+
+RRF matches the previous linear weighted score at **zero ranking cost**, while simplifying the scoring pipeline (BM25×3 + centrality, no importance/recency noise). Graph mode supersession is honored: obsolete entries stay excluded except for `as_of` point-in-time queries.
+
 ---
 
 ## Troubleshooting
@@ -1295,8 +1313,8 @@ toon-memory/
 │   │   ├── setup.ts             # CLI commands
 │   │   └── toon-memory.ts       # CLI runner
 │   ├── mcp/
-│   │   ├── server.ts            # MCP server (29 tools + 4 resources + 1 prompt)
-│   │   ├── tools.ts             # Tool registration (29 tools)
+│   │   ├── server.ts            # MCP server (40 tools + 4 resources + 1 prompt)
+│   │   ├── tools.ts             # Tool registration (40 tools)
 │   │   ├── resources.ts         # Resource registration (4 resources)
 │   │   ├── prompts.ts           # Prompt registration (1 prompt)
 │   │   ├── session-store.ts     # Session layer (auto-promote, cleanup)

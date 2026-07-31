@@ -1,6 +1,6 @@
 ---
-title: "37 MCP Tools for Persistent AI Memory"
-description: "37 MCP tools for persistent AI agent memory — memory_remember, memory_recall, memory_smart_recall, context_generate, and more. Token-efficient, graph-aware recall for Claude, Cursor, OpenCode."
+title: "40 MCP Tools for Persistent AI Memory"
+description: "40 MCP tools for persistent AI agent memory — memory_remember, memory_recall, memory_smart_recall, context_generate, and more. Token-efficient, graph-aware recall for Claude, Cursor, OpenCode."
 head:
   - tag: meta
     attrs:
@@ -10,14 +10,14 @@ head:
 
 ## Overview
 
-toon-memory provides 37 MCP tools and 4 MCP resources for managing persistent memory:
+toon-memory provides 40 MCP tools and 4 MCP resources for managing persistent memory:
 
 ## Tools
 
 | Tool | Description |
 |------|-------------|
 | `memory_remember` | Save a decision, pattern, bug, or knowledge (optional TTL, auto-tag inference, `links`, auto quality score, merge-dedup, confidence) |
-| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. Quality-weighted ranking. `sessionBias` boosts entries from the current git branch. `pathScope` scopes results to a file path (supports globMatch). `budget`: `"tiny"` (top 3), `"normal"` (top 10), or `"deep"` (top 20) |
+| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. Ranking uses RRF fusion (BM25×3 + graph centrality, adaptive `k`); pass `rrf: false` for the legacy linear score. `sessionBias` boosts entries from the current git branch. `pathScope` scopes results to a file path (supports globMatch). `budget`: `"tiny"` (top 3), `"normal"` (top 10), or `"deep"` (top 20). `as_of` re-includes entries superseded after a point-in-time date |
 | `memory_forget` | Soft-delete an entry by key or id (status=obsolete). Hard-delete with `force: true` |
 | `memory_resolve` | Restore a soft-deleted (obsolete) entry back to active status |
 | `memory_stats` | View memory state (including TTL stats, quality distribution, and cold memories below quality/access thresholds) |
@@ -45,6 +45,21 @@ toon-memory provides 37 MCP tools and 4 MCP resources for managing persistent me
 | `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match. `sessionBias` boosts entries from the current git branch |
 | `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
 | `memory_suppress` | Hide an entry from recall results without deleting it (status=suppressed) |
+| `memory_reflect` | **Memory reflection**: deterministically ranks entries by staleness, quality, and over-connection to surface what needs attention or cleanup. Zero LLM |
+| `memory_supersede` | **Supersede an entry**: mark it as replaced by a newer one (`status=obsolete`, `superseded_by`/`supersedes` links, `supersededOn` date). Old entries reappear in recall only for `as_of` queries before the supersession date |
+| `memory_promote` | **Auto-promote drafts**: promote low-confidence entries to active status deterministically (default threshold 0.65, Jaccard dedup > 0.5, `dryRun` by default) |
+
+## Typed graph edges
+
+Since v3.7.0 every edge in the memory graph carries a type, written as `type:key`:
+
+| Edge type | Meaning | Example |
+|-----------|---------|---------|
+| `relates` | Generic relatedness — explicit `links` you declare when saving | `relates:engine-arch` |
+| `superseded_by` | Entry replaced by a newer one (written on the old entry) | `superseded_by:new-key` |
+| `supersedes` | Entry that replaces an older one (mirrored on the new entry) | `supersedes:old-key` |
+
+Explicit `links` become `relates:key` edges, `memory_supersede` adds the `superseded_by`/`supersedes` pair, and recall's graph expansion can traverse them — so you can tell *how* entries relate, not just that they do.
 
 ## MCP Resources
 
@@ -285,16 +300,16 @@ What `compact` changes:
 
 ### How recall ranks results
 
-Recall is deterministic and offline (no embeddings, no LLM). Each candidate entry gets a combined score from:
+Recall is deterministic and offline (no embeddings, no LLM). Since v3.7.0 the default ranking is **RRF (Reciprocal Rank Fusion)**:
 
-- **BM25 relevance** — probabilistic term-frequency score over `id` + `category` + `key` + `content` + `file` + `tags`.
-- **Graph centrality** — degree-normalized (0..1); a hub connected to many entries scores near 1, so it surfaces even without the query word.
-- **Importance** — recency + access frequency.
-- **Quality boost** — entries with higher quality scores (more tags, links, detail) get a ranking boost.
-- **Seed bonus** — entries that directly match the query get a flat boost.
+- **BM25 relevance** — probabilistic term-frequency score over `id` + `category` + `key` + `content` + `file` + `tags`, fused **three times** (the only real retriever on a small memory graph).
+- **Graph centrality** — degree-normalized (0..1), fused once: a hub connected to many entries ranks near the top even without the query word.
+- **Adaptive `k`** — `k = clamp(3..60, round(sqrt(n)))`, where `n` is the candidate count. The textbook `k=60` flattens rank differences on small graphs, so it scales with `sqrt(n)`.
 - **Per-hop decay** — nodes `d` hops from a seed are multiplied by `0.5^d`, keeping distant context below nearby context.
+- **Session bias** — entries whose file appears in the current session get a 1.15× boost.
+- **Priority** — pinned entries sort first regardless of score.
 
-In `graph` mode, recall seeds on keyword matches, expands the ego-subgraph up to `hops`, and returns the top `limit` (default 6) by combined score. `memory_smart_recall` combines all these signals in one call.
+Pass `rrf: false` to fall back to the legacy linear weighted score (BM25 + 0.4·centrality + 0.25·importance + seed bonus). In `graph` mode, recall seeds on keyword matches, expands the ego-subgraph up to `hops`, and returns the top `limit` (default 6) by combined score. `memory_smart_recall` combines all these signals in one call.
 
 ### Smart recall (`memory_smart_recall`)
 

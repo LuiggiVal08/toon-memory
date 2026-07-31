@@ -95,6 +95,16 @@ describe("mergeEntries", () => {
     const incoming = `id2|decision|test-key|Content|file.ts|tag|${today}||0||0.60|1.0`
     expect(mergeEntries(existing, incoming)).toBe(incoming)
   })
+
+  it("preserves superseded_on (field 17) and supersedes link across merges", () => {
+    const existing = `id1|decision|old-key|Old content|f.ts|validation;superseded|2026-07-01||0|superseded_by:new-key|0.50|0.8|2026-07-01|0||agent|obsolete|2026-07-10`
+    const incoming = `id2|decision|old-key|Old content|f.ts|validation|2026-07-20||0||0.60|1.0`
+    const merged = mergeEntries(existing, incoming)
+    const parts = merged.split("|")
+    expect(parts[17]).toBe("2026-07-10")
+    expect(parts[9]).toContain("superseded_by:new-key")
+    expect(parts[16]).toBe("obsolete") // obsolete entries stay obsolete across merges
+  })
 })
 
 describe("generateSmartRecall", () => {
@@ -160,6 +170,20 @@ entries[2|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|co
     // The drifted entry should still appear but with lower effective score
     // Since it's the only match, it still shows up (BM25 score > 0)
     expect(resultDrift).toContain("use-zod")
+  })
+
+  it("supports rrf fusion and excludes drafts/obsolete entries", () => {
+    const today = new Date().toISOString().split("T")[0]
+    const data = `version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority|path_scope|origin|status}:
+  a1|decision|use-zod|Use Zod for validation|src/types.ts|types|${today}||0||0.70|1.0||0||agent|active
+  a2|knowledge|draft-idea|Borrador sin validar de idea|notes.md|draft|${today}||0||0.20|0.4||0||inferred|draft
+  a3|knowledge|old-junk|Nota vieja obsoleta|old.md|junk|${today}||0||0.10|0.3||0||agent|obsolete
+`
+    const result = generateSmartRecall(data, "zod", { rrf: true })
+    expect(result).toContain("use-zod")
+    expect(result).not.toContain("draft-idea")
+    expect(result).not.toContain("old-junk")
   })
 })
 

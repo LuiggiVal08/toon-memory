@@ -1,5 +1,52 @@
 # Changelog
 
+## [3.7.0] - 2026-07-31
+
+### Added
+- **`memory_reflect` MCP tool** — Deterministic memory reflection: ranks entries by staleness, quality, and over-connection. Zero LLM
+- **`memory_supersede` MCP tool** — Mark an entry as superseded by a newer one. Sets `status=obsolete`, adds `superseded_by`/`supersedes` links and a `supersededOn` date. Old entries are re-included in recall only when `as_of` predates the supersession
+- **`memory_promote` MCP tool** — Deterministic auto-promote: promotes low-confidence drafts to active entries (default threshold 0.65, dedup via Jaccard > 0.5). `dryRun` defaults to `true`
+- **`as_of` parameter** — `memory_recall` / `memory_smart_recall` accept an `as_of` date: superseded entries reappear when the point-in-time query predates their supersession
+- **Typed graph edges** — Edges now carry types (`type:key`): `superseded_by`, `supersedes`, and `relates`. Explicit `links` become `relates:key` in the graph
+- **RRF ranking (Reciprocal Rank Fusion)** — Recall fuses BM25 (×3) + graph-centrality ranks with adaptive `k = clamp(3..60, round(sqrt(n)))`. Benchmark (8 gold queries): RRF nDCG 0.776 == linear 0.776, MRR 0.917 — parity with `linear` at no cost
+- **MCP tool annotations** — Descriptions document `rrf` and `as_of` parameters on the relevant tools
+
+### Changed
+- Tool count: 37 → 40 MCP tools
+- `memory_recall` and `memory_smart_recall` now default to RRF fusion; pass `rrf: false` for the previous linear weighted score
+- `memory_compress` now honors supersession links when merging related entries
+
+## [3.6.1] - 2026-07-31
+
+### Fixed
+- **MCP Registry description** — Shortened `server.json` description to ≤100 characters so the server passes the MCP Registry's `422` validation
+
+## [3.6.0] - 2026-07-30
+
+### Added
+- **Path scoping** — `memory_recall` / `context_focus` accept a `pathScope` that filters entries to a file path (glob patterns supported via `globMatch`)
+- **Budget control** — `budget` parameter on recall: `"tiny"` (top 3, ~50 tokens), `"normal"` (top 10), `"deep"` (top 20). Backward compatible with `compact: true`
+- **Origin tracking** — Every entry tracks its origin (`human`, `agent`, `inferred`); human assertions get a quality boost
+- **Soft-delete & resolve** — `memory_forget` soft-deletes by default (`status=obsolete`); `memory_resolve` restores; `memory_suppress` hides without deleting
+- **Proactive recall** — OpenCode plugin auto-recalls entries by file path on every `tool.execute.after` event
+- **Enhanced lint** — `context_health` detects missing-evidence (path_scope without file) and stale-claims (overlapping content in same category)
+
+### Changed
+- Tool count: 35 → 37 MCP tools
+- `memory_forget` default changed from hard-delete to soft-delete
+
+## [3.5.0] - 2026-07-29
+
+### Added
+- **`memory_checkpoint` MCP tool** — Session snapshot with 7d TTL, rollback reference for long sessions
+- **Session bias** — Recall boosts entries from the current git branch
+- **Cold memories** — `memory_stats` flags entries below quality/access thresholds
+- **Priority pin** — `memory_pin` with priority 1-5; pinned entries always surface first
+- **Merge preview** — Merge-dedup shows a preview before applying
+
+### Changed
+- Tool count: 34 → 35 MCP tools
+
 ## [3.4.0] - 2026-07-30
 
 ### Added

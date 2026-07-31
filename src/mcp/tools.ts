@@ -12,7 +12,7 @@ import { archiveOldEntries } from "./archive"
 import { consolidateEntries } from "./consolidation"
 import { readUnderLock } from "../lib/lock"
 import { encrypt, decrypt } from "./crypto"
-import { graphRecallDetailed, renderCompact, parseEntries, buildGraph } from "../lib/graph"
+import { graphRecallDetailed, renderCompact, parseEntries, buildGraph, parseLinkToken, formatLink, typedLinks } from "../lib/graph"
 import { qualityScore, mergeEntries, generateSmartRecall } from "../lib/quality"
 import { generateContextBrief, generateContextGenerate, generateContextDiff, generateContextFocus, generateContextHealth, generateContextExport } from "../lib/context"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS, getCurrentSessionFiles } from "../lib/sessions"
@@ -43,6 +43,7 @@ server.registerTool(
       path_scope: z.string().optional().default("").describe("Glob pattern to scope this entry (e.g. src/**.ts). Empty = global."),
       origin: z.enum(["human", "agent", "inferred"]).optional().default("agent").describe("Who created this entry."),
     },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
   async ({ category, key, content, file, tags, ttl, links, path_scope, origin }) => {
     const data = readMemory()
@@ -147,16 +148,19 @@ server.registerTool(
       budget: z.enum(["tiny", "normal", "deep"]).optional().default("deep").describe("'tiny': key+1 line (~50 tokens). 'normal': compact with tags/edges. 'deep': all fields (default). Overrides 'compact'."),
       bias: z.enum(["none", "session"]).optional().default("none").describe("'session': boost entries whose file matches current session files. 'none': no bias (default)."),
       path_scope: z.string().optional().default("").describe("Glob pattern to filter entries by path scope (e.g. 'src/**.ts')."),
+      rrf: z.boolean().optional().default(false).describe("Use Reciprocal Rank Fusion (BM25x3 + centrality ranks, adaptive k=sqrtN) instead of weighted linear scoring. Weight-free: reaches parity with the tuned linear scorer on scripts/bench-rrf.mjs."),
+      as_of: z.string().optional().default("").describe("Temporal view (YYYY-MM-DD): return entries valid on that date. Superseded entries still appear if they were active then."),
     },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
-  async ({ query, category, from_date, to_date, mode, hops, compact, bias, budget: budgetParam, path_scope }) => {
+  async ({ query, category, from_date, to_date, mode, hops, compact, bias, budget: budgetParam, path_scope, rrf, as_of }) => {
     const data = readMemory()
 
     // Delegate to graphRecallDetailed for both flat and graph modes
     // This avoids duplicating BM25 + ranking logic
     const sessionFiles = bias === "session" ? getCurrentSessionFiles() : undefined
     const resolvedBudget = budgetParam || (compact ? "normal" : "deep")
-    const detail = graphRecallDetailed(data, query, { category, from_date, to_date, hops, sessionFiles, path_scope: path_scope || undefined })
+    const detail = graphRecallDetailed(data, query, { category, from_date, to_date, hops, sessionFiles, path_scope: path_scope || undefined, rrf, asOf: as_of || undefined })
     if (detail.entries.length === 0) {
       return { content: [{ type: "text" as const, text: `No results found for "${query}"` }] }
     }
@@ -177,7 +181,8 @@ server.registerTool(
         const originInfo = r.origin !== "agent" ? ` | origin: ${r.origin}` : ""
         const scopeInfo = r.path_scope ? ` | scope: ${r.path_scope}` : ""
         const statusInfo = r.status !== "active" ? ` | status: ${r.status}` : ""
-        return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}${originInfo}${scopeInfo}${statusInfo}`
+        const supersededInfo = r.supersededOn ? ` | superseded: ${r.supersededOn}` : ""
+        return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}${originInfo}${scopeInfo}${statusInfo}${supersededInfo}`
       })
       .join("\n\n")
     return { content: [{ type: "text" as const, text: formatted }] }
@@ -195,6 +200,7 @@ server.registerTool(
       key: z.string().describe("Key or id of the entry to delete"),
       hard: z.boolean().optional().default(false).describe("If true, permanently remove the entry. If false (default), softly marks as obsolete (status=obsolete) so it can be resolved or restored later."),
     },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
   async ({ key, hard }) => {
     const data = readMemory()
@@ -269,6 +275,7 @@ server.registerTool(
     title: "Memory Stats",
     description: "Show project memory statistics.",
     inputSchema: {},
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async () => {
     const data = readMemory()
@@ -391,6 +398,7 @@ server.registerTool(
       since: z.string().describe("Show changes since (e.g. 24h, 7d, 2026-07-10)"),
       type: z.enum(["all", "created", "updated"]).optional().default("all").describe("Filter by change type"),
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async ({ since, type }) => {
     const sinceDate = parseRelativeDate(since)
@@ -451,6 +459,7 @@ server.registerTool(
       context: z.string().describe("Text or context to search for suggestions"),
       limit: z.number().optional().default(5).describe("Maximum suggestions"),
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async ({ context, limit }) => {
     const related = findRelatedEntries(context, "", limit)
@@ -479,13 +488,15 @@ server.registerTool(
       limit: z.number().optional().default(8).describe("Maximum entries to return"),
       category: z.string().optional().default("").describe("Filter by category (empty = all)"),
       bias: z.enum(["none", "session"]).optional().default("none").describe("'session': boost entries whose file matches current session files. 'none': no bias (default)."),
+      rrf: z.boolean().optional().default(false).describe("Use Reciprocal Rank Fusion (BM25x3 + centrality ranks, adaptive k=sqrtN) instead of weighted linear scoring. Weight-free: reaches parity with the tuned linear scorer on scripts/bench-rrf.mjs."),
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
-  async ({ intent, limit, category, bias }) => {
+  async ({ intent, limit, category, bias, rrf }) => {
     const data = readMemory()
     const mtimes = fileMtimes()
     const sessionFiles = bias === "session" ? getCurrentSessionFiles() : undefined
-    const result = generateSmartRecall(data, intent, { limit, category, fileMtimes: mtimes, sessionFiles })
+    const result = generateSmartRecall(data, intent, { limit, category, fileMtimes: mtimes, sessionFiles, rrf })
     return { content: [{ type: "text" as const, text: result }] }
   }
 )
@@ -502,6 +513,7 @@ server.registerTool(
       file: z.string().describe("File path"),
       summary: z.string().optional().default("").describe("File summary (only for set)"),
     },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
   async ({ action, file, summary }) => {
     const data = readMemory()
@@ -556,6 +568,7 @@ server.registerTool(
     title: "Archive Old Entries",
     description: "Move old entries (>30 days) to archive.toon to keep memory clean.",
     inputSchema: {},
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
   async () => {
     const result = archiveOldEntries()
@@ -581,6 +594,7 @@ server.registerTool(
     title: "Enable Encryption",
     description: "Enable AES-256-GCM encryption for memory. Requires TOON_MEMORY_KEY in environment.",
     inputSchema: {},
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
   },
   async () => {
     const config = loadConfig()
@@ -616,6 +630,7 @@ server.registerTool(
     inputSchema: {
       key: z.string().describe("Encryption key"),
     },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
   },
   async ({ key }) => {
     const config = loadConfig()
@@ -658,6 +673,7 @@ server.registerTool(
       file: z.string().optional().default("").describe("Filter by file"),
       clear: z.boolean().optional().default(false).describe("If true, clears the capture log"),
     },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   },
   async ({ limit, tool, file, clear }) => {
     if (clear) {
@@ -697,6 +713,7 @@ server.registerTool(
     title: "Consolidate Memory",
     description: "Consolidate memory by removing entries with identical content (keeps the first). Deterministic, no LLM.",
     inputSchema: {},
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
   },
   async () => {
     const result = consolidateEntries()
@@ -722,6 +739,7 @@ server.registerTool(
     inputSchema: {
       conflictsOnly: z.boolean().optional().default(false).describe("If true, only show soft conflicts"),
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async ({ conflictsOnly }) => {
     const selfId = resolveSessionId()
@@ -790,6 +808,7 @@ server.registerTool(
       task: z.string().optional().default("").describe("Current agent task. If provided, entries are ranked by relevance to this task. If empty, shows top entries by importance."),
       limit: z.number().optional().default(6).describe("Maximum relevant entries to show"),
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async ({ task, limit }) => {
     const data = readMemory()
@@ -808,6 +827,7 @@ server.registerTool(
     inputSchema: {
       task: z.string().optional().default("").describe("Agent task. If provided, ranks entries by relevance to this task."),
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async ({ task }) => {
     const data = readMemory()
@@ -827,6 +847,7 @@ server.registerTool(
     inputSchema: {
       since: z.string().optional().default("").describe("Start date (YYYY-MM-DD or relative like '7d'). Empty = last visible changes."),
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async ({ since }) => {
     const data = readMemory()
@@ -847,6 +868,7 @@ server.registerTool(
       task: z.string().describe("Task or symbol to search context for (e.g. 'fix auth bug', 'authenticate')"),
       limit: z.number().optional().default(6).describe("Maximum memory entries to include"),
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async ({ task, limit }) => {
     const data = readMemory()
@@ -864,6 +886,7 @@ server.registerTool(
     title: "Memory Health Audit",
     description: "Full memory health audit: orphan links, duplicates, broken refs, expired TTL, quality, stale sessions. Includes score 0-100. Zero LLM.",
     inputSchema: {},
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async () => {
     const data = readMemory()
@@ -883,6 +906,7 @@ server.registerTool(
     inputSchema: {
       format: z.enum(["full", "compact"]).optional().default("full").describe("full = detailed with graph, compact = summarized without edges"),
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async ({ format }) => {
     const data = readMemory()
@@ -899,6 +923,7 @@ server.registerTool(
     title: "Backup Memory",
     description: "Create a timestamped backup of the memory file. Use before major operations or to preserve state.",
     inputSchema: {},
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   },
   async () => {
     if (!existsSync(MEMORY_FILE)) {
@@ -952,6 +977,7 @@ server.registerTool(
     title: "System Primer",
     description: "Generate a compact system primer: always-current knowledge map for auto-injection into agent context. Excludes private entries, shows top memories by importance, categories, and patterns. Use at session start or when context feels stale.",
     inputSchema: {},
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async () => {
     const data = readMemory()
@@ -973,6 +999,7 @@ server.registerTool(
       count: z.number().optional().default(3).describe("Number of entries to compress (2-10). Default: 3."),
       category: z.string().optional().default("").describe("Filter by category (empty = all)."),
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async ({ query, count, category }) => {
     const data = readMemory()
@@ -1058,6 +1085,7 @@ server.registerTool(
       minQuality: z.number().optional().default(0.3).describe("Entries below this quality score are compression candidates (0-1). Default: 0.3."),
       dryRun: z.boolean().optional().default(false).describe("If true, show what would be compressed without making changes."),
     },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
   async ({ minQuality, dryRun }) => {
     const data = readMemory()
@@ -1158,6 +1186,7 @@ server.registerTool(
     inputSchema: {
       description: z.string().optional().default("").describe("Optional description for the Gist."),
     },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   },
   async ({ description }) => {
     const token = process.env.GITHUB_TOKEN
@@ -1223,6 +1252,7 @@ server.registerTool(
       gist_id: z.string().describe("GitHub Gist ID or full URL (https://gist.github.com/user/id)."),
       merge: z.boolean().optional().default(true).describe("If true, merge with existing memory. If false, replace entirely."),
     },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
   async ({ gist_id, merge }) => {
     const token = process.env.GITHUB_TOKEN
@@ -1341,6 +1371,7 @@ server.registerTool(
       since: z.string().optional().default("24h").describe("Time window to merge (e.g. '24h', '7d', '2026-07-20'). Default: 24h."),
       promote: z.boolean().optional().default(false).describe("If true, auto-promote unique observations to memory entries."),
     },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   },
   async ({ since, promote }) => {
     const { listSessions, pruneSessions } = await import("../lib/sessions")
@@ -1483,6 +1514,7 @@ server.registerTool(
     inputSchema: {
       dryRun: z.boolean().optional().default(false).describe("If true, show what would be merged without making changes."),
     },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
   async ({ dryRun }) => {
     const data = readMemory()
@@ -1606,6 +1638,7 @@ server.registerTool(
       from: z.string().describe("Starting entry key"),
       to: z.string().describe("Target entry key"),
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async ({ from, to }) => {
     const data = readMemory()
@@ -1680,6 +1713,7 @@ server.registerTool(
     inputSchema: {
       note: z.string().optional().default("").describe("Optional summary of what was accomplished in this session."),
     },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
   async ({ note }) => {
     const data = readMemory()
@@ -1769,6 +1803,7 @@ server.registerTool(
       key: z.string().describe("Key or id of the entry to pin"),
       priority: z.number().optional().default(1).describe("Priority level 1-5 (5 = highest). Default: 1."),
     },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
   async ({ key, priority }) => {
     const data = readMemory()
@@ -1815,6 +1850,7 @@ server.registerTool(
     inputSchema: {
       key: z.string().describe("Key or id of the entry to unpin"),
     },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
   async ({ key }) => {
     const data = readMemory()
@@ -1870,9 +1906,12 @@ server.registerTool(
       budget: z.enum(["tiny", "normal", "deep"]).optional().default("deep").describe("'tiny': key+1 line (~50 tokens). 'normal': compact with tags/edges. 'deep': all fields (default). Overrides 'compact'."),
       bias: z.enum(["none", "session"]).optional().default("none").describe("'session': boost entries whose file matches current session files. 'none': no bias (default)."),
       path_scope: z.string().optional().default("").describe("Glob pattern to filter entries by path scope (e.g. 'src/**.ts')."),
+      rrf: z.boolean().optional().default(false).describe("Use Reciprocal Rank Fusion (BM25x3 + centrality ranks, adaptive k=sqrtN) instead of weighted linear scoring. Weight-free: reaches parity with the tuned linear scorer on scripts/bench-rrf.mjs."),
+      as_of: z.string().optional().default("").describe("Temporal view (YYYY-MM-DD): return entries valid on that date."),
     },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
-  async ({ query, category, tags, from_date, to_date, limit, mode, hops, compact, bias, budget: budgetParam, path_scope }) => {
+  async ({ query, category, tags, from_date, to_date, limit, mode, hops, compact, bias, budget: budgetParam, path_scope, rrf, as_of }) => {
     const data = readMemory()
 
     const resolvedFrom = from_date ? parseRelativeDate(from_date) : ""
@@ -1887,6 +1926,8 @@ server.registerTool(
       limit,
       sessionFiles,
       path_scope: path_scope || undefined,
+      rrf,
+      asOf: as_of || undefined,
     })
 
     if (detail.entries.length === 0) {
@@ -1912,7 +1953,8 @@ server.registerTool(
         const originInfo = r.origin !== "agent" ? ` | origin: ${r.origin}` : ""
         const scopeInfo = r.path_scope ? ` | scope: ${r.path_scope}` : ""
         const statusInfo = r.status !== "active" ? ` | status: ${r.status}` : ""
-        return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}${originInfo}${scopeInfo}${statusInfo}`
+        const supersededInfo = r.supersededOn ? ` | superseded: ${r.supersededOn}` : ""
+        return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}${originInfo}${scopeInfo}${statusInfo}${supersededInfo}`
       })
       .join("\n\n")
 
@@ -1940,6 +1982,7 @@ server.registerTool(
       tags: z.string().describe("Semicolon-separated tags to apply"),
       ids: z.string().describe("Comma or space-separated entry keys or IDs to modify"),
     },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
   async ({ action, tags, ids }) => {
     const data = readMemory()
@@ -2014,6 +2057,7 @@ server.registerTool(
     inputSchema: {
       key: z.string().describe("Key or id of the entry to resolve/restore"),
     },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
   async ({ key }) => {
     const data = readMemory()
@@ -2062,6 +2106,7 @@ server.registerTool(
     inputSchema: {
       key: z.string().describe("Key or id of the entry to suppress"),
     },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
   async ({ key }) => {
     const data = readMemory()
@@ -2096,6 +2141,410 @@ server.registerTool(
   }
 )
 
+// ── memory_supersede ─────────────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_supersede",
+  {
+    title: "Supersede Entry",
+    description: "Mark an entry as superseded (obsolete) by a newer entry, using typed graph edges (superseded_by / supersedes). The old entry stays in the file for history but is hidden from normal recalls. Use memory_recall(as_of: date) to see what was true at a point in time.",
+    inputSchema: {
+      old_key: z.string().describe("Key or id of the entry being superseded"),
+      new_key: z.string().optional().default("").describe("Key or id of the replacement entry (can be empty if the topic is simply retired)."),
+      reason: z.string().optional().default("").describe("Optional note explaining why it was superseded. Appended to the old entry's content."),
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
+  },
+  async ({ old_key, new_key, reason }) => {
+    const data = readMemory()
+    const lines = data.split("\n")
+    const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+    if (headerIdx === -1) {
+      return { content: [{ type: "text" as const, text: "No entries in memory" }] }
+    }
+
+    const today = new Date().toISOString().split("T")[0]
+
+    let oldIdx = -1
+    for (let i = headerIdx + 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line.startsWith("  ") || !line.includes("|")) continue
+      if (line.startsWith("  summaries:")) break
+      const parts = line.trim().split("|")
+      if (parts[0] === old_key || parts[2] === old_key) {
+        oldIdx = i
+        break
+      }
+    }
+
+    if (oldIdx === -1) {
+      return { content: [{ type: "text" as const, text: `❌ "${old_key}" not found in memory.` }] }
+    }
+
+    let newIdx = -1
+    let newKey = ""
+    if (new_key) {
+      for (let i = headerIdx + 1; i < lines.length; i++) {
+        const line = lines[i]
+        if (!line.startsWith("  ") || !line.includes("|")) continue
+        if (line.startsWith("  summaries:")) break
+        const parts = line.trim().split("|")
+        if (parts[0] === new_key || parts[2] === new_key) {
+          newIdx = i
+          newKey = parts[2]
+          break
+        }
+      }
+      if (newIdx === -1) {
+        return { content: [{ type: "text" as const, text: `❌ Replacement "${new_key}" not found in memory.` }] }
+      }
+    }
+
+    const oldParts = lines[oldIdx].trim().split("|")
+    const oldKey = oldParts[2]
+
+    // Tag the old entry as superseded.
+    const tags = (oldParts[5] || "").split(";").map((t) => t.trim()).filter(Boolean)
+    if (!tags.includes("superseded")) tags.push("superseded")
+
+    // Add the typed link old --superseded_by--> new.
+    const links = (oldParts[9] || "").split(/[\s;]+/).filter(Boolean)
+    if (newKey) {
+      const edge = formatLink("superseded_by", newKey)
+      if (!links.includes(edge)) links.push(edge)
+    }
+
+    // Append the reason to the content (kept in history). Records are single-line, so
+    // newlines in the reason would corrupt the | delimited format — flatten them.
+    let content = oldParts[3] || ""
+    if (reason && !content.includes(reason)) {
+      const flat = reason.replace(/[\r\n]+/g, " ").trim()
+      content = `${content} ⏳ Superseded (${today}): ${flat}`
+    }
+
+    while (oldParts.length < 18) oldParts.push("")
+    oldParts[3] = content
+    oldParts[5] = tags.join(";")
+    oldParts[9] = links.join(" ")
+    oldParts[16] = "obsolete"
+    oldParts[17] = today
+    lines[oldIdx] = `  ${oldParts.join("|")}`
+
+    // Mirror link on the replacement: new --supersedes--> old.
+    if (newIdx !== -1) {
+      const newParts = lines[newIdx].trim().split("|")
+      const newLinks = (newParts[9] || "").split(/[\s;]+/).filter(Boolean)
+      const edge = formatLink("supersedes", oldKey)
+      if (!newLinks.includes(edge)) {
+        newLinks.push(edge)
+        newParts[9] = newLinks.join(" ")
+        lines[newIdx] = `  ${newParts.join("|")}`
+      }
+    }
+
+    writeMemory(lines.join("\n"))
+
+    const target = newKey ? ` by "${newKey}"` : " (retired)"
+    return {
+      content: [{
+        type: "text" as const,
+        text: `⏳ "${oldKey}" superseded${target} on ${today}.\n\nOld entry is now status=obsolete (hidden from normal recalls).\n  · link: superseded_by${newKey ? `:${newKey}` : ""}\n  · tag: superseded\n\nTo see what was true before: memory_recall(query: "${oldKey}", as_of: "${today}")\nTo restore: memory_resolve(key: "${oldKey}")${reason ? `\n\nReason: ${reason}` : ""}`,
+      }],
+    }
+  }
+)
+
+// ── memory_reflect ───────────────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_reflect",
+  {
+    title: "Reflect on Memory",
+    description: "Deterministic memory audit (no LLM): tag co-occurrence themes, hub/orphan entries, near-duplicates, contradiction candidates, stale entries, and superseded-but-active entries. Signals what to link, merge, or retire.",
+    inputSchema: {
+      category: z.string().optional().default("").describe("Restrict analysis to one category (empty = all)."),
+      limit: z.number().optional().default(5).describe("Max items per section."),
+    },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  },
+  async ({ category, limit }) => {
+    const data = readMemory()
+    const entries = parseEntries(data)
+    const cap = Math.max(1, Math.min(20, limit || 5))
+    if (entries.length === 0) {
+      return { content: [{ type: "text" as const, text: "Empty memory." }] }
+    }
+
+    const scope = entries.filter((e) => !category || e.category === category)
+    const { adjacency } = buildGraph(entries)
+
+    const sections: string[] = [`🧠 Memory reflect (${scope.length}/${entries.length} entries)`]
+
+    // 1. Hubs and orphans
+    const degree = new Map<string, number>()
+    for (const [k, nbs] of adjacency) degree.set(k, nbs.length)
+    const hubs = [...degree.entries()].sort((a, b) => b[1] - a[1]).filter(([, d]) => d >= 3)
+    if (hubs.length > 0) {
+      sections.push("", "🔗 Hubs (connectors):")
+      for (const [k, d] of hubs.slice(0, cap)) {
+        const e = entries.find((x) => x.key === k)
+        sections.push(`  ${k} (deg ${d}) — ${e ? e.content.slice(0, 70) : ""}`)
+      }
+    }
+    const orphans = scope.filter((e) => e.status === "active" && !(degree.get(e.key) || 0) && e.tags.length === 0)
+    if (orphans.length > 0) {
+      sections.push("", "🕳️ Orphans (no links, no tags — consider linking):")
+      for (const e of orphans.slice(0, cap)) {
+        sections.push(`  [${e.category}] ${e.key} — ${e.content.slice(0, 70)}`)
+      }
+    }
+
+    // 2. Tag co-occurrence themes
+    const pairCount = new Map<string, number>()
+    for (const e of scope) {
+      if (e.tags.length < 2) continue
+      const t = [...e.tags].sort()
+      for (let i = 0; i < t.length; i++) {
+        for (let j = i + 1; j < t.length; j++) {
+          const pair = `${t[i]} + ${t[j]}`
+          pairCount.set(pair, (pairCount.get(pair) || 0) + 1)
+        }
+      }
+    }
+    const themes = [...pairCount.entries()].sort((a, b) => b[1] - a[1])
+    if (themes.length > 0) {
+      sections.push("", "🏷️ Latent themes (tag co-occurrence):")
+      for (const [pair, n] of themes.slice(0, cap)) {
+        sections.push(`  ${pair} — ${n} entries`)
+      }
+    }
+
+    // 3. Near-duplicates (Jaccard word overlap > 0.5)
+    const active = scope.filter((e) => e.status === "active")
+    const wordSets = new Map<string, Set<string>>()
+    for (const e of active) {
+      wordSets.set(e.key, new Set(normalize(`${e.key} ${e.content} ${e.tags.join(" ")}`).split(" ").filter(Boolean)))
+    }
+    const dupes: Array<{ a: string; b: string; sim: number }> = []
+    const keysArr = active.map((e) => e.key)
+    for (let i = 0; i < keysArr.length; i++) {
+      for (let j = i + 1; j < keysArr.length; j++) {
+        const wa = wordSets.get(keysArr[i])!
+        const wb = wordSets.get(keysArr[j])!
+        const inter = new Set([...wa].filter((w) => wb.has(w)))
+        const union = new Set([...wa, ...wb])
+        const sim = union.size > 0 ? inter.size / union.size : 0
+        if (sim > 0.5) dupes.push({ a: keysArr[i], b: keysArr[j], sim })
+      }
+    }
+    if (dupes.length > 0) {
+      sections.push("", "♻️ Near-duplicates (merge candidates):")
+      for (const d of dupes.sort((x, y) => y.sim - x.sim).slice(0, cap)) {
+        sections.push(`  ${d.a} ↔ ${d.b} (${(d.sim * 100).toFixed(0)}% overlap)`)
+      }
+    }
+
+    // 4. Contradiction candidates: same category, ≥2 shared tags, split polarity markers
+    const NEGATION = /\b(no longer|never|not|no|doesn'?t|don'?t|shouldn'?t|cannot|can'?t|instead of|contradicts|replaces|deprecated|broken|fails|wrong|incorrect)\b/i
+    const contradictions: string[] = []
+    for (let i = 0; i < active.length; i++) {
+      for (let j = i + 1; j < active.length; j++) {
+        const a = active[i], b = active[j]
+        if (a.category !== b.category) continue
+        const shared = a.tags.filter((t) => b.tags.includes(t)).length
+        if (shared < 2) continue
+        const aNeg = NEGATION.test(a.content)
+        const bNeg = NEGATION.test(b.content)
+        if (aNeg !== bNeg) {
+          contradictions.push(`${a.key} ↔ ${b.key} [${a.category}] (${shared} shared tags, split polarity)`)
+        }
+      }
+    }
+    if (contradictions.length > 0) {
+      sections.push("", "⚡ Contradiction candidates (verify):")
+      for (const c of contradictions.slice(0, cap)) {
+        sections.push(`  ${c}`)
+      }
+    }
+
+    // 5. Stale / archive candidates
+    const now = Date.now()
+    const stale = active.filter((e) => {
+      if (e.tags.includes("private")) return false
+      if (e.ttl && isExpiredLocal(e.ttl)) return true
+      if (!e.date) return false
+      const ageDays = (now - new Date(`${e.date}T00:00:00`).getTime()) / 86400000
+      const lastAccessDays = e.lastAccessed ? (now - new Date(e.lastAccessed).getTime()) / 86400000 : ageDays
+      return ageDays > 120 && lastAccessDays > 90 && e.accessed === 0
+    })
+    if (stale.length > 0) {
+      sections.push("", "🗄️ Stale (archive candidates):")
+      for (const e of stale.sort((a, b) => a.date.localeCompare(b.date)).slice(0, cap)) {
+        sections.push(`  [${e.category}] ${e.key} — ${e.content.slice(0, 70)}`)
+      }
+    }
+
+    // 6. Superseded-but-active (tag/link present but status not obsolete)
+    const pending = entries.filter((e) => e.status === "active" && (e.tags.includes("superseded") || typedLinks(e.links).some((l) => l.type === "superseded_by")))
+    if (pending.length > 0) {
+      sections.push("", "🔎 Superseded tag but still active (fix with memory_supersede):")
+      for (const e of pending.slice(0, cap)) {
+        sections.push(`  [${e.category}] ${e.key}`)
+      }
+    }
+
+    // 7. Drafts pending review
+    const drafts = entries.filter((e) => e.status === "draft")
+    if (drafts.length > 0) {
+      sections.push("", "📝 Drafts pending review (promote with memory_promote / memory_resolve):")
+      for (const e of drafts.slice(0, cap)) {
+        sections.push(`  [${e.category}] ${e.key} — ${e.content.slice(0, 70)}`)
+      }
+    }
+
+    return { content: [{ type: "text" as const, text: sections.join("\n") }] }
+  }
+)
+
+// ── memory_promote ───────────────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_promote",
+  {
+    title: "Promote Observations",
+    description: "Heuristic auto-promote from the capture log (no LLM). Each observation gets a deterministic confidence score; high-confidence ones promote as active entries, low-confidence (≤ minConfidence) become reviewable drafts. Opt-in: run with dryRun: true first.",
+    inputSchema: {
+      dryRun: z.boolean().optional().default(true).describe("If true, only preview what would be promoted (no writes)."),
+      minConfidence: z.number().optional().default(0.65).describe("Observations at or below this confidence become drafts; above it become active entries."),
+      max: z.number().optional().default(5).describe("Maximum observations to promote."),
+      days: z.number().optional().default(7).describe("Only consider observations from the last N days."),
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  },
+  async ({ dryRun, minConfidence, max, days }) => {
+    const obs = readObservations()
+    if (obs.length === 0) {
+      return { content: [{ type: "text" as const, text: "No captured activity. Enable with `toon-memory capture on`." }] }
+    }
+
+    const cutoff = Date.now() - (days || 7) * 86400000
+    const recent = obs.filter((o) => new Date(o.ts).getTime() >= cutoff)
+
+    const data = readMemory()
+    const existing = parseEntries(data)
+    const existingKeys = new Set(existing.map((e) => e.key))
+    const existingWords = existing.map((e) => new Set(normalize(`${e.key} ${e.content} ${e.tags.join(" ")}`).split(" ").filter(Boolean)))
+
+    // Deterministic confidence heuristic (0..1).
+    const confidence = (o: { tool: string; file: string; summary: string }): number => {
+      const summary = (o.summary || "").trim()
+      if (!summary) return 0.1
+      let c = 0.5
+      const len = summary.length
+      if (len >= 40 && len <= 300) c += 0.1
+      else if (len < 40) c -= 0.1
+      if (o.file) c += 0.15
+      const tool = (o.tool || "").toLowerCase()
+      if (["edit", "write", "create", "bash", "git", "npm"].includes(tool)) c += 0.1
+      else if (["read", "grep", "glob", "search", "ls", "list"].includes(tool)) c -= 0.15
+      if (/\b(error|fail|bug|fix|broken|fails|failed|cannot|crash)\b/i.test(summary)) c += 0.1
+      if (/\b(viewed|read|opened|inspected|browsed|listed|scanned)\b/i.test(summary)) c -= 0.1
+      return Math.max(0.05, Math.min(1, c))
+    }
+
+    const alreadyKnown = (o: { tool: string; summary: string }): boolean => {
+      const words = new Set(normalize(`${o.tool} ${o.summary}`).split(" ").filter(Boolean))
+      if (words.size === 0) return true
+      for (const set of existingWords) {
+        const inter = new Set([...words].filter((w) => set.has(w)))
+        const union = new Set([...words, ...set])
+        if (inter.size / union.size > 0.5) return true
+      }
+      return false
+    }
+
+    const seen = new Set<string>()
+    const candidates = recent
+      .filter((o) => {
+        const dedupKey = `${o.tool}|${o.summary}`
+        if (seen.has(dedupKey)) return false
+        seen.add(dedupKey)
+        return o.summary && !alreadyKnown(o)
+      })
+      .map((o) => ({ o, conf: confidence(o) }))
+      .sort((a, b) => b.conf - a.conf)
+      .slice(0, max || 5)
+
+    if (candidates.length === 0) {
+      return { content: [{ type: "text" as const, text: "✅ Nothing new to promote — all recent observations are already covered by memory or below threshold." }] }
+    }
+
+    const preview = candidates.map(({ o, conf }) => {
+      const kind = conf <= minConfidence ? "draft" : "active"
+      return `  [${kind}] ${(o.summary || "").slice(0, 90)} (conf ${conf.toFixed(2)})${o.file ? ` @ ${o.file}` : ""}`
+    })
+    const kindLabel = (conf: number) => (conf <= minConfidence ? "draft" : "active")
+
+    if (dryRun) {
+      return {
+        content: [{
+          type: "text" as const,
+          text: `🔍 Dry run — ${candidates.length} candidate(s) from the last ${days || 7}d (threshold ${minConfidence}):\n\n${preview.join("\n")}\n\nRun with dryRun: false to promote.`
+        }],
+      }
+    }
+
+    const date = new Date().toISOString().split("T")[0]
+    const lines = data.split("\n")
+    let headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+    if (headerIdx === -1) {
+      lines.push(`[0|]`)
+      headerIdx = lines.length - 1
+    }
+    const match = lines[headerIdx].match(/\[(\d+)\|/)
+    let count = match ? parseInt(match[1]) : 0
+
+    let promoted = 0
+    let drafted = 0
+    const actions: string[] = []
+    for (const { o, conf } of candidates) {
+      const key = o.summary
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, "")
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 4)
+        .join("-")
+        .slice(0, 40) || `observation-${Date.now().toString(36)}`
+      if (existingKeys.has(key)) continue
+
+      const newId = generateId()
+      const status = kindLabel(conf)
+      const tags = ["captured", `${o.agent || "agent"}`]
+      if (status === "draft") tags.push("draft")
+      const content = (o.summary || "").slice(0, 500)
+      const quality = qualityScore(tags.join(";"), "", content, date)
+      const entry = `${newId}|knowledge|${key}|${content}|${o.file || ""}|${tags.join(";")}|${date}||0||${quality.toFixed(2)}|${conf.toFixed(2)}|${date}|0||inferred|${status}`
+
+      lines.splice(headerIdx + 1, 0, `  ${entry}`)
+      count++
+      existingKeys.add(key)
+      if (status === "draft") drafted++
+      else promoted++
+      actions.push(`  [${status}] ${key} (conf ${conf.toFixed(2)})`)
+    }
+    lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count}|`)
+    writeMemory(lines.join("\n"))
+
+    return {
+      content: [{
+        type: "text" as const,
+        text: `📤 Promoted ${promoted} active + ${drafted} draft from the capture log.\n\n${actions.join("\n")}\n\nDrafts are hidden from recalls until promoted — use memory_resolve(key) to activate, or review with memory_reflect.`
+      }],
+    }
+  }
+)
+
 // ── memory_visualize (MCP Apps) ──────────────────────────────────────────────
 
 registerAppTool(
@@ -2107,6 +2556,7 @@ registerAppTool(
     inputSchema: {
       query: z.string().optional().default("").describe("Optional search query to highlight entries in the viewer"),
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
     _meta: { ui: { resourceUri: "ui://viewer" } },
   },
   async ({ query }) => {

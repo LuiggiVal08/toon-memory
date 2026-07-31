@@ -8,7 +8,7 @@ const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 ---
 
-<section class="content-section faq-section">
+<section id="faq" class="content-section faq-section">
   <div class="section-header">
     <h2>{c.faq.title}</h2>
     <p>{c.faq.subtitle}</p>

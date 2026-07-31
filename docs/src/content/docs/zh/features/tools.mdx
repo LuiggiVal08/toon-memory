@@ -1,6 +1,6 @@
 ---
-title: "37 个 MCP 工具实现持久化 AI 记忆"
-description: "37 个 MCP 工具用于 AI 代理持久化记忆 — memory_remember、memory_recall、memory_smart_recall、context_generate 等。面向 Claude、Cursor、OpenCode 的 token 高效、图感知召回。"
+title: "40 个 MCP 工具实现持久化 AI 记忆"
+description: "40 个 MCP 工具用于 AI 代理持久化记忆 — memory_remember、memory_recall、memory_smart_recall、context_generate 等。面向 Claude、Cursor、OpenCode 的 token 高效、图感知召回。"
 head:
   - tag: meta
     attrs:
@@ -10,14 +10,14 @@ head:
 
 ## 概述
 
-toon-memory 提供 37 个 MCP 工具和 4 个 MCP 资源，用于管理持久化记忆：
+toon-memory 提供 40 个 MCP 工具和 4 个 MCP 资源，用于管理持久化记忆：
 
 ## 工具
 
 | 工具 | 描述 |
 |------|------|
 | `memory_remember` | 保存决策、模式、缺陷或知识（可选 TTL、自动标签推断、`links`、自动质量评分、合并去重、置信度） |
-| `memory_recall` | 搜索记忆（应在读取文件之前使用，自动过滤过期 TTL）。`mode: "graph"` 可展开关系感知子图以获得更高精度。质量加权排序 |
+| `memory_recall` | 搜索记忆（应在读取文件之前使用，自动过滤过期 TTL）。`mode: "graph"` 可展开关系感知子图以获得更高精度。排名使用 RRF 融合（BM25×3 + 图中心性，自适应 k）；传入 `rrf: false` 使用旧版线性分数。`as_of` 会重新包含在指定日期之后被 superseded 的条目 |
 | `memory_forget` | 按 key 或 id 移除条目 |
 | `memory_stats` | 查看记忆状态（包括 TTL 统计和质量分布） |
 | `memory_summary` | 保存/获取文件摘要 |
@@ -42,6 +42,11 @@ toon-memory 提供 37 个 MCP 工具和 4 个 MCP 资源，用于管理持久化
 | `memory_unpin` | **Unpin an entry**: remove the pinned flag |
 | `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
 | `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
+| `memory_resolve` | **恢复条目**：将软删除（obsolete）的条目恢复为激活状态 |
+| `memory_suppress` | **隐藏条目**：从召回结果中隐藏条目而不删除（status=suppressed） |
+| `memory_reflect` | **记忆反思**：按过时程度、质量和过度连接确定性排名条目，揭示需要注意或清理的内容。零 LLM |
+| `memory_supersede` | **替换条目**：将其标记为已被更新的条目取代（`status=obsolete`、`superseded_by`/`supersedes` 链接、`supersededOn` 日期）。旧条目仅在早于取代日期的 `as_of` 查询中重新出现 |
+| `memory_promote` | **自动提升草稿**：确定性将低置信度条目提升为激活状态（阈值 0.65，Jaccard 去重 > 0.5，默认 `dryRun`） |
 
 ## MCP 资源
 
