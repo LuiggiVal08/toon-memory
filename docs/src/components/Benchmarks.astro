@@ -6,60 +6,252 @@ interface Props {
 }
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
+const b = c.benchmarks;
 
 const jsonTokens = 1097;
 const toonTokens = 850;
-const reductionPct = 22.5;
-const singleReductionPct = 30.5;
-const entries = 16;
-
-const rows = [
-  { format: 'JSON', tokens: jsonTokens, cls: 'bar-json' },
-  { format: 'TOON', tokens: toonTokens, cls: 'bar-toon' },
-];
 ---
 
-<section class="content-section benchmarks-section">
-  <div class="section-header">
-    <h2>{c.benchmarks.title}</h2>
-    <p>{c.benchmarks.subtitle}</p>
-  </div>
+<section id="benchmarks" class="content-section benchmarks-section">
+	<div class="section-header">
+		<h2>{b.title}</h2>
+		<p>{b.subtitle}</p>
+	</div>
 
-  <div class="savings-bars">
-    {
-      rows.map((r) => (
-        <div class="savings-bar">
-          <span class="savings-label">{r.format}</span>
-          <div class="bar-track">
-            <div class={`bar ${r.cls}`} style={`--pct:${(r.tokens / jsonTokens) * 100}%`} data-pct={(r.tokens / jsonTokens) * 100}>
-              <span>{r.tokens}</span>
-            </div>
-          </div>
-        </div>
-      ))
-    }
-  </div>
+	<div class="bench-tabs" role="tablist" aria-label={b.title}>
+		<button class="bench-tab is-active" data-tab="ranking" role="tab" aria-selected="true">{b.tabs.ranking}</button>
+		<button class="bench-tab" data-tab="workflow" role="tab" aria-selected="false">{b.tabs.workflow}</button>
+		<button class="bench-tab" data-tab="format" role="tab" aria-selected="false">{b.tabs.format}</button>
+	</div>
 
-  <div class="savings-stats">
-    <div class="savings-stat">
-      <span class="savings-num" data-count={`${reductionPct}%`}>{reductionPct}%</span>
-      <span class="savings-cap">{c.benchmarks.fewerTokens}</span>
-    </div>
-    <div class="savings-stat">
-      <span class="savings-num" data-count={`${singleReductionPct}%`}>{singleReductionPct}%</span>
-      <span class="savings-cap">{c.benchmarks.onSingle}</span>
-    </div>
-    <div class="savings-stat">
-      <span class="savings-num" data-count={String(entries)}>{entries}</span>
-      <span class="savings-cap">{c.benchmarks.entriesMeasured}</span>
-    </div>
-  </div>
+	<div class="bench-panel is-active" data-panel="ranking" role="tabpanel">
+		<h3 class="bench-panel-title">{b.ranking.subtitle}</h3>
+		<table class="bench-table">
+			<thead>
+				<tr>
+					<th>{b.ranking.metricLabel}</th>
+					<th>{b.ranking.linear}</th>
+					<th>{b.ranking.rrf}</th>
+				</tr>
+			</thead>
+			<tbody>
+				{b.ranking.metricRows.map((r: { metric: string; linear: string; rrf: string }) => (
+					<tr>
+						<td class="bench-metric">{r.metric}</td>
+						<td>{r.linear}</td>
+						<td class="rrf-val">{r.rrf}</td>
+					</tr>
+				))}
+			</tbody>
+		</table>
+		<div class="bench-result">{b.ranking.result}</div>
+		<p class="savings-note" set:html={b.ranking.note}></p>
+	</div>
 
-  <p class="savings-note" set:html={c.benchmarks.note}></p>
+	<div class="bench-panel" data-panel="workflow" role="tabpanel">
+		<h3 class="bench-panel-title">{b.workflow.subtitle}</h3>
+		<div class="savings-stats workflow-grid">
+			{
+				b.workflow.stats.map((s: { num: string; cap: string }) => (
+					<div class="savings-stat">
+						<span class="savings-num impact-num" data-count={s.num}>{s.num}</span>
+						<span class="savings-cap">{s.cap}</span>
+					</div>
+				))
+			}
+		</div>
+		<p class="savings-note" set:html={b.workflow.note}></p>
+	</div>
+
+	<div class="bench-panel" data-panel="format" role="tabpanel">
+		<h3 class="bench-panel-title">{b.format.subtitle}</h3>
+		<div class="savings-bars">
+			<div class="savings-bar">
+				<span class="savings-label">JSON</span>
+				<div class="bar-track">
+					<div class="bar bar-json" style={`--pct:100%`} data-pct={100}>
+						<span>{jsonTokens}</span>
+					</div>
+				</div>
+			</div>
+			<div class="savings-bar">
+				<span class="savings-label">TOON</span>
+				<div class="bar-track">
+					<div class="bar bar-toon" style={`--pct:${(toonTokens / jsonTokens) * 100}%`} data-pct={(toonTokens / jsonTokens) * 100}>
+						<span>{toonTokens}</span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="savings-stats format-stats">
+			{
+				b.format.stats.map((s: { num: string; cap: string }) => (
+					<div class="savings-stat">
+						<span class="savings-num" data-count={s.num}>{s.num}</span>
+						<span class="savings-cap">{s.cap}</span>
+					</div>
+				))
+			}
+		</div>
+		<p class="savings-note" set:html={b.format.note}></p>
+	</div>
 </section>
 
 <script>
-  import { animateCountsAndBars } from '../scripts/home-anim';
-  const root = document.querySelector<HTMLElement>('.benchmarks-section');
-  if (root) animateCountsAndBars(root);
+	import { animateCountsAndBars } from '../scripts/home-anim';
+	const root = document.querySelector<HTMLElement>('.benchmarks-section');
+	if (root) {
+		animateCountsAndBars(root);
+		root.querySelectorAll<HTMLButtonElement>('.bench-tab').forEach((tab) => {
+			tab.addEventListener('click', () => {
+				root.querySelectorAll('.bench-tab').forEach((t) => {
+					t.classList.remove('is-active');
+					t.setAttribute('aria-selected', 'false');
+				});
+				root.querySelectorAll('.bench-panel').forEach((p) => p.classList.remove('is-active'));
+				tab.classList.add('is-active');
+				tab.setAttribute('aria-selected', 'true');
+				const name = tab.dataset.tab;
+				const panel = root.querySelector<HTMLElement>(`.bench-panel[data-panel="${name}"]`);
+				if (panel) {
+					panel.classList.add('is-active');
+					animateCountsAndBars(panel);
+				}
+			});
+		});
+	}
 </script>
+
+<style>
+	.benchmarks-section {
+		margin-bottom: 3.5rem;
+		padding: 2.5rem 2rem;
+		border-radius: 16px;
+		background: linear-gradient(135deg, var(--color-accent-brand-ghost-wash), var(--color-accent-lavender-ghost));
+		border: 1px solid var(--color-accent-lavender-dim);
+	}
+	.benchmarks-section .section-header h2 {
+		font-size: 2.1rem;
+		background: var(--gradient);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+	.bench-tabs {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		margin-bottom: 1.5rem;
+	}
+	.bench-tab {
+		padding: 0.5rem 1.1rem;
+		border-radius: 999px;
+		border: 1px solid var(--color-accent-lavender-dim);
+		background: var(--color-accent-brand-ghost);
+		color: var(--text-muted);
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.18s ease;
+	}
+	.bench-tab:hover {
+		color: var(--text);
+		border-color: var(--color-accent-lavender);
+	}
+	.bench-tab.is-active {
+		background: var(--gradient);
+		color: #fff;
+		border-color: transparent;
+	}
+	.bench-panel {
+		display: none;
+	}
+	.bench-panel.is-active {
+		display: block;
+		animation: benchFade 0.25s ease;
+	}
+	@keyframes benchFade {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	.bench-panel-title {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--color-lavender);
+		margin-bottom: 1rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+	.bench-table {
+		width: 100%;
+		max-width: 420px;
+		border-collapse: collapse;
+		margin-bottom: 0.75rem;
+	}
+	.bench-table th {
+		font-size: 0.78rem;
+		font-weight: 600;
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		text-align: left;
+		padding: 0.45rem 0.75rem;
+		border-bottom: 1px solid var(--color-accent-lavender-dim);
+	}
+	.bench-table td {
+		padding: 0.45rem 0.75rem;
+		font-size: 0.95rem;
+		color: var(--text);
+	}
+	.bench-table .bench-metric {
+		color: var(--text-muted);
+	}
+	.bench-table .rrf-val {
+		font-weight: 700;
+	}
+	.bench-result {
+		display: inline-block;
+		margin: 0.5rem 0 0.75rem;
+		padding: 0.4rem 0.9rem;
+		border-radius: 999px;
+		background: linear-gradient(135deg, var(--color-accent-success-subtle), var(--color-accent-brand-ghost-wash));
+		border: 1px solid var(--color-accent-success-border);
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--text);
+	}
+	.workflow-grid {
+		justify-content: flex-start;
+		flex-wrap: wrap;
+		margin-top: 0.25rem;
+	}
+	.workflow-grid .savings-stat {
+		min-width: 170px;
+		align-items: flex-start;
+		padding: 0.75rem 1rem;
+		border-radius: 12px;
+		background: var(--color-accent-brand-ghost);
+		border: 1px solid var(--color-accent-lavender-dim);
+	}
+	.impact-num {
+		font-size: 2rem;
+		background: var(--gradient);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+	.format-stats {
+		margin-top: 1.25rem;
+	}
+	@media (max-width: 768px) {
+		.workflow-grid .savings-stat {
+			min-width: 140px;
+		}
+	}
+</style>

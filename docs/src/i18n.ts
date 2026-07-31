@@ -246,36 +246,46 @@ curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/instal
 # Windows (PowerShell)
 irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex`,
 		},
-		tokenSavings: {
-			title: '22% fewer tokens, by design',
-			subtitle: 'The TOON format is built for LLMs, not for humans',
-			stats: [
-				{ num: '22.5%', cap: 'fewer tokens than JSON' },
-				{ num: '30.5%', cap: 'on a single entry' },
-				{ num: '1.3x', cap: 'faster to parse' },
-			],
-			note: 'Measured with <code>gpt-tokenizer</code> (cl100k_base) over 16 representative memory entries, comparing the real on-disk TOON format against compact JSON. Reproducible: <code>npm run bench</code>.',
-		},
 		benchmarks: {
 			title: 'Benchmarks',
-			subtitle: 'Token efficiency of the TOON format — measured, not assumed',
-			fewerTokens: 'fewer tokens than JSON',
-			onSingle: 'on a single entry',
-			entriesMeasured: 'entries measured',
-			note: 'Measured with <code>gpt-tokenizer</code> (cl100k_base) over 16 representative memory entries, comparing the real on-disk TOON format against compact JSON. Reproducible: <code>npm run bench</code>.',
-		},
-		impactSection: {
-			title: 'Up to 90% fewer tokens per interaction',
-			subtitle:
-				'Five benchmarks: auto-loading saves ~90%, compact recall saves 68%, full session saves 80% tool calls, system primer saves 58%, batch compression saves 14%.',
-			stats: [
-				{ num: '~90%', cap: 'fewer tokens (auto-loading)' },
-				{ num: '80%', cap: 'fewer tool calls (25 → 5)' },
-				{ num: '68%', cap: 'fewer tokens (compact recall)' },
-				{ num: '58%', cap: 'fewer tokens (system primer)' },
-				{ num: '14%', cap: 'fewer tokens (batch compress)' },
-			],
-			note: 'Auto-loading benchmark: OpenCode plugin injects only file-relevant memory instead of dumping all entries. Full session: start → debug → implement → review → wrap-up. Reproducible: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
+			subtitle: 'Measured, not assumed',
+			tabs: {
+				ranking: 'Ranking quality',
+				workflow: 'Workflow savings',
+				format: 'TOON format',
+			},
+			ranking: {
+				subtitle: 'RRF vs linear recall on 8 gold queries — parity, not regression',
+				metricLabel: 'Metric',
+				linear: 'Linear',
+				rrf: 'RRF',
+				metricRows: [
+					{ metric: 'nDCG', linear: '0.776', rrf: '0.776' },
+					{ metric: 'MRR', linear: '0.917', rrf: '0.917' },
+				],
+				result: 'Parity — 1 win / 1 loss / 6 ties',
+				note: 'RRF fuses BM25 (×3) + graph centrality with adaptive k and ranks identically to the legacy linear score — graph-aware, no regression. Reproducible: <code>npm run bench:rrf</code>.',
+			},
+			workflow: {
+				subtitle: 'Token and tool-call savings measured across a real session',
+				stats: [
+					{ num: '~90%', cap: 'fewer tokens (auto-loading)' },
+					{ num: '80%', cap: 'fewer tool calls (25 → 5)' },
+					{ num: '68%', cap: 'fewer tokens (compact recall)' },
+					{ num: '58%', cap: 'fewer tokens (system primer)' },
+					{ num: '14%', cap: 'fewer tokens (batch compress)' },
+				],
+				note: 'Auto-loading: the OpenCode plugin injects only file-relevant memory instead of dumping all entries. Full session: start → debug → implement → review → wrap-up. Reproducible: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
+			},
+			format: {
+				subtitle: 'The TOON format is built for LLMs, not for humans',
+				stats: [
+					{ num: '22.5%', cap: 'fewer tokens than JSON' },
+					{ num: '30.5%', cap: 'on a single entry' },
+					{ num: '1.3x', cap: 'faster to parse' },
+				],
+				note: 'Measured with <code>gpt-tokenizer</code> (cl100k_base) over 16 representative memory entries, comparing the real on-disk TOON format against compact JSON. Reproducible: <code>npm run bench</code>.',
+			},
 		},
 		tools: {
 			title: '40 MCP tools, 4 resources',
@@ -474,7 +484,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{
 					icon: '🏆',
 					title: 'RRF Ranking',
-					body: 'Recall fuses BM25 (×3) + graph-centrality ranks with Reciprocal Rank Fusion and adaptive k=sqrt(n). Benchmark (8 gold queries): nDCG 0.776, MRR 0.917 — exact parity with linear scoring.',
+					body: 'Recall fuses BM25 (×3) + graph-centrality ranks with Reciprocal Rank Fusion and adaptive k=sqrt(n). Benchmarked parity with linear scoring — see the Benchmarks section.',
 					stats: ['BM25×3', 'Centrality', 'Parity'],
 				},
 				{
@@ -737,36 +747,46 @@ curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/instal
 # Windows (PowerShell)
 irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex`,
 		},
-		tokenSavings: {
-			title: '22% menos tokens, por diseño',
-			subtitle: 'El formato TOON está hecho para LLMs, no para humanos',
-			stats: [
-				{ num: '22.5%', cap: 'menos tokens que JSON' },
-				{ num: '30.5%', cap: 'en una sola entrada' },
-				{ num: '1.3x', cap: 'más rápido de parsear' },
-			],
-			note: 'Medido con <code>gpt-tokenizer</code> (cl100k_base) sobre 16 entradas de memoria representativas, comparando el formato TOON real en disco contra JSON compacto. Reproducible: <code>npm run bench</code>.',
-		},
 		benchmarks: {
 			title: 'Benchmarks',
-			subtitle: 'Eficiencia de tokens del formato TOON — medida, no asumida',
-			fewerTokens: 'menos tokens que JSON',
-			onSingle: 'en una sola entrada',
-			entriesMeasured: 'entradas medidas',
-			note: 'Medido con <code>gpt-tokenizer</code> (cl100k_base) sobre 16 entradas de memoria representativas, comparando el formato TOON real en disco contra JSON compacto. Reproducible: <code>npm run bench</code>.',
-		},
-		impactSection: {
-			title: 'Hasta 90% menos tokens por interacción',
-			subtitle:
-				'Cinco benchmarks: auto-carga ahorra ~90%, recall compacto ahorra 68%, sesión completa ahorra 80% tool calls, system primer ahorra 58%, compresión por lotes ahorra 14%.',
-			stats: [
-				{ num: '~90%', cap: 'menos tokens (auto-carga)' },
-				{ num: '80%', cap: 'menos tool calls (25 → 5)' },
-				{ num: '68%', cap: 'menos tokens (recall compacto)' },
-				{ num: '58%', cap: 'menos tokens (system primer)' },
-				{ num: '14%', cap: 'menos tokens (compresión por lotes)' },
-			],
-			note: 'Benchmark de auto-carga: el plugin de OpenCode inyecta solo memoria relevante al file path en vez de volcar todas las entradas. Sesión completa: inicio → debug → implementar → revisar → cerrar. Reproducible: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
+			subtitle: 'Medido, no asumido',
+			tabs: {
+				ranking: 'Calidad del ranking',
+				workflow: 'Ahorro en el flujo',
+				format: 'Formato TOON',
+			},
+			ranking: {
+				subtitle: 'RRF vs recall lineal sobre 8 queries gold — paridad, no regresión',
+				metricLabel: 'Métrica',
+				linear: 'Lineal',
+				rrf: 'RRF',
+				metricRows: [
+					{ metric: 'nDCG', linear: '0.776', rrf: '0.776' },
+					{ metric: 'MRR', linear: '0.917', rrf: '0.917' },
+				],
+				result: 'Paridad — 1 victoria / 1 derrota / 6 empates',
+				note: 'RRF fusiona BM25 (×3) + centralidad del grafo con k adaptativo y rankea idéntico al score lineal legacy — graph-aware, sin regresión. Reproducible: <code>npm run bench:rrf</code>.',
+			},
+			workflow: {
+				subtitle: 'Ahorro de tokens y tool calls medido en una sesión real',
+				stats: [
+					{ num: '~90%', cap: 'menos tokens (auto-carga)' },
+					{ num: '80%', cap: 'menos tool calls (25 → 5)' },
+					{ num: '68%', cap: 'menos tokens (recall compacto)' },
+					{ num: '58%', cap: 'menos tokens (system primer)' },
+					{ num: '14%', cap: 'menos tokens (compresión por lotes)' },
+				],
+				note: 'Auto-carga: el plugin de OpenCode inyecta solo memoria relevante al file path en vez de volcar todas las entradas. Sesión completa: inicio → debug → implementar → revisar → cerrar. Reproducible: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
+			},
+			format: {
+				subtitle: 'El formato TOON está hecho para LLMs, no para humanos',
+				stats: [
+					{ num: '22.5%', cap: 'menos tokens que JSON' },
+					{ num: '30.5%', cap: 'en una sola entrada' },
+					{ num: '1.3x', cap: 'más rápido de parsear' },
+				],
+				note: 'Medido con <code>gpt-tokenizer</code> (cl100k_base) sobre 16 entradas de memoria representativas, comparando el formato TOON real en disco contra JSON compacto. Reproducible: <code>npm run bench</code>.',
+			},
 		},
 	tools: {
 		title: '40 herramientas MCP, 4 recursos',
@@ -965,7 +985,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{
 				icon: '🏆',
 				title: 'Ranking RRF',
-				body: 'El recall fusiona ranks de BM25 (×3) + centralidad con Reciprocal Rank Fusion y k adaptativo sqrt(n). Benchmark (8 queries gold): nDCG 0.776, MRR 0.917 — paridad exacta con el scoring lineal.',
+				body: 'El recall fusiona ranks de BM25 (×3) + centralidad con Reciprocal Rank Fusion y k adaptativo sqrt(n). Paridad benchmarkeada con el scoring lineal — ver la sección Benchmarks.',
 				stats: ['BM25×3', 'Centralidad', 'Paridad'],
 			},
 			{
@@ -1062,21 +1082,38 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		exampleCode: '// 保存决策（自动标签推断）\nmemory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})\n// 🏷️ Tags inferred: types\n\n// 带 TTL 保存（7 天后过期）\nmemory_remember({\n  category: "knowledge",\n  key: "sprint-deadline",\n  content: "Sprint ends July 18",\n  ttl: "7d"\n})\n\n// 查看自上次会话以来的变化\nmemory_diff({ since: "24h" })\n\n// 搜索记忆\nmemory_recall({ query: "redis" })\n// [bug] redis-pool-fix (i9j0k1l2)\n//   Added max_connections=20',
 		installCode: '# npm\nnpm install -g toon-memory\n\n# macOS / Linux\ncurl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh\n\n# Windows (PowerShell)\nirm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex',
 	},
-	tokenSavings: {
-		title: '减少 22% 的 token，设计如此', subtitle: 'TOON 格式专为 LLM 设计，而非人类',
-		stats: [{ num: '22.5%', cap: '比 JSON 减少 token' }, { num: '30.5%', cap: '单条条目' }, { num: '1.3x', cap: '解析更快' }],
-		note: '使用 <code>gpt-tokenizer</code>（cl100k_base）在 16 条代表性记忆条目上测量，比较实际磁盘上的 TOON 格式与紧凑 JSON。可复现：<code>npm run bench</code>。',
-	},
 	benchmarks: {
-		title: '基准测试', subtitle: 'TOON 格式的 token 效率 — 实测而非假设',
-		fewerTokens: '比 JSON 减少 token', onSingle: '单条条目', entriesMeasured: '条目已测量',
-		note: '使用 <code>gpt-tokenizer</code>（cl100k_base）在 16 条代表性记忆条目上测量，比较实际磁盘上的 TOON 格式与紧凑 JSON。可复现：<code>npm run bench</code>。',
-	},
-	impactSection: {
-		title: '每会话减少 80% 工具调用',
-		subtitle: '四项基准测试：紧凑召回节省 68%，完整会话节省 80% 工具调用，批量压缩节省 14%，系统提示节省 58%。',
-		stats: [{ num: '80%', cap: '更少工具调用 (25 → 5)' }, { num: '68%', cap: '更少令牌 (紧凑召回)' }, { num: '58%', cap: '更少令牌 (系统提示)' }, { num: '14%', cap: '更少令牌 (批量压缩)' }],
-		note: '完整会话基准测试：启动 → 调试 → 实现 → 审查 → 完成。<code>context_*</code> 工具以约 318 个额外令牌换取 7 次更少调用——更丰富的上下文意味着更少的重新阅读。可复现：<code>npm run bench:full</code>、<code>npm run bench:primer</code>、<code>npm run bench:compress-all</code>。',
+		title: '基准测试',
+		subtitle: '实测而非假设',
+		tabs: { ranking: '排序质量', workflow: '工作流节省', format: 'TOON 格式' },
+		ranking: {
+			subtitle: '8 条黄金查询上的 RRF 与线性召回对比 — 平手，而非回退',
+			metricLabel: '指标',
+			linear: '线性',
+			rrf: 'RRF',
+			metricRows: [
+				{ metric: 'nDCG', linear: '0.776', rrf: '0.776' },
+				{ metric: 'MRR', linear: '0.917', rrf: '0.917' },
+			],
+			result: '完全一致 — 1 胜 / 1 负 / 6 平',
+			note: 'RRF 融合 BM25（×3）+ 图中心性并使用自适应 k，排序结果与旧版线性分数完全相同 — 图感知，无回退。可复现：<code>npm run bench:rrf</code>。',
+		},
+		workflow: {
+			subtitle: '在真实会话中测得的 token 与工具调用节省',
+			stats: [
+				{ num: '~90%', cap: '更少令牌（自动加载）' },
+				{ num: '80%', cap: '更少工具调用 (25 → 5)' },
+				{ num: '68%', cap: '更少令牌（紧凑召回）' },
+				{ num: '58%', cap: '更少令牌（系统提示）' },
+				{ num: '14%', cap: '更少令牌（批量压缩）' },
+			],
+			note: '自动加载：OpenCode 插件仅注入与文件相关的记忆，而不是转储所有条目。完整会话：启动 → 调试 → 实现 → 审查 → 完成。可复现：<code>npm run bench:full</code>、<code>npm run bench:primer</code>、<code>npm run bench:compress-all</code>。',
+		},
+		format: {
+			subtitle: 'TOON 格式专为 LLM 设计，而非人类',
+			stats: [{ num: '22.5%', cap: '比 JSON 减少 token' }, { num: '30.5%', cap: '单条条目' }, { num: '1.3x', cap: '解析更快' }],
+			note: '使用 <code>gpt-tokenizer</code>（cl100k_base）在 16 条代表性记忆条目上测量，比较实际磁盘上的 TOON 格式与紧凑 JSON。可复现：<code>npm run bench</code>。',
+		},
 	},
 	tools: {
 		title: '40 个 MCP 工具，4 个资源', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
@@ -1191,7 +1228,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{
 				icon: '🏆',
 				title: 'RRF 排名',
-				body: '召回使用 Reciprocal Rank Fusion 融合 BM25（×3）+ 图中心性排名，并使用自适应 k=sqrt(n)。基准测试（8 条黄金查询）：nDCG 0.776、MRR 0.917 — 与线性评分完全一致。',
+				body: '召回使用 Reciprocal Rank Fusion 融合 BM25（×3）+ 图中心性排名，并使用自适应 k=sqrt(n)。基准测试确认与线性评分完全一致 — 见基准测试部分。',
 				stats: ['BM25×3', '中心性', '完全一致'],
 			},
 			{
@@ -1267,21 +1304,38 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		exampleCode: '// 意思決定を保存（自動タグ推論）\nmemory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})\n// 🏷️ Tags inferred: types\n\n// TTL 付きで保存（7 日後に期限切れ）\nmemory_remember({\n  category: "knowledge",\n  key: "sprint-deadline",\n  content: "Sprint ends July 18",\n  ttl: "7d"\n})\n\n// 前回セッション以降の変更を確認\nmemory_diff({ since: "24h" })\n\n// メモリを検索\nmemory_recall({ query: "redis" })\n// [bug] redis-pool-fix (i9j0k1l2)\n//   Added max_connections=20',
 		installCode: '# npm\nnpm install -g toon-memory\n\n# macOS / Linux\ncurl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh\n\n# Windows (PowerShell)\nirm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex',
 	},
-	tokenSavings: {
-		title: '設計によりトークンを 22% 削減', subtitle: 'TOON フォーマットは人間のためではなく、LLM のために構築された',
-		stats: [{ num: '22.5%', cap: 'JSON よりトークン削減' }, { num: '30.5%', cap: '単一エントリ' }, { num: '1.3x', cap: 'パース速度向上' }],
-		note: '<code>gpt-tokenizer</code>（cl100k_base）で 16 件の代表的なメモリエントリを測定。実際の TOON フォーマットとコンパクト JSON を比較。再現可能：<code>npm run bench</code>。',
-	},
 	benchmarks: {
-		title: 'ベンチマーク', subtitle: 'TOON フォーマットのトークン効率 — 推測ではなく実測',
-		fewerTokens: 'JSON よりトークン削減', onSingle: '単一エントリ', entriesMeasured: 'エントリを測定',
-		note: '<code>gpt-tokenizer</code>（cl100k_base）で 16 件の代表的なメモリエントリを測定。実際の TOON フォーマットとコンパクト JSON を比較。再現可能：<code>npm run bench</code>。',
-	},
-	impactSection: {
-		title: 'セッションあたり80% fewer tool calls',
-		subtitle: '4つのベンチマーク：コンパクトrecallは68%節約、フルセッションは80% fewer tool calls、バッチ圧縮は14%節約、システムprimerは58%節約。',
-		stats: [{ num: '80%', cap: 'fewer tool calls (25 → 5)' }, { num: '68%', cap: 'fewer tokens (compact recall)' }, { num: '58%', cap: 'fewer tokens (system primer)' }, { num: '14%', cap: 'fewer tokens (batch compress)' }],
-		note: 'フルセッションベンチマーク：開始 → デバッグ → 実装 → レビュー → 終了。<code>context_*</code>ツールは追加~318トークンで7回 fewer callsと引き換え — より豊かなコンテキストはより少ない再読み込みを意味します。再現可能：<code>npm run bench:full</code>、<code>npm run bench:primer</code>、<code>npm run bench:compress-all</code>。',
+		title: 'ベンチマーク',
+		subtitle: '推測ではなく実測',
+		tabs: { ranking: 'ランキング品質', workflow: 'ワークフロー削減', format: 'TOON フォーマット' },
+		ranking: {
+			subtitle: '8 つのゴールドクエリでの RRF 対線形リコール — 同点、回帰ではない',
+			metricLabel: '指標',
+			linear: '線形',
+			rrf: 'RRF',
+			metricRows: [
+				{ metric: 'nDCG', linear: '0.776', rrf: '0.776' },
+				{ metric: 'MRR', linear: '0.917', rrf: '0.917' },
+			],
+			result: '同点 — 1 勝 / 1 敗 / 6 引き分け',
+			note: 'RRF は BM25（×3）+ グラフ中心性を適応的 k で融合し、レガシーな線形スコアと全く同じ順位付け — グラフ対応、回帰なし。再現可能：<code>npm run bench:rrf</code>。',
+		},
+		workflow: {
+			subtitle: '実際のセッションで測定したトークンとツール呼び出しの削減',
+			stats: [
+				{ num: '~90%', cap: 'トークン削減（自動ロード）' },
+				{ num: '80%', cap: 'ツール呼び出し削減 (25 → 5)' },
+				{ num: '68%', cap: 'トークン削減（コンパクト recall）' },
+				{ num: '58%', cap: 'トークン削減（システム primer）' },
+				{ num: '14%', cap: 'トークン削減（バッチ圧縮）' },
+			],
+			note: '自動ロード：OpenCode プラグインは全エントリをダンプせず、ファイル関連のメモリのみを注入します。フルセッション：開始 → デバッグ → 実装 → レビュー → 終了。再現可能：<code>npm run bench:full</code>、<code>npm run bench:primer</code>、<code>npm run bench:compress-all</code>。',
+		},
+		format: {
+			subtitle: 'TOON フォーマットは人間のためではなく、LLM のために構築された',
+			stats: [{ num: '22.5%', cap: 'JSON よりトークン削減' }, { num: '30.5%', cap: '単一エントリ' }, { num: '1.3x', cap: 'パース速度向上' }],
+			note: '<code>gpt-tokenizer</code>（cl100k_base）で 16 件の代表的なメモリエントリを測定。実際の TOON フォーマットとコンパクト JSON を比較。再現可能：<code>npm run bench</code>。',
+		},
 	},
 	tools: {
 		title: '40 個の MCP ツール、4 個のリソース', subtitle: 'エージェントが記憶、リコール、推論するために必要なすべて', resourcesLabel: 'リソース：',
@@ -1394,7 +1448,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{
 				icon: '🏆',
 				title: 'RRF ランキング',
-				body: 'リコールは BM25（×3）+ グラフ中心性のランクを Reciprocal Rank Fusion と適応的な k=sqrt(n) で統合。ベンチマーク（8 件のゴールドクエリ）：nDCG 0.776、MRR 0.917 — 線形スコアリングと完全に同等。',
+				body: 'リコールは BM25（×3）+ グラフ中心性のランクを Reciprocal Rank Fusion と適応的な k=sqrt(n) で統合。線形スコアリングと同点であることをベンチマークで確認 — ベンチマークセクションを参照。',
 				stats: ['BM25×3', '中心性', '同等'],
 			},
 			{
@@ -1470,21 +1524,38 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		exampleCode: '// 결정 저장 (자동 태그 추론)\nmemory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})\n// 🏷️ Tags inferred: types\n\n// TTL 포함 저장 (7일 후 만료)\nmemory_remember({\n  category: "knowledge",\n  key: "sprint-deadline",\n  content: "Sprint ends July 18",\n  ttl: "7d"\n})\n\n// 마지막 세션 이후 변경 사항 확인\nmemory_diff({ since: "24h" })\n\n// 메모리 검색\nmemory_recall({ query: "redis" })\n// [bug] redis-pool-fix (i9j0k1l2)\n//   Added max_connections=20',
 		installCode: '# npm\nnpm install -g toon-memory\n\n# macOS / Linux\ncurl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.sh | sh\n\n# Windows (PowerShell)\nirm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex',
 	},
-	tokenSavings: {
-		title: '설계에 의해 토큰 22% 절감', subtitle: 'TOON 형식은 인간을 위해 만들어진 것이 아니라 LLM을 위해 만들어짐',
-		stats: [{ num: '22.5%', cap: 'JSON보다 토큰 절감' }, { num: '30.5%', cap: '단일 항목' }, { num: '1.3x', cap: '파싱 속도 향상' }],
-		note: '<code>gpt-tokenizer</code> (cl100k_base)로 16개의 대표적인 메모리 항목을 측정. 실제 TOON 형식과 컴팩트 JSON 비교. 재현 가능: <code>npm run bench</code>.',
-	},
 	benchmarks: {
-		title: '벤치마크', subtitle: 'TOON 형식의 토큰 효율성 — 추측이 아닌 실측',
-		fewerTokens: 'JSON보다 토큰 절감', onSingle: '단일 항목', entriesMeasured: '항목 측정됨',
-		note: '<code>gpt-tokenizer</code> (cl100k_base)로 16개의 대표적인 메모리 항목을 측정. 실제 TOON 형식과 컴팩트 JSON 비교. 재현 가능: <code>npm run bench</code>.',
-	},
-	impactSection: {
-		title: '세션당 80% fewer tool calls',
-		subtitle: '4개 벤치마크: 컴팩트 recall은 68% 절약, 전체 세션은 80% fewer tool calls, 배치 압축은 14% 절약, 시스템 primer은 58% 절약.',
-		stats: [{ num: '80%', cap: 'fewer tool calls (25 → 5)' }, { num: '68%', cap: 'fewer tokens (compact recall)' }, { num: '58%', cap: 'fewer tokens (system primer)' }, { num: '14%', cap: 'fewer tokens (batch compress)' }],
-		note: '전체 세션 벤치마크: 시작 → 디버그 → 구현 → 검토 → 마무리. <code>context_*</code> 도구는 추가 ~318 토큰으로 7번 fewer calls와 교환 — 더 풍부한 컨텍스트는 fewer 재읽기를 의미합니다. 재현 가능: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
+		title: '벤치마크',
+		subtitle: '추측이 아닌 실측',
+		tabs: { ranking: '순위 품질', workflow: '워크플로 절감', format: 'TOON 형식' },
+		ranking: {
+			subtitle: '8개 골드 쿼리에서 RRF 대 선형 리콜 — 동률, 회귀 아님',
+			metricLabel: '지표',
+			linear: '선형',
+			rrf: 'RRF',
+			metricRows: [
+				{ metric: 'nDCG', linear: '0.776', rrf: '0.776' },
+				{ metric: 'MRR', linear: '0.917', rrf: '0.917' },
+			],
+			result: '동률 — 1승 / 1패 / 6무',
+			note: 'RRF는 BM25(×3) + 그래프 중심성을 적응형 k로 융합하며 기존 선형 점수와 동일하게 순위를 매깁니다 — 그래프 인식, 회귀 없음. 재현 가능: <code>npm run bench:rrf</code>.',
+		},
+		workflow: {
+			subtitle: '실제 세션에서 측정한 토큰 및 도구 호출 절감',
+			stats: [
+				{ num: '~90%', cap: '토큰 절감 (자동 로딩)' },
+				{ num: '80%', cap: '도구 호출 절감 (25 → 5)' },
+				{ num: '68%', cap: '토큰 절감 (컴팩트 리콜)' },
+				{ num: '58%', cap: '토큰 절감 (시스템 프라이머)' },
+				{ num: '14%', cap: '토큰 절감 (배치 압축)' },
+			],
+			note: '자동 로딩: OpenCode 플러그인은 모든 항목을 덤프하는 대신 파일 관련 메모리만 주입합니다. 전체 세션: 시작 → 디버그 → 구현 → 검토 → 마무리. 재현 가능: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
+		},
+		format: {
+			subtitle: 'TOON 형식은 인간을 위해 만들어진 것이 아니라 LLM을 위해 만들어짐',
+			stats: [{ num: '22.5%', cap: 'JSON보다 토큰 절감' }, { num: '30.5%', cap: '단일 항목' }, { num: '1.3x', cap: '파싱 속도 향상' }],
+			note: '<code>gpt-tokenizer</code> (cl100k_base)로 16개의 대표적인 메모리 항목을 측정. 실제 TOON 형식과 컴팩트 JSON 비교. 재현 가능: <code>npm run bench</code>.',
+		},
 	},
 	tools: {
 		title: '40개 MCP 도구, 4개 리소스', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
@@ -1597,7 +1668,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{
 				icon: '🏆',
 				title: 'RRF 순위',
-				body: '리콜이 Reciprocal Rank Fusion과 적응형 k=sqrt(n)으로 BM25 (×3) + 그래프 중심성 순위를 융합. 벤치마크 (8개 골드 쿼리): nDCG 0.776, MRR 0.917 — 선형 스코어링과 정확히 동일.',
+				body: '리콜이 Reciprocal Rank Fusion과 적응형 k=sqrt(n)으로 BM25 (×3) + 그래프 중심성 순위를 융합. 선형 스코어링과 동률임을 벤치마크로 확인 — 벤치마크 섹션 참조.',
 				stats: ['BM25×3', '중심성', '성능 동일'],
 			},
 			{
@@ -1828,35 +1899,42 @@ curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/instal
 # Windows (PowerShell)
 irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex`,
 	},
-	tokenSavings: {
-		title: '22% menos tokens, por design',
-		subtitle: 'O formato TOON é feito para LLMs, não para humanos',
-		stats: [
-			{ num: '22.5%', cap: 'menos tokens que JSON' },
-			{ num: '30.5%', cap: 'em uma única entrada' },
-			{ num: '1.3x', cap: 'mais rápido para parsear' },
-		],
-		note: 'Medido com <code>gpt-tokenizer</code> (cl100k_base) em 16 entradas de memória representativas, comparando o formato TOON real em disco contra JSON compacto. Reproduzível: <code>npm run bench</code>.',
-	},
 	benchmarks: {
 		title: 'Benchmarks',
-		subtitle: 'Eficiência de tokens do formato TOON — medido, não assumido',
-		fewerTokens: 'menos tokens que JSON',
-		onSingle: 'em uma única entrada',
-		entriesMeasured: 'entradas medidas',
-		note: 'Medido com <code>gpt-tokenizer</code> (cl100k_base) em 16 entradas de memória representativas, comparando o formato TOON real em disco contra JSON compacto. Reproduzível: <code>npm run bench</code>.',
-	},
-	impactSection: {
-		title: '80% menos chamadas de ferramentas por sessão',
-		subtitle:
-			'Quatro benchmarks: recall compacto economiza 68%, sessão completa economiza 80% de chamadas, compressão em lote economiza 14%, system primer economiza 58%.',
-		stats: [
-			{ num: '80%', cap: 'menos chamadas (25 → 5)' },
-			{ num: '68%', cap: 'menos tokens (recall compacto)' },
-			{ num: '58%', cap: 'menos tokens (system primer)' },
-			{ num: '14%', cap: 'menos tokens (compressão em lote)' },
-		],
-		note: 'Benchmark de sessão completa: início → depuração → implementação → revisão → encerramento. As ferramentas <code>context_*</code> trocam ~318 tokens extras por 7 chamadas a menos — contexto mais rico significa menos re-leituras. Reprodutível: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
+		subtitle: 'Medido, não assumido',
+		tabs: { ranking: 'Qualidade do ranking', workflow: 'Economia no fluxo', format: 'Formato TOON' },
+		ranking: {
+			subtitle: 'RRF vs recall linear em 8 queries gold — paridade, não regressão',
+			metricLabel: 'Métrica',
+			linear: 'Linear',
+			rrf: 'RRF',
+			metricRows: [
+				{ metric: 'nDCG', linear: '0.776', rrf: '0.776' },
+				{ metric: 'MRR', linear: '0.917', rrf: '0.917' },
+			],
+			result: 'Paridade — 1 vitória / 1 derrota / 6 empates',
+			note: 'RRF funde BM25 (×3) + centralidade do grafo com k adaptativo e ranqueia idêntico ao score linear legado — graph-aware, sem regressão. Reprodutível: <code>npm run bench:rrf</code>.',
+		},
+		workflow: {
+			subtitle: 'Economia de tokens e chamadas medida em uma sessão real',
+			stats: [
+				{ num: '~90%', cap: 'menos tokens (auto-loading)' },
+				{ num: '80%', cap: 'menos chamadas (25 → 5)' },
+				{ num: '68%', cap: 'menos tokens (recall compacto)' },
+				{ num: '58%', cap: 'menos tokens (system primer)' },
+				{ num: '14%', cap: 'menos tokens (compressão em lote)' },
+			],
+			note: 'Auto-loading: o plugin do OpenCode injeta apenas memória relevante ao arquivo em vez de despejar todas as entradas. Sessão completa: início → depuração → implementação → revisão → encerramento. Reprodutível: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
+		},
+		format: {
+			subtitle: 'O formato TOON é feito para LLMs, não para humanos',
+			stats: [
+				{ num: '22.5%', cap: 'menos tokens que JSON' },
+				{ num: '30.5%', cap: 'em uma única entrada' },
+				{ num: '1.3x', cap: 'mais rápido para parsear' },
+			],
+			note: 'Medido com <code>gpt-tokenizer</code> (cl100k_base) em 16 entradas de memória representativas, comparando o formato TOON real em disco contra JSON compacto. Reproduzível: <code>npm run bench</code>.',
+		},
 	},
 	tools: {
 		title: '40 ferramentas MCP, 4 recursos',
@@ -2036,7 +2114,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{
 				icon: '🏆',
 				title: 'Ranking RRF',
-				body: 'O recall funde ranks de BM25 (×3) + centralidade com Reciprocal Rank Fusion e k adaptativo = sqrt(n). Benchmark (8 consultas ouro): nDCG 0.776, MRR 0.917 — paridade exata com a pontuação linear.',
+				body: 'O recall funde ranks de BM25 (×3) + centralidade com Reciprocal Rank Fusion e k adaptativo = sqrt(n). Paridade com a pontuação linear confirmada por benchmark — veja a seção Benchmarks.',
 				stats: ['BM25×3', 'Centralidade', 'Paridade'],
 			},
 			{
@@ -2274,35 +2352,42 @@ curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/instal
 # Windows (PowerShell)
 irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex`,
 	},
-	tokenSavings: {
-		title: '22% weniger Token, durch Design',
-		subtitle: 'Das TOON-Format ist für LLMs gebaut, nicht für Menschen',
-		stats: [
-			{ num: '22.5%', cap: 'weniger Token als JSON' },
-			{ num: '30.5%', cap: 'bei einem einzelnen Eintrag' },
-			{ num: '1.3x', cap: 'schnelleres Parsen' },
-		],
-		note: 'Gemessen mit <code>gpt-tokenizer</code> (cl100k_base) über 16 repräsentative Speicher-Einträge, vergleicht das echte TOON-Format auf Disk mit kompaktem JSON. Reproduzierbar: <code>npm run bench</code>.',
-	},
 	benchmarks: {
 		title: 'Benchmarks',
-		subtitle: 'Token-Effizienz des TOON-Formats — gemessen, nicht angenommen',
-		fewerTokens: 'weniger Token als JSON',
-		onSingle: 'bei einem einzelnen Eintrag',
-		entriesMeasured: 'Einträge gemessen',
-		note: 'Gemessen mit <code>gpt-tokenizer</code> (cl100k_base) über 16 repräsentative Speicher-Einträge, vergleicht das echte TOON-Format auf Disk mit kompaktem JSON. Reproduzierbar: <code>npm run bench</code>.',
-	},
-	impactSection: {
-		title: '80% weniger Tool-Calls pro Sitzung',
-		subtitle:
-			'Vier Benchmarks: Kompakter Recall spart 68%, volle Sitzung spart 80% Tool-Calls, Batch-Komprimierung spart 14%, System-Primer spart 58%.',
-		stats: [
-			{ num: '80%', cap: 'weniger Tool-Calls (25 → 5)' },
-			{ num: '68%', cap: 'weniger Tokens (kompakter Recall)' },
-			{ num: '58%', cap: 'weniger Tokens (System-Primer)' },
-			{ num: '14%', cap: 'weniger Tokens (Batch-Komprimierung)' },
-		],
-		note: 'Vollständiger Sitzungs-Benchmark: Start → Debug → Implementierung → Review → Abschluss. <code>context_*</code>-Tools tauschen ~318 zusätzliche Tokens gegen 7 weniger Aufrufe — reicherer Kontext bedeutet weniger Nachlesevorgänge. Reproduzierbar: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
+		subtitle: 'Gemessen, nicht angenommen',
+		tabs: { ranking: 'Ranking-Qualität', workflow: 'Workflow-Ersparnis', format: 'TOON-Format' },
+		ranking: {
+			subtitle: 'RRF vs. linearer Recall bei 8 Gold-Queries — Parität, kein Rückschritt',
+			metricLabel: 'Metrik',
+			linear: 'Linear',
+			rrf: 'RRF',
+			metricRows: [
+				{ metric: 'nDCG', linear: '0.776', rrf: '0.776' },
+				{ metric: 'MRR', linear: '0.917', rrf: '0.917' },
+			],
+			result: 'Parität — 1 Sieg / 1 Niederlage / 6 Unentschieden',
+			note: 'RRF fusioniert BM25 (×3) + Graph-Zentralität mit adaptivem k und rankt identisch zum alten linearen Score — graph-bewusst, keine Regression. Reproduzierbar: <code>npm run bench:rrf</code>.',
+		},
+		workflow: {
+			subtitle: 'Token- und Tool-Call-Ersparnis, gemessen in einer realen Sitzung',
+			stats: [
+				{ num: '~90%', cap: 'weniger Tokens (Auto-Loading)' },
+				{ num: '80%', cap: 'weniger Tool-Calls (25 → 5)' },
+				{ num: '68%', cap: 'weniger Tokens (kompakter Recall)' },
+				{ num: '58%', cap: 'weniger Tokens (System-Primer)' },
+				{ num: '14%', cap: 'weniger Tokens (Batch-Komprimierung)' },
+			],
+			note: 'Auto-Loading: Das OpenCode-Plugin injiziert nur dateirelevante Erinnerungen statt alle Einträge zu laden. Volle Sitzung: Start → Debug → Implementierung → Review → Abschluss. Reproduzierbar: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
+		},
+		format: {
+			subtitle: 'Das TOON-Format ist für LLMs gebaut, nicht für Menschen',
+			stats: [
+				{ num: '22.5%', cap: 'weniger Token als JSON' },
+				{ num: '30.5%', cap: 'bei einem einzelnen Eintrag' },
+				{ num: '1.3x', cap: 'schnelleres Parsen' },
+			],
+			note: 'Gemessen mit <code>gpt-tokenizer</code> (cl100k_base) über 16 repräsentative Speicher-Einträge, vergleicht das echte TOON-Format auf Disk mit kompaktem JSON. Reproduzierbar: <code>npm run bench</code>.',
+		},
 	},
 	tools: {
 		title: '40 MCP-Tools, 4 Ressourcen',
@@ -2482,7 +2567,7 @@ whatNew: {
 		{
 			icon: '🏆',
 			title: 'RRF-Ranking',
-			body: 'Recall fusioniert BM25 (×3)- und Graph-Zentralitäts-Ränge mit Reciprocal Rank Fusion und adaptivem k=sqrt(n). Benchmark (8 Gold-Queries): nDCG 0.776, MRR 0.917 — exakte Parität mit linearer Bewertung.',
+			body: 'Recall fusioniert BM25 (×3)- und Graph-Zentralitäts-Ränge mit Reciprocal Rank Fusion und adaptivem k=sqrt(n). Parität mit linearer Bewertung per Benchmark bestätigt — siehe Abschnitt Benchmarks.',
 			stats: ['BM25×3', 'Zentralität', 'Parität'],
 		},
 		{
@@ -2720,35 +2805,42 @@ curl -fsSL https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/instal
 # Windows (PowerShell)
 irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex`,
 	},
-	tokenSavings: {
-		title: '22% moins de tokens, par conception',
-		subtitle: 'Le format TOON est conçu pour les LLMs, pas pour les humains',
-		stats: [
-			{ num: '22.5%', cap: 'moins de tokens que JSON' },
-			{ num: '30.5%', cap: 'sur une seule entrée' },
-			{ num: '1.3x', cap: 'plus rapide à parser' },
-		],
-		note: 'Mesuré avec <code>gpt-tokenizer</code> (cl100k_base) sur 16 entrées de mémoire représentatives, comparant le format TOON réel sur disque au JSON compact. Reproductible : <code>npm run bench</code>.',
-	},
 	benchmarks: {
 		title: 'Benchmarks',
-		subtitle: 'Efficacité token du format TOON — mesuré, pas supposé',
-		fewerTokens: 'moins de tokens que JSON',
-		onSingle: 'sur une seule entrée',
-		entriesMeasured: 'entrées mesurées',
-		note: 'Mesuré avec <code>gpt-tokenizer</code> (cl100k_base) sur 16 entrées de mémoire représentatives, comparant le format TOON réel sur disque au JSON compact. Reproductible : <code>npm run bench</code>.',
-	},
-	impactSection: {
-		title: '80% moins d\'appels d\'outils par session',
-		subtitle:
-			'Quatre benchmarks : recall compact économise 68%, session complète économise 80% d\'appels, compression par lot économise 14%, system primer économise 58%.',
-		stats: [
-			{ num: '80%', cap: 'moins d\'appels (25 → 5)' },
-			{ num: '68%', cap: 'moins de tokens (recall compact)' },
-			{ num: '58%', cap: 'moins de tokens (system primer)' },
-			{ num: '14%', cap: 'moins de tokens (compression par lot)' },
-		],
-		note: 'Benchmark de session complète : démarrage → débogage → implémentation → révision → clôture. Les outils <code>context_*</code> échangent ~318 tokens supplémentaires pour 7 appels en moins — un contexte plus riche signifie moins de re-lectures. Reproductible : <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
+		subtitle: 'Mesuré, pas supposé',
+		tabs: { ranking: 'Qualité du classement', workflow: 'Économies de flux', format: 'Format TOON' },
+		ranking: {
+			subtitle: 'RRF vs rappel linéaire sur 8 requêtes gold — parité, pas une régression',
+			metricLabel: 'Métrique',
+			linear: 'Linéaire',
+			rrf: 'RRF',
+			metricRows: [
+				{ metric: 'nDCG', linear: '0.776', rrf: '0.776' },
+				{ metric: 'MRR', linear: '0.917', rrf: '0.917' },
+			],
+			result: 'Parité — 1 victoire / 1 défaite / 6 égalités',
+			note: 'RRF fusionne BM25 (×3) + centralité du graphe avec un k adaptatif et classe identique au score linéaire hérité — graph-aware, sans régression. Reproductible : <code>npm run bench:rrf</code>.',
+		},
+		workflow: {
+			subtitle: 'Économies de tokens et d\'appels mesurées sur une session réelle',
+			stats: [
+				{ num: '~90%', cap: 'moins de tokens (auto-loading)' },
+				{ num: '80%', cap: 'moins d\'appels (25 → 5)' },
+				{ num: '68%', cap: 'moins de tokens (recall compact)' },
+				{ num: '58%', cap: 'moins de tokens (system primer)' },
+				{ num: '14%', cap: 'moins de tokens (compression par lot)' },
+			],
+			note: 'Auto-loading : le plugin OpenCode injecte uniquement la mémoire pertinente au fichier au lieu de vider toutes les entrées. Session complète : démarrage → débogage → implémentation → révision → clôture. Reproductible : <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
+		},
+		format: {
+			subtitle: 'Le format TOON est conçu pour les LLMs, pas pour les humains',
+			stats: [
+				{ num: '22.5%', cap: 'moins de tokens que JSON' },
+				{ num: '30.5%', cap: 'sur une seule entrée' },
+				{ num: '1.3x', cap: 'plus rapide à parser' },
+			],
+			note: 'Mesuré avec <code>gpt-tokenizer</code> (cl100k_base) sur 16 entrées de mémoire représentatives, comparant le format TOON réel sur disque au JSON compact. Reproductible : <code>npm run bench</code>.',
+		},
 	},
 	tools: {
 		title: '40 outils MCP, 4 ressources',
@@ -2932,7 +3024,7 @@ whatNew: {
 		{
 			icon: '🏆',
 			title: 'Classement RRF',
-			body: 'Le rappel fusionne BM25 (×3) et centralité du graphe avec Reciprocal Rank Fusion et k=sqrt(n) adaptatif. Benchmark (8 requêtes gold) : nDCG 0.776, MRR 0.917 — parité exacte avec la notation linéaire.',
+			body: 'Le rappel fusionne BM25 (×3) et centralité du graphe avec Reciprocal Rank Fusion et k=sqrt(n) adaptatif. Parité avec la notation linéaire confirmée par benchmark — voir la section Benchmarks.',
 			stats: ['BM25×3', 'Centralité', 'Parité'],
 		},
 		{
