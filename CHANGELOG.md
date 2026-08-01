@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.1.2] - 2026-08-01
+
+### Fixed
+- **Corrupt `data.toon` entries** — 3 entries written with unescaped `|` literals (field-shift corruption) repaired in place with the production serializer; content, dates, and TTLs restored
+- **Dynamic entry-count limit in health warnings** — `context_health` and the context brief now read `MAX_ENTRIES` from `config.json` via `getMaxEntries()` instead of a hardcoded `100`
+- **Malformed-entry detection** — `generateContextHealth` now scans raw lines and flags shifted/invalid `date`/`ttl` fields as a **Critical** health issue (score −20), so a future unescaped-pipe corruption surfaces instead of silently parsing wrong
+
+### Tests
+- 18-field `toToonLine` round-trip with combined pipes/backslashes/multiline hazards
+- Field-shift exposure: unescaped pipe is visible as an invalid date field, not silent garbage
+- Health detector flags malformed entries and leaves clean data unflagged
+
 ## [4.1.1] - 2026-08-01
 
 ### Fixed
