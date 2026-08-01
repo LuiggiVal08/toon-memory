@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.2.0] - 2026-08-01
+
+### Added
+- **Explain WHY** — `memory_recall` and `memory_smart_recall` accept `explain: true` and append a deterministic reason line (`↳ 100% relevance · used 14× · used today · importance HIGH`) to every rendered entry, built by `buildReason()` from relevance %, access count, last-used and importance — no LLM involved
+- **Token budgets** — `memory_recall` and `memory_smart_recall` accept `budget_tokens` (0 = no limit); `renderCompact` and the deep-render path accumulate entries greedily via `estimateTokens()` and drop the tail that would exceed the budget
+- **Version supersession compaction** — `memory_consolidate mode: "versions"` (with `dryRun`) detects entries describing the same subject at different library versions via `extractVersion()`/`compareVersions()`, marks the older ones `status=obsolete` + `supersededOn=today`, and links the winner
+- **Negative memories** — `memory_remember` gains a `warning` category for "do NOT do this" facts; `warning` entries get a +0.2 recall boost in both `graphRecallDetailed` and `generateSmartRecall` (also accepted by session capture promotion)
+- **Extended stats** — `memory_stats` now reports `Hit rate` (% recalled at least once), `Duplicate` (% exact-content duplicates) and `Dead` (% obsolete entries)
+- **Ranking factors** — recall scoring now includes `languageFamily()` (Unicode-range detection; same-family boost +0.1) and a `path_scope` folder-match boost (+0.05), applied consistently in the graph and unified recall pipelines
+
+### Tests
+- `buildReason` reason rendering (relevance %, usage, importance) and `graphRecallDetailed` reason population
+- `renderCompact` token-budget behavior (drops tail over budget, keeps all without a budget)
+- `generateSmartRecall` explain flag, tiny-budget trimming and `warning`-boost ordering
+- `extractVersion` version detection (major.minor, full semver, `v` prefix, no-version)
+- `estimateTokens` determinism/monotonicity and `languageFamily` latin/CJK/cyrillic/none
+
 ## [4.1.2] - 2026-08-01
 
 ### Fixed
