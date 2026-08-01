@@ -120,4 +120,42 @@ describe("parseToonLine / toToonLine", () => {
 		expect(parseToonLine("  a|b|c|")).toEqual(["a", "b", "c", ""])
 		expect(parseToonLine("  a||")).toEqual(["a", "", ""])
 	})
+
+	it("round-trips the full 18-field schema with combined hazards", () => {
+		const parts = [
+			"578c2abd",
+			"knowledge",
+			"toon-file-format-details",
+			"Migración: pipe `|` literal, backslash `\\` y nueva línea\nsegunda línea. Escapado como `\\|` y `\\\\`.",
+			"src/mcp/memory-io.ts",
+			"toon;format;storage;compact;human-readable",
+			"2026-07-29",
+			"2029",
+			"0",
+			"toon-format-decision memory-io-layer jsonl-format",
+			"1.00",
+			"0.99",
+			"2026-08-01T17:30:38.668Z",
+			"0",
+			"",
+			"agent",
+			"active",
+			"",
+		]
+		const line = toToonLine(parts)
+		expect(line.split("\n").length).toBe(1)
+		expect(parseToonLine(line)).toEqual(parts)
+	})
+
+	it("exposes a field shift (unescaped pipe) as a shifted date field", () => {
+		// A corrupted line where a literal pipe was written unescaped in the
+		// content field pushes fields right. The production parser must expose
+		// the shifted date field (parts[6] = "3", not a real date) so health
+		// detection can flag it instead of treating it as clean.
+		const corrupted = `  6dcca393|knowledge|data-toon-migration-3-entries|contenido con | pipe no escapado|ignored|3|2029||0|ts1|ts2|1|`
+		const parts = parseToonLine(corrupted)
+		expect(parts[3]).toBe("contenido con ")
+		expect(parts[6]).toBe("3")
+		expect(/^\d{4}-\d{2}-\d{2}$/.test(parts[6])).toBe(false)
+	})
 })

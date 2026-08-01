@@ -15,11 +15,12 @@
 
 import { existsSync, readFileSync } from "fs"
 import { join } from "path"
-import { parseEntries, buildGraph, bm25Scores, centrality, renderCompact, type GraphEntry } from "./graph"
+import { parseEntries, buildGraph, bm25Scores, centrality, renderCompact, entryLines, type GraphEntry } from "./graph"
 import { qualityScore } from "./quality"
-import { normalize, isExpiredLocal, tokenize, importance, isPrivate } from "./utils"
+import { normalize, isExpiredLocal, tokenize, importance, isPrivate, parseToonLine } from "./utils"
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
+import { getMaxEntries } from "../mcp/config"
 import { coordinationView, currentBranch, pruneSessions, listSessions } from "./sessions"
 import { readRecentCommits, gitStatusSummary, readGitIndex, fileMtimes } from "./git"
 import { scanProjectStructure, readManifest, readEnvExample } from "./project-scan"
@@ -176,8 +177,9 @@ function formatHealth(data: string): string {
 		warnings.push(`${expired.length} entries with expired TTL (run memory_archive)`)
 	}
 
-	if (entries.length > 80) {
-		warnings.push(`${entries.length} entries (near limit of 100, auto-archive will trigger)`)
+	const maxEntries = getMaxEntries()
+	if (entries.length > Math.floor(maxEntries * 0.8)) {
+		warnings.push(`${entries.length} entries (near limit of ${maxEntries}, auto-archive triggers on the next memory_remember that exceeds it)`)
 	}
 
 	const orphanLinks = findOrphanLinks(entries)
@@ -495,6 +497,27 @@ export function generateContextHealth(data: string, root: string): { report: Hea
 	const info: string[] = []
 	let score = 100
 
+	// 0. Malformed lines (unescaped-pipe corruption shifts fields; a non-date
+	//    date field is the reliable signature — seen as "3"/"2"/a file path).
+	const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+	const TTL_RE = /^\d{4}(?:-\d{2}-\d{2})?$/
+	const malformed: string[] = []
+	for (const line of entryLines(data)) {
+		const parts = parseToonLine(line)
+		if (parts.length < 7) {
+			malformed.push(`too few fields (${parts.length})`)
+			continue
+		}
+		const date = parts[6] || ""
+		if (date && !DATE_RE.test(date)) malformed.push(`${parts[2]} (date=${JSON.stringify(date)})`)
+		const ttl = parts[7] || ""
+		if (ttl && !DATE_RE.test(ttl) && !TTL_RE.test(ttl)) malformed.push(`${parts[2]} (ttl=${JSON.stringify(ttl)})`)
+	}
+	if (malformed.length > 0) {
+		critical.push(`${malformed.length} malformed entries: ${malformed.slice(0, 3).join("; ")}`)
+		score -= 20
+	}
+
 	// 1. Orphan links
 	const keys = new Set(entries.map((e) => e.key))
 	const orphanLinks: string[] = []
@@ -611,8 +634,9 @@ export function generateContextHealth(data: string, root: string): { report: Hea
 	}
 
 	// 10. Entry count
-	if (entries.length > 80) {
-		warnings.push(`${entries.length} entries (near limit of 100)`)
+	const maxEntries = getMaxEntries()
+	if (entries.length > Math.floor(maxEntries * 0.8)) {
+		warnings.push(`${entries.length} entries (near limit of ${maxEntries})`)
 		score -= 3
 	} else if (entries.length === 0) {
 		info.push("Empty memory")

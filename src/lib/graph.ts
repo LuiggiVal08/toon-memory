@@ -86,7 +86,7 @@ export interface MemoryGraph {
 	byKey: Map<string, GraphEntry>
 }
 
-const entryLines = (data: string): string[] =>
+export const entryLines = (data: string): string[] =>
 	data
 		.split("\n")
 		.filter(

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
-import { generateContextBrief } from "../src/lib/context"
+import { generateContextBrief, generateContextHealth } from "../src/lib/context"
 import { join } from "path"
 import { tmpdir } from "os"
 import { mkdirSync, rmSync, writeFileSync, existsSync, readdirSync, unlinkSync } from "fs"
@@ -143,6 +143,28 @@ describe("generateContextBrief — health section", () => {
 	it("does not show health section when no warnings", () => {
 		const result = generateContextBrief(EMPTY)
 		expect(result).not.toContain("Health")
+	})
+})
+
+describe("generateContextHealth — malformed entries", () => {
+	it("flags a corrupted line whose date field is not a date", () => {
+		const data = `version: 1
+entries[1|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  6dcca393|knowledge|data-toon-migration-3-entries|contenido con | pipe no escapado|ignored|3|2029||0|ts1|ts2|1|
+`
+		const { report, markdown } = generateContextHealth(data, process.cwd())
+		expect(report.critical.some((c) => c.includes("malformed"))).toBe(true)
+		expect(report.score).toBeLessThan(100)
+		expect(markdown).toContain("malformed entries")
+	})
+
+	it("does not flag clean entries", () => {
+		const data = `version: 1
+entries[1|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1|knowledge|ok|Contenido limpio sin pipes raros.|f.ts|tag|${today}|2029|0||0.60|1.0
+`
+		const { report } = generateContextHealth(data, process.cwd())
+		expect(report.critical.some((c) => c.includes("malformed"))).toBe(false)
 	})
 })
 
