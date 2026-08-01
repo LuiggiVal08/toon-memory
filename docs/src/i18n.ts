@@ -262,7 +262,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				format: 'TOON format',
 			},
 			retrieval: {
-				subtitle: 'LongMemEval-style retrieval over a frozen 187-entry snapshot of real project memory — 42 hand-authored gold queries',
+				subtitle: 'LongMemEval-style retrieval on a frozen 187-entry real snapshot — 42 gold queries',
 				what: 'The unified recall pipeline finds the right entry in the top 5',
 				metricLabel: 'Metric',
 				linear: 'Linear',
@@ -274,7 +274,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{ metric: 'MRR@5', gloss: 'position of the right hit', linear: '0.776', rrf: '0.788', smart: '0.760' },
 				],
 				result: '97.6% of queries answered from the top-5',
-				note: 'Real <code>data.toon</code> snapshot (187 entries, 2026-08-01) with a deterministic <code>today</code> parameter so recency and decay can\'t drift the results; read-only, no access tracking. Two priority meta-entries that describe the data file itself are excluded. The measured code is the production pipeline (src/lib), bundled in-memory — no faithful copies. Reproducible: <code>npm run bench:retrieval</code>.',
+				note: 'Real <code>data.toon</code> snapshot (187 entries, 2026-08-01), deterministic <code>today</code>, read-only, no code copies; 2 priority meta-entries excluded. Reproducible: <code>npm run bench:retrieval</code>.',
 			},
 			workflow: {
 				subtitle: 'Token and tool-call savings measured across a real session',
@@ -777,7 +777,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				format: 'Formato TOON',
 			},
 			retrieval: {
-				subtitle: 'Búsqueda estilo LongMemEval sobre un snapshot congelado de 187 entries reales de la memoria del proyecto — 42 gold queries escritas a mano',
+				subtitle: 'Búsqueda estilo LongMemEval sobre un snapshot real congelado de 187 entries — 42 gold queries',
 				what: 'El pipeline de recall unificado encuentra la entrada correcta en el top 5',
 				metricLabel: 'Métrica',
 				linear: 'Lineal',
@@ -789,7 +789,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{ metric: 'MRR@5', gloss: 'posición del acierto', linear: '0.776', rrf: '0.788', smart: '0.760' },
 				],
 				result: 'El 97.6% de las queries se responden desde el top-5',
-				note: 'Snapshot real de <code>data.toon</code> (187 entries, 2026-08-01) con el parámetro determinista <code>today</code> para que recency y decay no desvíen los resultados; solo lectura, sin seguimiento de accesos. Se excluyen 2 meta-entries con priority que describen el propio archivo de datos. El código medido es el pipeline de producción (src/lib), empaquetado en memoria — sin copias fieles. Reproducible: <code>npm run bench:retrieval</code>.',
+				note: 'Snapshot real de <code>data.toon</code> (187 entries, 2026-08-01), <code>today</code> determinista, solo lectura y sin copias; se excluyen 2 meta-entries priority. Reproducible: <code>npm run bench:retrieval</code>.',
 			},
 			workflow: {
 				subtitle: 'Ahorro de tokens y tool calls medido en una sesión real',
@@ -1128,7 +1128,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: '实测而非假设',
 		tabs: { ranking: '排序质量', workflow: '工作流节省', format: 'TOON 格式' },
 		retrieval: {
-			subtitle: '在真实项目记忆的 187 条冻结快照上进行 LongMemEval 风格检索 — 42 条手工编写的 gold queries',
+			subtitle: '在 187 条真实条目冻结快照上的 LongMemEval 风格检索 — 42 条 gold queries',
 			what: '统一检索管道能在前 5 名中找到正确的条目',
 			metricLabel: '指标',
 			linear: '线性',
@@ -1140,7 +1140,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ metric: 'MRR@5', gloss: '正确命中的位置', linear: '0.776', rrf: '0.788', smart: '0.760' },
 			],
 			result: '97.6% 的查询可从前 5 名得到答案',
-			note: '真实 <code>data.toon</code> 快照（187 条，2026-08-01），配合确定性 <code>today</code> 参数使 recency 与衰减不随时钟漂移；只读，不追踪访问。排除了 2 条描述数据文件本身的 priority 元条目。被测代码为生产管道（src/lib），在内存中打包 — 无复刻。可复现：<code>npm run bench:retrieval</code>。',
+			note: '真实 <code>data.toon</code> 快照（187 条，2026-08-01），<code>today</code> 确定性、只读、无代码复刻；排除 2 条 priority 元条目。可复现：<code>npm run bench:retrieval</code>。',
 		},
 		workflow: {
 			subtitle: '在真实会话中测得的 token 与工具调用节省',
@@ -1346,7 +1346,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: '推測ではなく実測',
 		tabs: { ranking: 'ランキング品質', workflow: 'ワークフロー削減', format: 'TOON フォーマット' },
 		retrieval: {
-			subtitle: '実プロジェクトメモリの187件スナップショットでのLongMemEval式検索 — 手書きの42 gold queries',
+			subtitle: '187件の実スナップショットでのLongMemEval式検索 — 42 gold queries',
 			what: '統合リコールパイプラインが正しいエントリをトップ5で見つける',
 			metricLabel: '指標',
 			linear: '線形',
@@ -1358,7 +1358,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ metric: 'MRR@5', gloss: '正解の位置', linear: '0.776', rrf: '0.788', smart: '0.760' },
 			],
 			result: '97.6%のクエリがトップ5から回答可能',
-			note: '実 <code>data.toon</code> スナップショット（187件、2026-08-01）と決定的 <code>today</code> パラメータで recency・減衰が時計に依存せず、読み取り専用でアクセス追跡なし。データファイル自体を記述する priority 付きメタエントリ2件を除外。測定対象は本番パイプライン（src/lib）をインメモリでバンドルしたもの — コピーなし。再現: <code>npm run bench:retrieval</code>。',
+			note: '実 <code>data.toon</code> スナップショット（187件、2026-08-01）、<code>today</code> で決定論的、読み取り専用・コピーなし；priority メタエントリ2件除外。再現: <code>npm run bench:retrieval</code>。',
 		},
 		workflow: {
 			subtitle: '実際のセッションで測定したトークンとツール呼び出しの削減',
@@ -1562,7 +1562,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: '추측이 아닌 실측',
 		tabs: { ranking: '순위 품질', workflow: '워크플로 절감', format: 'TOON 형식' },
 		retrieval: {
-			subtitle: '실제 프로젝트 메모리 187개 항목 스냅샷에서 LongMemEval 스타일 검색 — 직접 작성한 gold queries 42개',
+			subtitle: '187개 실제 항목 스냅샷에서 LongMemEval 스타일 검색 — gold queries 42개',
 			what: '통합 리콜 파이프라인이 올바른 항목을 상위 5개 안에서 찾는다',
 			metricLabel: '지표',
 			linear: '선형',
@@ -1574,7 +1574,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ metric: 'MRR@5', gloss: '정답의 위치', linear: '0.776', rrf: '0.788', smart: '0.760' },
 			],
 			result: '97.6%의 쿼리가 상위 5개에서 답변 가능',
-			note: '실제 <code>data.toon</code> 스냅샷(187개, 2026-08-01)과 결정적 <code>today</code> 매개변수로 recency와 감쇠가 시계에 따라 변하지 않으며, 읽기 전용으로 접근 추적 없음. 데이터 파일 자체를 설명하는 priority 메타 항목 2개는 제외. 측정 대상은 프로덕션 파이프라인(src/lib)을 인메모리로 번들한 것 — 복사본 없음. 재현: <code>npm run bench:retrieval</code>.',
+			note: '실제 <code>data.toon</code> 스냅샷(187개, 2026-08-01), <code>today</code> 결정적, 읽기 전용·복사본 없음; priority 메타 항목 2개 제외. 재현: <code>npm run bench:retrieval</code>.',
 		},
 		workflow: {
 			subtitle: '실제 세션에서 측정한 토큰 및 도구 호출 절감',
@@ -1928,7 +1928,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: 'Medido, não assumido',
 		tabs: { ranking: 'Qualidade do ranking', workflow: 'Economia no fluxo', format: 'Formato TOON' },
 		retrieval: {
-			subtitle: 'Busca estilo LongMemEval sobre um snapshot congelado de 187 entradas reais da memória do projeto — 42 gold queries escritas à mão',
+			subtitle: 'Busca estilo LongMemEval sobre snapshot real congelado de 187 entradas — 42 gold queries',
 			what: 'O pipeline de recall unificado encontra a entrada correta no top 5',
 			metricLabel: 'Métrica',
 			linear: 'Linear',
@@ -1940,7 +1940,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ metric: 'MRR@5', gloss: 'posição do acerto', linear: '0.776', rrf: '0.788', smart: '0.760' },
 			],
 			result: '97,6% das queries respondidas a partir do top-5',
-			note: 'Snapshot real do <code>data.toon</code> (187 entradas, 2026-08-01) com o parâmetro determinístico <code>today</code> para que recency e decay não mudem com o relógio; somente leitura, sem rastreio de acessos. Excluídas 2 meta-entradas com priority que descrevem o próprio arquivo de dados. O código medido é o pipeline de produção (src/lib), empacotado em memória — sem cópias. Reproduzível: <code>npm run bench:retrieval</code>.',
+			note: 'Snapshot real do <code>data.toon</code> (187 entradas, 2026-08-01), <code>today</code> determinístico, somente leitura e sem cópias; excluídas 2 meta-entradas priority. Reproduzível: <code>npm run bench:retrieval</code>.',
 		},
 		workflow: {
 			subtitle: 'Economia de tokens e chamadas medida em uma sessão real',
@@ -2372,7 +2372,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: 'Gemessen, nicht angenommen',
 		tabs: { ranking: 'Ranking-Qualität', workflow: 'Workflow-Ersparnis', format: 'TOON-Format' },
 		retrieval: {
-			subtitle: 'LongMemEval-artige Suche über einen eingefrorenen 187-Einträge-Snapshot des echten Projektgedächtnisses — 42 handgeschriebene Gold-Queries',
+			subtitle: 'LongMemEval-artige Suche über einen eingefrorenen 187-Einträge-Snapshot — 42 Gold-Queries',
 			what: 'Die vereinheitlichte Recall-Pipeline findet den richtigen Eintrag in den Top 5',
 			metricLabel: 'Metrik',
 			linear: 'Linear',
@@ -2384,7 +2384,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ metric: 'MRR@5', gloss: 'Position des Treffers', linear: '0.776', rrf: '0.788', smart: '0.760' },
 			],
 			result: '97,6 % der Queries aus den Top 5 beantwortet',
-			note: 'Echter <code>data.toon</code>-Snapshot (187 Einträge, 2026-08-01) mit deterministischem <code>today</code>-Parameter, damit Recency und Decay nicht mit der Uhr driften; schreibgeschützt, ohne Zugriffs-Tracking. Zwei Priority-Meta-Einträge, die die Datendatei selbst beschreiben, sind ausgeschlossen. Gemessen wird der Produktions-Pipeline (src/lib), im Speicher gebündelt — keine Kopien. Reproduzierbar: <code>npm run bench:retrieval</code>.',
+			note: 'Echter <code>data.toon</code>-Snapshot (187 Einträge, 2026-08-01), deterministisches <code>today</code>, schreibgeschützt, keine Kopien; 2 Priority-Meta-Einträge ausgeschlossen. Reproduzierbar: <code>npm run bench:retrieval</code>.',
 		},
 		workflow: {
 			subtitle: 'Token- und Tool-Call-Ersparnis, gemessen in einer realen Sitzung',
@@ -2816,7 +2816,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: 'Mesuré, pas supposé',
 		tabs: { ranking: 'Qualité du classement', workflow: 'Économies de flux', format: 'Format TOON' },
 		retrieval: {
-			subtitle: 'Recherche type LongMemEval sur un snapshot figé de 187 entrées réelles de la mémoire du projet — 42 gold queries écrites à la main',
+			subtitle: 'Recherche type LongMemEval sur un snapshot figé de 187 entrées réelles — 42 gold queries',
 			what: 'Le pipeline de recall unifié trouve la bonne entrée dans le top 5',
 			metricLabel: 'Métrique',
 			linear: 'Linéaire',
@@ -2828,7 +2828,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ metric: 'MRR@5', gloss: 'position du bon résultat', linear: '0.776', rrf: '0.788', smart: '0.760' },
 			],
 			result: '97,6 % des requêtes répondues depuis le top-5',
-			note: 'Snapshot réel de <code>data.toon</code> (187 entrées, 2026-08-01) avec le paramètre déterministe <code>today</code> pour que recency et decay ne dérivent pas avec l\'horloge ; lecture seule, sans suivi des accès. Deux méta-entrées priority décrivant le fichier de données lui-même sont exclues. Le code mesuré est le pipeline de production (src/lib), empaqueté en mémoire — aucune copie. Reproductible : <code>npm run bench:retrieval</code>.',
+			note: 'Snapshot réel de <code>data.toon</code> (187 entrées, 2026-08-01), <code>today</code> déterministe, lecture seule et sans copies ; 2 méta-entrées priority exclues. Reproductible : <code>npm run bench:retrieval</code>.',
 		},
 		workflow: {
 			subtitle: 'Économies de tokens et d\'appels mesurées sur une session réelle',

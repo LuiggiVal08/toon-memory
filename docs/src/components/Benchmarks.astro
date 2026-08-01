@@ -125,7 +125,7 @@ const wfTiles: WfTile[] = wfCards
 						<div class="retrieval-row">
 							<span class="retrieval-metric">
 								{r.metric}
-								<em>{r.gloss}</em>
+								{r.gloss && <em>· {r.gloss}</em>}
 							</span>
 							<span>{r.linear}</span>
 							<span class="retrieval-best">{r.rrf}</span>
@@ -340,7 +340,8 @@ const wfTiles: WfTile[] = wfCards
 	}
 	.retrieval-metric {
 		display: flex;
-		flex-direction: column;
+		align-items: baseline;
+		gap: 0.3rem;
 		font-weight: 700;
 	}
 	.retrieval-metric em {
