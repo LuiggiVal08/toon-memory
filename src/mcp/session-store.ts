@@ -94,7 +94,7 @@ export function writeSessionEntry(entry: Omit<SessionEntry, "accessed" | "lastAc
  */
 export function promoteSessionEntries(
   entriesToPromote: SessionEntry[],
-  category: "decision" | "pattern" | "bug" | "knowledge" | "architecture" = "knowledge"
+  category: "decision" | "pattern" | "bug" | "knowledge" | "architecture" | "warning" = "knowledge"
 ): number {
   if (entriesToPromote.length === 0) return 0
 

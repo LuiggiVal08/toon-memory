@@ -9,7 +9,7 @@ import { generateId, parseTTL, isExpired, inferTags, parseRelativeDate } from ".
 import { findRelatedEntries, bumpAccessed } from "./scoring"
 import { readObservations } from "./observations"
 import { archiveOldEntries } from "./archive"
-import { consolidateEntries } from "./consolidation"
+import { consolidateEntries, consolidateVersions } from "./consolidation"
 import { readUnderLock } from "../lib/lock"
 import { encrypt, decrypt } from "./crypto"
 import { graphRecallDetailed, renderCompact, parseEntries, buildGraph, parseLinkToken, formatLink, typedLinks } from "../lib/graph"
@@ -17,7 +17,7 @@ import { qualityScore, mergeEntries, generateSmartRecall } from "../lib/quality"
 import { generateContextBrief, generateContextGenerate, generateContextDiff, generateContextFocus, generateContextHealth, generateContextExport } from "../lib/context"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS, getCurrentSessionFiles } from "../lib/sessions"
 import { fileMtimes } from "../lib/git"
-import { normalize, isExpiredLocal, tokenize, importance, parseToonLine, toToonLine, escField, unescField } from "../lib/utils"
+import { normalize, isExpiredLocal, tokenize, importance, estimateTokens, parseToonLine, toToonLine, escField, unescField } from "../lib/utils"
 import { expandSynonyms } from "../lib/synonyms"
 
 /**
@@ -236,6 +236,27 @@ function runConsolidate(): { content: ToolText[] } {
   }
 }
 
+function runConsolidateVersions(dryRun: boolean): { content: ToolText[] } {
+  const result = consolidateVersions(dryRun)
+  if (result.groups.length === 0) {
+    return { content: [{ type: "text", text: "✅ No version supersession detected." }] }
+  }
+  if (dryRun) {
+    return {
+      content: [{
+        type: "text",
+        text: `🔍 Version supersession candidates (${result.groups.length}):\n${result.proposals.map((p) => `  • ${p}`).join("\n")}\n\nRun again with dryRun: false to apply.`,
+      }],
+    }
+  }
+  return {
+    content: [{
+      type: "text",
+      text: `🗂️ Marked ${result.removed} old-version entries obsolete:\n${result.proposals.map((p) => `  • ${p}`).join("\n")}`,
+    }],
+  }
+}
+
 function runMergeSimilar(dryRun: boolean): { content: ToolText[] } {
   const data = readMemory()
   const lines = data.split("\n")
@@ -436,7 +457,7 @@ server.registerTool(
     title: "Save to Memory",
     description: "Save a fact to the project's persistent memory (decisions, patterns, bugs, knowledge). Persists between sessions. Tags: 'private' excludes from context injection; 'superseded' marks as obsolete.",
     inputSchema: {
-      category: z.enum(["decision", "pattern", "bug", "knowledge"]).describe("Category of the fact"),
+      category: z.enum(["decision", "pattern", "bug", "knowledge", "warning"]).describe("Category of the fact. 'warning' = negative memory ('NO hacer esto, rompe X') — recalled with a boost so past mistakes surface first."),
       key: z.string().describe("Short title in kebab-case (e.g. risk-engine-priority)"),
       content: z.string().describe("Detailed content of the fact"),
       file: z.string().optional().default("").describe("Related file or line (e.g. spec.md:145)"),
@@ -549,6 +570,8 @@ server.registerTool(
       hops: z.number().optional().default(1).describe("Graph depth in 'graph' mode (1 or 2). Default 1."),
       compact: z.boolean().optional().default(false).describe("Token-efficient output: numeric indices (1, 2), omits id/date/file (keeps tags), edges as '->2', truncates graph neighbors to a snippet. Does not mutate .toon file."),
       budget: z.enum(["tiny", "normal", "deep"]).optional().default("deep").describe("'tiny': key+1 line (~50 tokens). 'normal': compact with tags/edges. 'deep': all fields (default). Overrides 'compact'."),
+      budget_tokens: z.number().optional().default(0).describe("Deterministic token budget: include entries until the estimated output reaches ~N tokens (overrides limit). 0 = no budget."),
+      explain: z.boolean().optional().default(false).describe("Append a 'why this entry' line to each result (relevance %, times used, last used, importance). No LLM — pure heuristics."),
       bias: z.enum(["none", "session"]).optional().default("none").describe("'session': boost entries whose file matches current session files. 'none': no bias (default)."),
       path_scope: z.string().optional().default("").describe("Glob pattern to filter entries by path scope (e.g. 'src/**.ts')."),
       rrf: z.boolean().optional().default(false).describe("Use Reciprocal Rank Fusion (BM25x3 + centrality ranks, adaptive k=sqrtN) instead of weighted linear scoring. Weight-free: reaches parity with the tuned linear scorer on scripts/bench-rrf.mjs."),
@@ -556,7 +579,7 @@ server.registerTool(
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
-  async ({ query, category, from_date, to_date, mode, hops, compact, bias, budget: budgetParam, path_scope, rrf, as_of }) => {
+  async ({ query, category, from_date, to_date, mode, hops, compact, budget: budgetParam, budget_tokens, explain, bias, path_scope, rrf, as_of }) => {
     const data = readMemory()
 
     // Delegate to graphRecallDetailed for both flat and graph modes
@@ -568,12 +591,15 @@ server.registerTool(
       return { content: [{ type: "text" as const, text: `No results found for "${query}"` }] }
     }
     bumpAccessed(detail.entries.map((e) => e.id))
+    const reasons = explain ? detail.reasons : undefined
     if (resolvedBudget === "tiny" || resolvedBudget === "normal") {
       const formatted = renderCompact(detail.entries, {
         adjacency: detail.adjacency,
         seeds: detail.seeds,
         snippetLen: 90,
         budget: resolvedBudget,
+        reasons,
+        budgetTokens: budget_tokens || undefined,
       })
       return { content: [{ type: "text" as const, text: formatted }] }
     }
@@ -585,9 +611,22 @@ server.registerTool(
         const scopeInfo = r.path_scope ? ` | scope: ${r.path_scope}` : ""
         const statusInfo = r.status !== "active" ? ` | status: ${r.status}` : ""
         const supersededInfo = r.supersededOn ? ` | superseded: ${r.supersededOn}` : ""
-        return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}${originInfo}${scopeInfo}${statusInfo}${supersededInfo}`
+        const why = reasons?.get(r.key) ? `\n  ↳ ${reasons.get(r.key)}` : ""
+        return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}${originInfo}${scopeInfo}${statusInfo}${supersededInfo}${why}`
       })
       .join("\n\n")
+    // Deterministic token budget for the deep render.
+    if (budget_tokens && budget_tokens > 0) {
+      const blocks = formatted.split("\n\n")
+      let acc = 0
+      let out: string[] = []
+      for (let i = 0; i < blocks.length; i++) {
+        acc += estimateTokens(blocks[i])
+        if (i > 0 && acc > budget_tokens) break
+        out.push(blocks[i])
+      }
+      return { content: [{ type: "text" as const, text: out.join("\n\n") }] }
+    }
     return { content: [{ type: "text" as const, text: formatted }] }
   }
 )
@@ -654,10 +693,31 @@ server.registerTool(
     const summaryLines = data.split("\n").filter((l) => l.includes(":") && !l.startsWith("  ") && !l.startsWith("version") && !l.startsWith("entries") && !/^\[\d+\|]/.test(l))
     const byOrigin: Record<string, number> = {}
     const byStatus: Record<string, number> = {}
-    for (const e of entries) {
-      byOrigin[e.origin || "agent"] = (byOrigin[e.origin || "agent"] || 0) + 1
-      byStatus[e.status || "active"] = (byStatus[e.status || "active"] || 0) + 1
+    const accessed = new Map<string, number>()
+    const fullParts = lines
+      .filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
+      .map((l) => parseToonLine(l))
+    for (const p of fullParts) {
+      byOrigin[p.length > 15 ? p[15] || "agent" : "agent"] = (byOrigin[p.length > 15 ? p[15] || "agent" : "agent"] || 0) + 1
+      const st = p.length > 16 ? p[16] || "active" : "active"
+      byStatus[st] = (byStatus[st] || 0) + 1
+      accessed.set(p[0], p.length > 8 ? parseInt(p[8]) || 0 : 0)
     }
+
+    // Extended stats: hit rate, duplicate %, dead %
+    const hitRate = entries.length > 0
+      ? ((fullParts.filter((p) => (parseInt(p[8]) || 0) > 0).length / entries.length) * 100).toFixed(0)
+      : "0"
+    const contentCounts = new Map<string, number>()
+    for (const p of fullParts) {
+      const norm = (p[3] || "").toLowerCase().replace(/\s+/g, " ").trim()
+      contentCounts.set(norm, (contentCounts.get(norm) || 0) + 1)
+    }
+    let dupCount = 0
+    for (const c of contentCounts.values()) if (c > 1) dupCount += c - 1
+    const dupPct = entries.length > 0 ? ((dupCount / entries.length) * 100).toFixed(0) : "0"
+    const deadCount = byStatus["obsolete"] || 0
+    const deadPct = entries.length > 0 ? ((deadCount / entries.length) * 100).toFixed(0) : "0"
 
     const stats = [
       `Total entries: ${entries.length}`,
@@ -674,6 +734,10 @@ server.registerTool(
       "",
       `TTL: ${withTtl} with expiration, ${expired} expired`,
       `Average quality: ${avgQuality} (${withQuality} with score)`,
+      "",
+      `Hit rate: ${hitRate}% recalled at least once (${fullParts.filter((p) => (parseInt(p[8]) || 0) > 0).length}/${entries.length})`,
+      `Duplicate: ${dupPct}% (${dupCount} exact-content dups)`,
+      `Dead: ${deadPct}% (${deadCount} obsolete)`,
       "",
       `Last 5 entries:`,
       ...lines.slice(-5).map((l) => {
@@ -843,14 +907,16 @@ server.registerTool(
       category: z.string().optional().default("").describe("Filter by category (empty = all)"),
       bias: z.enum(["none", "session"]).optional().default("none").describe("'session': boost entries whose file matches current session files. 'none': no bias (default)."),
       rrf: z.boolean().optional().default(false).describe("Use Reciprocal Rank Fusion (BM25x3 + centrality ranks, adaptive k=sqrtN) instead of weighted linear scoring. Weight-free: reaches parity with the tuned linear scorer on scripts/bench-rrf.mjs."),
+      budget_tokens: z.number().optional().default(0).describe("Deterministic token budget: include entries until the estimated output reaches ~N tokens (overrides limit). 0 = no budget."),
+      explain: z.boolean().optional().default(false).describe("Append a 'why this entry' line to each result (relevance %, times used, last used, importance). No LLM — pure heuristics."),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
-  async ({ intent, limit, category, bias, rrf }) => {
+  async ({ intent, limit, category, bias, rrf, budget_tokens, explain }) => {
     const data = readMemory()
     const mtimes = fileMtimes()
     const sessionFiles = bias === "session" ? getCurrentSessionFiles() : undefined
-    const result = generateSmartRecall(data, intent, { limit, category, fileMtimes: mtimes, sessionFiles, rrf })
+    const result = generateSmartRecall(data, intent, { limit, category, fileMtimes: mtimes, sessionFiles, rrf, budgetTokens: budget_tokens || undefined, explain })
     return { content: [{ type: "text" as const, text: result }] }
   }
 )
@@ -1065,9 +1131,9 @@ server.registerTool(
   "memory_consolidate",
   {
     title: "Consolidate Memory",
-    description: "Cleanup operations, all deterministic (no LLM): identical removes duplicate entries (keeps the first), similar merges entries with >50% word overlap (keeps longer content, combines tags), low-quality removes entries below minQuality or without tags.",
+    description: "Cleanup operations, all deterministic (no LLM): identical removes duplicate entries (keeps the first), similar merges entries with >50% word overlap (keeps longer content, combines tags), low-quality removes entries below minQuality or without tags, versions marks entries describing the same subject with older versions obsolete in favor of the newest.",
     inputSchema: {
-      mode: z.enum(["identical", "similar", "low-quality"]).optional().default("identical").describe("identical: dedupe entries with identical content (default). similar: merge entries with >50% word overlap. low-quality: remove entries below minQuality or without tags."),
+      mode: z.enum(["identical", "similar", "low-quality", "versions"]).optional().default("identical").describe("identical: dedupe entries with identical content (default). similar: merge entries with >50% word overlap. low-quality: remove entries below minQuality or without tags. versions: detect version supersession ('Use React 18' vs 'React 19') and obsolete the older ones."),
       minQuality: z.number().optional().default(0.3).describe("Entries below this quality score are candidates (only used with mode: low-quality)."),
       dryRun: z.boolean().optional().default(false).describe("If true, show what would change without writing."),
     },
@@ -1079,6 +1145,8 @@ server.registerTool(
         return runMergeSimilar(dryRun)
       case "low-quality":
         return runCompressAll(minQuality, dryRun)
+      case "versions":
+        return runConsolidateVersions(dryRun)
       default:
         return runConsolidate()
     }

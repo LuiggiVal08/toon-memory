@@ -1,6 +1,6 @@
 import { readMemory, writeMemory } from "./memory-io"
 import { mergeEntries } from "../lib/quality"
-import { parseToonLine } from "../lib/utils"
+import { parseToonLine, toToonLine } from "../lib/utils"
 
 /**
  * Jaccard similarity between two content strings (0..1).
@@ -113,4 +113,97 @@ export function consolidateEntries(): { removed: number; kept: number; duplicate
   writeMemory(lines.join("\n"))
 
   return { removed: totalRemoved, kept: order.length, duplicates }
+}
+
+/**
+ * Extract a (base, version) pair from a versioned key or content line.
+ * Matches "Use React 18", "React 18.2", "next 13.5.1", "vite ^5.0.0", etc.
+ * Returns null when no version number is present.
+ */
+export function extractVersion(text: string): { base: string; version: [number, number, number] } | null {
+  const m = text.match(/([A-Za-z][A-Za-z0-9._-]*?)\s*(?:v)?(\d+)\.(\d+)(?:\.(\d+))?/)
+  if (!m) return null
+  const base = m[1].replace(/[-_.]+$/g, "").toLowerCase()
+  return { base, version: [parseInt(m[2]), parseInt(m[3]), m[4] ? parseInt(m[4]) : 0] }
+}
+
+/** Compare two [major, minor, patch] version tuples: >0, <0, or 0. */
+function compareVersions(a: [number, number, number], b: [number, number, number]): number {
+  for (let i = 0; i < 3; i++) {
+    if (a[i] !== b[i]) return a[i] - b[i]
+  }
+  return 0
+}
+
+/**
+ * Version-supersession compaction: detect entries that describe the same
+ * subject with different versions (e.g. "Use React 18" vs "Use React 19")
+ * and mark the older ones obsolete in favor of the newest. Deterministic,
+ * no LLM — uses a version regex + base-name grouping.
+ *
+ * Returns the actions taken (or proposed when `dryRun`).
+ */
+export function consolidateVersions(dryRun: boolean): { removed: number; proposals: string[]; groups: Array<{ base: string; winner: string; losers: string[] }> } {
+  const data = readMemory()
+  const lines = data.split("\n")
+  const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+  if (headerIdx === -1) return { removed: 0, proposals: [], groups: [] }
+
+  interface Candidate { lineIdx: number; id: string; key: string; content: string; category: string; base: string; version: [number, number, number] }
+  const candidates: Candidate[] = []
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line.startsWith("  ") || !line.includes("|")) continue
+    if (line.startsWith("  summaries:")) break
+    const parts = parseToonLine(line)
+    if (parts.length < 7) continue
+    const [id, category, key, content] = parts
+    const hit = extractVersion(`${key} ${content}`.toLowerCase())
+    if (hit && key.toLowerCase().includes(hit.base)) {
+      candidates.push({ lineIdx: i, id, key, content, category, base: hit.base, version: hit.version })
+    }
+  }
+  if (candidates.length < 2) return { removed: 0, proposals: [], groups: [] }
+
+  // Group by base name.
+  const byBase = new Map<string, Candidate[]>()
+  for (const c of candidates) {
+    const list = byBase.get(c.base) || []
+    list.push(c)
+    byBase.set(c.base, list)
+  }
+
+  const groups: Array<{ base: string; winner: string; losers: string[] }> = []
+  for (const [base, list] of byBase) {
+    if (list.length < 2) continue
+    const sorted = [...list].sort((a, b) => compareVersions(b.version, a.version))
+    const winner = sorted[0]
+    const losers = sorted.slice(1)
+    if (losers.length === 0) continue
+    groups.push({ base, winner: winner.key, losers: losers.map((l) => l.key) })
+  }
+
+  if (groups.length === 0) return { removed: 0, proposals: [], groups }
+  if (dryRun) return { removed: 0, proposals: groups.map((g) => `Replace ${g.losers.join(", ")} by ${g.winner}`), groups }
+
+  // Apply: mark losers obsolete with a superseded note.
+  const today = new Date().toISOString().split("T")[0]
+  let changed = 0
+  for (const g of groups) {
+    for (const loser of g.losers) {
+      const hit = candidates.find((c) => c.key === loser)
+      if (!hit) continue
+      const parts = parseToonLine(lines[hit.lineIdx])
+      while (parts.length < 18) parts.push("")
+      parts[9] = parts[9] ? `${parts[9]} ${g.winner}` : g.winner
+      parts[16] = "obsolete"
+      parts[17] = today
+      lines[hit.lineIdx] = toToonLine(parts)
+      changed++
+    }
+  }
+  if (changed === 0) return { removed: 0, proposals: [], groups }
+
+  writeMemory(lines.join("\n"))
+  return { removed: changed, proposals: groups.map((g) => `Replace ${g.losers.join(", ")} by ${g.winner}`), groups }
 }

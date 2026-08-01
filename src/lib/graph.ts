@@ -14,7 +14,7 @@
  * without mutating the stored `.toon` file.
  */
 
-import { normalize, isExpiredLocal, tokenize, importance, parseToonLine } from "./utils"
+import { normalize, isExpiredLocal, tokenize, importance, estimateTokens, parseToonLine } from "./utils"
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
 
@@ -389,6 +389,37 @@ export interface GraphRecallResult {
 	adjacency: Map<string, string[]>
 	/** Final combined score per key (bm25 + centrality + importance + seed bonus). */
 	scores: Map<string, number>
+	/** Optional per-key "why selected" reason strings (Explaining WHY). */
+	reasons?: Map<string, string>
+}
+
+/**
+ * Build a short, deterministic "why was this selected" string per entry.
+ * Pure heuristics — no LLM. Used to explain recall results so the agent can
+ * trust the ranking instead of trusting a black box.
+ */
+export function buildReason(
+	e: GraphEntry,
+	bm25Score: number,
+	bm25Max: number,
+	impScore: number,
+	today = new Date().toISOString().split("T")[0]
+): string {
+	const parts: string[] = []
+	if (bm25Max > 0) {
+		parts.push(`${Math.round((bm25Score / bm25Max) * 100)}% relevance`)
+	}
+	if (e.accessed > 0) {
+		parts.push(`used ${e.accessed}×`)
+	}
+	if (e.lastAccessed) {
+		const days = Math.floor((Date.parse(`${today}T00:00:00`) - Date.parse(e.lastAccessed)) / 86400000)
+		parts.push(days <= 0 ? "used today" : days === 1 ? "used yesterday" : `used ${days}d ago`)
+	} else if (e.accessed === 0) {
+		parts.push("never used")
+	}
+	parts.push(impScore >= 0.7 ? "importance HIGH" : impScore >= 0.4 ? "importance MED" : "importance LOW")
+	return parts.join(" · ")
 }
 
 const W_CENT = 0.4
@@ -508,6 +539,8 @@ export function graphRecallDetailed(
 							s *= 1.15
 						}
 					}
+					// Negative-memory boost: warnings surface first.
+					if (e.category === "warning") s += 0.2
 					s *= decay
 					return { e, s, priority: e.priority }
 				})
@@ -545,7 +578,18 @@ export function graphRecallDetailed(
 	const scores = new Map<string, number>()
 	selected.forEach((e) => scores.set(e.key, scored.find((x) => x.e.key === e.key)!.s))
 
-	return { entries: selected, seeds: seedKeys, adjacency: subAdj, scores }
+	// Explain WHY: normalize bm25 by its max over the visible candidates.
+	let bm25Max = 0
+	for (const v of bm25.values()) if (v > bm25Max) bm25Max = v
+	const reasons = new Map<string, string>()
+	for (const e of selected) {
+		reasons.set(
+			e.key,
+			buildReason(e, bm25.get(e.key) || 0, bm25Max, importance(e, opts.today), opts.today)
+		)
+	}
+
+	return { entries: selected, seeds: seedKeys, adjacency: subAdj, scores, reasons }
 }
 
 /**
@@ -568,6 +612,10 @@ export interface RenderCompactOpts {
 	snippetLen?: number
 	/** Budget level: "tiny" (key+1 line), "normal" (compact, default), "deep" (all fields). */
 	budget?: "tiny" | "normal" | "deep"
+	/** Optional per-key reason strings appended after each entry ("why it was selected"). */
+	reasons?: Map<string, string>
+	/** Deterministic token budget: stop after entries consume ~N estimated tokens. */
+	budgetTokens?: number
 }
 
 /**
@@ -614,31 +662,31 @@ export function renderCompact(entries: GraphEntry[], opts: RenderCompactOpts = {
 
 	const budget = opts.budget ?? "normal"
 
-	return entries
-		.map((e) => {
-			const n = index.get(e.key)!
-			const isSeed = opts.seeds ? opts.seeds.has(e.key) : true
+	const rendered: string[] = []
+	let tokens = 0
+	for (const e of entries) {
+		const n = index.get(e.key)!
+		const isSeed = opts.seeds ? opts.seeds.has(e.key) : true
+		const reason = opts.reasons?.get(e.key)
+		let block: string
 
-			if (budget === "tiny") {
-				const firstLine = e.content.split("\n")[0] || ""
-				const snippet = firstLine.length > 80 ? firstLine.slice(0, 80).trimEnd() + "…" : firstLine
-				const pin = e.priority > 0 ? (e.priority > 1 ? ` 📌${e.priority}` : " 📌") : ""
-				return `[${n}] ${e.category}/${e.key}${pin}\n  ${snippet}`
-			}
-
-			if (budget === "deep") {
-				const ttlInfo = e.ttl ? ` · ttl: ${e.ttl}` : ""
-				const accessInfo = e.accessed > 0 ? ` · accessed: ${e.accessed}x` : ""
-				const lastAccess = e.lastAccessed ? ` · lastAccess: ${e.lastAccessed}` : ""
-				const pin = e.priority > 0 ? (e.priority > 1 ? ` 📌${e.priority}` : " 📌") : ""
-				const links = e.links.length ? `\n  links: ${e.links.join(", ")}` : ""
-				const originInfo = e.origin !== "agent" ? ` · origin: ${e.origin}` : ""
-				const scopeInfo = e.path_scope ? ` · scope: ${e.path_scope}` : ""
-				const statusInfo = e.status !== "active" ? ` · status: ${e.status}` : ""
-				const supersededInfo = e.supersededOn ? ` · superseded: ${e.supersededOn}` : ""
-				return `[${n}] ${e.category}/${e.key}${pin} (${e.id})\n  ${e.content}\n  File: ${e.file} | Tags: ${e.tags.join(";")} | Date: ${e.date}${ttlInfo}${accessInfo}${lastAccess}${originInfo}${scopeInfo}${statusInfo}${supersededInfo}${links}`
-			}
-
+		if (budget === "tiny") {
+			const firstLine = e.content.split("\n")[0] || ""
+			const snippet = firstLine.length > 80 ? firstLine.slice(0, 80).trimEnd() + "…" : firstLine
+			const pin = e.priority > 0 ? (e.priority > 1 ? ` 📌${e.priority}` : " 📌") : ""
+			block = `[${n}] ${e.category}/${e.key}${pin}\n  ${snippet}`
+		} else if (budget === "deep") {
+			const ttlInfo = e.ttl ? ` · ttl: ${e.ttl}` : ""
+			const accessInfo = e.accessed > 0 ? ` · accessed: ${e.accessed}x` : ""
+			const lastAccess = e.lastAccessed ? ` · lastAccess: ${e.lastAccessed}` : ""
+			const pin = e.priority > 0 ? (e.priority > 1 ? ` 📌${e.priority}` : " 📌") : ""
+			const links = e.links.length ? `\n  links: ${e.links.join(", ")}` : ""
+			const originInfo = e.origin !== "agent" ? ` · origin: ${e.origin}` : ""
+			const scopeInfo = e.path_scope ? ` · scope: ${e.path_scope}` : ""
+			const statusInfo = e.status !== "active" ? ` · status: ${e.status}` : ""
+			const supersededInfo = e.supersededOn ? ` · superseded: ${e.supersededOn}` : ""
+			block = `[${n}] ${e.category}/${e.key}${pin} (${e.id})\n  ${e.content}\n  File: ${e.file} | Tags: ${e.tags.join(";")} | Date: ${e.date}${ttlInfo}${accessInfo}${lastAccess}${originInfo}${scopeInfo}${statusInfo}${supersededInfo}${links}`
+		} else {
 			// "normal" budget (default)
 			let body = e.content
 			if (!isSeed && e.content.length > snippetLen) {
@@ -653,7 +701,21 @@ export function renderCompact(entries: GraphEntry[], opts: RenderCompactOpts = {
 					.filter((x): x is number => typeof x === "number")
 				if (nb.length) edges = ` · edges: ->${nb.join(", ->")}`
 			}
-			return `[${n}] ${e.category}/${e.key}${tag}\n  ${body}${tags}${edges}`
-		})
-		.join("\n\n")
+			block = `[${n}] ${e.category}/${e.key}${tag}\n  ${body}${tags}${edges}`
+		}
+
+		if (reason) block += `\n  ↳ ${reason}`
+		rendered.push(block)
+
+		// Deterministic token budget: stop before the accumulated estimate exceeds it.
+		if (opts.budgetTokens && opts.budgetTokens > 0) {
+			tokens += estimateTokens(block)
+			if (rendered.length > 1 && tokens > opts.budgetTokens) {
+				rendered.pop()
+				break
+			}
+		}
+	}
+
+	return rendered.join("\n\n")
 }

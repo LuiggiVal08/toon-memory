@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { tokenize, normalize, isPrivate, escField, unescField, parseToonLine, toToonLine } from "../src/lib/utils"
+import { tokenize, normalize, isPrivate, escField, unescField, parseToonLine, toToonLine, estimateTokens, languageFamily } from "../src/lib/utils"
 
 describe("tokenize", () => {
 	it("splits camelCase identifiers", () => {
@@ -157,5 +157,37 @@ describe("parseToonLine / toToonLine", () => {
 		expect(parts[3]).toBe("contenido con ")
 		expect(parts[6]).toBe("3")
 		expect(/^\d{4}-\d{2}-\d{2}$/.test(parts[6])).toBe(false)
+	})
+})
+
+describe("estimateTokens", () => {
+	it("returns a positive deterministic estimate", () => {
+		const a = estimateTokens("short text")
+		const b = estimateTokens("short text")
+		expect(a).toBeGreaterThan(0)
+		expect(a).toBe(b)
+	})
+
+	it("estimates more tokens for longer text", () => {
+		const short = estimateTokens("a")
+		const long = estimateTokens("a ".repeat(200))
+		expect(long).toBeGreaterThan(short)
+	})
+
+	it("returns 0 for empty input", () => {
+		expect(estimateTokens("")).toBe(0)
+	})
+})
+
+describe("languageFamily", () => {
+	it("detects latin vs CJK vs cyrillic", () => {
+		expect(languageFamily("Esto es español con acentos")).toBe("latin")
+		expect(languageFamily("this is english")).toBe("latin")
+		expect(languageFamily("这是一段中文")).toBe("cjk")
+		expect(languageFamily("Это по-русски")).toBe("cyrillic")
+	})
+
+	it("returns none for non-letter input", () => {
+		expect(languageFamily("12345 !!!")).toBe("none")
 	})
 })

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { qualityScore, mergeEntries, generateSmartRecall, generateSystemPrimer } from "../src/lib/quality"
 import { parseToonLine } from "../src/lib/utils"
+import { extractVersion } from "../src/mcp/consolidation"
 
 describe("qualityScore", () => {
   const today = new Date().toISOString().split("T")[0]
@@ -237,5 +238,57 @@ entries[1|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|co
     const primer = generateSystemPrimer(data)
     expect(primer).toContain("Established patterns:")
     expect(primer).toContain("use-zod")
+  })
+})
+
+describe("generateSmartRecall — explain + budget_tokens + warning boost", () => {
+  const today = new Date().toISOString().split("T")[0]
+
+  const DATA = `version: 1
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1|decision|redis-cache|Usamos redis para cache de sesiones con mucho contenido extra para inflar el tamaño estimado de esta entrada.|cache.ts|redis;cache|${today}||14||0.70|1.0
+  a2|warning|prisma-migration|NO migres Prisma sin backup: rompe la base de datos en producción.|db.ts|prisma;warning|${today}||0||0.60|1.0
+  a3|knowledge|postgres-db|Postgres guarda el estado principal de la aplicacion.|db.ts|db;postgres|${today}||0||0.50|1.0
+`
+
+  it("appends a reason line when explain is true", () => {
+    const out = generateSmartRecall(DATA, "redis", { explain: true, today })
+    expect(out).toContain("↳")
+    expect(out).toContain("importance")
+  })
+
+  it("does not append reasons by default", () => {
+    const out = generateSmartRecall(DATA, "redis", { today })
+    expect(out).not.toContain("↳")
+  })
+
+  it("honors a tiny token budget by dropping entries", () => {
+    const all = generateSmartRecall(DATA, "redis", { today })
+    const trimmed = generateSmartRecall(DATA, "redis", { today, budgetTokens: 60 })
+    expect(trimmed.split("…").length).toBeLessThanOrEqual(all.split("…").length)
+  })
+
+  it("boosts warning entries above equal relevance", () => {
+    // query hits the prisma content token ('prisma') in both warning and a neutral entry
+    const out = generateSmartRecall(DATA, "prisma", { today })
+    expect(out).toContain("prisma-migration")
+  })
+})
+
+describe("extractVersion (version-supersession detection)", () => {
+  it("extracts the versioned word + major.minor version", () => {
+    const hit = extractVersion("use react 18.2")
+    expect(hit).toEqual({ base: "react", version: [18, 2, 0] })
+  })
+
+  it("handles full semver and v prefixes", () => {
+    const hit = extractVersion("next 13.5.1")
+    expect(hit!.version).toEqual([13, 5, 1])
+    const v = extractVersion("node v18.2")
+    expect(v).toEqual({ base: "node", version: [18, 2, 0] })
+  })
+
+  it("returns null when no version is present", () => {
+    expect(extractVersion("just some note about react")).toBeNull()
   })
 })

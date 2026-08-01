@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { parseEntries, buildGraph, graphRecall, graphRecallDetailed, bm25Scores, centrality, renderCompact, parseLinkToken, linkKey, formatLink, typedLinks } from "../src/lib/graph"
+import { parseEntries, buildGraph, graphRecall, graphRecallDetailed, bm25Scores, centrality, renderCompact, parseLinkToken, linkKey, formatLink, typedLinks, buildReason } from "../src/lib/graph"
 
 const SAMPLE = `version: 1
 entries[5|]{id|category|key|content|file|tags|date|ttl|accessed|links}:
@@ -320,5 +320,62 @@ describe("renderCompact", () => {  it("drops id/date/file and assigns stable num
     if (neighbor.content.length > 20) {
       expect(out).toContain("…")
     }
+  })
+})
+
+describe("buildReason (Explain WHY)", () => {
+  it("combines relevance %, usage, last-used and importance", () => {
+    const entry = {
+      id: "a1", category: "decision", key: "risk-engine", content: "x",
+      file: "", tags: [], date: "2026-07-30", ttl: "", accessed: 14,
+      links: [], lastAccessed: "2026-08-01T10:00:00Z", priority: 0,
+      path_scope: "", origin: "agent" as const, status: "active" as const, supersededOn: "",
+    }
+    const reason = buildReason(entry, 0.95, 1.0, 0.8, "2026-08-01")
+    expect(reason).toContain("95% relevance")
+    expect(reason).toContain("used 14×")
+    expect(reason).toContain("used today")
+    expect(reason).toContain("importance HIGH")
+  })
+
+  it("says 'never used' when the entry was never recalled", () => {
+    const entry = {
+      id: "a1", category: "knowledge", key: "fresh", content: "x",
+      file: "", tags: [], date: "2026-07-30", ttl: "", accessed: 0,
+      links: [], lastAccessed: "", priority: 0,
+      path_scope: "", origin: "agent" as const, status: "active" as const, supersededOn: "",
+    }
+    const reason = buildReason(entry, 0, 0, 0.2, "2026-08-01")
+    expect(reason).toContain("never used")
+    expect(reason).toContain("importance LOW")
+  })
+
+  it("graphRecallDetailed exposes reasons for the selected entries", () => {
+    const d = graphRecallDetailed(SAMPLE, "riesgo", { hops: 1 })
+    expect(d.reasons).toBeDefined()
+    expect(d.reasons!.size).toBe(d.entries.length)
+  })
+})
+
+describe("renderCompact — budget_tokens", () => {
+  const LONG = `version: 1
+entries[2|]{id|category|key|content|file|tags|date|ttl|accessed|links}:
+  c1|knowledge|long-a|Palabra clave AAA seguida de mucho contenido repetido aqui para inflar los tokens estimados de la entrada y forzar el corte del presupuesto.|a.ts|k|2026-07-01||0|
+  c2|knowledge|long-b|Palabra clave AAA seguida de mucho contenido repetido aqui para inflar los tokens estimados de la entrada y forzar el corte del presupuesto.|b.ts|k|2026-07-01||0|
+`
+
+  it("drops later entries when the estimated tokens exceed the budget", () => {
+    const d = graphRecallDetailed(LONG, "AAA", { hops: 1 })
+    expect(d.entries.length).toBeGreaterThan(1)
+    const out = renderCompact(d.entries, { budget: "deep", budgetTokens: 100 })
+    // A tiny budget fits at most one deep-rendered entry.
+    const blocks = out.split("\n\n")
+    expect(blocks.length).toBe(1)
+  })
+
+  it("keeps every entry when no budget is set", () => {
+    const d = graphRecallDetailed(LONG, "AAA", { hops: 1 })
+    const out = renderCompact(d.entries, { budget: "deep" })
+    expect(out.split("\n\n").length).toBe(d.entries.length)
   })
 })

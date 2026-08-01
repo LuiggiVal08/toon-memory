@@ -32,6 +32,46 @@ export const tokenize = (s: string): string[] =>
 		.filter(Boolean)
 
 /**
+ * Deterministic token estimate for a text: roughly one token per 4 chars,
+ * plus one per whitespace run. No LLM — good enough to budget recall output.
+ */
+export const estimateTokens = (s: string): number => {
+	if (!s) return 0
+	const chars = Math.ceil(s.length / 4)
+	const words = (s.match(/\S+/g) || []).length
+	return Math.max(1, chars + words)
+}
+
+/**
+ * Language-family detection via character ranges. Deterministic, no libraries.
+ * Returns "latin" for ASCII/EU languages, "cjk" for CJK, "cyrillic", "arabic",
+ * "greek", "hebrew", "devanagari", or "other".
+ */
+export const languageFamily = (s: string): string => {
+	let cjk = 0, cyr = 0, arab = 0, greek = 0, hebrew = 0, deva = 0, latin = 0, total = 0
+	for (const ch of s) {
+		const c = ch.codePointAt(0)!
+		if (!/[\p{L}]/u.test(ch)) continue
+		total++
+		if (c >= 0x4e00 && c <= 0x9fff || c >= 0x3040 && c <= 0x30ff || c >= 0xac00 && c <= 0xd7af) cjk++
+		else if (c >= 0x0400 && c <= 0x04ff) cyr++
+		else if (c >= 0x0600 && c <= 0x06ff) arab++
+		else if (c >= 0x0370 && c <= 0x03ff) greek++
+		else if (c >= 0x0590 && c <= 0x05ff) hebrew++
+		else if (c >= 0x0900 && c <= 0x097f) deva++
+		else latin++
+	}
+	if (total === 0) return "none"
+	if (cjk / total > 0.3) return "cjk"
+	if (cyr / total > 0.3) return "cyrillic"
+	if (arab / total > 0.3) return "arabic"
+	if (greek / total > 0.3) return "greek"
+	if (hebrew / total > 0.3) return "hebrew"
+	if (deva / total > 0.3) return "devanagari"
+	return "latin"
+}
+
+/**
  * Escape a field for the pipe-delimited TOON format. Literal newlines, pipes and
  * backslashes would otherwise break line-based parsing (a multi-line content turns
  * each continuation line into a bogus entry), so they are stored as `\n`, `\|` and

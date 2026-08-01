@@ -16,9 +16,11 @@ import {
 	rankBy,
 	rrfFuse,
 	rrfK,
+	globMatch,
+	buildReason,
 	type GraphEntry,
 } from "./graph"
-import { normalize, isExpiredLocal, tokenize, importance, isPrivate, parseToonLine, toToonLine } from "./utils"
+import { normalize, isExpiredLocal, tokenize, importance, isPrivate, estimateTokens, languageFamily, parseToonLine, toToonLine } from "./utils"
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
 
@@ -188,7 +190,17 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 export function generateSmartRecall(
 	data: string,
 	intent: string,
-	opts: { limit?: number; category?: string; bumpAccess?: (ids: string[]) => void; fileMtimes?: Map<string, string>; sessionFiles?: string[]; rrf?: boolean; today?: string } = {}
+	opts: {
+		limit?: number
+		category?: string
+		bumpAccess?: (ids: string[]) => void
+		fileMtimes?: Map<string, string>
+		sessionFiles?: string[]
+		rrf?: boolean
+		today?: string
+		explain?: boolean
+		budgetTokens?: number
+	} = {}
 ): string {
 	const entries = parseEntries(data)
 	if (entries.length === 0) return "Empty memory."
@@ -247,14 +259,27 @@ export function generateSmartRecall(
 					sessionBias = 0.15
 				}
 			}
+			// Language match: same script family as the query gets a small boost
+			// (a Spanish query should prefer Spanish entries over English ones).
+			let langBoost = 0
+			const qFamily = languageFamily(intent)
+			if (qFamily !== "none") {
+				const eFamily = languageFamily(`${e.content} ${e.key} ${e.tags.join(" ")}`)
+				if (qFamily === eFamily) langBoost = 0.1
+			}
+			// Folder match: entries scoped to the current working directory get a boost.
+			let folderBoost = 0
+			if (e.path_scope && globMatch(e.path_scope, ".")) folderBoost = 0.05
+			// Negative-memory boost: warnings are cheap to ignore and expensive to repeat.
+			const warningBoost = e.category === "warning" ? 0.2 : 0
 			let combined: number
 			if (opts.rrf) {
-				combined = (fused?.get(e.key) ?? 0) - drift + sessionBias
+				combined = (fused?.get(e.key) ?? 0) - drift + sessionBias + langBoost + folderBoost + warningBoost
 			} else {
 				combined =
-					bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift + sessionBias
+					bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift + sessionBias + langBoost + folderBoost + warningBoost
 			}
-			return { entry: e, score: combined, matchesQuery, priority: e.priority }
+			return { entry: e, score: combined, matchesQuery, priority: e.priority, bm25Score }
 		})
 		.filter((x) => x.score > 0 || x.matchesQuery)
 		.sort((a, b) => {
@@ -272,7 +297,7 @@ export function generateSmartRecall(
 		.filter(Boolean)
 		.sort((a, b) => b.priority - a.priority)
 	for (const e of toInject) {
-		scored.unshift({ entry: e, score: 999, matchesQuery: false, priority: e.priority })
+		scored.unshift({ entry: e, score: 999, matchesQuery: false, priority: e.priority, bm25Score: 0 })
 	}
 
 	if (scored.length === 0) {
@@ -283,11 +308,24 @@ export function generateSmartRecall(
 			})
 			.slice(0, limit)
 		if (top.length === 0) return "No entries in memory."
-		return renderCompact(top)
+		return renderCompact(top, { budgetTokens: opts.budgetTokens })
 	}
 
 	if (opts.bumpAccess) opts.bumpAccess(scored.map((x) => x.entry.id))
-	return renderCompact(scored.map((x) => x.entry))
+
+	// Explain WHY: build per-key reasons with the same determinism as graph recall.
+	let bm25Max = 0
+	for (const s of scored) if (s.bm25Score > bm25Max) bm25Max = s.bm25Score
+	const reasons = new Map<string, string>()
+	if (opts.explain) {
+		for (const s of scored) {
+			reasons.set(
+				s.entry.key,
+				buildReason(s.entry, s.bm25Score, bm25Max, importance(s.entry, opts.today), opts.today)
+			)
+		}
+	}
+	return renderCompact(scored.map((x) => x.entry), { reasons: opts.explain ? reasons : undefined, budgetTokens: opts.budgetTokens })
 }
 
 /**
