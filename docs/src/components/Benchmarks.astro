@@ -24,7 +24,6 @@ const retrieval = (b as unknown as { retrieval?: RetrievalBlock }).retrieval;
 
 const jsonTokens = 1097;
 const toonTokens = 850;
-const formatBarPct = Math.round((toonTokens / jsonTokens) * 100);
 
 function splitNum(raw: string): { prefix: string; num: string; suffix: string } {
 	const m = raw.trim().match(/^([~≈]?)([\d.]+)([%x×]?)$/);
@@ -84,34 +83,34 @@ const wfTiles: WfTile[] = wfCards
 		<div class="metric-tile highlight">
 			<span class="tile-kicker">{b.tabs.format}</span>
 			<p class="tile-subtitle">{b.format.subtitle}</p>
-			<div class="tile-number">
-				{fmt0.prefix && <span class="tile-prefix">{fmt0.prefix}</span>}
-				<span class="tile-count" data-count={fmt0.num}>{fmt0.num}</span>
-				{fmt0.suffix && <span class="tile-suffix">{fmt0.suffix}</span>}
+			<div class="retrieval-table format-table">
+				<div class="retrieval-row retrieval-head">
+					<span class="retrieval-metric">{b.retrieval.metricLabel}</span>
+					<span class="retrieval-val"></span>
+				</div>
+				<div class="retrieval-row">
+					<span class="retrieval-metric">{b.format.stats[0].cap}</span>
+					<span class="retrieval-val">{fmt0.prefix}{fmt0.num}{fmt0.suffix}</span>
+				</div>
+				<div class="retrieval-row">
+					<span class="retrieval-metric">{b.format.stats[1].cap}</span>
+					<span class="retrieval-val">{fmt1.prefix}{fmt1.num}{fmt1.suffix}</span>
+				</div>
+				<div class="retrieval-row">
+					<span class="retrieval-metric">{b.format.stats[2].cap}</span>
+					<span class="retrieval-val">{fmt2.prefix}{fmt2.num}{fmt2.suffix}</span>
+				</div>
 			</div>
-			<h3 class="tile-title">{b.format.stats[0].cap}</h3>
 			<p class="tile-flow">
 				<span class="tile-before">JSON {jsonTokens}</span>
 				<span class="tile-arrow">→</span>
 				<span class="tile-after">TOON {toonTokens}</span>
 			</p>
-			<div class="tile-bar-track" aria-hidden="true">
-				<div class="bar tile-bar bar-toon" data-pct={formatBarPct} style={`--pct:${formatBarPct}%`}></div>
-			</div>
-			<div class="tile-chips">
-				<span class="tile-chip">
-					<span class="chip-num" data-count={fmt1.num}>{fmt1.num}</span>{fmt1.suffix} {b.format.stats[1].cap}
-				</span>
-				<span class="tile-chip">
-					<span class="chip-num" data-count={fmt2.num}>{fmt2.num}</span>{fmt2.suffix} {b.format.stats[2].cap}
-				</span>
-			</div>
 			<p class="tile-note" set:html={b.format.note}></p>
 		</div>
 
 		<div class="metric-tile ranking-tile">
 			<span class="tile-kicker">{b.tabs.ranking}</span>
-			{retrieval.what && <h3 class="tile-title">{retrieval.what}</h3>}
 			<p class="tile-subtitle">{retrieval.subtitle}</p>
 			<div class="retrieval-table">
 				<div class="retrieval-row retrieval-head">
@@ -264,43 +263,6 @@ const wfTiles: WfTile[] = wfCards
 	.tile-after {
 		color: var(--color-accent-success);
 	}
-	.tile-bar-track {
-		height: 8px;
-		border-radius: 9999px;
-		overflow: hidden;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		margin-top: auto;
-	}
-	.tile-bar {
-		padding-right: 0;
-		justify-content: flex-start;
-		font-size: 0;
-	}
-	.tile-chips {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-		margin-top: 0.25rem;
-	}
-	.tile-chip {
-		display: inline-flex;
-		align-items: baseline;
-		gap: 0.2rem;
-		padding: 0.3rem 0.7rem;
-		border-radius: 999px;
-		background: var(--color-accent-brand-ghost);
-		border: 1px solid var(--color-accent-lavender-dim);
-		font-size: 0.78rem;
-		color: var(--text-muted);
-	}
-	.chip-num {
-		font-weight: 800;
-		background: var(--gradient);
-		-webkit-background-clip: text;
-		background-clip: text;
-		-webkit-text-fill-color: transparent;
-	}
 	.tile-result {
 		align-self: flex-start;
 		margin-top: 0.5rem;
@@ -356,6 +318,20 @@ const wfTiles: WfTile[] = wfCards
 		-webkit-background-clip: text;
 		background-clip: text;
 		-webkit-text-fill-color: transparent;
+	}
+	.format-table .retrieval-row {
+		grid-template-columns: 1fr 7rem;
+	}
+	.retrieval-val {
+		text-align: right;
+		font-weight: 800;
+		background: var(--gradient);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+	.bench-duo .metric-tile {
+		justify-content: space-between;
 	}
 	@media (max-width: 600px) {
 		.retrieval-row {
