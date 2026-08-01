@@ -906,7 +906,6 @@ body.modal-open {
 .viewer-launch {
   position: relative;
   width: 100%;
-  aspect-ratio: 4/3;
   padding: 0;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -924,8 +923,7 @@ body.modal-open {
 .viewer-launch img {
   display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
 }
 .viewer-launch::after {
   content: '';

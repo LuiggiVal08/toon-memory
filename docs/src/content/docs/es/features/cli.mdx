@@ -16,6 +16,7 @@ npx toon-memory status       # Ver estado de la instalación
 npx toon-memory stats        # Ver estadísticas de memoria
 npx toon-memory export       # Exportar memoria a JSON
 npx toon-memory import <file> # Importar memoria desde JSON
+npx toon-memory viewer [opts] # Abrir el visor de la memoria (servidor HTTP)
 npx toon-memory watch [opts] # Auto-backup con opciones
 npx toon-memory upgrade      # Actualizar a la última versión
 npx toon-memory uninstall    # Eliminar de todos los agentes
@@ -27,6 +28,17 @@ npx toon-memory uninstall    # Eliminar de todos los agentes
 |--------|-------------|---------|
 | `--agent <nombre>` | No interactivo: configurar agente(s) específico(s). Repetir para múltiples. | interactivo |
 | `--scope <scope>` | `local` o `global` — dónde almacenar la configuración del agente | interactivo |
+| `-h, --help` | Muestra la ayuda de `init` | — |
+
+## Opciones del visor (viewer)
+
+| Opción | Descripción | Por defecto |
+|--------|-------------|---------|
+| `--port <n>` | Puerto del servidor HTTP | 3000 (o `$PORT`) |
+| `--export` | Guarda un HTML estático en `.toon-memory/viewer/index.html` en lugar de iniciar el servidor | — |
+| `-h, --help` | Muestra la ayuda del visor | — |
+
+> Nota: con `--export`, si también pasas `--port` se ignora con un aviso. Si usas `--port` sin un valor, el comando muestra un error y su ayuda.
 
 ## Opciones de watch
 
