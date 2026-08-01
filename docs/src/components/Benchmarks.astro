@@ -7,7 +7,6 @@ interface Props {
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 const b = c.benchmarks;
-const rankWhat = (b.ranking as unknown as { what?: string }).what;
 
 type RetrievalRow = { metric: string; gloss: string; linear: string; rrf: string; smart: string };
 type RetrievalBlock = {
@@ -112,62 +111,35 @@ const wfTiles: WfTile[] = wfCards
 
 		<div class="metric-tile ranking-tile">
 			<span class="tile-kicker">{b.tabs.ranking}</span>
-			{rankWhat && <h3 class="tile-title">{rankWhat}</h3>}
-			<p class="tile-subtitle">{b.ranking.subtitle}</p>
-			<div class="rank-rows">
+			{retrieval.what && <h3 class="tile-title">{retrieval.what}</h3>}
+			<p class="tile-subtitle">{retrieval.subtitle}</p>
+			<div class="retrieval-table">
+				<div class="retrieval-row retrieval-head">
+					<span class="retrieval-metric">{retrieval.metricLabel}</span>
+					<span>{retrieval.linear}</span>
+					<span class="retrieval-best">{retrieval.rrf}</span>
+					<span>{retrieval.smart}</span>
+				</div>
 				{
-					b.ranking.metricRows.map((r: { metric: string; linear: string; rrf: string; gloss?: string }) => (
-						<>
-							<div class="rank-row">
-								<span class="rank-metric">{r.metric}</span>
-								<span class="rank-linear">{r.linear}</span>
-								<span class="rank-arrow">→</span>
-								<span class="rank-rrf">{r.rrf}</span>
-							</div>
-							{r.gloss && <p class="rank-gloss">{r.gloss}</p>}
-						</>
+					retrieval.metricRows?.map((r: RetrievalRow) => (
+						<div class="retrieval-row">
+							<span class="retrieval-metric">
+								{r.metric}
+								<em>{r.gloss}</em>
+							</span>
+							<span>{r.linear}</span>
+							<span class="retrieval-best">{r.rrf}</span>
+							<span>{r.smart}</span>
+						</div>
 					))
 				}
 			</div>
-			<span class="tile-result">{b.ranking.result}</span>
-			<p class="tile-note" set:html={b.ranking.note}></p>
+			<span class="tile-result">{retrieval.result}</span>
+			<p class="tile-note" set:html={retrieval.note}></p>
 		</div>
 	</div>
 
 	<p class="savings-note" set:html={b.workflow.note}></p>
-
-	{
-		retrieval && (
-			<div class="metric-tile retrieval-tile">
-				<span class="tile-kicker">{b.tabs.ranking} — retrieval</span>
-				{retrieval.what && <h3 class="tile-title">{retrieval.what}</h3>}
-				<p class="tile-subtitle">{retrieval.subtitle}</p>
-				<div class="retrieval-table">
-					<div class="retrieval-row retrieval-head">
-						<span class="retrieval-metric">{retrieval.metricLabel}</span>
-						<span>{retrieval.linear}</span>
-						<span class="retrieval-best">{retrieval.rrf}</span>
-						<span>{retrieval.smart}</span>
-					</div>
-					{
-						retrieval.metricRows?.map((r: RetrievalRow) => (
-							<div class="retrieval-row">
-								<span class="retrieval-metric">
-									{r.metric}
-									<em>{r.gloss}</em>
-								</span>
-								<span>{r.linear}</span>
-								<span class="retrieval-best">{r.rrf}</span>
-								<span>{r.smart}</span>
-							</div>
-						))
-					}
-				</div>
-				<span class="tile-result">{retrieval.result}</span>
-				<p class="tile-note" set:html={retrieval.note}></p>
-			</div>
-		)
-	}
 </section>
 
 <script>
@@ -329,36 +301,6 @@ const wfTiles: WfTile[] = wfCards
 		background-clip: text;
 		-webkit-text-fill-color: transparent;
 	}
-	.rank-rows {
-		display: flex;
-		flex-direction: column;
-		gap: 0.4rem;
-		margin-top: 0.25rem;
-	}
-	.rank-row {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		font-size: 0.95rem;
-	}
-	.rank-metric {
-		font-weight: 600;
-		color: var(--text-muted);
-		min-width: 3.5rem;
-	}
-	.rank-linear {
-		color: var(--text-muted);
-		text-decoration: line-through;
-	}
-	.rank-rrf {
-		font-weight: 700;
-		color: var(--text);
-	}
-	.rank-gloss {
-		margin: 0 0 0.5rem 3.5rem;
-		font-size: 0.78rem;
-		color: var(--text-muted);
-	}
 	.tile-result {
 		align-self: flex-start;
 		margin-top: 0.5rem;
@@ -375,11 +317,6 @@ const wfTiles: WfTile[] = wfCards
 		font-size: 0.8rem;
 		color: var(--text-muted);
 		line-height: 1.55;
-	}
-	.retrieval-tile {
-		margin-top: 1.5rem;
-		border-color: var(--color-accent-lavender-dim);
-		background: linear-gradient(180deg, var(--color-accent-brand-ghost-wash), var(--bg-card));
 	}
 	.retrieval-table {
 		display: flex;
