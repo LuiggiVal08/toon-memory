@@ -68,6 +68,48 @@ describe("CLI Commands", () => {
     })
     expect(output).toContain("toon-memory — MCP memory server for AI coding agents")
     expect(output).toContain("Commands:")
+    expect(output).toContain("viewer")
+  })
+
+  it("should print viewer help with viewer -h", () => {
+    const output = execSync(`node ${cliPath} viewer -h`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+    expect(output).toContain("Usage: toon-memory viewer")
+    expect(output).toContain("--port")
+    expect(output).not.toContain("Port 3000")
+  })
+
+  it("should print viewer help with viewer --help", () => {
+    const output = execSync(`node ${cliPath} viewer --help`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+    expect(output).toContain("Usage: toon-memory viewer")
+    expect(output).toContain("--export")
+  })
+
+  it("should reject an invalid viewer port", () => {
+    expect(() =>
+      execSync(`node ${cliPath} viewer --port abc`, {
+        cwd: testDir,
+        encoding: "utf-8",
+        env: { ...process.env, HOME: testDir },
+      })
+    ).toThrow()
+  })
+
+  it("should reject viewer --port without a value", () => {
+    expect(() =>
+      execSync(`node ${cliPath} viewer --port`, {
+        cwd: testDir,
+        encoding: "utf-8",
+        env: { ...process.env, HOME: testDir },
+      })
+    ).toThrow()
   })
 
   it("should init with local scope", () => {

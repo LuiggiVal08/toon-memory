@@ -31,6 +31,7 @@ Commands:
   export [file]            Export memory to a TOON/JSON file
   import <file>            Import memory from a TOON/JSON file
   watch                    Watch memory file and re-render on change
+  viewer [--port <n>]      Open the interactive graph viewer in a browser (auto-picks a free port)
   uninstall                Remove toon-memory from all agents
   capture <on|off>         Enable/disable activity capture hooks
   upgrade                  Upgrade to the latest version

@@ -18,8 +18,22 @@ function openBrowser(url: string): void {
   }
 }
 
+function resolvePort(portArg?: string): number {
+  const raw = portArg ?? process.env.PORT
+  if (raw === undefined || raw === "") return 3000
+  const port = Number(raw)
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    console.error(`Invalid port: '${raw}'. Expected an integer between 1 and 65535.`)
+    process.exit(1)
+  }
+  return port
+}
+
+const MAX_PORT_ATTEMPTS = 20
+
 export function viewer(portArg?: string): void {
-  const PORT = parseInt(portArg || process.env.PORT || "3000", 10)
+  const startPort = resolvePort(portArg)
+  let port = startPort
   let currentHtml = generateHtml(buildViewerData())
 
   const server = createServer((_req: IncomingMessage, res: ServerResponse) => {
@@ -27,15 +41,31 @@ export function viewer(portArg?: string): void {
     res.end(currentHtml)
   })
 
-  server.listen(PORT, "127.0.0.1", () => {
-    const url = `http://127.0.0.1:${PORT}`
+  server.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE" && port < startPort + MAX_PORT_ATTEMPTS) {
+      port += 1
+      console.log(`Port ${port - 1} in use, trying ${port}...`)
+      server.listen(port, "127.0.0.1", onListen)
+    } else if (err.code === "EADDRINUSE") {
+      console.error(`Port ${port} already in use. Try: toon-memory viewer --port ${port + 1} (or PORT=${port + 1} toon-memory viewer)`)
+      process.exit(1)
+    } else {
+      console.error(`Server error: ${err.message}`)
+      process.exit(1)
+    }
+  })
+
+  function onListen(): void {
+    const url = `http://127.0.0.1:${port}`
     const data = buildViewerData()
     console.log(`\ntoon-memory viewer`)
     console.log(`   Entries: ${data.totalEntries} | Edges: ${data.edges.length}`)
     console.log(`   Serving at: ${url}`)
     console.log(`   Press 'r' in terminal to reload | Ctrl+C to stop\n`)
     openBrowser(url)
-  })
+  }
+
+  server.listen(startPort, "127.0.0.1", onListen)
 
   if (process.stdin.isTTY) {
     process.stdin.setRawMode?.(true)
@@ -50,15 +80,6 @@ export function viewer(portArg?: string): void {
       if (key === "\u0003") process.exit(0)
     })
   }
-
-  server.on("error", (err: NodeJS.ErrnoException) => {
-    if (err.code === "EADDRINUSE") {
-      console.error(`Port ${PORT} already in use. Try: PORT=3001 toon-memory viewer`)
-    } else {
-      console.error(`Server error: ${err.message}`)
-    }
-    process.exit(1)
-  })
 }
 
 export function viewerExport(): void {

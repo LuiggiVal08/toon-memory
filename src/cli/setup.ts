@@ -16,6 +16,10 @@ if (args[0] === "uninstall") {
 }
 
 if (args[0] === "init") {
+  if (args.includes("-h") || args.includes("--help")) {
+    printUsage()
+    process.exit(0)
+  }
   const rest = args.slice(1)
   const agentNames: string[] = []
   let scope: string | undefined
@@ -74,9 +78,19 @@ if (args[0] === "watch") {
 }
 
 if (args[0] === "viewer") {
+  if (args.includes("-h") || args.includes("--help")) {
+    printViewerUsage()
+    process.exit(0)
+  }
   const portIdx = args.indexOf("--port")
-  const port = portIdx !== -1 && args[portIdx + 1] ? args[portIdx + 1] : undefined
+  if (portIdx !== -1 && !args[portIdx + 1]) {
+    console.error("Missing value for --port\n")
+    printViewerUsage()
+    process.exit(1)
+  }
+  const port = portIdx !== -1 ? args[portIdx + 1] : undefined
   if (args.includes("--export")) {
+    if (port) console.log("Note: --port is ignored with --export")
     viewerExport()
   } else {
     viewer(port)
@@ -88,6 +102,17 @@ if (args[0] === "viewer") {
   console.log(`Unknown command: '${args[0]}'\n`)
   printUsage()
   process.exit(1)
+}
+
+/** Viewer-specific usage. */
+function printViewerUsage(): void {
+  console.log(`Usage: toon-memory viewer [options]
+Options:
+  --export               Save a static HTML viewer to .toon-memory/viewer/index.html
+  --port <n>             Port to serve on (default: 3000, or $PORT)
+  -h, --help             Show this help
+
+Press 'r' in the terminal while serving to reload the graph.`)
 }
 
 /** Minimal usage string for unknown commands. */
