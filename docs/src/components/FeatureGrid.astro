@@ -16,6 +16,18 @@ const c = getContent(lang);
         <div class="card-icon"><Icon emoji={f.icon} /></div>
         <h3>{f.title}</h3>
         <p>{f.body}</p>
+        {f.toolGroups && (
+          <div class="card-tools">
+            {f.toolGroups.map((g) => (
+              <div class="tool-group">
+                <span class="tool-group-label">{g.label}</span>
+                <div class="tool-chips">
+                  {g.tools.map((t) => <code class="tool-chip">{t}</code>)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         {f.tags && (
           <div class="card-tags">
             {f.tags.map((t) => <span class="tag">{t}</span>)}

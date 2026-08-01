@@ -14,7 +14,7 @@
  * without mutating the stored `.toon` file.
  */
 
-import { normalize, isExpiredLocal, tokenize, importance } from "./utils"
+import { normalize, isExpiredLocal, tokenize, importance, parseToonLine } from "./utils"
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
 
@@ -40,7 +40,7 @@ export interface GraphEntry {
 	origin: "human" | "agent" | "inferred"
 	/** Lifecycle status. Obsolete/draft entries are filtered from normal recalls. */
 	status: "active" | "obsolete" | "resolved" | "draft"
-	/** ISO date when this entry was superseded (set by memory_supersede). Empty if never superseded. */
+	/** ISO date when this entry was superseded (set by memory_forget action=supersede). Empty if never superseded. */
 	supersededOn: string
 }
 
@@ -101,7 +101,7 @@ const entryLines = (data: string): string[] =>
 export function parseEntries(data: string): GraphEntry[] {
 	const out: GraphEntry[] = []
 	for (const line of entryLines(data)) {
-		const parts = line.trim().split("|")
+		const parts = parseToonLine(line)
 		if (parts.length < 7) continue
 		const [id, category, key, content, file, tags, date, ttl, accessedRaw, linksRaw] =
 			parts
@@ -133,9 +133,26 @@ export function parseEntries(data: string): GraphEntry[] {
 	return out
 }
 
+/** Similarity used to attach orphans: shared tags dominate, then shared key
+ * tokens, then shared content tokens. Deterministic (tie-break by key). */
+function orphanScore(a: GraphEntry, b: GraphEntry): number {
+	const aTags = new Set(a.tags)
+	let sharedTags = 0
+	for (const t of b.tags) if (aTags.has(t)) sharedTags++
+	const aKey = new Set(tokenize(a.key))
+	const bKey = new Set(tokenize(b.key))
+	let sharedKey = 0
+	for (const t of bKey) if (aKey.has(t)) sharedKey++
+	const aTok = new Set(tokenize(a.content))
+	let sharedContent = 0
+	for (const t of tokenize(b.content)) if (aTok.has(t)) sharedContent++
+	return sharedTags * 4 + sharedKey * 2 + sharedContent
+}
+
 /**
  * Build the adjacency graph from explicit links and implicit `[[key]]` refs.
- * Edges are undirected and only connect keys that actually exist.
+ * Edges are undirected and only connect keys that actually exist. Nodes with
+ * zero edges are linked to their most similar entry so every node connects.
  */
 export function buildGraph(entries: GraphEntry[]): MemoryGraph {
 	const byKey = new Map<string, GraphEntry>()
@@ -177,7 +194,81 @@ export function buildGraph(entries: GraphEntry[]): MemoryGraph {
 
 	const adjacency = new Map<string, string[]>()
 	for (const [k, v] of adj) adjacency.set(k, [...v])
+
+	// Guarantee connectivity: every entry gets at least one edge. Orphans are
+	// attached to their most similar entry so nothing floats alone in the graph.
+	const allKeys = [...byKey.keys()]
+	for (const key of allKeys) {
+		if (adj.has(key)) continue
+		let best = ""
+		let bestScore = -1
+		for (const other of allKeys) {
+			if (other === key) continue
+			const score = orphanScore(byKey.get(key)!, byKey.get(other)!)
+			if (best === "" || score > bestScore || (score === bestScore && other < best)) {
+				bestScore = score
+				best = other
+			}
+		}
+		if (best) link(key, best)
+	}
+	for (const [k, v] of adj) adjacency.set(k, [...v])
+
+	// Bridge any remaining islands into the largest component so the graph is
+	// one connected whole, not several self-connected clusters.
+	const comps = connectedComponents(adjacency)
+	if (comps.length > 1) {
+		let largest = comps[0]
+		for (const c of comps) if (c.length > largest.length) largest = c
+		const largestSet = new Set(largest)
+		for (const comp of comps) {
+			if (comp.length === largest.length && comp[0] === largest[0]) continue
+			let bestA = ""
+			let bestB = ""
+			let bestScore = -1
+			for (const a of comp) {
+				const ea = byKey.get(a)!
+				for (const b of largest) {
+					const score = orphanScore(ea, byKey.get(b)!)
+					if (
+						bestA === "" ||
+						score > bestScore ||
+						(score === bestScore && a + b < bestA + bestB)
+					) {
+						bestScore = score
+						bestA = a
+						bestB = b
+					}
+				}
+			}
+			if (bestA) link(bestA, bestB)
+		}
+		for (const [k, v] of adj) adjacency.set(k, [...v])
+	}
 	return { adjacency, byKey }
+}
+
+function connectedComponents(adjacency: Map<string, string[]>): string[][] {
+	const comps: string[][] = []
+	const seen = new Set<string>()
+	for (const [start] of adjacency) {
+		if (seen.has(start)) continue
+		const comp: string[] = []
+		const stack = [start]
+		seen.add(start)
+		while (stack.length) {
+			const cur = stack.pop()!
+			comp.push(cur)
+			for (const next of adjacency.get(cur) || []) {
+				if (!seen.has(next)) {
+					seen.add(next)
+					stack.push(next)
+				}
+			}
+		}
+		comps.push(comp)
+	}
+	return comps
 }
 
 export interface GraphRecallOpts {

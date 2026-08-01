@@ -63,7 +63,7 @@ Lee [Cómo toon-memory Hace tu Agente de IA más Inteligente](https://luiggival0
 
 ## Características
 
-- **29 herramientas MCP** — Gestión completa de memoria vía Model Context Protocol, incluyendo `memory_smart_recall` (recall unificado), `memory_sessions` para coordinación multi-sesión, herramientas `context_*` para generación de contexto en una sola llamada, `memory_compress` (compresión con LLM), `memory_compress_all` (compresión por lotes), `memory_primer` (contexto auto-inyectado), `memory_merge_sessions` (fusión multi-sesión), y `memory_export_gist`/`memory_import_gist` (sincronización con GitHub Gist)
+- **35 herramientas MCP** — Gestión completa de memoria vía Model Context Protocol, incluyendo `memory_smart_recall` (recall unificado), `memory_sessions` para coordinación multi-sesión, herramientas `context_*` para generación de contexto en una sola llamada, `memory_compress` (compresión con LLM), `memory_consolidate` (deduplicación y limpieza deterministas), `memory_primer` (contexto auto-inyectado), `memory_merge_sessions` (fusión multi-sesión), y `memory_export_gist`/`memory_import_gist` (sincronización con GitHub Gist)
 - **Recursos MCP** — Lee memoria como contexto sin invocaciones de herramientas, incluyendo un System Primer (mapa de conocimiento auto-generado)
 - **15 agentes soportados** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Instalador interactivo** — Selecciona qué agentes configurar desde un menú
@@ -89,7 +89,7 @@ Lee [Cómo toon-memory Hace tu Agente de IA más Inteligente](https://luiggival0
 - **Near-duplicate detection** — La consolidación detecta entradas casi-duplicadas vía similitud Jaccard (umbral 0.7) y las fusiona
 - **Merge-dedup** — Guardar con la misma `key` fusiona atributos (unión de tags, máxima confianza, fecha más reciente, links combinados) en lugar de sobrescribir
 - **Puntaje de confianza** — Cada entrada rastrea confiabilidad: declarada por usuario = 1.0, inferida = 0.65–0.75
-- **Compresión con LLM** — `memory_compress` usa IA para resumir entradas largas; `memory_compress_all` hace compresión por lotes de forma determinista
+- **Compresión con LLM** — `memory_compress` usa IA para resumir entradas largas; `memory_consolidate(mode: "low-quality")` hace limpieza por lotes de forma determinista
 - **Fusión multi-sesión** — `memory_merge_sessions` fusiona observaciones entre sesiones paralelas para un archivo
 - **Sincronización con GitHub Gist** — `memory_export_gist` y `memory_import_gist` sincronizan entradas de memoria vía GitHub Gist (sin dependencias externas)
 - **Modo verbatim** — `config.verbatim` preserva las entradas originales en lugar de sobrescribir al guardar
@@ -172,7 +172,7 @@ memory_remember   # Guarda decisiones importantes
 | `memory_remember` | Guarda una decisión, patrón, bug o conocimiento (TTL opcional, inferencia automática de tags, `links` para construir el grafo de memoria, merge-dedup en la misma key, puntaje de calidad y confianza automáticos) |
 | `memory_recall` | Busca memoria (usa ANTES de leer archivos, filtra TTL expirados). `mode: "graph"` expande un subgrafo consciente de relaciones para mayor precisión. `compact: true` devuelve un formato eficiente en tokens indexado numéricamente. `sessionBias` potencia entradas de la rama git actual. Ranking ponderado por calidad |
 | `memory_smart_recall` | **Recall unificado**: BM25 + grafo + decaimiento + calidad en una sola llamada. Usa al INICIO de cada tarea. Devuelve salida compacta eficiente en tokens. `sessionBias` potencia entradas de la rama git actual |
-| `memory_forget` | Elimina una entrada por key o id |
+| `memory_forget` | **Operaciones de ciclo de vida** por key o id: `action: "soft"` (por defecto) marca obsoleta, `"hard"` elimina permanentemente, `"restore"` la devuelve a activa, `"supersede"` la retira con enlace `superseded_by` a `new_key` |
 | `memory_stats` | Ve el estado de la memoria (incluyendo estadísticas de TTL, distribución de calidad, y memorias frías por debajo de umbrales) |
 | `memory_summary` | Guarda/obtiene resúmenes de archivos |
 | `memory_archive` | Archiva entradas antiguas (>30 días) y entradas con TTL expirado |
@@ -183,15 +183,13 @@ memory_remember   # Guarda decisiones importantes
 | `memory_backup` | Crea backup con marca de tiempo del archivo de memoria (auto-poda a 10 más recientes) |
 | `memory_captured` | Lista actividad auto-capturada por hooks (opt-in) o limpia el registro |
 | `memory_checkpoint` | **Punto de control**: crea una instantánea del estado actual de memoria con TTL de 7d. Útil para referencia de restauración durante sesiones largas |
-| `memory_consolidate` | Fusiona-deduplica entradas: entradas con la misma key se fusionan (unión de tags, máxima confianza, fecha más reciente), luego se eliminan duplicados de contenido exacto (determinístico, sin LLM) |
+| `memory_consolidate` | **Operaciones de limpieza** determinísticas (sin LLM): `mode: "identical"` (por defecto) deduplica entradas de contenido idéntico, `"similar"` fusiona casi-duplicados (Jaccard >50%), `"low-quality"` elimina en lote entradas de baja calidad (`minQuality`, `dryRun`) |
 | `memory_sessions` | Muestra sesiones activas de agentes (rama, archivos, última vez visto) y conflictos suaves para trabajo paralelo |
 | `memory_compress` | Compresión con LLM en dos pasos: resumir + sobrescribir. Usa `anthropic`/`openai` CLI si están disponibles, sino devuelve prompt para compresión manual |
-| `memory_compress_all` | Compresión por lotes: sobrescribe todas las entradas bajo 100 tokens con una versión comprimida. Determinístico, sin LLM |
 | `memory_primer` | Contexto en una llamada: memorias principales + categorías + cambios de archivos de sesión. Auto-inyectado al inicio de sesión |
 | `memory_merge_sessions` | Fusiona observaciones entre sesiones paralelas para un archivo. Deduplica y opcionalmente auto-promueve a memoria |
 | `memory_export_gist` | Exporta entradas de memoria a un GitHub Gist (público o privado). Usa `GITHUB_TOKEN` o `gh` CLI para autenticación |
 | `memory_import_gist` | Importa entradas desde un GitHub Gist. Fusiona con entradas existentes (unión de tags, máxima confianza) |
-| `memory_merge_similar` | Encontrar entries con >50% similitud de palabras (Jaccard) y mergearlas determinísticamente. `dryRun: true` muestra una vista previa detallada de fusión |
 | `memory_graph_path` | Camino BFS más corto entre dos entries en el knowledge graph |
 | `context_brief` | **Briefing de contexto en una llamada**: memoria + sesiones + salud en markdown compacto. Usa en lugar de 5-6 llamadas manuales de memory_*. Cero LLM, agregación puramente determinística |
 | `context_generate` | **Briefing completo del proyecto**: combina estructura del proyecto, estado de git, entradas de memoria y sesiones activas en una llamada. Reemplaza 5-6 llamadas manuales de herramientas |
@@ -1174,7 +1172,7 @@ toon-memory/
 │   │   ├── setup.ts             # Comandos CLI
 │   │   └── toon-memory.ts       # Ejecutor CLI
 │   ├── mcp/
-│   │   └── server.ts            # Servidor MCP (29 herramientas + 3 recursos)
+│   │   └── server.ts            # Servidor MCP (35 herramientas + 4 recursos)
 │   ├── lib/
 │   │   ├── lock.ts              # Lock de archivo Advisory + escritura atómica
 │   │   ├── sessions.ts          # Coordinación multi-sesión

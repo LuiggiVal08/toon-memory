@@ -1,6 +1,6 @@
 ---
 title: "37 Ferramentas MCP para Memória Persistente de IA"
-description: "40 ferramentas MCP para memória persistente de agentes IA — memory_remember, memory_recall, memory_smart_recall, context_generate e mais. Recall eficiente em tokens e baseado em grafo para Claude, Cursor, OpenCode."
+description: "35 ferramentas MCP para memória persistente de agentes IA — memory_remember, memory_recall, memory_smart_recall, context_generate e mais. Recall eficiente em tokens e baseado em grafo para Claude, Cursor, OpenCode."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## Visão Geral
 
-O toon-memory fornece 40 ferramentas MCP e 4 recursos MCP para gerenciar memória persistente:
+O toon-memory fornece 35 ferramentas MCP e 4 recursos MCP para gerenciar memória persistente:
 
 ## Ferramentas
 
@@ -42,10 +42,7 @@ O toon-memory fornece 40 ferramentas MCP e 4 recursos MCP para gerenciar memóri
 | `memory_unpin` | **Unpin an entry**: remove the pinned flag |
 | `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
 | `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
-| `memory_resolve` | **Restaurar entrada**: restaura uma entrada com soft-delete (obsolete) para o estado ativo |
-| `memory_suppress` | **Ocultar entrada**: esconde uma entrada dos resultados de recall sem deletá-la (status=suppressed) |
 | `memory_reflect` | **Reflexão de memória**: classifica entradas de forma determinística por obsolescência, qualidade e sobre-conexão para revelar o que precisa de atenção ou limpeza. Zero LLM |
-| `memory_supersede` | **Substituir entrada**: marca como substituída por uma mais nova (`status=obsolete`, links `superseded_by`/`supersedes`, data `supersededOn`). Entradas antigas reaparecem apenas em consultas `as_of` anteriores à substituição |
 | `memory_promote` | **Auto-promover rascunhos**: promove entradas de baixa confiança para ativas de forma determinística (limiar 0.65, dedup Jaccard > 0.5, `dryRun` por padrão) |
 
 ## Recursos MCP

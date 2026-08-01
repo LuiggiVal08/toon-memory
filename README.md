@@ -65,7 +65,7 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 
 ## Features
 
-- **40 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall with session bias), `memory_sessions` for multi-session coordination, `context_*` tools for one-call context generation (briefing, diff, focus, health audit, export), `memory_compress` (LLM-powered compression), `memory_compress_all` (batch compression), `memory_primer` (auto-injected context), `memory_merge_sessions` (cross-session merge), `memory_pin`/`memory_unpin` (pin important entries with priority 1-5), `memory_checkpoint` (session snapshot with 7d TTL), `memory_search` (unified search with tag filters + session bias), `memory_tag` (batch tag operations), `memory_export_gist`/`memory_import_gist` (GitHub Gist sync), `memory_resolve` (restore soft-deleted entries), `memory_suppress` (mark entries as obsolete), `memory_reflect` (staleness/quality reflection), `memory_supersede` (replace an entry with a newer one, with `as_of` point-in-time recall), and `memory_promote` (auto-promote low-confidence drafts)
+- **35 MCP tools** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall with session bias), `memory_sessions` for multi-session coordination, `context_*` tools for one-call context generation (briefing, diff, focus, health audit, export), `memory_compress` (LLM-powered compression), `memory_consolidate` (deterministic dedup/merge/cleanup), `memory_primer` (auto-injected context), `memory_merge_sessions` (cross-session merge), `memory_pin`/`memory_unpin` (pin important entries with priority 1-5), `memory_checkpoint` (session snapshot with 7d TTL), `memory_search` (unified search with tag filters + session bias), `memory_tag` (batch tag operations), `memory_export_gist`/`memory_import_gist` (GitHub Gist sync), `memory_forget` (soft/hard delete, restore, supersede), `memory_reflect` (staleness/quality reflection), and `memory_promote` (auto-promote low-confidence drafts)
 - **MCP Resources** — Read memory as context without tool invocations, including a System Primer (auto-generated knowledge map)
 - **15 agents supported** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Interactive installer** — Select which agents to configure from a menu
@@ -91,7 +91,7 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 - **Merge-dedup** — Saving with the same `key` merges attributes (union of tags, max confidence, latest date, combined links) instead of overwriting
 - **Near-duplicate detection** — Consolidation detects near-duplicates via Jaccard similarity (threshold 0.7) and merges them
 - **Confidence score** — Each entry tracks reliability: user-asserted = 1.0, inferred = 0.65–0.75
-- **LLM-powered compression** — `memory_compress` uses AI to summarize long entries; `memory_compress_all` does batch compression deterministically
+- **LLM-powered compression** — `memory_compress` uses AI to summarize long entries; `memory_consolidate(mode: "low-quality")` does batch cleanup deterministically
 - **Cross-session merge** — `memory_merge_sessions` merges observations across parallel sessions for a file
 - **GitHub Gist sync** — `memory_export_gist` and `memory_import_gist` sync memory entries via GitHub Gist (zero dependencies)
 - **Verbatim mode** — `config.verbatim` preserves original entries instead of overwriting on save
@@ -100,12 +100,12 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 - **Path Scoping** — Entries can be scoped to file paths via glob patterns (`path_scope`); recall filters by scope automatically
 - **Budget Control** — Three output levels: `budget: "tiny"` (key+1 line, ~50 tokens), `"normal"` (compact with tags/edges), `"deep"` (all fields with origin/scope/status). Backward compatible with `compact: true`
 - **Origin Tracking** — Each entry tracks its origin (`human`, `agent`, `inferred`); human assertions get a quality boost
-- **Soft Delete** — `memory_forget` soft-deletes by default (sets `status=obsolete`). Use `memory_resolve` to restore, `memory_suppress` to hide. Permanent deletion via `hard: true`
+- **Soft Delete** — `memory_forget` soft-deletes by default (sets `status=obsolete`). Restore with `memory_forget(key, action: "restore")`, hide with `action: "soft"`, permanent removal via `action: "hard"`
 - **Enhanced Health Audit** — `context_health` now detects missing-evidence (path_scope without file) and stale-claims (overlapping content in same category)
 - **Typed graph edges** — Edges carry types (`superseded_by`, `supersedes`, `relates`), written as `type:key` in the graph. Explicit `links` become `relates:key`, so you can tell *how* entries are related, not just that they are
 - **RRF ranking** — Recall fuses BM25 (×3) and graph-centrality ranks with Reciprocal Rank Fusion and an adaptive `k = clamp(3..60, round(sqrt(n)))`. Benchmark (8 gold queries): nDCG 0.776, MRR 0.917 — exact parity with the previous linear scoring. Pass `rrf: false` to fall back
 - **Memory reflect** — `memory_reflect` ranks entries by staleness, quality, and over-connection to surface what needs attention or cleanup. Deterministic, zero LLM
-- **Memory supersede** — `memory_supersede` marks an entry as replaced by a newer one (`superseded_by` link + `supersededOn` date). `memory_recall({ as_of })` re-includes old entries for point-in-time queries before their supersession
+- **Memory supersede** — `memory_forget(key, action: "supersede", new_key)` marks an entry as replaced by a newer one (`superseded_by` link + `supersededOn` date). `memory_recall({ as_of })` re-includes old entries for point-in-time queries before their supersession
 - **Auto-promote** — `memory_promote` promotes low-confidence drafts to active entries deterministically (threshold 0.65, Jaccard dedup), with `dryRun` by default
 
 ---
@@ -231,7 +231,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 | `memory_remember` | Save a decision, pattern, bug, or knowledge (optional TTL, auto-tag inference, `links` to build the memory graph, merge-dedup on same key, auto quality score and confidence) |
 | `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. `budget: "tiny"|"normal"|"deep"` controls output verbosity (backward compat with `compact: true`). `path_scope` filters by glob pattern. `sessionBias` boosts entries from the current git branch. Quality-weighted ranking |
 | `memory_smart_recall` | **Unified recall**: BM25 + graph + decay + quality in one call. `sessionBias` boosts entries from the current git branch. Use at the START of every task. Returns compact, token-efficient output |
-| `memory_forget` | Remove an entry by key or id. Soft-deletes by default (sets `status=obsolete`); use `hard: true` for permanent removal. Restore with `memory_resolve` |
+| `memory_forget` | **Lifecycle ops** by key or id: `action: "soft"` (default) marks obsolete, `"hard"` permanently removes, `"restore"` brings back to active, `"supersede"` retires it with a `superseded_by` link to `new_key` |
 | `memory_stats` | View memory state (including TTL stats, quality distribution, origin/status breakdown, and cold memories below quality/access thresholds) |
 | `memory_summary` | Save/retrieve file summaries |
 | `memory_archive` | Archive old entries (>30 days) and expired TTL entries |
@@ -242,15 +242,13 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 | `memory_backup` | Create timestamped backup of memory file (auto-prunes to 10 most recent) |
 | `memory_captured` | List activity auto-captured by hooks (opt-in) or clear the log |
 | `memory_checkpoint` | **Session checkpoint**: creates a snapshot of current memory state with 7d TTL. Useful for rollback reference during long sessions |
-| `memory_consolidate` | Merge-dedup entries: same-key entries are merged (tags union, max confidence, latest date), then exact-content duplicates removed (deterministic, no LLM) |
+| `memory_consolidate` | **Cleanup ops**, deterministic (no LLM): `mode: "identical"` (default) dedupes identical-content entries, `"similar"` merges near-duplicates (Jaccard >50%), `"low-quality"` batch-removes low-quality entries (`minQuality`, `dryRun`) |
 | `memory_sessions` | Show active agent sessions (branch, files, last-seen) and soft conflicts for parallel work |
 | `memory_compress` | LLM-powered two-step compression: summarize + overwrite. Uses `anthropic`/`openai` CLI if available, otherwise returns prompt for manual compression |
-| `memory_compress_all` | Batch compression: overwrites all entries under 100 tokens with a compressed version. Deterministic, no LLM |
 | `memory_primer` | One-call context primer: top memories + categories + session file changes. Auto-injected at session start |
 | `memory_merge_sessions` | Merge observations across parallel sessions for a file. Deduplicates and optionally auto-promotes to memory |
 | `memory_export_gist` | Export memory entries to a GitHub Gist (public or private). Uses `GITHUB_TOKEN` or `gh` CLI |
 | `memory_import_gist` | Import entries from a GitHub Gist. Merges with existing entries (union of tags, max confidence) |
-| `memory_merge_similar` | Find entries with >50% word similarity (Jaccard) and merge them deterministically. `dryRun: true` shows a detailed merge preview (what merges, what stays). No LLM needed |
 | `memory_graph_path` | BFS shortest path between two entries in the knowledge graph. Shows how concepts are connected |
 | `context_brief` | **One-call context briefing**: memory + sessions + health in compact markdown. Use instead of 5-6 separate memory_* calls. Zero LLM, pure deterministic aggregation |
 | `context_generate` | **Full project briefing**: combines project structure, git state, memory entries, and active sessions in one call. Replaces 5-6 manual tool calls |
@@ -260,8 +258,6 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 | `context_export` | **Export memory as markdown**: injectable context for system prompts (full or compact) |
 | `memory_pin` | **Pin an entry with priority 1-5**: pinned entries always appear first in recall results sorted by priority, even without a keyword match |
 | `memory_unpin` | **Unpin an entry**: remove the priority flag |
-| `memory_resolve` | **Restore a soft-deleted entry**: sets `status=active`. Reverses `memory_forget` or `memory_suppress` |
-| `memory_suppress` | **Hide an entry**: marks as `status=obsolete`, filtered from normal recalls. Restore with `memory_resolve` |
 | `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match. `budget` controls output verbosity. `path_scope` filters by glob pattern. `sessionBias` boosts entries from the current git branch |
 | `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
 
@@ -1313,8 +1309,8 @@ toon-memory/
 │   │   ├── setup.ts             # CLI commands
 │   │   └── toon-memory.ts       # CLI runner
 │   ├── mcp/
-│   │   ├── server.ts            # MCP server (40 tools + 4 resources + 1 prompt)
-│   │   ├── tools.ts             # Tool registration (40 tools)
+│   │   ├── server.ts            # MCP server (35 tools + 4 resources + 1 prompt)
+│   │   ├── tools.ts             # Tool registration (35 tools)
 │   │   ├── resources.ts         # Resource registration (4 resources)
 │   │   ├── prompts.ts           # Prompt registration (1 prompt)
 │   │   ├── session-store.ts     # Session layer (auto-promote, cleanup)

@@ -18,7 +18,7 @@ import {
 	rrfK,
 	type GraphEntry,
 } from "./graph"
-import { normalize, isExpiredLocal, tokenize, importance, isPrivate } from "./utils"
+import { normalize, isExpiredLocal, tokenize, importance, isPrivate, parseToonLine, toToonLine } from "./utils"
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
 
@@ -109,8 +109,8 @@ export function qualityScore(
  * quality. Returns the merged TOON entry line.
  */
 export function mergeEntries(existingLine: string, newLine: string): string {
-	const ep = existingLine.trim().split("|")
-	const np = newLine.trim().split("|")
+	const ep = parseToonLine(existingLine)
+	const np = parseToonLine(newLine)
 	if (ep.length < 7 || np.length < 7) return newLine
 
 	const id = ep[0]
@@ -178,7 +178,7 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 	// Preserve superseded_on (field 17) from the existing entry.
 	const existingSupersededOn = ep.length > 17 ? ep[17] || "" : ""
 
-	return `${id}|${category}|${key}|${content}|${file}|${mergedTags}|${date}|${ttl}|${accessed}|${mergedLinks}|${quality.toFixed(2)}|${confidence}|${lastAccessed}|${priority}|${path_scope}|${origin}|${status}|${existingSupersededOn}`
+	return toToonLine([id, category, key, content, file, mergedTags, date, ttl, String(accessed), mergedLinks, quality.toFixed(2), String(confidence), lastAccessed, String(priority), path_scope, origin, status, existingSupersededOn])
 }
 
 /**

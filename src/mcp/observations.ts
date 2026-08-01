@@ -1,5 +1,6 @@
 import { readFileSync, existsSync, writeFileSync } from "fs"
 import { OBSERVATIONS_FILE } from "./config"
+import { parseToonLine } from "../lib/utils"
 
 /** Maximum observations to keep in the log file */
 const MAX_OBSERVATIONS = 500
@@ -13,7 +14,7 @@ export function readObservations(): Array<{ ts: string; session: string; agent: 
     .split("\n")
     .filter((l) => l.startsWith("  ") && l.includes("|"))
     .map((l) => {
-      const p = l.trim().split("|")
+      const p = parseToonLine(l)
       return { ts: p[0] || "", session: p[1] || "", agent: p[2] || "", branch: p[3] || "", tool: p[4] || "", file: p[6] || "", summary: p[7] || "" }
     })
 }

@@ -1,6 +1,6 @@
 // Compress-all benchmark: measures token savings of batch compression.
 //
-// Simulates what memory_compress_all does:
+// Simulates what memory_consolidate(mode: "low-quality") does:
 //   1. Creates a corpus of 30 TOON-format entries (mix of quality)
 //   2. Identifies low-quality candidates (quality < 0.3, no tags, short)
 //   3. Removes candidates

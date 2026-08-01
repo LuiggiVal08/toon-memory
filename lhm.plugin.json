@@ -27,7 +27,7 @@
     },
     {
       "name": "memory_forget",
-      "description": "Delete a memory entry by its key or id."
+      "description": "Lifecycle operations by key or id: action 'soft' (default) marks obsolete, 'hard' permanently removes, 'restore' brings back to active, 'supersede' retires it with a superseded_by link to new_key."
     },
     {
       "name": "memory_stats",
@@ -67,7 +67,7 @@
     },
     {
       "name": "memory_consolidate",
-      "description": "Consolidate memory by removing entries with identical content. Deterministic, no LLM."
+      "description": "Cleanup operations, deterministic (no LLM): mode 'identical' (default) dedupes identical-content entries, 'similar' merges near-duplicates (Jaccard >50%), 'low-quality' batch-removes low-quality entries (minQuality, dryRun)."
     },
     {
       "name": "memory_sessions",
@@ -110,10 +110,6 @@
       "description": "LLM-powered compression: select entries to compress into one concise entry. Two-step dance: tool provides context, agent provides intelligence."
     },
     {
-      "name": "memory_compress_all",
-      "description": "Compress all low-quality entries (no tags, low quality score) in one pass. Deterministic, no LLM."
-    },
-    {
       "name": "memory_export_gist",
       "description": "Export memory to a private GitHub Gist for cloud sync. Requires GITHUB_TOKEN env var."
     },
@@ -124,10 +120,6 @@
     {
       "name": "memory_merge_sessions",
       "description": "Merge observations from multiple sessions/branches into a consolidated view. Deduplicates and suggests entries to promote."
-    },
-    {
-      "name": "memory_merge_similar",
-      "description": "Find entries with overlapping content (>50% word similarity) and merge them. Deterministic, no LLM."
     },
     {
       "name": "memory_graph_path",

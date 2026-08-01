@@ -7,9 +7,29 @@ interface Props {
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 const b = c.benchmarks;
+const rankWhat = (b.ranking as unknown as { what?: string }).what;
 
 const jsonTokens = 1097;
 const toonTokens = 850;
+const formatBarPct = Math.round((toonTokens / jsonTokens) * 100);
+
+function splitNum(raw: string): { prefix: string; num: string; suffix: string } {
+	const m = raw.trim().match(/^([~≈]?)([\d.]+)([%x×]?)$/);
+	if (!m) return { prefix: '', num: raw, suffix: '' };
+	return { prefix: m[1], num: m[2], suffix: m[3] };
+}
+const fmt0 = splitNum(b.format.stats[0].num);
+const fmt1 = splitNum(b.format.stats[1].num);
+const fmt2 = splitNum(b.format.stats[2].num);
+
+type WfTile = { feature: string; num: string; cap: string; from?: string; to?: string; more?: string };
+const wfCards = (b.workflow as unknown as { cards?: WfTile[] }).cards;
+const wfTiles: WfTile[] = wfCards
+	? wfCards
+	: b.workflow.stats.map((s) => {
+			const m = s.cap.match(/^(.+?)\s*\(([^)]+)\)$/);
+			return { feature: m ? m[2] : b.tabs.workflow, num: s.num, cap: m ? m[1] : s.cap };
+	  });
 ---
 
 <section id="benchmarks" class="content-section benchmarks-section">
@@ -18,113 +38,103 @@ const toonTokens = 850;
 		<p>{b.subtitle}</p>
 	</div>
 
-	<div class="bench-tabs" role="tablist" aria-label={b.title}>
-		<button class="bench-tab is-active" data-tab="ranking" role="tab" aria-selected="true">{b.tabs.ranking}</button>
-		<button class="bench-tab" data-tab="workflow" role="tab" aria-selected="false">{b.tabs.workflow}</button>
-		<button class="bench-tab" data-tab="format" role="tab" aria-selected="false">{b.tabs.format}</button>
-	</div>
+	<p class="bench-lead">{b.workflow.subtitle}</p>
 
-	<div class="bench-panel is-active" data-panel="ranking" role="tabpanel">
-		<h3 class="bench-panel-title">{b.ranking.subtitle}</h3>
-		<table class="bench-table">
-			<thead>
-				<tr>
-					<th>{b.ranking.metricLabel}</th>
-					<th>{b.ranking.linear}</th>
-					<th>{b.ranking.rrf}</th>
-				</tr>
-			</thead>
-			<tbody>
-				{b.ranking.metricRows.map((r: { metric: string; linear: string; rrf: string }) => (
-					<tr>
-						<td class="bench-metric">{r.metric}</td>
-						<td>{r.linear}</td>
-						<td class="rrf-val">{r.rrf}</td>
-					</tr>
-				))}
-			</tbody>
-		</table>
-		<div class="bench-result">{b.ranking.result}</div>
-		<p class="savings-note" set:html={b.ranking.note}></p>
-	</div>
-
-	<div class="bench-panel" data-panel="workflow" role="tabpanel">
-		<h3 class="bench-panel-title">{b.workflow.subtitle}</h3>
-		<div class="savings-stats workflow-grid">
-			{
-				b.workflow.stats.map((s: { num: string; cap: string }) => (
-					<div class="savings-stat">
-						<span class="savings-num impact-num" data-count={s.num}>{s.num}</span>
-						<span class="savings-cap">{s.cap}</span>
+	<div class="bench-grid">
+		{
+			wfTiles.map((s) => {
+				const { prefix, num, suffix } = splitNum(s.num);
+				return (
+					<div class="metric-tile">
+						<span class="tile-kicker">{s.feature}</span>
+						<div class="tile-number">
+							{prefix && <span class="tile-prefix">{prefix}</span>}
+							<span class="tile-count" data-count={num}>{num}</span>
+							{suffix && <span class="tile-suffix">{suffix}</span>}
+						</div>
+						<h3 class="tile-title">{s.cap}</h3>
+						{s.from && s.to && (
+							<p class="tile-flow">
+								<span class="tile-before">{s.from}</span>
+								<span class="tile-arrow">→</span>
+								<span class="tile-after">{s.to}</span>
+							</p>
+						)}
+						{s.more && <p class="tile-more">{s.more}</p>}
 					</div>
-				))
-			}
-		</div>
-		<p class="savings-note" set:html={b.workflow.note}></p>
+				);
+			})
+		}
 	</div>
 
-	<div class="bench-panel" data-panel="format" role="tabpanel">
-		<h3 class="bench-panel-title">{b.format.subtitle}</h3>
-		<div class="savings-bars">
-			<div class="savings-bar">
-				<span class="savings-label">JSON</span>
-				<div class="bar-track">
-					<div class="bar bar-json" style={`--pct:100%`} data-pct={100}>
-						<span>{jsonTokens}</span>
-					</div>
-				</div>
+	<div class="bench-duo">
+		<div class="metric-tile highlight">
+			<span class="tile-kicker">{b.tabs.format}</span>
+			<p class="tile-subtitle">{b.format.subtitle}</p>
+			<div class="tile-number">
+				{fmt0.prefix && <span class="tile-prefix">{fmt0.prefix}</span>}
+				<span class="tile-count" data-count={fmt0.num}>{fmt0.num}</span>
+				{fmt0.suffix && <span class="tile-suffix">{fmt0.suffix}</span>}
 			</div>
-			<div class="savings-bar">
-				<span class="savings-label">TOON</span>
-				<div class="bar-track">
-					<div class="bar bar-toon" style={`--pct:${(toonTokens / jsonTokens) * 100}%`} data-pct={(toonTokens / jsonTokens) * 100}>
-						<span>{toonTokens}</span>
-					</div>
-				</div>
+			<h3 class="tile-title">{b.format.stats[0].cap}</h3>
+			<p class="tile-flow">
+				<span class="tile-before">JSON {jsonTokens}</span>
+				<span class="tile-arrow">→</span>
+				<span class="tile-after">TOON {toonTokens}</span>
+			</p>
+			<div class="tile-bar-track" aria-hidden="true">
+				<div class="bar tile-bar bar-toon" data-pct={formatBarPct} style={`--pct:${formatBarPct}%`}></div>
 			</div>
+			<div class="tile-chips">
+				<span class="tile-chip">
+					<span class="chip-num" data-count={fmt1.num}>{fmt1.num}</span>{fmt1.suffix} {b.format.stats[1].cap}
+				</span>
+				<span class="tile-chip">
+					<span class="chip-num" data-count={fmt2.num}>{fmt2.num}</span>{fmt2.suffix} {b.format.stats[2].cap}
+				</span>
+			</div>
+			<p class="tile-note" set:html={b.format.note}></p>
 		</div>
-		<div class="savings-stats format-stats">
-			{
-				b.format.stats.map((s: { num: string; cap: string }) => (
-					<div class="savings-stat">
-						<span class="savings-num" data-count={s.num}>{s.num}</span>
-						<span class="savings-cap">{s.cap}</span>
-					</div>
-				))
-			}
+
+		<div class="metric-tile ranking-tile">
+			<span class="tile-kicker">{b.tabs.ranking}</span>
+			{rankWhat && <h3 class="tile-title">{rankWhat}</h3>}
+			<p class="tile-subtitle">{b.ranking.subtitle}</p>
+			<div class="rank-rows">
+				{
+					b.ranking.metricRows.map((r: { metric: string; linear: string; rrf: string; gloss?: string }) => (
+						<>
+							<div class="rank-row">
+								<span class="rank-metric">{r.metric}</span>
+								<span class="rank-linear">{r.linear}</span>
+								<span class="rank-arrow">→</span>
+								<span class="rank-rrf">{r.rrf}</span>
+							</div>
+							{r.gloss && <p class="rank-gloss">{r.gloss}</p>}
+						</>
+					))
+				}
+			</div>
+			<span class="tile-result">{b.ranking.result}</span>
+			<p class="tile-note" set:html={b.ranking.note}></p>
 		</div>
-		<p class="savings-note" set:html={b.format.note}></p>
 	</div>
+
+	<p class="savings-note" set:html={b.workflow.note}></p>
 </section>
 
 <script>
-	import { animateCountsAndBars } from '../scripts/home-anim';
+	import { animateCountsAndBars, revealCards } from '../scripts/home-anim';
 	const root = document.querySelector<HTMLElement>('.benchmarks-section');
 	if (root) {
 		animateCountsAndBars(root);
-		root.querySelectorAll<HTMLButtonElement>('.bench-tab').forEach((tab) => {
-			tab.addEventListener('click', () => {
-				root.querySelectorAll('.bench-tab').forEach((t) => {
-					t.classList.remove('is-active');
-					t.setAttribute('aria-selected', 'false');
-				});
-				root.querySelectorAll('.bench-panel').forEach((p) => p.classList.remove('is-active'));
-				tab.classList.add('is-active');
-				tab.setAttribute('aria-selected', 'true');
-				const name = tab.dataset.tab;
-				const panel = root.querySelector<HTMLElement>(`.bench-panel[data-panel="${name}"]`);
-				if (panel) {
-					panel.classList.add('is-active');
-					animateCountsAndBars(panel);
-				}
-			});
-		});
+		revealCards(root, '.metric-tile');
 	}
 </script>
 
 <style>
 	.benchmarks-section {
-		margin-bottom: 3.5rem;
+		margin-bottom: 5rem;
 		padding: 2.5rem 2rem;
 		border-radius: 16px;
 		background: linear-gradient(135deg, var(--color-accent-brand-ghost-wash), var(--color-accent-lavender-ghost));
@@ -137,121 +147,197 @@ const toonTokens = 850;
 		background-clip: text;
 		-webkit-text-fill-color: transparent;
 	}
-	.bench-tabs {
-		display: flex;
-		gap: 0.5rem;
-		flex-wrap: wrap;
+	.bench-lead {
+		margin: 0 0 1.25rem;
+		font-size: 0.95rem;
+		color: var(--text-muted);
+	}
+	.bench-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 1rem;
 		margin-bottom: 1.5rem;
 	}
-	.bench-tab {
-		padding: 0.5rem 1.1rem;
-		border-radius: 999px;
-		border: 1px solid var(--color-accent-lavender-dim);
-		background: var(--color-accent-brand-ghost);
-		color: var(--text-muted);
-		font-size: 0.85rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.18s ease;
+	.bench-duo {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+		margin-bottom: 1.75rem;
 	}
-	.bench-tab:hover {
-		color: var(--text);
-		border-color: var(--color-accent-lavender);
+	.metric-tile {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 1.25rem 1.35rem;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 14px;
+		transition: border-color 0.25s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s;
 	}
-	.bench-tab.is-active {
-		background: var(--gradient);
-		color: #fff;
-		border-color: transparent;
+	.metric-tile:hover {
+		border-color: var(--brand);
+		transform: translateY(-3px);
+		box-shadow: 0 6px 24px -6px var(--brand-glow);
 	}
-	.bench-panel {
-		display: none;
+	.metric-tile.highlight {
+		border-color: var(--color-accent-lavender-dim);
+		background: linear-gradient(180deg, var(--color-accent-brand-ghost-wash), var(--bg-card));
 	}
-	.bench-panel.is-active {
-		display: block;
-		animation: benchFade 0.25s ease;
+	.metric-tile.pre-reveal {
+		opacity: 0;
+		transform: translateY(16px);
+		transition: opacity 0.6s ease, transform 0.6s ease;
 	}
-	@keyframes benchFade {
-		from {
-			opacity: 0;
-			transform: translateY(4px);
-		}
-		to {
-			opacity: 1;
-			transform: none;
-		}
+	.metric-tile.revealed {
+		opacity: 1;
+		transform: none;
 	}
-	.bench-panel-title {
-		font-size: 0.85rem;
-		font-weight: 600;
+	.tile-kicker {
+		font-size: 0.72rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
 		color: var(--color-lavender);
-		margin-bottom: 1rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
 	}
-	.bench-table {
-		width: 100%;
-		max-width: 420px;
-		border-collapse: collapse;
-		margin-bottom: 0.75rem;
-	}
-	.bench-table th {
-		font-size: 0.78rem;
-		font-weight: 600;
-		color: var(--text-muted);
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		text-align: left;
-		padding: 0.45rem 0.75rem;
-		border-bottom: 1px solid var(--color-accent-lavender-dim);
-	}
-	.bench-table td {
-		padding: 0.45rem 0.75rem;
-		font-size: 0.95rem;
-		color: var(--text);
-	}
-	.bench-table .bench-metric {
-		color: var(--text-muted);
-	}
-	.bench-table .rrf-val {
-		font-weight: 700;
-	}
-	.bench-result {
-		display: inline-block;
-		margin: 0.5rem 0 0.75rem;
-		padding: 0.4rem 0.9rem;
-		border-radius: 999px;
-		background: linear-gradient(135deg, var(--color-accent-success-subtle), var(--color-accent-brand-ghost-wash));
-		border: 1px solid var(--color-accent-success-border);
+	.tile-subtitle {
+		margin: 0;
 		font-size: 0.85rem;
-		font-weight: 700;
-		color: var(--text);
+		color: var(--text-muted);
+		line-height: 1.5;
 	}
-	.workflow-grid {
-		justify-content: flex-start;
-		flex-wrap: wrap;
-		margin-top: 0.25rem;
-	}
-	.workflow-grid .savings-stat {
-		min-width: 170px;
-		align-items: flex-start;
-		padding: 0.75rem 1rem;
-		border-radius: 12px;
-		background: var(--color-accent-brand-ghost);
-		border: 1px solid var(--color-accent-lavender-dim);
-	}
-	.impact-num {
-		font-size: 2rem;
+	.tile-number {
+		font-size: 2.3rem;
+		font-weight: 800;
+		line-height: 1.05;
 		background: var(--gradient);
 		-webkit-background-clip: text;
 		background-clip: text;
 		-webkit-text-fill-color: transparent;
 	}
-	.format-stats {
-		margin-top: 1.25rem;
+	.tile-title {
+		margin: 0;
+		font-size: 0.95rem;
+		font-weight: 600;
+		color: var(--text);
+	}
+	.tile-flow {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin: 0;
+		font-size: 0.9rem;
+		font-weight: 600;
+	}
+	.tile-more {
+		margin-top: auto;
+		padding-top: 0.5rem;
+		border-top: 1px solid var(--border);
+		font-size: 0.8rem;
+		color: var(--text-muted);
+	}
+	.tile-before {
+		color: var(--text-muted);
+		text-decoration: line-through;
+	}
+	.tile-arrow {
+		color: var(--color-lavender);
+	}
+	.tile-after {
+		color: var(--color-accent-success);
+	}
+	.tile-bar-track {
+		height: 8px;
+		border-radius: 9999px;
+		overflow: hidden;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		margin-top: auto;
+	}
+	.tile-bar {
+		padding-right: 0;
+		justify-content: flex-start;
+		font-size: 0;
+	}
+	.tile-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 0.25rem;
+	}
+	.tile-chip {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 0.2rem;
+		padding: 0.3rem 0.7rem;
+		border-radius: 999px;
+		background: var(--color-accent-brand-ghost);
+		border: 1px solid var(--color-accent-lavender-dim);
+		font-size: 0.78rem;
+		color: var(--text-muted);
+	}
+	.chip-num {
+		font-weight: 800;
+		background: var(--gradient);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+	.rank-rows {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		margin-top: 0.25rem;
+	}
+	.rank-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.95rem;
+	}
+	.rank-metric {
+		font-weight: 600;
+		color: var(--text-muted);
+		min-width: 3.5rem;
+	}
+	.rank-linear {
+		color: var(--text-muted);
+		text-decoration: line-through;
+	}
+	.rank-rrf {
+		font-weight: 700;
+		color: var(--text);
+	}
+	.rank-gloss {
+		margin: 0 0 0.5rem 3.5rem;
+		font-size: 0.78rem;
+		color: var(--text-muted);
+	}
+	.tile-result {
+		align-self: flex-start;
+		margin-top: 0.5rem;
+		padding: 0.35rem 0.8rem;
+		border-radius: 999px;
+		background: linear-gradient(135deg, var(--color-accent-success-subtle), var(--color-accent-brand-ghost-wash));
+		border: 1px solid var(--color-accent-success-border);
+		font-size: 0.8rem;
+		font-weight: 700;
+		color: var(--text);
+	}
+	.tile-note {
+		margin: 0.5rem 0 0;
+		font-size: 0.8rem;
+		color: var(--text-muted);
+		line-height: 1.55;
+	}
+	@media (max-width: 900px) {
+		.bench-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
 	}
 	@media (max-width: 768px) {
-		.workflow-grid .savings-stat {
-			min-width: 140px;
+		.bench-grid,
+		.bench-duo {
+			grid-template-columns: 1fr;
 		}
 	}
 </style>

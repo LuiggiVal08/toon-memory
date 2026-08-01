@@ -8,7 +8,7 @@ const OUT = join(__dirname, "..", "docs", "public", "viewer", "embed.html")
 
 function parseToon(path) {
   const text = readFileSync(path, "utf-8")
-  const lines = text.split("\n").filter(l => l.trim() && !l.startsWith("version:"))
+  const lines = text.split("\n").filter(l => /^  [0-9a-f]{8}\|/.test(l))
   const entries = []
   for (const line of lines) {
     if (line.startsWith("[")) continue // header
@@ -36,18 +36,42 @@ function parseToon(path) {
   return entries
 }
 
+function unescField(s) {
+  let out = ""
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i]
+    if (c === "\\" && i + 1 < s.length) {
+      const n = s[i + 1]
+      if (n === "n") { out += "\n"; i++ }
+      else if (n === "|") { out += "|"; i++ }
+      else if (n === "\\") { out += "\\"; i++ }
+      else out += c
+    } else out += c
+  }
+  return out
+}
+
 function splitToonLine(line) {
   const parts = []
   let buf = ""
+  let escaped = false
   for (let i = 0; i < line.length; i++) {
-    if (line[i] === "|") {
-      parts.push(buf)
+    const c = line[i]
+    if (escaped) {
+      buf += c
+      escaped = false
+    } else if (c === "\\") {
+      buf += c
+      escaped = true
+    } else if (c === "|") {
+      parts.push(unescField(buf))
       buf = ""
     } else {
-      buf += line[i]
+      buf += c
     }
   }
-  parts.push(buf)
+  if (escaped) buf += "\\"
+  parts.push(unescField(buf))
   return parts
 }
 
@@ -60,7 +84,7 @@ const entries = parseToon(DATA_TOON)
 console.log(`Read ${entries.length} entries from data.toon`)
 
 const demoNodes = entries.map(e => ({
-  id: e.id,
+  id: e.key,
   key: e.key,
   category: e.category,
   content: e.content,
@@ -74,27 +98,118 @@ const demoNodes = entries.map(e => ({
   lastAccessed: e.lastAccessed
 }))
 
+// Dedupe by key (entry id field is not guaranteed unique after imports).
+const byKey = new Map()
+for (const n of demoNodes) if (!byKey.has(n.key)) byKey.set(n.key, n)
+
 const edges = []
 const seen = new Set()
-for (const n of demoNodes) {
-  for (const link of n.links) {
-    if (demoNodes.some(d => d.id === link || d.key === link)) {
-      const target = demoNodes.find(d => d.id === link || d.key === link)
-      const targetId = target ? target.id : link
-      const pair = [n.id, targetId].sort().join("::")
-      if (!seen.has(pair)) { seen.add(pair); edges.push({ source: n.id, target: targetId }) }
+const adjMap = new Map()
+const link = (a, b) => {
+  if (a === b) return
+  if (!byKey.has(a) || !byKey.has(b)) return
+  const pair = [a, b].sort().join("::")
+  if (!seen.has(pair)) {
+    seen.add(pair)
+    edges.push({ source: a, target: b })
+    if (!adjMap.has(a)) adjMap.set(a, new Set())
+    if (!adjMap.has(b)) adjMap.set(b, new Set())
+    adjMap.get(a).add(b)
+    adjMap.get(b).add(a)
+  }
+}
+
+// Explicit links + implicit [[key]] refs + shared tags (mirrors src/lib/graph.ts).
+const nodes = [...byKey.values()]
+for (const n of nodes) {
+  for (const l of n.links) {
+    const target = l.split(":").pop()
+    if (byKey.has(target)) link(n.key, target)
+  }
+  const refs = n.content.match(/\[\[([\w-]+)\]\]/g) || []
+  for (const r of refs) link(n.key, r.slice(2, -2))
+}
+for (let i = 0; i < nodes.length; i++) {
+  const ni = nodes[i]
+  if (ni.tags.length === 0) continue
+  const ti = new Set(ni.tags)
+  for (let j = i + 1; j < nodes.length; j++) {
+    const nj = nodes[j]
+    if (nj.tags.length === 0) continue
+    let shared = 0
+    for (const t of nj.tags) if (ti.has(t)) shared++
+    if (shared >= 2) link(ni.key, nj.key)
+  }
+}
+
+// Orphan fallback: attach every isolated node to its most similar entry
+// (mirrors src/lib/graph.ts orphanScore) so nothing floats alone.
+const tokenize = (s) => s.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[-_]/g, " ").toLowerCase().split(/\s+/).filter(Boolean)
+const orphanScore = (a, b) => {
+  const ta = new Set(a.tags); let sharedTags = 0
+  for (const t of b.tags) if (ta.has(t)) sharedTags++
+  const ka = new Set(tokenize(a.key)); const kb = new Set(tokenize(b.key)); let sharedKey = 0
+  for (const t of kb) if (ka.has(t)) sharedKey++
+  const ca = new Set(tokenize(a.content)); let sharedContent = 0
+  for (const t of tokenize(b.content)) if (ca.has(t)) sharedContent++
+  return sharedTags * 4 + sharedKey * 2 + sharedContent
+}
+for (const n of nodes) {
+  if ((adjMap.get(n.key) || new Set()).size > 0) continue
+  let best = "", bestScore = -1
+  for (const o of nodes) {
+    if (o.key === n.key) continue
+    const score = orphanScore(n, o)
+    if (best === "" || score > bestScore || (score === bestScore && o.key < best)) { bestScore = score; best = o.key }
+  }
+  if (best) link(n.key, best)
+}
+
+// Bridge any remaining islands into the largest component (mirrors graph.ts).
+const components = () => {
+  const comps = []
+  const visited = new Set()
+  for (const [start] of adjMap) {
+    if (visited.has(start)) continue
+    const comp = []
+    const stack = [start]
+    visited.add(start)
+    while (stack.length) {
+      const cur = stack.pop()
+      comp.push(cur)
+      for (const next of adjMap.get(cur) || []) {
+        if (!visited.has(next)) { visited.add(next); stack.push(next) }
+      }
     }
+    comps.push(comp)
+  }
+  return comps
+}
+const comps = components()
+if (comps.length > 1) {
+  let largest = comps[0]
+  for (const c of comps) if (c.length > largest.length) largest = c
+  for (const comp of comps) {
+    if (comp.length === largest.length && comp[0] === largest[0]) continue
+    let bestA = "", bestB = "", bestScore = -1
+    for (const a of comp) {
+      for (const b of largest) {
+        const score = orphanScore(byKey.get(a), byKey.get(b))
+        if (bestA === "" || score > bestScore || (score === bestScore && a + b < bestA + bestB)) { bestScore = score; bestA = a; bestB = b }
+      }
+    }
+    if (bestA) link(bestA, bestB)
   }
 }
 
 const categories = {}
 const tagCounts = {}
-for (const n of demoNodes) {
+for (const n of nodes) {
   categories[n.category] = (categories[n.category] || 0) + 1
   for (const t of n.tags) tagCounts[t] = (tagCounts[t] || 0) + 1
 }
 
-const jsonData = JSON.stringify({ nodes: demoNodes, edges, categories, tagCounts, totalEntries: demoNodes.length })
+const jsonData = JSON.stringify({ nodes, edges, categories, tagCounts, totalEntries: nodes.length })
 
 const html = `<!DOCTYPE html>
 <html lang="en">
@@ -168,6 +283,9 @@ html,body{height:100%;font-family:system-ui,-apple-system,sans-serif;background:
 .empty-detail{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:0.9rem}
 .graph-legend{position:absolute;bottom:3.5rem;left:0.5rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;font-size:0.7rem;z-index:10}
 .legend-item{display:flex;align-items:center;gap:0.4rem;margin-bottom:0.25rem}.legend-dot{width:10px;height:10px;border-radius:50%}
+.minimap{width:150px;height:100px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.3);cursor:pointer;position:absolute;bottom:0.5rem;right:0.5rem;z-index:10}
+.minimap svg{width:100%;height:100%;display:block}
+.minimap-viewport{fill:rgba(167,139,250,0.15);stroke:var(--brand);stroke-width:1.5}
 .graph-controls{position:absolute;top:1rem;right:1rem;display:flex;gap:0.4rem;z-index:10}
 .graph-btn{width:32px;height:32px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all 0.15s}
 .graph-btn:hover{border-color:var(--brand);color:var(--brand)}
@@ -236,6 +354,7 @@ html,body{height:100%;font-family:system-ui,-apple-system,sans-serif;background:
         <div class="tab-panel active" id="panel-graph">
           <div class="graph-container" id="graphContainer">
             <div class="graph-legend" id="legend"></div>
+            <div class="minimap" id="minimap"><svg id="minimapSvg"></svg></div>
             <div class="graph-controls">
               <button class="graph-btn" id="zoomIn" title="Zoom in (+)">+</button>
               <button class="graph-btn" id="zoomOut" title="Zoom out (-)">−</button>
@@ -432,7 +551,7 @@ const graph = (function() {
   filter.append('feMerge').selectAll('feMergeNode').data(['blur', 'SourceGraphic']).join('feMergeNode').attr('in', d => d);
   const g = svg.append('g');
   let currentTransform = d3.zoomIdentity;
-  const zoom = d3.zoom().scaleExtent([0.1, 4]).on('zoom', e => { g.attr('transform', e.transform); currentTransform = e.transform; });
+  const zoom = d3.zoom().scaleExtent([0.1, 4]).on('zoom', e => { g.attr('transform', e.transform); currentTransform = e.transform; updateMinimap(); });
   svg.call(zoom);
   function nodeRadius(d) { return 4 + Math.min((d.accessCount || 0) * 0.6, 10); }
   const connectionCount = new Map();
@@ -478,6 +597,49 @@ const graph = (function() {
   simulation.on('tick', () => {
     link.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
     node.attr('cx', d => d.x).attr('cy', d => d.y); label.attr('x', d => d.x).attr('y', d => d.y);
+    updateMinimap();
+  });
+  const minimapSvg = d3.select('#minimapSvg');
+  const minimapScale = 0.1;
+  const minimapW = 150, minimapH = 100;
+  const minimapG = minimapSvg.append('g');
+  minimapG.append('g').attr('class', 'minimap-links');
+  minimapG.append('g').attr('class', 'minimap-nodes');
+  const minimapViewport = minimapSvg.append('rect').attr('class', 'minimap-viewport').attr('fill', 'rgba(167,139,250,0.12)').attr('stroke', 'var(--brand)').attr('stroke-width', 1.5).attr('rx', 3);
+  function getGraphBounds() {
+    const allX = DATA.nodes.map(n => n.x || 0);
+    const allY = DATA.nodes.map(n => n.y || 0);
+    return { minX: Math.min(...allX) - 20, minY: Math.min(...allY) - 20, maxX: Math.max(...allX) + 20, maxY: Math.max(...allY) + 20 };
+  }
+  function updateMinimap() {
+    const { minX, minY } = getGraphBounds();
+    minimapG.attr('transform', 'translate(' + (-minX * minimapScale) + ',' + (-minY * minimapScale) + ')');
+    minimapG.select('.minimap-links').selectAll('line').data(DATA.edges).join('line')
+      .attr('x1', d => (d.source.x || 0) * minimapScale)
+      .attr('y1', d => (d.source.y || 0) * minimapScale)
+      .attr('x2', d => (d.target.x || 0) * minimapScale)
+      .attr('y2', d => (d.target.y || 0) * minimapScale)
+      .attr('stroke', 'var(--border)').attr('stroke-width', 0.5).attr('stroke-opacity', 0.3);
+    minimapG.select('.minimap-nodes').selectAll('circle').data(DATA.nodes).join('circle')
+      .attr('cx', d => (d.x || 0) * minimapScale).attr('cy', d => (d.y || 0) * minimapScale)
+      .attr('r', 1.8).attr('fill', d => COLORS[d.category] || '#888').attr('stroke', 'none');
+    const t = currentTransform;
+    const containerW = container.clientWidth;
+    const containerH = container.clientHeight;
+    const vpX = (-t.x / t.k - minX) * minimapScale;
+    const vpY = (-t.y / t.k - minY) * minimapScale;
+    const vpW = (containerW / t.k) * minimapScale;
+    const vpH = (containerH / t.k) * minimapScale;
+    minimapViewport.attr('x', Math.max(0, vpX)).attr('y', Math.max(0, vpY))
+      .attr('width', Math.min(vpW, minimapW)).attr('height', Math.min(vpH, minimapH));
+  }
+  minimapSvg.on('click', (e) => {
+    const { minX, minY } = getGraphBounds();
+    const rect = minimapSvg.node().getBoundingClientRect();
+    const mmx = (e.clientX - rect.left) / minimapScale + minX;
+    const mmy = (e.clientY - rect.top) / minimapScale + minY;
+    const w2 = container.clientWidth / 2, h2 = container.clientHeight / 2;
+    svg.transition().duration(300).call(zoom.transform, d3.zoomIdentity.translate(w2 - mmx, h2 - mmy));
   });
   function highlightNode(id) {
     const neighbors = new Set();
@@ -529,6 +691,11 @@ const graph = (function() {
   });
   node.on('dblclick', (e, d) => { e.stopPropagation(); if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; } selectEntry(d); hideTooltip(); });
   function resize() { const w = container.clientWidth, h = container.clientHeight; simulation.force('center', d3.forceCenter(w / 2, h / 2).strength(centerStrength)); simulation.alpha(0.3).restart(); }
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { resize(); updateMinimap(); }, 80);
+  });
   return { highlightNode, highlightSearch, centerOn, resize };
 })();
 

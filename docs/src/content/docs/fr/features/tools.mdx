@@ -1,6 +1,6 @@
 ---
-title: "40 outils MCP pour la mémoire IA persistante"
-description: "40 outils MCP pour la mémoire persistante des agents IA — memory_remember, memory_recall, memory_smart_recall, context_generate et plus encore. Rappel économe en tokens, basé sur le graphe, pour Claude, Cursor, OpenCode."
+title: "35 outils MCP pour la mémoire IA persistante"
+description: "35 outils MCP pour la mémoire persistante des agents IA — memory_remember, memory_recall, memory_smart_recall, context_generate et plus encore. Rappel économe en tokens, basé sur le graphe, pour Claude, Cursor, OpenCode."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## Présentation
 
-toon-memory fournit 40 outils MCP et 4 ressources MCP pour gérer la mémoire persistante :
+toon-memory fournit 35 outils MCP et 4 ressources MCP pour gérer la mémoire persistante :
 
 ## Outils
 
@@ -18,7 +18,7 @@ toon-memory fournit 40 outils MCP et 4 ressources MCP pour gérer la mémoire pe
 |-------|-------------|
 | `memory_remember` | Enregistrer une décision, un pattern, un bug ou une connaissance (TTL optionnel, inférence automatique des tags, `links`, score de qualité automatique, fusion-dédup, confiance) |
 | `memory_recall` | Rechercher en mémoire (à utiliser AVANT de lire les fichiers, filtre les TTL expirés). `mode: "graph"` étend un sous-graphe conscient des relations pour plus de précision. Le classement utilise la fusion RRF (BM25×3 + centralité du graphe, k adaptatif) ; passez `rrf: false` pour le score linéaire hérité. `as_of` réinclut les entrées superseded après une date ponctuelle |
-| `memory_forget` | Supprimer une entrée par clé ou id |
+| `memory_forget` | **Cycle de vie** par clé ou id : `action: "soft"` (défaut) marque obsolète, `"hard"` supprime définitivement, `"restore"` réactive, `"supersede"` remplace avec un lien `superseded_by` vers `new_key`. Outil canonique |
 | `memory_stats` | Voir l'état de la mémoire (y compris les stats TTL et la distribution de qualité) |
 | `memory_summary` | Enregistrer/récupérer des résumés de fichiers |
 | `memory_archive` | Archiver les vieilles entrées (>30 jours) et les TTL expirés |
@@ -26,7 +26,7 @@ toon-memory fournit 40 outils MCP et 4 ressources MCP pour gérer la mémoire pe
 | `memory_suggest` | Trouver des entrées liées pour un contexte donné |
 | `memory_captured` | Lister l'activité capturée automatiquement par les hooks (opt-in) ou vider le journal |
 | `memory_checkpoint` | **Point de contrôle** : crée un instantané de l'état actuel de la mémoire avec TTL de 7j. Utile pour référence de restauration pendant les longues sessions |
-| `memory_consolidate` | Dédupliquer les entrées avec un contenu identique et fusionner les attributs (déterministe, pas de LLM) |
+| `memory_consolidate` | **Nettoyage**, déterministe (sans LLM) : `mode: "identical"` (défaut) déduplique les entrées identiques, `"similar"` fusionne les quasi-doublons (Jaccard >50%), `"low-quality"` compresse en lot les entrées de faible qualité |
 | `memory_encrypt` | Activer le chiffrement AES-256-GCM |
 | `memory_decrypt` | Désactiver le chiffrement |
 | `memory_backup` | Créer une sauvegarde horodatée du fichier mémoire (auto-nettoyage à 10 sauvegardes récentes) |
@@ -42,10 +42,7 @@ toon-memory fournit 40 outils MCP et 4 ressources MCP pour gérer la mémoire pe
 | `memory_unpin` | **Détacher une entrée**: supprime le marqueur d'épingle d'une entrée |
 | `memory_search` | **Recherche unifiée avec filtres**: comme `memory_recall` plus filtres par catégorie, tags et plage de dates |
 | `memory_tag` | **Opérations par lots**: ajoute, supprime ou définit des tags sur une ou plusieurs entrées par key ou id |
-| `memory_resolve` | **Restaurer une entrée** : restaure une entrée soft-delete (obsolete) en statut actif |
-| `memory_suppress` | **Masquer une entrée** : masque une entrée des résultats de rappel sans la supprimer (status=suppressed) |
 | `memory_reflect` | **Réflexion mémoire** : classe de manière déterministe les entrées par obsolescence, qualité et sur-connexion pour révéler ce qui mérite attention ou nettoyage. Zéro LLM |
-| `memory_supersede` | **Remplacer une entrée** : la marque comme remplacée par une plus récente (`status=obsolete`, liens `superseded_by`/`supersedes`, date `supersededOn`). Les anciennes entrées ne réapparaissent que pour les requêtes `as_of` antérieures à leur remplacement |
 | `memory_promote` | **Promotion automatique des brouillons** : promeut les entrées à faible confiance en statut actif de manière déterministe (seuil 0.65, dédup Jaccard > 0.5, `dryRun` par défaut) |
 
 ## Ressources MCP

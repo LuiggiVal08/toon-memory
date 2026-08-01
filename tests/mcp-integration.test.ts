@@ -146,9 +146,9 @@ describe("MCP Integration", () => {
 
 	// ── Tool listing ──────────────────────────────────────────────
 
-  it("lists all 40 tools", async () => {
+  it("lists all 35 tools", async () => {
     const tools = await client.listTools()
-    expect(tools.length).toBe(40)
+    expect(tools.length).toBe(35)
     expect(tools).toContain("memory_remember")
     expect(tools).toContain("memory_recall")
     expect(tools).toContain("memory_forget")
@@ -161,7 +161,6 @@ describe("MCP Integration", () => {
     expect(tools).toContain("memory_smart_recall")
     expect(tools).toContain("memory_diff")
     expect(tools).toContain("memory_compress")
-    expect(tools).toContain("memory_compress_all")
     expect(tools).toContain("memory_consolidate")
     expect(tools).toContain("memory_backup")
     expect(tools).toContain("memory_sessions")
@@ -176,7 +175,6 @@ describe("MCP Integration", () => {
     expect(tools).toContain("context_generate")
     expect(tools).toContain("context_health")
     expect(tools).toContain("context_export")
-    expect(tools).toContain("memory_merge_similar")
     expect(tools).toContain("memory_graph_path")
     expect(tools).toContain("memory_visualize")
     expect(tools).toContain("memory_pin")
@@ -184,9 +182,6 @@ describe("MCP Integration", () => {
     expect(tools).toContain("memory_search")
     expect(tools).toContain("memory_tag")
     expect(tools).toContain("memory_checkpoint")
-    expect(tools).toContain("memory_resolve")
-    expect(tools).toContain("memory_suppress")
-    expect(tools).toContain("memory_supersede")
     expect(tools).toContain("memory_reflect")
     expect(tools).toContain("memory_promote")
   })
@@ -200,10 +195,7 @@ describe("MCP Integration", () => {
     expect(byName.get("memory_encrypt")!.annotations?.destructiveHint).toBe(true)
     expect(byName.get("memory_decrypt")!.annotations?.destructiveHint).toBe(true)
     expect(byName.get("memory_import_gist")!.annotations?.destructiveHint).toBe(true)
-    expect(byName.get("memory_compress_all")!.annotations?.destructiveHint).toBe(true)
     expect(byName.get("memory_consolidate")!.annotations?.destructiveHint).toBe(true)
-    expect(byName.get("memory_merge_similar")!.annotations?.destructiveHint).toBe(true)
-    expect(byName.get("memory_supersede")!.annotations?.destructiveHint).toBe(true)
     // Read-only tools must be flagged
     for (const name of ["memory_stats", "memory_diff", "memory_suggest", "memory_primer", "context_brief", "context_health", "context_export", "context_diff", "context_focus", "context_generate", "memory_graph_path", "memory_sessions", "memory_compress", "memory_reflect", "memory_visualize"]) {
       expect(byName.get(name)!.annotations?.readOnlyHint).toBe(true)
@@ -282,7 +274,7 @@ describe("MCP Integration", () => {
 		expect(recall).toContain("to-delete")
 
 		// Delete it (hard delete to fully remove)
-		const deleteResult = await client.callTool("memory_forget", { key: "to-delete", hard: true })
+		const deleteResult = await client.callTool("memory_forget", { key: "to-delete", action: "hard" })
 		expect(deleteResult).toContain("to-delete")
 
 		// Verify it's gone (no entry content, only the "no results" echo)
@@ -290,9 +282,9 @@ describe("MCP Integration", () => {
 		expect(recallAfter).not.toContain("Entry that will be deleted")
 	})
 
-	// ── memory_resolve + soft-delete ──────────────────────────────
+	// ── memory_forget soft-delete + restore ─────────────────────────
 
-	it("memory_forget soft-deletes and memory_resolve restores", async () => {
+	it("memory_forget soft-deletes and restore brings it back", async () => {
 		// Add an entry
 		await client.callTool("memory_remember", {
 			category: "knowledge",
@@ -309,7 +301,7 @@ describe("MCP Integration", () => {
 		expect(recall).not.toContain("soft-delete-test")
 
 		// Restore
-		const resolveResult = await client.callTool("memory_resolve", { key: "soft-delete-test" })
+		const resolveResult = await client.callTool("memory_forget", { key: "soft-delete-test", action: "restore" })
 		expect(resolveResult).toContain("restored")
 
 		// Should appear again
@@ -317,18 +309,40 @@ describe("MCP Integration", () => {
 		expect(recallAfter).toContain("soft-delete-test")
 	})
 
-	it("memory_suppress marks entry as obsolete", async () => {
+	it("memory_forget soft action marks entry as obsolete", async () => {
 		await client.callTool("memory_remember", {
 			category: "knowledge",
 			key: "suppress-test",
 			content: "Entry to suppress",
 		})
 
-		const result = await client.callTool("memory_suppress", { key: "suppress-test" })
-		expect(result).toContain("suppressed")
+		const result = await client.callTool("memory_forget", { key: "suppress-test", action: "soft" })
+		expect(result).toContain("obsolete")
 
 		const recall = await client.callTool("memory_recall", { query: "suppress-test" })
 		expect(recall).not.toContain("suppress-test")
+	})
+
+	it("memory_forget canonical restore/supersede actions work", async () => {
+		await client.callTool("memory_remember", {
+			category: "knowledge",
+			key: "lifecycle-canary",
+			content: "Entry for canonical lifecycle actions",
+		})
+
+		// Supersede via the canonical action param
+		const supersede = await client.callTool("memory_forget", { key: "lifecycle-canary", action: "supersede" })
+		expect(supersede).toContain("superseded")
+
+		const recall = await client.callTool("memory_recall", { query: "lifecycle-canary" })
+		expect(recall).not.toContain("Entry for canonical lifecycle actions")
+
+		// Restore via the canonical action param
+		const restore = await client.callTool("memory_forget", { key: "lifecycle-canary", action: "restore" })
+		expect(restore).toContain("restored")
+
+		const recallAfter = await client.callTool("memory_recall", { query: "lifecycle-canary" })
+		expect(recallAfter).toContain("lifecycle-canary")
 	})
 
 	// ── memory_consolidate ────────────────────────────────────────
@@ -336,6 +350,26 @@ describe("MCP Integration", () => {
 	it("memory_consolidate runs without error", async () => {
 		const result = await client.callTool("memory_consolidate")
 		expect(result).toContain("consolidat")
+	})
+
+	it("memory_consolidate similar and low-quality modes run", async () => {
+		await client.callTool("memory_remember", {
+			category: "knowledge",
+			key: "similar-dup-a",
+			content: "The Redis cache uses a fixed pool size with a 5s timeout for reconnects",
+		})
+		await client.callTool("memory_remember", {
+			category: "knowledge",
+			key: "similar-dup-b",
+			content: "The Redis cache uses a fixed pool size with a 5s timeout for reconnects",
+		})
+
+		const similar = await client.callTool("memory_consolidate", { mode: "similar" })
+		expect(similar).toContain("Merged")
+		expect(similar).toContain("similar-dup")
+
+		const lowQuality = await client.callTool("memory_consolidate", { mode: "low-quality", minQuality: 1.0, dryRun: true })
+		expect(lowQuality).toContain("Compression candidates")
 	})
 
 	// ── memory_sessions ───────────────────────────────────────────
@@ -461,9 +495,9 @@ describe("MCP Integration", () => {
 		expect(result.length).toBeGreaterThan(0)
 	})
 
-	// ── memory_supersede + as_of ──────────────────────────────────
+	// ── memory_forget supersede + as_of ───────────────────────────────
 
-	it("memory_supersede marks old entry obsolete and as_of recalls it", async () => {
+	it("memory_forget supersede marks old entry obsolete and as_of recalls it", async () => {
 		// Seed controlled entries: use-joi created 2026-07-01, superseded today.
 		const dataFile = join(testDir, ".toon-memory", "memory", "data.toon")
 		writeFileSync(
@@ -471,7 +505,7 @@ describe("MCP Integration", () => {
 			`version: 1\nentries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:\n  abc12345|decision|use-zod|Use Zod for validation|src/types.ts|types;validation|2026-07-25||0||0.70|1.0\n  e1|decision|use-joi|Use Joi for validation|t.ts|validation;superseded|2026-07-01||0||0.5|1.0\n  e2|decision|use-zod-fresh|Use Zod 2 for validation|t.ts|validation|2026-07-01||0||0.9|1.0\n`
 		)
 
-		const result = await client.callTool("memory_supersede", { old_key: "use-joi", new_key: "use-zod-fresh", reason: "Zod is better" })
+		const result = await client.callTool("memory_forget", { key: "use-joi", action: "supersede", new_key: "use-zod-fresh", reason: "Zod is better" })
 		expect(result).toContain("superseded")
 		expect(result).toContain("use-zod-fresh")
 
@@ -484,7 +518,7 @@ describe("MCP Integration", () => {
 		expect(asOf).toContain("Use Joi for validation")
 
 		// Still restorable
-		const resolveResult = await client.callTool("memory_resolve", { key: "use-joi" })
+		const resolveResult = await client.callTool("memory_forget", { key: "use-joi", action: "restore" })
 		expect(resolveResult).toContain("restored")
 	})
 

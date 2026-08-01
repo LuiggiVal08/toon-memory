@@ -1,6 +1,6 @@
 ---
-title: "40 MCP Tools for Persistent AI Memory"
-description: "40 MCP tools for persistent AI agent memory — memory_remember, memory_recall, memory_smart_recall, context_generate, and more. Token-efficient, graph-aware recall for Claude, Cursor, OpenCode."
+title: "35 MCP Tools for Persistent AI Memory"
+description: "35 MCP tools for persistent AI agent memory — memory_remember, memory_recall, memory_smart_recall, context_generate, and more. Token-efficient, graph-aware recall for Claude, Cursor, OpenCode."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## Overview
 
-toon-memory provides 40 MCP tools and 4 MCP resources for managing persistent memory:
+toon-memory provides 35 MCP tools and 4 MCP resources for managing persistent memory:
 
 ## Tools
 
@@ -18,8 +18,7 @@ toon-memory provides 40 MCP tools and 4 MCP resources for managing persistent me
 |------|-------------|
 | `memory_remember` | Save a decision, pattern, bug, or knowledge (optional TTL, auto-tag inference, `links`, auto quality score, merge-dedup, confidence) |
 | `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. Ranking uses RRF fusion (BM25×3 + graph centrality, adaptive `k`); pass `rrf: false` for the legacy linear score. `sessionBias` boosts entries from the current git branch. `pathScope` scopes results to a file path (supports globMatch). `budget`: `"tiny"` (top 3), `"normal"` (top 10), or `"deep"` (top 20). `as_of` re-includes entries superseded after a point-in-time date |
-| `memory_forget` | Soft-delete an entry by key or id (status=obsolete). Hard-delete with `force: true` |
-| `memory_resolve` | Restore a soft-deleted (obsolete) entry back to active status |
+| `memory_forget` | **Lifecycle ops** by key or id: `action: "soft"` (default) marks obsolete, `"hard"` permanently removes, `"restore"` brings back to active, `"supersede"` retires it with a `superseded_by` link to `new_key` |
 | `memory_stats` | View memory state (including TTL stats, quality distribution, and cold memories below quality/access thresholds) |
 | `memory_summary` | Save/retrieve file summaries |
 | `memory_archive` | Archive old entries (>30 days) and expired TTL entries |
@@ -27,7 +26,7 @@ toon-memory provides 40 MCP tools and 4 MCP resources for managing persistent me
 | `memory_suggest` | Find related entries for a given context |
 | `memory_captured` | List activity auto-captured by hooks (opt-in) or clear the log |
 | `memory_checkpoint` | **Session checkpoint**: creates a snapshot of current memory state with 7d TTL. Useful for rollback reference during long sessions |
-| `memory_consolidate` | De-duplicate entries with identical content and merge attributes (deterministic, no LLM) |
+| `memory_consolidate` | **Cleanup ops**, deterministic (no LLM): `mode: "identical"` (default) de-duplicates entries with identical content, `"similar"` merges near-duplicates (Jaccard >50%), `"low-quality"` batch-compresses low-quality entries (`minQuality`, `dryRun`) |
 | `memory_encrypt` | Enable AES-256-GCM encryption |
 | `memory_decrypt` | Disable encryption |
 | `memory_backup` | Create timestamped backup of memory file (auto-prunes to 10 most recent) |
@@ -44,9 +43,7 @@ toon-memory provides 40 MCP tools and 4 MCP resources for managing persistent me
 | `memory_unpin` | **Unpin an entry**: remove the priority flag |
 | `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match. `sessionBias` boosts entries from the current git branch |
 | `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
-| `memory_suppress` | Hide an entry from recall results without deleting it (status=suppressed) |
 | `memory_reflect` | **Memory reflection**: deterministically ranks entries by staleness, quality, and over-connection to surface what needs attention or cleanup. Zero LLM |
-| `memory_supersede` | **Supersede an entry**: mark it as replaced by a newer one (`status=obsolete`, `superseded_by`/`supersedes` links, `supersededOn` date). Old entries reappear in recall only for `as_of` queries before the supersession date |
 | `memory_promote` | **Auto-promote drafts**: promote low-confidence entries to active status deterministically (default threshold 0.65, Jaccard dedup > 0.5, `dryRun` by default) |
 
 ## Typed graph edges
@@ -59,7 +56,7 @@ Since v3.7.0 every edge in the memory graph carries a type, written as `type:key
 | `superseded_by` | Entry replaced by a newer one (written on the old entry) | `superseded_by:new-key` |
 | `supersedes` | Entry that replaces an older one (mirrored on the new entry) | `supersedes:old-key` |
 
-Explicit `links` become `relates:key` edges, `memory_supersede` adds the `superseded_by`/`supersedes` pair, and recall's graph expansion can traverse them — so you can tell *how* entries relate, not just that they do.
+Explicit `links` become `relates:key` edges, `memory_forget(key, action: "supersede")` adds the `superseded_by`/`supersedes` pair, and recall's graph expansion can traverse them — so you can tell *how* entries relate, not just that they do.
 
 ## MCP Resources
 

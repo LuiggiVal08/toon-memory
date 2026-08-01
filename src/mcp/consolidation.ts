@@ -1,5 +1,6 @@
 import { readMemory, writeMemory } from "./memory-io"
 import { mergeEntries } from "../lib/quality"
+import { parseToonLine } from "../lib/utils"
 
 /**
  * Jaccard similarity between two content strings (0..1).
@@ -41,11 +42,11 @@ export function consolidateEntries(): { removed: number; kept: number; duplicate
 
   for (let i = 0; i < entryLines.length; i++) {
     const line = entryLines[i].trim()
-    const parts = line.split("|")
+    const parts = parseToonLine(line)
     if (parts.length < 3) continue
     const key = parts[2]
     const existingIdx = keyOrder.findIndex((idx) => {
-      const ep = entryLines[idx].trim().split("|")
+      const ep = parseToonLine(entryLines[idx])
       return ep[2] === key
     })
     if (existingIdx !== -1) {
@@ -65,7 +66,7 @@ export function consolidateEntries(): { removed: number; kept: number; duplicate
 
   for (const idx of keyOrder) {
     const line = byKey.get(idx)!
-    const parts = line.split("|")
+    const parts = parseToonLine(line)
     if (parts.length < 3) {
       order.push(line)
       continue
@@ -82,7 +83,7 @@ export function consolidateEntries(): { removed: number; kept: number; duplicate
     // Check for near-duplicate (same category, similar content)
     let merged = false
     for (const [seenNorm, existing] of contentSeen) {
-      const existingParts = existing.line.split("|")
+      const existingParts = parseToonLine(existing.line)
       if (existingParts[1] !== parts[1]) continue // different category
       const sim = contentSimilarity(content, existingParts[3] || "")
       if (sim >= NEAR_DUP_THRESHOLD) {

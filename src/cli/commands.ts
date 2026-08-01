@@ -6,6 +6,7 @@ import type { Agent } from "./types"
 import { projectRoot, INSTRUCTION_CONTENT, ANTIGRAVITY_HOOK_NAME } from "./constants"
 import { detectAgents, resolvePackageJson } from "./agents"
 import { installMemoryDir, ensureGitignore, dumpMemoryMarkdown } from "./memory"
+import { parseToonLine } from "../lib/utils"
 import { installMCPConfig, updateMemoryConfig } from "./config-writer"
 import { installInstructions } from "./instructions"
 import { installHooks, registerAntigravityHooks } from "./hooks"
@@ -340,7 +341,7 @@ export function stats(): void {
   let latestDate = ""
 
   for (const line of lines) {
-    const parts = line.trim().split("|")
+    const parts = parseToonLine(line)
     if (parts.length >= 7) {
       const category = parts[1]
       const date = parts[6]
@@ -381,7 +382,7 @@ export function exportMemory(): void {
   const lines = data.split("\n").filter((l: string) => l.startsWith("  ") && l.includes("|"))
 
   const entries = lines.map((line: string) => {
-    const parts = line.trim().split("|")
+    const parts = parseToonLine(line)
     return {
       id: parts[0],
       category: parts[1],
@@ -449,7 +450,7 @@ export function importMemory(): void {
     const existing = readFileSync(memoryFile, "utf-8")
     existingKeys = existing.split("\n")
       .filter((l: string) => l.startsWith("  ") && l.includes("|"))
-      .map((l: string) => l.trim().split("|")[2])
+      .map((l: string) => parseToonLine(l)[2])
   }
 
   const newEntries = importData.entries.filter((e: any) => !existingKeys.includes(e.key))

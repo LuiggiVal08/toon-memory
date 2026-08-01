@@ -4,6 +4,7 @@ import { createHash } from "crypto"
 import { withLockSync, atomicWrite } from "../lib/lock"
 import { heartbeat, endSession, resolveSessionId, currentBranch } from "../lib/sessions"
 import { pruneObservations } from "../mcp/observations"
+import { parseToonLine } from "../lib/utils"
 
 /**
  * Hook capture script for toon-memory.
@@ -171,7 +172,7 @@ function main(): void {
     const data = readFileSync(OBSERVATIONS_FILE, "utf-8")
     for (const line of data.split("\n")) {
       if (!line.startsWith("  ")) continue
-      const p = line.trim().split("|")
+      const p = parseToonLine(line)
       if (p[5] === hash) {
         const prev = new Date(p[0]).getTime()
         if (Date.now() - prev < DEDUP_WINDOW_MS) process.exit(0)

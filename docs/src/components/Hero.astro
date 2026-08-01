@@ -47,12 +47,12 @@ const docsHref = lang === 'es' ? '/toon-memory/es/getting-started/quickstart' : 
   </div>
 
   <div class="badges-row">
-    <span class="badge"><span class="badge-label">Tools</span><span class="badge-value badge-purple">40</span></span>
-    <span class="badge"><span class="badge-label">Fewer tokens</span><span class="badge-value badge-green">~90%</span></span>
-    <span class="badge"><span class="badge-label">Fewer tool calls</span><span class="badge-value badge-green">80%</span></span>
-    <span class="badge"><span class="badge-label">Tests</span><span class="badge-value badge-blue">301</span></span>
-    <span class="badge"><span class="badge-label">Agents</span><span class="badge-value badge-pink">15</span></span>
-    <img src="https://img.shields.io/npm/dt/toon-memory?style=flat&label=Downloads" alt="toon-memory downloads on npm" />
+    <span class="chip"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>35 tools</span></span>
+    <span class="chip"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>~90% fewer tokens with auto-loading</span></span>
+    <span class="chip"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>80% fewer tool calls</span></span>
+    <span class="chip"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>302 tests</span></span>
+    <span class="chip"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>15 agents</span></span>
+    <span class="chip chip-live"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 3v10.55l-3.5-3.5-1.41 1.41L12 16.41l4.91-4.96-1.41-1.41-3.5 3.5V3zM5 20h14v-2H5v2z"/></svg><span><span class="chip-value" id="npmDownloads">…</span> npm downloads</span></span>
   </div>
 </section>
 
@@ -74,5 +74,17 @@ const docsHref = lang === 'es' ? '/toon-memory/es/getting-started/quickstart' : 
       if (i++ <= full.length) setTimeout(type, 55);
     };
     setTimeout(type, 700);
+  }
+
+  const dl = document.getElementById('npmDownloads');
+  if (dl) {
+    fetch('https://api.npmjs.org/downloads/point/last-month/toon-memory')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d && typeof d.downloads === 'number') {
+          dl.textContent = d.downloads.toLocaleString('en-US');
+        }
+      })
+      .catch(() => {});
   }
 </script>

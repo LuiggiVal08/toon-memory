@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from "fs"
 import { join } from "path"
 import { heartbeat, coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS } from "../lib/sessions"
+import { parseToonLine } from "../lib/utils"
 
 /**
  * SessionStart hook for toon-memory.
@@ -30,7 +31,7 @@ function systemPrimer(): string {
     // Parse entries and sort by importance (accessed + recency)
     const entries = lines
       .map((l) => {
-        const p = l.trim().split("|")
+        const p = parseToonLine(l)
         if (p.length < 7) return null
         const accessed = p.length > 8 ? parseInt(p[8]) || 0 : 0
         const daysSince = (Date.now() - new Date(`${p[6]}T00:00:00`).getTime()) / 86400000

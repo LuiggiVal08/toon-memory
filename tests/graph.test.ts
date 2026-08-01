@@ -48,8 +48,37 @@ describe("buildGraph", () => {
     expect(adjacency.get("risk-engine")).toContain("risk-spec")
     // undirected
     expect(adjacency.get("engine-arch")).toContain("risk-engine")
-    // dangling key (none here) would be dropped; unrelated-bug has no edges
-    expect(adjacency.get("unrelated-bug")).toBeUndefined()
+    // dangling key (none here) would be dropped
+    // unrelated-bug has no links, but the orphan fallback attaches it to its
+    // most similar entry (deep-node wins the tie-break) so no node is isolated
+    expect(adjacency.get("unrelated-bug")).toContain("deep-node")
+  })
+
+  it("bridges separate clusters into a single connected component", () => {
+    const data = [
+      "version: 1",
+      "[4|]{id|category|key|content|file|tags|date|ttl|accessed|links}:",
+      "  a|knowledge|alpha|alpha content|a.ts|red;blue|2026-07-01||0|",
+      "  b|knowledge|bravo|bravo content|b.ts|red;blue|2026-07-01||0|",
+      "  c|knowledge|charlie|charlie content|c.ts|green;yellow|2026-07-01||0|",
+      "  d|knowledge|delta|delta content|d.ts|green;yellow|2026-07-01||0|",
+      "",
+    ].join("\n")
+    const { adjacency, byKey } = buildGraph(parseEntries(data))
+    const ids = [...byKey.keys()]
+    const seen = new Set<string>()
+    const stack = [ids[0]]
+    seen.add(ids[0])
+    while (stack.length) {
+      const cur = stack.pop()!
+      for (const next of adjacency.get(cur) || []) {
+        if (!seen.has(next)) {
+          seen.add(next)
+          stack.push(next)
+        }
+      }
+    }
+    expect(seen.size).toBe(4)
   })
 })
 
@@ -115,8 +144,9 @@ describe("centrality", () => {
     expect(max).toBe(1)
     // engine-arch (connected to risk-engine, risk-spec, deep-node) is the hub
     expect(cent.get("engine-arch")).toBe(1)
-    // unrelated-bug has no edges → not present / 0
-    expect(cent.get("unrelated-bug") ?? 0).toBe(0)
+    // unrelated-bug had no edges but the orphan fallback attaches it to the
+    // graph, so it now has degree 1 (positive centrality, not isolated)
+    expect(cent.get("unrelated-bug") ?? 0).toBeGreaterThan(0)
   })
 })
 
@@ -179,7 +209,8 @@ entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links}:
     expect(byKey.has("engine-arch")).toBe(true)
     expect(adjacency.get("risk-engine")).toContain("engine-arch")
     expect(adjacency.get("engine-arch")).toContain("risk-engine")
-    expect(adjacency.get("unrelated-bug")).toBeUndefined()
+    // orphan fallback attaches unrelated-bug to its nearest neighbor
+    expect(adjacency.get("unrelated-bug")).toContain("engine-arch")
   })
 
   it("stores the raw typed token on the entry (render/deep output keeps the type)", () => {

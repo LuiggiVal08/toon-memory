@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
 import { join } from "path"
 import { MEMORY_DIR, projectRoot } from "./constants"
+import { parseToonLine, unescField } from "../lib/utils"
 
 /**
  * Install memory directory and initial data file.
@@ -52,7 +53,7 @@ export function dumpMemoryMarkdown(): string {
   const lines = data.split("\n").filter((l: string) => l.startsWith("  ") && l.includes("|"))
 
   const entries = lines.map((line: string) => {
-    const parts = line.trim().split("|")
+    const parts = parseToonLine(line)
     return {
       id: parts[0] ?? "",
       category: parts[1] ?? "",
@@ -72,7 +73,7 @@ export function dumpMemoryMarkdown(): string {
       if (!sl.includes(":") || !sl.startsWith("  ")) continue
       const idx = sl.indexOf(":")
       const file = sl.slice(0, idx).trim()
-      const summary = sl.slice(idx + 1).trim()
+      const summary = unescField(sl.slice(idx + 1).trim())
       if (file && summary) summaries.push({ file, summary })
     }
   }

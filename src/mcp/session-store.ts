@@ -2,6 +2,7 @@ import { readFileSync, existsSync, writeFileSync, renameSync } from "fs"
 import { join } from "path"
 import { OBSERVATIONS_FILE, MEMORY_FILE, MEMORY_DIR } from "./config"
 import { withLockSync, atomicWrite, readUnderLock } from "../lib/lock"
+import { parseToonLine, toToonLine } from "../lib/utils"
 import { loadConfig, getKey } from "./config"
 import { encrypt, decrypt } from "./crypto"
 
@@ -41,7 +42,7 @@ export function readSessionEntries(sessionId?: string): SessionEntry[] {
     .split("\n")
     .filter((l) => l.startsWith("  ") && l.includes("|"))
     .map((l) => {
-      const p = l.trim().split("|")
+      const p = parseToonLine(l)
       return {
         ts: p[0] || "",
         session: p[1] || "",
@@ -76,11 +77,11 @@ export function writeSessionEntry(entry: Omit<SessionEntry, "accessed" | "lastAc
     headerIdx = lines.length - 1
   }
 
-  const entryLine = `${entry.ts}|${entry.session}|${entry.agent}|${entry.branch}|${entry.tool}||${entry.file}|${entry.summary}|0|`
+  const entryLine = toToonLine([entry.ts, entry.session, entry.agent, entry.branch, entry.tool, "", entry.file, entry.summary, "0", ""])
 
   const match = lines[headerIdx].match(/\[(\d+)\|/)
   const count = match ? parseInt(match[1]) : 0
-  lines.splice(headerIdx + 1, 0, `  ${entryLine}`)
+  lines.splice(headerIdx + 1, 0, entryLine)
   lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count + 1}|`)
 
   atomicWrite(filePath, lines.join("\n"))
@@ -113,11 +114,11 @@ export function promoteSessionEntries(
     const date = entry.ts.split("T")[0] || new Date().toISOString().split("T")[0]
     const key = entry.summary.slice(0, 50).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || `session-${id}`
 
-    const memoryEntry = `${id}|${category}|${key}|${entry.summary}|${entry.file}|session-promoted|${date}||0||0.5|1.0|`
+    const memoryEntry = toToonLine([id, category, key, entry.summary, entry.file, "session-promoted", date, "", "0", "", "0.5", "1.0", ""])
 
     const match = memoryLines[memoryHeaderIdx].match(/\[(\d+)\|/)
     const count = match ? parseInt(match[1]) : 0
-    memoryLines.splice(memoryHeaderIdx + 1, 0, `  ${memoryEntry}`)
+    memoryLines.splice(memoryHeaderIdx + 1, 0, memoryEntry)
     memoryLines[memoryHeaderIdx] = memoryLines[memoryHeaderIdx].replace(/\[\d+\|/, `[${count + 1}|`)
     promoted++
   }
@@ -176,14 +177,14 @@ export function bumpSessionAccess(summaries: string[]): void {
   for (let i = headerIdx + 1; i < lines.length; i++) {
     const line = lines[i]
     if (!line.startsWith("  ") || !line.includes("|")) continue
-    const parts = line.trim().split("|")
+    const parts = parseToonLine(line)
     const summary = parts[7] || ""
     if (summarySet.has(summary)) {
       const accessed = parts.length > 8 ? (parseInt(parts[8]) || 0) + 1 : 1
       parts[8] = String(accessed)
       while (parts.length < 10) parts.push("")
       parts[9] = now
-      lines[i] = `  ${parts.join("|")}`
+      lines[i] = toToonLine(parts)
     }
   }
 
@@ -219,12 +220,12 @@ function migrateObservationsToSession(): void {
   const newLines = [`session[0|]{ts|session|agent|branch|tool||file|summary|accessed|lastAccessed}:`]
   for (const line of lines.slice(headerIdx + 1)) {
     if (!line.startsWith("  ") || !line.includes("|")) continue
-    const parts = line.trim().split("|")
+    const parts = parseToonLine(line)
     // Old format: ts|session|agent|branch|tool||file|summary
     // New format: ts|session|agent|branch|tool||file|summary|accessed|lastAccessed
     while (parts.length < 8) parts.push("")
     parts.push("0", "") // Add accessed=0 and lastAccessed=""
-    newLines.push(`  ${parts.join("|")}`)
+    newLines.push(toToonLine(parts))
   }
 
   const sessionFile = join(MEMORY_DIR, "session.toon")

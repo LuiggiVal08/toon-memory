@@ -1,5 +1,5 @@
 import { readMemory, writeMemory } from "./memory-io"
-import { normalize, importance } from "../lib/utils"
+import { normalize, importance, parseToonLine, toToonLine } from "../lib/utils"
 
 /**
  * Importance score for an entry: blends recency and access frequency.
@@ -10,7 +10,7 @@ export function entryScore(dateStr: string, accessed: number): number {
 }
 
 export function entryScoreForLine(line: string): number {
-  const parts = line.trim().split("|")
+  const parts = parseToonLine(line)
   const date = parts[6] || new Date().toISOString().split("T")[0]
   const accessed = parts.length > 8 ? parseInt(parts[8]) || 0 : 0
   return entryScore(date, accessed)
@@ -28,7 +28,7 @@ export function findRelatedEntries(text: string, excludeKey: string = "", limit:
   const scored = lines
     .map((line) => {
       const trimmed = line.trim()
-      const parts = trimmed.split("|")
+      const parts = parseToonLine(trimmed)
       if (parts.length < 7) return null
       const [id, cat, key, content, file, tags, date] = parts
       if (key === excludeKey) return null
@@ -65,14 +65,14 @@ export function bumpAccessed(ids: string[]): void {
     const line = lines[i]
     if (!line.startsWith("  ") || !line.includes("|")) continue
     if (line.startsWith("  summaries:")) break
-    const parts = line.trim().split("|")
+    const parts = parseToonLine(line)
     if (idSet.has(parts[0])) {
       const accessed = parts.length > 8 ? (parseInt(parts[8]) || 0) + 1 : 1
       parts[8] = String(accessed)
       // Ensure we have enough fields for lastAccessed (field 12)
       while (parts.length < 13) parts.push("")
       parts[12] = now
-      lines[i] = `  ${parts.join("|")}`
+      lines[i] = toToonLine(parts)
     }
   }
   writeMemory(lines.join("\n"))

@@ -1,6 +1,6 @@
 ---
-title: "AI 에이전트 영구 메모리를 위한 40개 MCP 도구"
-description: "AI 에이전트 영구 메모리를 위한 40개 MCP 도구 — memory_remember, memory_recall, memory_smart_recall, context_generate 등. Claude, Cursor, OpenCode를 위한 토큰 효율적이고 그래프 인식 검색."
+title: "AI 에이전트 영구 메모리를 위한 35개 MCP 도구"
+description: "AI 에이전트 영구 메모리를 위한 35개 MCP 도구 — memory_remember, memory_recall, memory_smart_recall, context_generate 등. Claude, Cursor, OpenCode를 위한 토큰 효율적이고 그래프 인식 검색."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## 개요
 
-toon-memory는 영구 메모리를 관리하기 위한 40개의 MCP 도구와 4개의 MCP 리소스를 제공합니다:
+toon-memory는 영구 메모리를 관리하기 위한 35개의 MCP 도구와 4개의 MCP 리소스를 제공합니다:
 
 ## 도구
 
@@ -42,10 +42,7 @@ toon-memory는 영구 메모리를 관리하기 위한 40개의 MCP 도구와 4�
 | `memory_unpin` | **Unpin an entry**: remove the pinned flag |
 | `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
 | `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
-| `memory_resolve` | **항목 복원**: 소프트 삭제(obsolete)된 항목을 활성 상태로 복원합니다 |
-| `memory_suppress` | **항목 숨기기**: 삭제하지 않고 리콜 결과에서 숨깁니다 (status=suppressed) |
 | `memory_reflect` | **메모리 반성**: 항목을 노후화·품질·과잉 연결별로 결정적으로 순위를 매겨 주의나 정리가 필요한 것을 드러냅니다. LLM 없음 |
-| `memory_supersede` | **항목 대체**: 더 새로운 것으로 대체되었음을 표시(`status=obsolete`, `superseded_by`/`supersedes` 링크, `supersededOn` 날짜). 이전 항목은 대체 날짜보다 이른 `as_of` 쿼리에서만 다시 나타납니다 |
 | `memory_promote` | **초안 자동 승격**: 낮은 신뢰도의 항목을 결정적으로 활성 상태로 승격(임계값 0.65, Jaccard 중복 제거 > 0.5, 기본 `dryRun`) |
 
 ## MCP 리소스

@@ -1,6 +1,6 @@
 ---
-title: "永続AIメモリ向けの40個のMCPツール"
-description: "永続AIエージェントメモリ向けの40個のMCPツール — memory_remember、memory_recall、memory_smart_recall、context_generateなど。Claude、Cursor、OpenCode向けのトークン効率の高いグラフ対応リコール。"
+title: "永続AIメモリ向けの35個のMCPツール"
+description: "永続AIエージェントメモリ向けの35個のMCPツール — memory_remember、memory_recall、memory_smart_recall、context_generateなど。Claude、Cursor、OpenCode向けのトークン効率の高いグラフ対応リコール。"
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## 概要
 
-toon-memoryは永続メモリを管理するための40個のMCPツールと4つのMCPリソースを提供します：
+toon-memoryは永続メモリを管理するための35個のMCPツールと4つのMCPリソースを提供します：
 
 ## ツール
 
@@ -18,7 +18,7 @@ toon-memoryは永続メモリを管理するための40個のMCPツールと4つ
 |------|-------------|
 | `memory_remember` | 決定、パターン、バグ、ナレッジを保存（任意のTTL、自動タグ推論、`links`、自動品質スコア、マージ重複排除、信頼度） |
 | `memory_recall` | メモリを検索（ファイルを読む前に使用。期限切れTTLをフィルタ）。`mode: "graph"`で関係性を考慮したサブグラフを展開し、より高い精度を実現。ランキングはRRF融合（BM25×3 + グラフ中心性、適応的k）を使用。`rrf: false`で従来の線形スコアに。`as_of`は指定日以降にsupersededされたエントリを再包含します |
-| `memory_forget` | キーまたはIDでエントリを削除 |
+| `memory_forget` | **ライフサイクル操作**: `action: "soft"`（デフォルト）でobsoleteに、`"hard"`で完全削除、`"restore"`で復元、`"supersede"`で`new_key`への`superseded_by`リンク付き置き換え。正規のライフサイクルツール |
 | `memory_stats` | メモリの状態を表示（TTL統計と品質分布を含む） |
 | `memory_summary` | ファイルサマリーの保存/取得 |
 | `memory_archive` | 古いエントリ（30日以上）と期限切れTTLエントリをアーカイブ |
@@ -26,7 +26,7 @@ toon-memoryは永続メモリを管理するための40個のMCPツールと4つ
 | `memory_suggest` | 特定のコンテキストに関連するエントリを検索 |
 | `memory_captured` | フックによって自動キャプチャされたアクティビティを一覧表示（オプトイン）またはログをクリア |
 | `memory_checkpoint` | **セッションチェックポイント**: 現在のメモリ状態のスナップショットを7d TTLで作成。長時間セッション中のロールバック参照に便利 |
-| `memory_consolidate` | 同一内容のエントリを重複排除して属性をマージ（決定論的、LLM不使用） |
+| `memory_consolidate` | **クリーンアップ操作**、決定論的（LLM不使用）: `mode: "identical"`（デフォルト）で同一内容を重複排除、`"similar"`で近似重複をマージ（Jaccard >50%）、`"low-quality"`で低品質エントリを一括圧縮 |
 | `memory_encrypt` | AES-256-GCM暗号化を有効化 |
 | `memory_decrypt` | 暗号化を無効化 |
 | `memory_backup` | メモリファイルのタイムスタンプ付きバックアップを作成（最新10件に自動プルーン） |
@@ -42,10 +42,7 @@ toon-memoryは永続メモリを管理するための40個のMCPツールと4つ
 | `memory_unpin` | **Unpin an entry**: remove the pinned flag |
 | `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
 | `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
-| `memory_resolve` | **エントリを復元**: ソフト削除（obsolete）されたエントリをアクティブに復元します |
-| `memory_suppress` | **エントリを非表示**: 削除せずにリコール結果から隠します（status=suppressed） |
 | `memory_reflect` | **メモリの振り返り**: エントリを陳腐度・品質・過接続で決定的にランク付けし、注意や整理が必要なものを明らかにします。LLM不使用 |
-| `memory_supersede` | **エントリを置き換え**: 新しいものに置き換えられたことをマーク（`status=obsolete`、`superseded_by`/`supersedes`リンク、`supersededOn`日付）。古いエントリは置き換え日より前の`as_of`クエリでのみ再表示 |
 | `memory_promote` | **ドラフトを自動昇格**: 低信頼度エントリを決定的にアクティブへ昇格（しきい値0.65、Jaccard重複排除>0.5、デフォルトで`dryRun`） |
 
 ## MCPリソース

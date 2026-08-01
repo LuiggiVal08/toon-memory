@@ -45,9 +45,16 @@ export const content = {
 			cards: [
 			{
 				icon: '🧩',
-				title: '40 MCP Tools + 4 Resources',
-				body: 'Full memory management via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, checkpoint, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, merge_similar, graph_path, context_brief, context_generate, context_diff, context_focus, context_health, context_export, visualize, pin, unpin, search, tag, resolve, suppress, reflect, supersede, promote. Plus resources for direct context reading including an interactive graph viewer.',
-				tags: ['remember', 'recall', 'context', 'diff'],
+				title: '35 MCP Tools + 4 Resources',
+				body: 'Full memory management via MCP — 35 tools grouped by purpose, plus 4 resources for direct context reading including an interactive graph viewer.',
+				toolGroups: [
+					{ label: 'Core Memory', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
+					{ label: 'Search & Intelligence', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
+					{ label: 'Context Briefing', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
+					{ label: 'Compression', tools: ['memory_compress', 'memory_primer'] },
+					{ label: 'Session Management', tools: ['memory_sessions', 'memory_merge_sessions'] },
+					{ label: 'Sync & Security', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+				],
 				wide: true,
 			},
 				{
@@ -112,7 +119,7 @@ export const content = {
 		},
 		stats: {
 			items: [
-				{ number: '40', label: 'MCP Tools' },
+				{ number: '35', label: 'MCP Tools' },
 				{ number: '15', label: 'Agents' },
 				{ number: '80%', label: 'Fewer Tool Calls / session' },
 				{ number: '0', label: 'Config Needed' },
@@ -159,7 +166,7 @@ toon-memory:
 					body: 'One call gives your agent everything: project, git, memory, sessions. 80% fewer tool calls.',
 					code: `context_generate({})
 // # Project Briefing (full)
-// ## Project — toon-memory v3.0.0
+// ## Project — toon-memory v4.0.0
 // ## Git — branch: main, 3 commits
 // ## Memory — 30 entries, 18 edges
 // ## Sessions — 2 active`,
@@ -255,25 +262,51 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				format: 'TOON format',
 			},
 			ranking: {
-				subtitle: 'RRF vs linear recall on 8 gold queries — parity, not regression',
+				subtitle: 'Classic linear score vs new RRF, which also weighs graph links — 8 test queries',
+				what: 'The new search ranks as well as the classic one',
 				metricLabel: 'Metric',
 				linear: 'Linear',
 				rrf: 'RRF',
 				metricRows: [
-					{ metric: 'nDCG', linear: '0.776', rrf: '0.776' },
-					{ metric: 'MRR', linear: '0.917', rrf: '0.917' },
+					{ metric: 'nDCG', gloss: 'ordering quality', linear: '0.776', rrf: '0.776' },
+					{ metric: 'MRR', gloss: 'position of the right hit', linear: '0.917', rrf: '0.917' },
 				],
-				result: 'Parity — 1 win / 1 loss / 6 ties',
-				note: 'RRF fuses BM25 (×3) + graph centrality with adaptive k and ranks identically to the legacy linear score — graph-aware, no regression. Reproducible: <code>npm run bench:rrf</code>.',
+				result: 'Parity — 1 better, 1 worse, 6 identical',
+				note: 'RRF fuses text match + graph links and ranks identically to the legacy score. Reproducible: <code>npm run bench:rrf</code>.',
 			},
 			workflow: {
 				subtitle: 'Token and tool-call savings measured across a real session',
 				stats: [
-					{ num: '~90%', cap: 'fewer tokens (auto-loading)' },
-					{ num: '80%', cap: 'fewer tool calls (25 → 5)' },
-					{ num: '68%', cap: 'fewer tokens (compact recall)' },
-					{ num: '58%', cap: 'fewer tokens (system primer)' },
-					{ num: '14%', cap: 'fewer tokens (batch compress)' },
+					{ num: '~90%', cap: 'fewer tokens', feature: 'Auto-loading', from: 'Dumping all memory at every step', to: 'Only the task-relevant entries' },
+					{ num: '80%', cap: 'fewer tool calls', feature: 'Tool calls', from: '25 manual calls', to: '5 calls per session' },
+					{ num: '68%', cap: 'fewer tokens', feature: 'Compact recall', from: 'Reading whole files', to: 'One compact recall' },
+					{ num: '58%', cap: 'fewer tokens', feature: 'System primer', from: 'Gathering context by hand', to: 'Primer injected automatically' },
+					{ num: '14%', cap: 'fewer tokens', feature: 'Batch compress', from: 'Scattered low-quality entries', to: 'One consolidated summary' },
+				],
+				cards: [
+					{
+						feature: 'Auto-loading',
+						num: '~90%',
+						cap: 'fewer tokens',
+						from: 'Dumping all memory at every step',
+						to: 'Only the task-relevant entries',
+						more: '80% fewer tool calls (25 → 5)',
+					},
+					{
+						feature: 'Compact recall',
+						num: '68%',
+						cap: 'fewer tokens',
+						from: 'Reading whole files',
+						to: 'One compact recall',
+						more: '58% fewer tokens (system primer)',
+					},
+					{
+						feature: 'Batch compress',
+						num: '14%',
+						cap: 'fewer tokens',
+						from: 'Scattered low-quality entries',
+						to: 'One consolidated summary',
+					},
 				],
 				note: 'Auto-loading: the OpenCode plugin injects only file-relevant memory instead of dumping all entries. Full session: start → debug → implement → review → wrap-up. Reproducible: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 			},
@@ -288,7 +321,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 		},
 		tools: {
-			title: '40 MCP tools, 4 resources',
+			title: '35 MCP tools, 4 resources',
 			subtitle: 'Everything your agent needs to remember, recall, and reason',
 			resourcesLabel: 'Resources:',
 			groups: {
@@ -302,7 +335,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			cards: [
 				{ name: 'memory_remember', title: 'Save to Memory', desc: 'Store decisions, patterns, bugs, or knowledge — persisted across sessions with auto quality scoring.', group: 'core' },
 				{ name: 'memory_recall', title: 'Search Memory', desc: 'Query the knowledge graph before reading files. Quality-weighted results. Supports path scoping (scope entries to a file path) and budget control (tiny/normal/deep).', group: 'core' },
-				{ name: 'memory_forget', title: 'Soft-Delete', desc: 'Mark an entry as obsolete by key or id (soft-delete). Hard-delete with force flag.', group: 'core' },
+				{ name: 'memory_forget', title: 'Lifecycle Ops', desc: 'Soft-delete (obsolete), hard-delete, restore, or supersede an entry by key or id via the action parameter.', group: 'core' },
 				{ name: 'memory_stats', title: 'Memory Stats', desc: 'Show statistics about the project memory, including quality distribution and most accessed entries.', group: 'core' },
 				{ name: 'memory_diff', title: 'Memory Diff', desc: 'See what changed since your last session.', group: 'core' },
 				{ name: 'memory_suggest', title: 'Suggest Related', desc: 'Surface related entries for a given context.', group: 'core' },
@@ -311,8 +344,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'memory_smart_recall', title: 'Smart Recall', desc: 'Unified search combining BM25 + graph centrality + quality score + freshness + session bias in one call.', group: 'search' },
 				{ name: 'memory_captured', title: 'Captured Activity', desc: 'View auto-captured hook activity log — promote observations to memory.', group: 'search' },
 				{ name: 'memory_checkpoint', title: 'Session Checkpoint', desc: 'Snapshot the current memory state with 7d TTL — rollback reference for long sessions.', group: 'core' },
-				{ name: 'memory_consolidate', title: 'Consolidate', desc: 'Merge duplicate entries with identical content deterministically.', group: 'search' },
-				{ name: 'memory_merge_similar', title: 'Merge Similar', desc: 'Find and merge near-duplicates via Jaccard similarity (>50%). Deterministic, no LLM — deduplicates your memory in one pass.', group: 'search' },
+				{ name: 'memory_consolidate', title: 'Consolidate', desc: 'Dedupe identical entries, merge near-duplicates (Jaccard >50%), or batch-compress low-quality entries via the mode parameter — deterministic, no LLM.', group: 'search' },
 				{ name: 'memory_graph_path', title: 'Graph Path', desc: 'BFS shortest-path between two entries. Trace knowledge chains across your graph without embeddings or LLM.', group: 'search' },
 				{ name: 'context_brief', title: 'Context Briefing', desc: 'One-call context briefing: memory + sessions + health in compact markdown. Zero LLM.', group: 'context' },
 				{ name: 'context_generate', title: 'Full Project Briefing', desc: 'One-call briefing: project structure + git state + memory + sessions. Replaces 6 manual calls. Saves 93% tokens.', group: 'context' },
@@ -321,7 +353,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'context_health', title: 'Health Audit', desc: 'Orphan links, duplicates, broken file refs, expired TTL, stale sessions. Score 0–100.', group: 'context' },
 				{ name: 'context_export', title: 'Export as Markdown', desc: 'Export memory as injectable markdown for system prompts. Saves 82% tokens.', group: 'context' },
 				{ name: 'memory_compress', title: 'LLM Compress', desc: 'LLM-powered two-step compression: summarize + overwrite. Uses Anthropic/OpenAI CLI if available.', group: 'compress' },
-				{ name: 'memory_compress_all', title: 'Batch Compress', desc: 'Batch compression: overwrites all entries under 100 tokens with a compressed version. Deterministic, no LLM.', group: 'compress' },
 				{ name: 'memory_primer', title: 'Context Primer', desc: 'One-call context primer: top memories + categories + session file changes. Auto-injected at session start.', group: 'compress' },
 				{ name: 'memory_sessions', title: 'Sessions', desc: 'Show active agent sessions and detect soft conflicts.', group: 'sessions' },
 				{ name: 'memory_merge_sessions', title: 'Merge Sessions', desc: 'Merge observations across parallel sessions for a file. Deduplicates and auto-promotes.', group: 'sessions' },
@@ -335,10 +366,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'memory_unpin', title: 'Unpin Entry', desc: 'Remove the priority flag from an entry.', group: 'core' },
 				{ name: 'memory_search', title: 'Unified Search', desc: 'Search memory with category, tags, and date range filters. Tag filter uses AND logic — all specified tags must match. sessionBias boosts entries from the current git branch.', group: 'search' },
 				{ name: 'memory_tag', title: 'Batch Tag Ops', desc: 'Add, remove, or set tags on one or more entries by key or id in a single call.', group: 'core' },
-				{ name: 'memory_resolve', title: 'Resolve Entry', desc: 'Restore a soft-deleted (obsolete) entry back to active status.', group: 'core' },
-				{ name: 'memory_suppress', title: 'Suppress Entry', desc: 'Hide an entry from recall results without deleting it (status=suppressed).', group: 'search' },
 				{ name: 'memory_reflect', title: 'Memory Reflect', desc: 'Deterministically rank entries by staleness, quality, and over-connection to surface what needs attention or cleanup. Zero LLM.', group: 'core' },
-				{ name: 'memory_supersede', title: 'Supersede Entry', desc: 'Mark an entry as replaced by a newer one (superseded_by/supersedes links + supersededOn). Old entries reappear only for as_of point-in-time queries before their supersession.', group: 'core' },
 				{ name: 'memory_promote', title: 'Auto-Promote', desc: 'Promote low-confidence drafts to active entries deterministically (threshold 0.65, Jaccard dedup > 0.5). dryRun by default.', group: 'core' },
 			],
 		},
@@ -356,6 +384,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		viewerSection: {
 			title: 'Memory Graph Viewer',
 			subtitle: 'Visualize your memory as an interactive force-directed graph. See entries, connections, categories, and access patterns at a glance.',
+			capsLabel: 'Inside the viewer:',
+			caps: ['Search', 'Path finder', 'PNG / SVG export', 'Dark & light themes'],
 			features: [
 				'<strong>CLI viewer:</strong> <code>npx toon-memory viewer</code> starts an HTTP server',
 				'<strong>Inline MCP Apps viewer:</strong> call <code>memory_visualize()</code> to render the graph directly in MCP Apps–compatible hosts — no server needed',
@@ -393,7 +423,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			items: [
 				{
 					q: 'What is toon-memory?',
-					a: 'A persistent memory layer for AI coding agents with 40 MCP tools. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions — with 80% fewer tool calls per session.',
+					a: 'A persistent memory layer for AI coding agents with 35 MCP tools. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions — with 80% fewer tool calls per session.',
 				},
 				{
 					q: 'Which agents are supported?',
@@ -445,7 +475,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				},
 				{
 					q: 'What is memory compression?',
-					a: 'memory_compress lets an LLM summarize related entries into one concise summary. memory_compress_all removes low-quality entries (no tags, short content) deterministically — no LLM needed. Both reduce token count.',
+					a: 'memory_compress lets an LLM summarize related entries into one concise summary. memory_consolidate(mode: "low-quality") removes low-quality entries (no tags, short content) deterministically — no LLM needed. Both reduce token count.',
 				},
 				{
 					q: 'Can I sync memory across machines?',
@@ -454,50 +484,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			],
 		},
 		whatNew: {
-			title: "What's New in v3.7.0",
-			subtitle: 'RRF ranking, supersede & point-in-time recall, memory_reflect, memory_promote, typed edges',
+			title: "What's New in v4.0.0",
+			subtitle: 'Canonical tools, memory_forget lifecycle actions, memory_consolidate modes, 5 deprecated aliases removed',
 			cards: [
 				{
-					icon: '🧭',
-					title: 'Memory Reflect',
-					body: 'memory_reflect deterministically ranks entries by staleness, quality, and over-connection — no LLM. Surface what needs attention or cleanup in one call.',
-					stats: ['Staleness', 'Quality', 'Zero LLM'],
-				},
-				{
 					icon: '🔄',
-					title: 'Supersede & Resolve',
-					body: 'memory_supersede replaces an entry with a newer one (superseded_by link + date). Memory_resolve can still revert it. Point-in-time recall with as_of returns the memory as it was.',
-					stats: ['superseded_by', 'supersededOn', 'Reversible'],
+					title: 'Canonical Lifecycle',
+					body: 'memory_forget now owns the full entry lifecycle via a single action param: soft (mark obsolete), hard (permanent delete), restore (reactivate), supersede (retire with a superseded_by link). One tool, no aliases.',
+					stats: ['soft', 'hard', 'restore', 'supersede'],
 				},
 				{
-					icon: '🚀',
-					title: 'Auto-Promote Drafts',
-					body: 'memory_promote promotes low-confidence drafts to active entries deterministically — threshold 0.65, Jaccard dedup > 0.5, dryRun by default. No LLM, no surprises.',
-					stats: ['threshold 0.65', 'Jaccard dedup', 'dryRun'],
-				},
-				{
-					icon: '🔗',
-					title: 'Typed Graph Edges',
-					body: 'Edges now carry types written as type:key — relates, superseded_by, supersedes. Explicit links become relates:key, so you can tell how entries relate, not just that they do.',
-					stats: ['relates', 'superseded_by', 'supersedes'],
-				},
-				{
-					icon: '🏆',
-					title: 'RRF Ranking',
-					body: 'Recall fuses BM25 (×3) + graph-centrality ranks with Reciprocal Rank Fusion and adaptive k=sqrt(n). Benchmarked parity with linear scoring — see the Benchmarks section.',
-					stats: ['BM25×3', 'Centrality', 'Parity'],
-				},
-				{
-					icon: '📅',
-					title: 'Point-in-Time Recall',
-					body: 'memory_recall and memory_smart_recall accept an as_of date: superseded entries reappear when the query predates their supersession. Audit memory as it was on any date.',
-					stats: ['as_of', 'Temporal view', 'Audit'],
+					icon: '🔀',
+					title: 'Consolidate Modes',
+					body: 'memory_consolidate(mode) selects the cleanup strategy: identical (dedupe identical content), similar (merge near-duplicates via Jaccard), low-quality (batch cleanup with minQuality). Deterministic, no LLM.',
+					stats: ['identical', 'similar', 'low-quality'],
 				},
 				{
 					icon: '🧩',
-					title: '40 MCP Tools + 4 Resources',
-					body: 'Adds memory_reflect, memory_supersede, and memory_promote. Updates memory_recall and memory_smart_recall (RRF + as_of). Total: 40 tools + 4 resources.',
-					stats: ['+3 tools', '40 total'],
+					title: '35 MCP Tools + 4 Resources',
+					body: 'Removed 5 deprecated aliases: memory_resolve, memory_suppress, memory_supersede, memory_merge_similar, memory_compress_all. The MCP SDK has no tool-level deprecated flag, so aliases only added noise. Now: 35 tools + 4 resources.',
+					stats: ['-5 aliases', '35 total', '4 resources'],
+				},
+				{
+					icon: '⚡',
+					title: 'Drop-in Replacement',
+					body: 'Every removed alias maps 1:1 to a canonical call — memory_resolve → memory_forget(action: "restore"), memory_suppress → memory_forget(action: "soft"), memory_supersede → memory_forget(action: "supersede"), memory_merge_similar → memory_consolidate(mode: "similar"), memory_compress_all → memory_consolidate(mode: "low-quality"). Nothing breaks.',
+					stats: ['1:1 mapping', 'Same behavior'],
 				},
 			],
 		},
@@ -557,9 +569,16 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			cards: [
 			{
 				icon: '🧩',
-				title: '40 herramientas MCP + 4 recursos',
-				body: 'Gestión completa de memoria vía MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, checkpoint, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, merge_similar, graph_path, context_brief, context_generate, context_diff, context_focus, context_health, context_export, visualize, pin, unpin, search, tag, resolve, suppress, reflect, supersede, promote. Más recursos para lectura directa de contexto.',
-				tags: ['remember', 'recall', 'context', 'diff'],
+				title: '35 herramientas MCP + 4 recursos',
+				body: 'Gestión completa de memoria vía MCP — 35 herramientas agrupadas por propósito, más 4 recursos para lectura directa de contexto, incluido un visor de grafo interactivo.',
+				toolGroups: [
+					{ label: 'Memoria Principal', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
+					{ label: 'Búsqueda e Inteligencia', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
+					{ label: 'Contexto Briefing', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
+					{ label: 'Compresión', tools: ['memory_compress', 'memory_primer'] },
+					{ label: 'Sesiones', tools: ['memory_sessions', 'memory_merge_sessions'] },
+					{ label: 'Sincronización y Seguridad', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+				],
 				wide: true,
 			},
 				{
@@ -624,7 +643,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		stats: {
 			items: [
-				{ number: '40', label: 'Herramientas MCP' },
+				{ number: '35', label: 'Herramientas MCP' },
 				{ number: '15', label: 'Agentes' },
 				{ number: '80%', label: 'Menos tool calls por sesión' },
 				{ number: '0', label: 'Config necesaria' },
@@ -756,25 +775,51 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				format: 'Formato TOON',
 			},
 			ranking: {
-				subtitle: 'RRF vs recall lineal sobre 8 queries gold — paridad, no regresión',
+				subtitle: 'Puntaje lineal clásico vs nuevo RRF, que también pondera vínculos del grafo — 8 queries de prueba',
+				what: 'El buscador nuevo ordena tan bien como el clásico',
 				metricLabel: 'Métrica',
 				linear: 'Lineal',
 				rrf: 'RRF',
 				metricRows: [
-					{ metric: 'nDCG', linear: '0.776', rrf: '0.776' },
-					{ metric: 'MRR', linear: '0.917', rrf: '0.917' },
+					{ metric: 'nDCG', gloss: 'calidad del orden', linear: '0.776', rrf: '0.776' },
+					{ metric: 'MRR', gloss: 'posición del acierto', linear: '0.917', rrf: '0.917' },
 				],
-				result: 'Paridad — 1 victoria / 1 derrota / 6 empates',
-				note: 'RRF fusiona BM25 (×3) + centralidad del grafo con k adaptativo y rankea idéntico al score lineal legacy — graph-aware, sin regresión. Reproducible: <code>npm run bench:rrf</code>.',
+				result: 'Paridad — 1 mejor, 1 peor, 6 idénticos',
+				note: 'RRF fusiona coincidencia de texto + vínculos del grafo y rankea idéntico al score legacy. Reproducible: <code>npm run bench:rrf</code>.',
 			},
 			workflow: {
 				subtitle: 'Ahorro de tokens y tool calls medido en una sesión real',
 				stats: [
-					{ num: '~90%', cap: 'menos tokens (auto-carga)' },
-					{ num: '80%', cap: 'menos tool calls (25 → 5)' },
-					{ num: '68%', cap: 'menos tokens (recall compacto)' },
-					{ num: '58%', cap: 'menos tokens (system primer)' },
-					{ num: '14%', cap: 'menos tokens (compresión por lotes)' },
+					{ num: '~90%', cap: 'menos tokens', feature: 'Auto-carga', from: 'Volcar toda la memoria a cada paso', to: 'Solo lo relevante a la tarea' },
+					{ num: '80%', cap: 'menos tool calls', feature: 'Tool calls', from: '25 llamadas manuales', to: '5 llamadas por sesión' },
+					{ num: '68%', cap: 'menos tokens', feature: 'Recall compacto', from: 'Releer los archivos enteros', to: 'Un recall compacto' },
+					{ num: '58%', cap: 'menos tokens', feature: 'System primer', from: 'Pedir el contexto a mano', to: 'Primer inyectado solo' },
+					{ num: '14%', cap: 'menos tokens', feature: 'Compresión por lotes', from: 'Entradas dispersas de baja calidad', to: '1 resumen consolidado' },
+				],
+				cards: [
+					{
+						feature: 'Auto-carga',
+						num: '~90%',
+						cap: 'menos tokens',
+						from: 'Volcar toda la memoria a cada paso',
+						to: 'Solo lo relevante a la tarea',
+						more: '80% menos tool calls (25 → 5)',
+					},
+					{
+						feature: 'Recall compacto',
+						num: '68%',
+						cap: 'menos tokens',
+						from: 'Releer los archivos enteros',
+						to: 'Un recall compacto',
+						more: '58% menos tokens (system primer)',
+					},
+					{
+						feature: 'Compresión por lotes',
+						num: '14%',
+						cap: 'menos tokens',
+						from: 'Entradas dispersas de baja calidad',
+						to: '1 resumen consolidado',
+					},
 				],
 				note: 'Auto-carga: el plugin de OpenCode inyecta solo memoria relevante al file path en vez de volcar todas las entradas. Sesión completa: inicio → debug → implementar → revisar → cerrar. Reproducible: <code>npm run bench:full</code>, <code>npm run bench:primer</code>, <code>npm run bench:compress-all</code>.',
 			},
@@ -789,7 +834,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 		},
 	tools: {
-		title: '40 herramientas MCP, 4 recursos',
+		title: '35 herramientas MCP, 4 recursos',
 		subtitle: 'Todo lo que tu agente necesita para recordar, recuperar y razonar',
 		resourcesLabel: 'Recursos:',
 		groups: {
@@ -803,7 +848,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		cards: [
 			{ name: 'memory_remember', title: 'Guardar en memoria', desc: 'Almacena decisiones, patrones, bugs o conocimiento — persistente entre sesiones con puntuación de calidad automática.', group: 'core' },
 			{ name: 'memory_recall', title: 'Buscar en memoria', desc: 'Consulta el grafo de conocimiento antes de leer archivos. Resultados ponderados por calidad. Soporta path scoping (pathScope) y control de presupuesto (tiny/normal/deep).', group: 'core' },
-			{ name: 'memory_forget', title: 'Soft-Delete', desc: 'Marca una entrada como obsoleta por key o id (soft-delete). Borrado definitivo con flag force.', group: 'core' },
+			{ name: 'memory_forget', title: 'Ciclo de vida', desc: 'Soft-delete (obsoleta), borrado definitivo, restaurar o superseder una entrada por key o id mediante el parámetro action.', group: 'core' },
 			{ name: 'memory_stats', title: 'Estadísticas', desc: 'Muestra estadísticas sobre la memoria del proyecto, incluyendo distribución de calidad y entradas más accedidas.', group: 'core' },
 			{ name: 'memory_diff', title: 'Diff de memoria', desc: 'Mira qué cambió desde tu última sesión.', group: 'core' },
 			{ name: 'memory_suggest', title: 'Sugerir relacionados', desc: 'Muestra entradas relacionadas para un contexto dado.', group: 'core' },
@@ -812,8 +857,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_smart_recall', title: 'Recuperación inteligente', desc: 'Búsqueda unificada combinando BM25 + centralidad + calidad + frescura + sesgo de sesión en una sola llamada.', group: 'search' },
 			{ name: 'memory_captured', title: 'Actividad capturada', desc: 'Muestra el log de actividad capturado por hooks — promueve observaciones a memoria.', group: 'search' },
 			{ name: 'memory_checkpoint', title: 'Punto de control', desc: 'Crea una instantánea del estado actual de memoria con TTL de 7d. Útil para referencia de restauración durante sesiones largas.', group: 'core' },
-			{ name: 'memory_consolidate', title: 'Consolidar', desc: 'Combina entradas duplicadas con contenido idéntico de forma determinista.', group: 'search' },
-			{ name: 'memory_merge_similar', title: 'Fusionar similares', desc: 'Encuentra y fusiona casi-duplicados vía similitud Jaccard (>50%). Determinístico, sin LLM — limpia tu memoria de un solo paso.', group: 'search' },
+			{ name: 'memory_consolidate', title: 'Consolidar', desc: 'Elimina duplicados idénticos, fusiona casi-duplicados (Jaccard >50%) o comprime en lote entradas de baja calidad mediante el parámetro mode — determinístico, sin LLM.', group: 'search' },
 			{ name: 'memory_graph_path', title: 'Ruta del grafo', desc: 'BFS shortest-path entre dos entradas. Traza cadenas de conocimiento a través de tu grafo sin embeddings ni LLM.', group: 'search' },
 			{ name: 'context_brief', title: 'Briefing de contexto', desc: 'Briefing de contexto en una sola llamada: memoria + sesiones + salud en markdown compacto. Cero LLM.', group: 'context' },
 			{ name: 'context_generate', title: 'Briefing completo', desc: 'Briefing en una llamada: estructura del proyecto + estado git + memoria + sesiones. Reemplaza 6 llamadas manuales. Ahorra 93% tokens.', group: 'context' },
@@ -822,7 +866,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'context_health', title: 'Auditoría de salud', desc: 'Links huérfanos, duplicados, referencias rotas, TTL expirados, sesiones obsoletas. Puntaje 0–100.', group: 'context' },
 			{ name: 'context_export', title: 'Exportar como Markdown', desc: 'Exporta memoria como markdown inyectable para system prompts. Ahorra 82% tokens.', group: 'context' },
 			{ name: 'memory_compress', title: 'Compresión con LLM', desc: 'Compresión con LLM en dos pasos: resumir + sobrescribir. Usa Anthropic/OpenAI CLI si están disponibles.', group: 'compress' },
-			{ name: 'memory_compress_all', title: 'Compresión por lotes', desc: 'Compresión por lotes: sobrescribe entradas bajo 100 tokens con versión comprimida. Determinístico, sin LLM.', group: 'compress' },
 			{ name: 'memory_primer', title: 'Primer de contexto', desc: 'Contexto en una llamada: memorias principales + categorías + cambios de archivos. Auto-inyectado al inicio de sesión.', group: 'compress' },
 			{ name: 'memory_sessions', title: 'Sesiones', desc: 'Muestra sesiones de agente activas y detecta conflictos suaves.', group: 'sessions' },
 			{ name: 'memory_merge_sessions', title: 'Fusionar sesiones', desc: 'Fusiona observaciones entre sesiones paralelas para un archivo. Deduplica y auto-promueve.', group: 'sessions' },
@@ -836,10 +879,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_unpin', title: 'Desfijar entrada', desc: 'Elimina la marca de prioridad de una entrada.', group: 'core' },
 			{ name: 'memory_search', title: 'Búsqueda unificada', desc: 'Busca en la memoria con filtros de categoría, etiquetas y rango de fechas. Filtro de etiquetas usa lógica AND. sessionBias potencia entradas de la rama git actual.', group: 'search' },
 			{ name: 'memory_tag', title: 'Operaciones por lotes', desc: 'Añade, elimina o establece etiquetas en una o más entradas por key o id en una sola llamada.', group: 'core' },
-			{ name: 'memory_resolve', title: 'Restaurar entrada', desc: 'Restaura una entrada soft-delete (obsoleta) a estado activo.', group: 'core' },
-			{ name: 'memory_suppress', title: 'Suprimir entrada', desc: 'Oculta una entrada de resultados de recall sin eliminarla (status=suppressed).', group: 'search' },
 			{ name: 'memory_reflect', title: 'Reflexión de memoria', desc: 'Rankea entradas determinísticamente por obsolescencia, calidad y sobre-conexión para detectar qué necesita atención o limpieza. Zero LLM.', group: 'core' },
-			{ name: 'memory_supersede', title: 'Superseder entrada', desc: 'Marca una entrada como reemplazada por una más nueva (enlaces superseded_by/supersedes + supersededOn). Las antiguas reaparecen solo en consultas as_of anteriores a su supersession.', group: 'core' },
 			{ name: 'memory_promote', title: 'Auto-promover', desc: 'Promueve drafts de baja confianza a entradas activas de forma determinista (umbral 0.65, dedup Jaccard > 0.5). dryRun por defecto.', group: 'core' },
 		],
 	},
@@ -857,6 +897,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		viewerSection: {
 			title: 'Visor del grafo de memoria',
 			subtitle: 'Visualiza tu memoria como un grafo interactivo de fuerza dirigida. Ve entradas, conexiones, categorías y patrones de acceso de un vistazo.',
+			capsLabel: 'Dentro del visor:',
+			caps: ['Búsqueda', 'Buscador de caminos', 'Exportar PNG / SVG', 'Temas claro y oscuro'],
 			features: [
 				'<strong>Visor CLI:</strong> <code>npx toon-memory viewer</code> inicia un servidor HTTP',
 				'<strong>Visor inline MCP Apps:</strong> llama <code>memory_visualize()</code> para renderizar el grafo directamente en hosts compatibles con MCP Apps — sin servidor',
@@ -946,7 +988,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 			{
 				q: '¿Qué es la compresión de memoria?',
-				a: 'memory_compress permite a un LLM resumir entradas relacionadas en un resumen conciso. memory_compress_all elimina entradas de baja calidad (sin tags, contenido corto) de forma determinista — sin LLM. Ambas reducen el conteo de tokens.',
+				a: 'memory_compress permite a un LLM resumir entradas relacionadas en un resumen conciso. memory_consolidate(mode: "low-quality") elimina entradas de baja calidad (sin tags, contenido corto) de forma determinista — sin LLM. Ambas reducen el conteo de tokens.',
 			},
 			{
 				q: '¿Puedo sincronizar la memoria entre máquinas?',
@@ -955,50 +997,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	whatNew: {
-		title: 'Novedades en v3.7.0',
-		subtitle: 'Ranking RRF, supersede y recall punto-en-tiempo, memory_reflect, memory_promote, aristas tipadas',
+		title: 'Novedades en v4.0.0',
+		subtitle: 'Herramientas canónicas, acciones de ciclo de vida en memory_forget, modos de memory_consolidate, 5 aliases deprecados eliminados',
 		cards: [
 			{
-				icon: '🧭',
-				title: 'Memory Reflect',
-				body: 'memory_reflect rankea entradas determinísticamente por obsolescencia, calidad y sobre-conexión — sin LLM. Detecta qué necesita atención o limpieza en una llamada.',
-				stats: ['Obsolescencia', 'Calidad', 'Zero LLM'],
-			},
-			{
 				icon: '🔄',
-				title: 'Supersede y Resolver',
-				body: 'memory_supersede reemplaza una entrada por una más nueva (enlace superseded_by + fecha). memory_resolve puede revertirlo. El recall punto-en-tiempo con as_of devuelve la memoria tal como era.',
-				stats: ['superseded_by', 'supersededOn', 'Reversible'],
+				title: 'Ciclo de Vida Canónico',
+				body: 'memory_forget ahora gestiona todo el ciclo de vida de una entrada mediante un único parámetro action: soft (marcar obsoleta), hard (borrado permanente), restore (reactivar), supersede (retirar con enlace superseded_by). Una herramienta, sin aliases.',
+				stats: ['soft', 'hard', 'restore', 'supersede'],
 			},
 			{
-				icon: '🚀',
-				title: 'Auto-Promover Drafts',
-				body: 'memory_promote promueve drafts de baja confianza a entradas activas de forma determinista — umbral 0.65, dedup Jaccard > 0.5, dryRun por defecto. Sin LLM, sin sorpresas.',
-				stats: ['umbral 0.65', 'Dedup Jaccard', 'dryRun'],
-			},
-			{
-				icon: '🔗',
-				title: 'Aristas Tipadas del Grafo',
-				body: 'Las aristas ahora llevan tipo escrito como type:key — relates, superseded_by, supersedes. Los links explícitos se vuelven relates:key: sabes cómo se relacionan las entradas, no solo que se relacionan.',
-				stats: ['relates', 'superseded_by', 'supersedes'],
-			},
-			{
-				icon: '🏆',
-				title: 'Ranking RRF',
-				body: 'El recall fusiona ranks de BM25 (×3) + centralidad con Reciprocal Rank Fusion y k adaptativo sqrt(n). Paridad benchmarkeada con el scoring lineal — ver la sección Benchmarks.',
-				stats: ['BM25×3', 'Centralidad', 'Paridad'],
-			},
-			{
-				icon: '📅',
-				title: 'Recall Punto-en-Tiempo',
-				body: 'memory_recall y memory_smart_recall aceptan una fecha as_of: entradas superseded reaparecen cuando la consulta precede a su supersession. Audita la memoria tal como era en cualquier fecha.',
-				stats: ['as_of', 'Vista temporal', 'Auditoría'],
+				icon: '🔀',
+				title: 'Modos de Consolidación',
+				body: 'memory_consolidate(mode) selecciona la estrategia de limpieza: identical (dedupe de contenido idéntico), similar (fusiona casi-duplicados vía Jaccard), low-quality (limpieza por lotes con minQuality). Determinista, sin LLM.',
+				stats: ['identical', 'similar', 'low-quality'],
 			},
 			{
 				icon: '🧩',
-				title: '40 Herramientas MCP + 4 Recursos',
-				body: 'Añade memory_reflect, memory_supersede y memory_promote. Actualiza memory_recall y memory_smart_recall (RRF + as_of). Total: 40 herramientas + 4 recursos.',
-				stats: ['+3 herramientas', '40 total'],
+				title: '35 Herramientas MCP + 4 Recursos',
+				body: 'Eliminados 5 aliases deprecados: memory_resolve, memory_suppress, memory_supersede, memory_merge_similar, memory_compress_all. El SDK de MCP no tiene flag deprecated a nivel de herramienta, así que los aliases solo añadían ruido. Ahora: 35 herramientas + 4 recursos.',
+				stats: ['-5 aliases', '35 total', '4 recursos'],
+			},
+			{
+				icon: '⚡',
+				title: 'Sustitución Directa',
+				body: 'Cada alias eliminado mapea 1:1 a una llamada canónica — memory_resolve → memory_forget(action: "restore"), memory_suppress → memory_forget(action: "soft"), memory_supersede → memory_forget(action: "supersede"), memory_merge_similar → memory_consolidate(mode: "similar"), memory_compress_all → memory_consolidate(mode: "low-quality"). Nada se rompe.',
+				stats: ['Mapeo 1:1', 'Mismo comportamiento'],
 			},
 		],
 	},
@@ -1043,7 +1067,20 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	features: {
 		cards: [
-			{ icon: '🧩', title: '40 个 MCP 工具 + 4 个资源', body: '通过 MCP 实现完整的记忆管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、compress、compress_all、primer、merge_sessions、export_gist、import_gist、merge_similar、graph_path、context_brief、context_generate、context_diff、context_focus、context_health、context_export、visualize、pin、unpin、search、tag、reflect、supersede、promote。外加直接上下文读取的资源。', tags: ['remember', 'recall', 'context', 'diff'] },
+			{
+				icon: '🧩',
+				title: '35 个 MCP 工具 + 4 个资源',
+				body: '通过 MCP 实现完整的记忆管理 — 35 个工具按用途分组，外加 4 个直接上下文读取资源，包括交互式图谱查看器。',
+				toolGroups: [
+					{ label: '核心记忆', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
+					{ label: '搜索与智能', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
+					{ label: '上下文简报', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
+					{ label: '压缩', tools: ['memory_compress', 'memory_primer'] },
+					{ label: '会话管理', tools: ['memory_sessions', 'memory_merge_sessions'] },
+					{ label: '同步与安全', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+				],
+				wide: true,
+			},
 			{ icon: '⭐', title: '多代理', body: '支持所有主流 AI 编程代理。OpenCode、VS Code、Claude、Cursor、Windsurf、Cline、Continue — 零配置。', tags: ['OpenCode', 'Claude', 'Cursor'] },
 			{ icon: '📄', title: 'TOON 格式', body: '比 JSON 减少 22% 的 token（实测）。自定义编码专为 LLM 理解和 token 效率设计。', stats: ['减少 22% token', '解析速度提升 1.3x'] },
 			{ icon: '🔎', title: '智能召回', body: '基于图的召回按 BM25 相关性和图中心性重新排序（中心节点即使不包含查询词也会浮现）。按跳数衰减保持远距离上下文较低。Token 高效的 `compact` 模式返回数字索引、片段截断的结果。', stats: ['BM25', '中心性', 'compact'] },
@@ -1052,7 +1089,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '支持 15+ 个 AI 编程代理', subtitle: '零配置 — toon-memory 自动检测并配置每个代理' },
-	stats: { items: [{ number: '40', label: 'MCP 工具' }, { number: '15', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
+	stats: { items: [{ number: '35', label: 'MCP 工具' }, { number: '15', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
 	howItWorks: {
 		title: '它是如何工作的？',
 		subtitle: '从失忆到记忆的四个步骤',
@@ -1116,7 +1153,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '40 个 MCP 工具，4 个资源', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
+		title: '35 个 MCP 工具，4 个资源', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
 		groups: {
 			core: '核心记忆',
 			search: '搜索与智能',
@@ -1136,7 +1173,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_archive', title: '归档旧条目', desc: '移动超过 30 天的条目以保持记忆整洁。', group: 'core' },
 			{ name: 'memory_smart_recall', title: '智能召回', desc: '统一搜索，在一次调用中结合 BM25 + 图中心性 + 质量评分 + 新鲜度。', group: 'search' },
 			{ name: 'memory_captured', title: '捕获的活动', desc: '查看 hooks 自动捕获的活动日志 — 将观察提升为记忆。', group: 'search' },
-			{ name: 'memory_consolidate', title: '合并去重', desc: '以确定性方式合并内容相同的重复条目。通过 Jaccard 相似度检测近似重复。', group: 'search' },
+			{ name: 'memory_consolidate', title: '合并去重', desc: '通过 mode 参数以确定性方式去重相同内容、合并近似重复（Jaccard >50%）或批量移除低质量条目 — 无 LLM。', group: 'search' },
 			{ name: 'context_brief', title: '上下文简报', desc: '一次调用的上下文简报：记忆 + 会话 + 健康状态，紧凑 markdown。零 LLM。', group: 'context' },
 			{ name: 'context_generate', title: '完整项目简报', desc: '一次调用的简报：项目结构 + git 状态 + 记忆 + 会话。替代 6 次手动调用。节省 93% token。', group: 'context' },
 			{ name: 'context_diff', title: '增量简报', desc: 'git 提交 + 修改的文件 + 自上次会话以来的新/更新记忆。节省 72% token。', group: 'context' },
@@ -1145,7 +1182,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'context_export', title: '导出为 Markdown', desc: '将记忆导出为可注入的 markdown 用于系统提示。节省 82% token。', group: 'context' },
 			{ name: 'memory_sessions', title: '会话', desc: '显示活跃的代理会话并检测软冲突。', group: 'sessions' },
 			{ name: 'memory_compress', title: 'LLM 压缩', desc: 'LLM 驱动的两步压缩：摘要 + 覆盖。如果可用则使用 Anthropic/OpenAI CLI。', group: 'compress' },
-			{ name: 'memory_compress_all', title: '批量压缩', desc: '批量压缩：将所有低于 100 token 的条目覆盖为压缩版本。确定性，无 LLM。', group: 'compress' },
 			{ name: 'memory_primer', title: '上下文引导', desc: '一次调用的上下文引导：主要记忆 + 分类 + 会话文件变化。会话开始时自动注入。', group: 'compress' },
 			{ name: 'memory_merge_sessions', title: '合并会话', desc: '合并文件的并行会话中的观察。去重并自动提升。', group: 'sessions' },
 			{ name: 'memory_export_gist', title: '导出到 Gist', desc: '将条目导出到 GitHub Gist（公开或私有）。使用 GITHUB_TOKEN 或 gh CLI。', group: 'sync' },
@@ -1159,7 +1195,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_search', title: '统一搜索', desc: '使用类别、标签和日期范围过滤器搜索记忆。标签过滤使用 AND 逻辑。', group: 'search' },
 			{ name: 'memory_tag', title: '批量标签操作', desc: '在单次调用中按 key 或 id 对一个或多个条目添加、删除或设置标签。', group: 'core' },
 			{ name: 'memory_reflect', title: '记忆反思', desc: '按过期程度、质量和过度连接对条目进行确定性排名，以发现需要关注或清理的内容。零 LLM。', group: 'core' },
-			{ name: 'memory_supersede', title: '替换条目', desc: '将条目标记为被较新条目替换（superseded_by/supersedes 链接 + supersededOn）。旧条目仅在早于其替换时间的 as_of 时间点查询中重新出现。', group: 'core' },
 			{ name: 'memory_promote', title: '自动提升', desc: '确定性提升低置信度草稿为活跃条目（阈值 0.65，Jaccard 去重 > 0.5）。默认 dryRun。', group: 'core' },
 		],
 	},
@@ -1180,7 +1215,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	faq: {
 		title: '常见问题', subtitle: '关于为你的代理提供记忆你需要知道的一切',
 		items: [
-			{ q: '什么是 toon-memory？', a: '面向 AI 编程代理的持久记忆层，包含 40 个 MCP 工具。它以紧凑的 TOON 格式存储决策、模式、bug 和上下文，让你的代理在会话之间记住一切 — 每次会话减少 80% 的工具调用。' },
+			{ q: '什么是 toon-memory？', a: '面向 AI 编程代理的持久记忆层，包含 35 个 MCP 工具。它以紧凑的 TOON 格式存储决策、模式、bug 和上下文，让你的代理在会话之间记住一切 — 每次会话减少 80% 的工具调用。' },
 			{ q: '支持哪些代理？', a: 'OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex、Gemini、Zed、Antigravity、Aider、KiloCode、OpenClaw 和 Kiro — 通过 MCP 服务器零配置支持 15+ 个代理。' },
 			{ q: '我的数据如何存储？', a: '条目写入本地 TOON 文件（一种 token 高效的格式，比 JSON 小约 22%，实测）。你拥有该文件，可以像任何其他源文件一样提交、diff 或备份。' },
 			{ q: '我的记忆是加密的吗？', a: '是的。使用 memory_encrypt 工具启用加密，通过 AES-256-GCM 保护敏感条目。密钥自动生成并保持在本地。' },
@@ -1193,55 +1228,37 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ q: '什么是智能召回？', a: 'memory_smart_recall 在一次调用中结合 BM25 关键词搜索、图中心性、质量评分和新鲜度衰减 — 无需手动编排的最佳排名策略。' },
 			{ q: '质量评分是如何工作的？', a: '每条条目自动获得质量评分 (0-1)，基于标签覆盖率、链接丰富度、内容详细度、新鲜度和特定度。高质量条目在召回结果中首先出现。' },
 			{ q: '如果我两次保存相同的键会怎样？', a: '系统合并属性而非替换：标签和链接取并集，质量和置信度取最大值，日期更新。你的条目随时间变得更丰富。' },
-			{ q: '什么是记忆压缩？', a: 'memory_compress 允许 LLM 将相关条目摘要为简洁的总结。memory_compress_all 确定性地移除低质量条目（无标签、短内容）— 无需 LLM。两者都减少令牌数量。' },
+			{ q: '什么是记忆压缩？', a: 'memory_compress 允许 LLM 将相关条目摘要为简洁的总结。memory_consolidate(mode: "low-quality") 可确定性地移除低质量条目（无标签、短内容）— 无需 LLM。两者都减少令牌数量。' },
 			{ q: '可以在机器之间同步记忆吗？', a: '可以。使用 memory_export_gist 将条目推送到 GitHub Gist，然后在另一台机器上使用 memory_import_gist。条目会自动合并（标签并集、最大置信度）。' },
 		],
 	},
 	whatNew: {
-		title: 'v3.7.0 新功能',
-		subtitle: 'RRF 排名、supersede 与时间点召回、memory_reflect、memory_promote、类型化边',
+		title: 'v4.0.0 新功能',
+		subtitle: '规范化工具、memory_forget 生命周期操作、memory_consolidate 模式、移除 5 个弃用别名',
 		cards: [
 			{
-				icon: '🧭',
-				title: 'Memory Reflect',
-				body: 'memory_reflect 按过期程度、质量和过度连接对条目进行确定性排名 — 无需 LLM。一次调用即可发现哪些内容需要关注或清理。',
-				stats: ['过期程度', '质量', 'Zero LLM'],
-			},
-			{
 				icon: '🔄',
-				title: 'Supersede 与解析',
-				body: 'memory_supersede 用较新的条目替换旧条目（superseded_by 链接 + 日期）。memory_resolve 仍然可以还原。使用 as_of 的时间点召回会返回当时的记忆原貌。',
-				stats: ['superseded_by', 'supersededOn', '可还原'],
+				title: '规范化生命周期',
+				body: 'memory_forget 现在通过单一的 action 参数管理条目的完整生命周期：soft（标记为过时）、hard（永久删除）、restore（重新激活）、supersede（通过 superseded_by 链接退役）。一个工具，没有别名。',
+				stats: ['soft', 'hard', 'restore', 'supersede'],
 			},
 			{
-				icon: '🚀',
-				title: '草稿自动提升',
-				body: 'memory_promote 将低置信度的草稿确定性提升为活跃条目 — 阈值 0.65，Jaccard 去重 > 0.5，默认 dryRun。无需 LLM，没有意外。',
-				stats: ['阈值 0.65', 'Jaccard 去重', 'dryRun'],
-			},
-			{
-				icon: '🔗',
-				title: '类型化图边',
-				body: '边现在携带以 type:key 形式书写的类型 — relates、superseded_by、supersedes。显式链接变为 relates:key，因此你不仅能看出条目之间有关联，还能看出它们如何关联。',
-				stats: ['relates', 'superseded_by', 'supersedes'],
-			},
-			{
-				icon: '🏆',
-				title: 'RRF 排名',
-				body: '召回使用 Reciprocal Rank Fusion 融合 BM25（×3）+ 图中心性排名，并使用自适应 k=sqrt(n)。基准测试确认与线性评分完全一致 — 见基准测试部分。',
-				stats: ['BM25×3', '中心性', '完全一致'],
-			},
-			{
-				icon: '📅',
-				title: '时间点召回',
-				body: 'memory_recall 和 memory_smart_recall 接受 as_of 日期：当查询早于被 supersede 的时间时，被替代的条目会重新出现。审计任意日期的记忆原貌。',
-				stats: ['as_of', '时间视图', '审计'],
+				icon: '🔀',
+				title: '整合模式',
+				body: 'memory_consolidate(mode) 选择清理策略：identical（去重相同内容）、similar（通过 Jaccard 合并近似重复）、low-quality（使用 minQuality 批量清理）。确定性，无需 LLM。',
+				stats: ['identical', 'similar', 'low-quality'],
 			},
 			{
 				icon: '🧩',
-				title: '40 个 MCP 工具 + 4 个资源',
-				body: '新增 memory_reflect、memory_supersede 和 memory_promote。更新 memory_recall 和 memory_smart_recall（RRF + as_of）。总计：40 个工具 + 4 个资源。',
-				stats: ['+3 工具', '40 总计'],
+				title: '35 个 MCP 工具 + 4 个资源',
+				body: '移除 5 个弃用别名：memory_resolve、memory_suppress、memory_supersede、memory_merge_similar、memory_compress_all。MCP SDK 没有工具级的 deprecated 标记，因此别名只会增加噪音。现在：35 个工具 + 4 个资源。',
+				stats: ['-5 个别名', '35 总计', '4 个资源'],
+			},
+			{
+				icon: '⚡',
+				title: '直接替换',
+				body: '每个被移除的别名都 1:1 映射到规范化调用 — memory_resolve → memory_forget(action: "restore")、memory_suppress → memory_forget(action: "soft")、memory_supersede → memory_forget(action: "supersede")、memory_merge_similar → memory_consolidate(mode: "similar")、memory_compress_all → memory_consolidate(mode: "low-quality")。脚本不会中断。',
+				stats: ['1:1 映射', '行为不变'],
 			},
 		],
 	},
@@ -1266,7 +1283,20 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	features: {
 		cards: [
-			{ icon: '🧩', title: '40 個の MCP ツール + 4 個のリソース', body: 'MCP 経由で完全なメモリ管理 — remember、recall、forget、stats、summary、archive、diff、suggest、smart_recall、encrypt、decrypt、captured、consolidate、sessions、compress、compress_all、primer、merge_sessions、export_gist、import_gist、context_brief、context_generate、context_diff、context_focus、context_health、context_export、reflect、supersede、promote。加えて直接コンテキスト読み取り用リソース。', tags: ['remember', 'recall', 'context', 'diff'] },
+			{
+				icon: '🧩',
+				title: '35 個の MCP ツール + 4 個のリソース',
+				body: 'MCP 経由で完全なメモリ管理 — 用途ごとにグループ化した 35 個のツールと、対話型グラフビューアを含む直接コンテキスト読み取り用の 4 個のリソース。',
+				toolGroups: [
+					{ label: 'コアメモリ', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
+					{ label: '検索＆インテリジェンス', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
+					{ label: 'コンテキストブリーフィング', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
+					{ label: '圧縮', tools: ['memory_compress', 'memory_primer'] },
+					{ label: 'セッション', tools: ['memory_sessions', 'memory_merge_sessions'] },
+					{ label: '同期＆セキュリティ', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+				],
+				wide: true,
+			},
 			{ icon: '⭐', title: 'マルチエージェント', body: 'すべての主要 AI コーディングエージェントに対応。OpenCode、VS Code、Claude、Cursor、Windsurf、Cline、Continue — ゼロコンフィグ。', tags: ['OpenCode', 'Claude', 'Cursor'] },
 			{ icon: '📄', title: 'TOON フォーマット', body: 'JSON より 22% トークン削減（実測）。LLM 理解とトークン効率のために設計されたカスタムエンコーディング。', stats: ['トークン 22% 削減', 'パース速度 1.3x 向上'] },
 			{ icon: '🔎', title: 'スマートリコール', body: 'グラフベースのリコールが BM25 関連性とグラフ中心性で再順位付けされます（クエリワードがなくてもハブが浮上）。ホップごとの減衰で遠いコンテキストを低く維持。トークン効率の高い `compact` モードは数字インデックス、スニペット切り詰めの結果を返します。', stats: ['BM25', '中心性', 'compact'] },
@@ -1275,7 +1305,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '15 以上の AI コーディングエージェントに対応', subtitle: 'ゼロコンフィグ — toon-memory が自動検出し、各エージェントを設定' },
-	stats: { items: [				{ number: '40', label: 'MCP ツール' }, { number: '15', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
+	stats: { items: [				{ number: '35', label: 'MCP ツール' }, { number: '15', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
 	howItWorks: {
 		title: 'どのように機能するのか？', subtitle: '記憶喪失からメモリへの 4 つのステップ',
 		steps: [
@@ -1338,7 +1368,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '40 個の MCP ツール、4 個のリソース', subtitle: 'エージェントが記憶、リコール、推論するために必要なすべて', resourcesLabel: 'リソース：',
+		title: '35 個の MCP ツール、4 個のリソース', subtitle: 'エージェントが記憶、リコール、推論するために必要なすべて', resourcesLabel: 'リソース：',
 		groups: {
 			core: 'コアメモリ',
 			search: '検索＆インテリジェンス',
@@ -1358,7 +1388,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_archive', title: '古いものをアーカイブ', desc: 'メモリをきれいに保つために 30 日以上のエントリを移動。', group: 'core' },
 			{ name: 'memory_smart_recall', title: 'スマートリコール', desc: 'BM25 + グラフ中心性 + 品質スコア + 新鮮度を 1 回の呼び出しで統合検索。', group: 'search' },
 			{ name: 'memory_captured', title: 'キャプチャされたアクティビティ', desc: 'フックによって自動キャプチャされたアクティビティログを表示 — オブザベーションをメモリに昇格。', group: 'search' },
-			{ name: 'memory_consolidate', title: '統合', desc: '内容が同一の重複エントリを決定的にマージ。Jaccard 類似度による近似重複検出。', group: 'search' },
+			{ name: 'memory_consolidate', title: '統合', desc: 'mode パラメータで、同一内容の重複を除去し、近似重複（Jaccard >50%）をマージし、低品質エントリを一括削除します — 決定的、LLM 不要。', group: 'search' },
 			{ name: 'context_brief', title: 'コンテキストブリーフィング', desc: '1 回呼び出しのコンテキストブリーフィング：メモリ + セッション + ヘルス。コンパクト markdown。ゼロ LLM。', group: 'context' },
 			{ name: 'context_generate', title: '完全プロジェクトブリーフィング', desc: '1 回呼び出しのブリーフィング：プロジェクト構造 + git 状態 + メモリ + セッション。6 回の手動呼び出しを置換。トークン 93% 節約。', group: 'context' },
 			{ name: 'context_diff', title: 'インクリメンタルブリーフィング', desc: 'git コミット + 変更ファイル + 前回セッション以降の新規/更新メモリ。トークン 72% 節約。', group: 'context' },
@@ -1366,7 +1396,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'context_health', title: 'ヘルス監査', desc: 'オーファンリンク、重複、壊れたファイル参照、期限切れ TTL、古いセッション。スコア 0–100。', group: 'context' },
 			{ name: 'context_export', title: 'Markdown としてエクスポート', desc: 'メモリをシステムプロンプト用の注入可能な markdown としてエクスポート。トークン 82% 節約。', group: 'context' },
 			{ name: 'memory_compress', title: 'LLM 圧縮', desc: 'LLM 駆動の2段階圧縮：要約 + 上書き。Anthropic/OpenAI CLI が利用可能な場合は使用。', group: 'compress' },
-			{ name: 'memory_compress_all', title: '一括圧縮', desc: '一括圧縮：100 トークン未満のすべてのエントリを圧縮バージョンで上書き。決定的、LLM 不要。', group: 'compress' },
 			{ name: 'memory_primer', title: 'コンテキストプライマー', desc: '1 回呼び出しのコンテキストプライマー：主要メモリ + カテゴリ + セッションファイル変更。セッション開始時に自動注入。', group: 'compress' },
 			{ name: 'memory_sessions', title: 'セッション', desc: 'アクティブなエージェントセッションを表示し、ソフト衝突を検出。', group: 'sessions' },
 			{ name: 'memory_merge_sessions', title: 'セッションマージ', desc: 'ファイルの並列セッション間でオブザベーションをマージ。重複排除し、自動昇格。', group: 'sessions' },
@@ -1380,7 +1409,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_search', title: '統合検索', desc: 'カテゴリ、タグ、日付範囲フィルタでメモリを検索。タグフィルタは AND 論理 — 指定した全タグが一致する必要があります。', group: 'search' },
 			{ name: 'memory_tag', title: '一括タグ操作', desc: '1 回の呼び出しで key または id で 1 つ以上のエントリにタグを追加、削除、設定。', group: 'core' },
 			{ name: 'memory_reflect', title: 'メモリリフレクト', desc: '古さ、品質、過剰接続に基づいてエントリを決定的にランク付けし、注目やクリーンアップが必要なものを明らかにします。ゼロ LLM。', group: 'core' },
-			{ name: 'memory_supersede', title: 'エントリを置き換え', desc: 'エントリを新しいものに置き換え済みとしてマーク（superseded_by/supersedes リンク + supersededOn）。置き換え前の as_of 時点別クエリでのみ古いエントリが再表示されます。', group: 'core' },
 			{ name: 'memory_promote', title: '自動昇格', desc: '低信頼度の下書きを決定的にアクティブエントリへ昇格（閾値 0.65、Jaccard 重複排除 > 0.5）。デフォルトは dryRun。', group: 'core' },
 		],
 	},
@@ -1400,7 +1428,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	faq: {
 		title: 'よくある質問', subtitle: 'エージェントにメモリを与えるために知っておくべきことすべて',
 		items: [
-			{ q: 'toon-memory とは？', a: '40 個の MCP ツールを備えた AI コーディングエージェント向けの永続メモリレイヤー。意思決定、パターン、バグ、コンテキストをコンパクトな TOON フォーマットで保存し、エージェントがセッション間ですべてを記憶 — セッションあたり 80% ツール呼び出し削減。' },
+			{ q: 'toon-memory とは？', a: '35 個の MCP ツールを備えた AI コーディングエージェント向けの永続メモリレイヤー。意思決定、パターン、バグ、コンテキストをコンパクトな TOON フォーマットで保存し、エージェントがセッション間ですべてを記憶 — セッションあたり 80% ツール呼び出し削減。' },
 			{ q: 'どのエージェントがサポートされているか？', a: 'OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex、Gemini、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro — MCP サーバー経由でゼロコンフィグの 15 以上のエージェント。' },
 			{ q: 'データはどのように保存されるか？', a: 'エントリはローカル TOON ファイル（JSON より約 22% 小さいトークン効率のフォーマット、実測）に書き込まれます。ファイルはあなたのもので、他のソースファイルと同様にコミット、diff、バックアップが可能。' },
 			{ q: 'メモリは暗号化されているか？', a: 'はい。memory_encrypt ツールで暗号化を有効にし、AES-256-GCM で機密エントリを保護。キーは自動生成され、ローカルに保持。' },
@@ -1413,55 +1441,37 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ q: 'スマートリコールとは？', a: 'memory_smart_recall は BM25 キーワード検索、グラフ中心性、品質スコアリング、新鮮度の減衰を 1 回の呼び出しで組み合わせ — 手動オーケストレーションなしですべてのランキング戦略の最良を実現。' },
 			{ q: '品質スコアリングはどのように機能するか？', a: '各エントリはタグカバレッジ、リンクの豊かさ、コンテンツの詳細度、新鮮度、特異性に基づいて自動的に品質スコア（0-1）を取得。高品質エントリがリコール結果で最初に表示。' },
 			{ q: '同じキーを 2 回保存するとどうなるか？', a: 'システムは属性をマージして置換しない：タグとリンクは和集合、品質と信頼度は最大値、日付は更新。エントリは時間とともに豊かになる。' },
-			{ q: 'メモリ圧縮とは？', a: 'memory_compressはLLMに関連するエントリを簡潔な要約にまとめるさせます。memory_compress_allは低品質なエントリ（タグなし、短いコンテンツ）を決定論的に削除します — LLM不要。どちらもトークン数を削減します。' },
+			{ q: 'メモリ圧縮とは？', a: 'memory_compressはLLMに関連するエントリを簡潔な要約にまとめるさせます。memory_consolidate(mode: "low-quality")は低品質なエントリ（タグなし、短いコンテンツ）を決定論的に削除します — LLM不要。どちらもトークン数を削減します。' },
 			{ q: 'マシン間でメモリを同期できますか？', a: 'はい。memory_export_gistでGitHub Gistにエントリをプッシュし、別のマシンでmemory_import_gistを使用します。エントリは自動的にマージされます（タグの和集合、最大信頼度）。' },
 		],
 	},
 	whatNew: {
-		title: 'v3.7.0 新機能',
-		subtitle: 'RRFランキング、supersedeと時点別リコール、memory_reflect、memory_promote、型付きエッジ',
+		title: 'v4.0.0 新機能',
+		subtitle: '正規ツール、memory_forget のライフサイクル操作、memory_consolidate のモード、非推奨エイリアス5つを削除',
 		cards: [
 			{
-				icon: '🧭',
-				title: 'Memory Reflect',
-				body: 'memory_reflect は古さ、品質、過剰接続に基づいてエントリを決定的にランク付け — LLM 不要。注目やクリーンアップが必要なものを 1 回の呼び出しで明らかにします。',
-				stats: ['古さ', '品質', 'LLM 不要'],
-			},
-			{
 				icon: '🔄',
-				title: 'Supersede と Resolve',
-				body: 'memory_supersede はエントリを新しいものに置き換えます（superseded_by リンク + 日付）。memory_resolve でいつでも元に戻せます。as_of による時点別リコールは当時のメモリをそのまま返します。',
-				stats: ['superseded_by', 'supersededOn', '元に戻せる'],
+				title: '正規ライフサイクル',
+				body: 'memory_forget は単一の action パラメータでエントリの完全なライフサイクルを管理：soft（廃止をマーク）、hard（完全削除）、restore（再アクティブ化）、supersede（superseded_by リンクで退役）。1つのツール、エイリアスなし。',
+				stats: ['soft', 'hard', 'restore', 'supersede'],
 			},
 			{
-				icon: '🚀',
-				title: '下書きの自動昇格',
-				body: 'memory_promote は低信頼度の下書きを決定的にアクティブエントリへ昇格 — 閾値 0.65、Jaccard 重複排除 > 0.5、デフォルトは dryRun。LLM 不要、想定外なし。',
-				stats: ['threshold 0.65', 'Jaccard dedup', 'dryRun'],
-			},
-			{
-				icon: '🔗',
-				title: '型付きグラフエッジ',
-				body: 'エッジが type:key 形式の型を持つようになりました — relates、superseded_by、supersedes。明示的なリンクは relates:key になり、エントリがどのように関連するかを把握できます。',
-				stats: ['relates', 'superseded_by', 'supersedes'],
-			},
-			{
-				icon: '🏆',
-				title: 'RRF ランキング',
-				body: 'リコールは BM25（×3）+ グラフ中心性のランクを Reciprocal Rank Fusion と適応的な k=sqrt(n) で統合。線形スコアリングと同点であることをベンチマークで確認 — ベンチマークセクションを参照。',
-				stats: ['BM25×3', '中心性', '同等'],
-			},
-			{
-				icon: '📅',
-				title: '時点別リコール',
-				body: 'memory_recall と memory_smart_recall が as_of 日付を受け付け：クエリが置き換え前の日付なら superseded エントリが再表示。任意の日付時点のメモリを監査できます。',
-				stats: ['as_of', '時点別ビュー', '監査'],
+				icon: '🔀',
+				title: '統合モード',
+				body: 'memory_consolidate(mode) がクリーンアップ戦略を選択：identical（同一コンテンツを重複排除）、similar（Jaccard で類似エントリをマージ）、low-quality（minQuality で一括クリーンアップ）。決定論的、LLM 不要。',
+				stats: ['identical', 'similar', 'low-quality'],
 			},
 			{
 				icon: '🧩',
-				title: '40 MCPツール + 4 リソース',
-				body: 'memory_reflect、memory_supersede、memory_promote を追加。memory_recall と memory_smart_recall（RRF + as_of）を更新。合計：40ツール + 4リソース。',
-				stats: ['+3 ツール', '40 合計'],
+				title: '35 MCPツール + 4 リソース',
+				body: '非推奨エイリアス5つを削除：memory_resolve、memory_suppress、memory_supersede、memory_merge_similar、memory_compress_all。MCP SDK にツールレベルの deprecated フラグがないため、エイリアスはノイズにしかなりませんでした。現在：35ツール + 4リソース。',
+				stats: ['-5 エイリアス', '35 合計', '4 リソース'],
+			},
+			{
+				icon: '⚡',
+				title: 'そのまま置き換え',
+				body: '削除したエイリアスはすべて正規呼び出しに 1:1 で対応 — memory_resolve → memory_forget(action: "restore")、memory_suppress → memory_forget(action: "soft")、memory_supersede → memory_forget(action: "supersede")、memory_merge_similar → memory_consolidate(mode: "similar")、memory_compress_all → memory_consolidate(mode: "low-quality")。スクリプトは壊れません。',
+				stats: ['1:1 マッピング', '同じ動作'],
 			},
 		],
 	},
@@ -1486,7 +1496,20 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	features: {
 		cards: [
-			{ icon: '🧩', title: '40개 MCP 도구 + 4개 리소스', body: 'MCP를 통한 완전한 메모리 관리 — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, merge_similar, graph_path, context_brief, context_generate, context_diff, context_focus, context_health, context_export, visualize, pin, unpin, search, tag, reflect, supersede, promote. 직접 컨텍스트 읽기를 위한 리소스 포함.', tags: ['remember', 'recall', 'context', 'diff'] },
+			{
+				icon: '🧩',
+				title: '35개 MCP 도구 + 4개 리소스',
+				body: 'MCP를 통한 완전한 메모리 관리 — 용도별로 그룹화된 35개 도구와 대화형 그래프 뷰어를 포함한 직접 컨텍스트 읽기용 리소스 4개.',
+				toolGroups: [
+					{ label: '핵심 메모리', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
+					{ label: '검색 및 인텔리전스', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
+					{ label: '컨텍스트 브리핑', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
+					{ label: '압축', tools: ['memory_compress', 'memory_primer'] },
+					{ label: '세션', tools: ['memory_sessions', 'memory_merge_sessions'] },
+					{ label: '동기화 및 보안', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+				],
+				wide: true,
+			},
 			{ icon: '⭐', title: '멀티 에이전트', body: '모든 주요 AI 코딩 에이전트와 호환. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue — 제로 구성.', tags: ['OpenCode', 'Claude', 'Cursor'] },
 			{ icon: '📄', title: 'TOON 형식', body: 'JSON보다 22% 적은 토큰 (실측). LLM 이해와 토큰 효율성을 위해 설계된 맞춤 인코딩.', stats: ['토큰 22% 절감', '파싱 속도 1.3x 향상'] },
 			{ icon: '🔎', title: '스마트 리콜', body: '그래프 기반 리콜이 BM25 관련성과 그래프 중심성으로 재순위화됨 (쿼리 단어 없이도 허브가 부상). 홉당 감쇠로 먼 컨텍스트를 낮게 유지. 토큰 효율적인 `compact` 모드는 숫자 인덱스, 스니펫 잘린 결과를 반환.', stats: ['BM25', '중심성', 'compact'] },
@@ -1495,7 +1518,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '15개 이상의 AI 코딩 에이전트 지원', subtitle: '제로 구성 — toon-memory가 각 에이전트를 자동 감지하고 구성' },
-	stats: { items: [				{ number: '40', label: 'MCP 도구' }, { number: '15', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
+	stats: { items: [				{ number: '35', label: 'MCP 도구' }, { number: '15', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
 	howItWorks: {
 		title: '어떻게 작동하나요?', subtitle: '기억 상실에서 메모리까지 4단계',
 		steps: [
@@ -1558,7 +1581,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '40개 MCP 도구, 4개 리소스', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
+		title: '35개 MCP 도구, 4개 리소스', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
 		groups: {
 			core: '핵심 메모리',
 			search: '검색 및 인텔리전스',
@@ -1578,7 +1601,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_archive', title: '오래된 항목 아카이브', desc: '메모리를 깨끗하게 유지하기 위해 30일 이상 된 항목 이동.', group: 'core' },
 			{ name: 'memory_smart_recall', title: '스마트 리콜', desc: 'BM25 + 그래프 중심성 + 품질 점수 + 신선도를 하나의 호출로 통합 검색.', group: 'search' },
 			{ name: 'memory_captured', title: '캡처된 활동', desc: '훅에 의해 자동 캡처된 활동 로그 표시 — 관찰을 메모리로 승격.', group: 'search' },
-			{ name: 'memory_consolidate', title: '통합', desc: '동일한 내용의 중복 항목을 결정적으로 병합. 자카드 유사도를 통한 근사 중복 감지.', group: 'search' },
+			{ name: 'memory_consolidate', title: '통합', desc: 'mode 매개변수로 동일한 중복 항목을 제거하고 근사 중복(Jaccard >50%)을 병합하며 저품질 항목을 일괄 제거합니다 — 결정적, LLM 불필요.', group: 'search' },
 			{ name: 'context_brief', title: '컨텍스트 브리핑', desc: '한 번의 호출 컨텍스트 브리핑: 메모리 + 세션 + 헬스를 컴팩트 markdown으로. 제로 LLM.', group: 'context' },
 			{ name: 'context_generate', title: '전체 프로젝트 브리핑', desc: '한 번의 호출 브리핑: 프로젝트 구조 + git 상태 + 메모리 + 세션. 6회 수동 호출 대체. 토큰 93% 절약.', group: 'context' },
 			{ name: 'context_diff', title: '점증 브리핑', desc: 'git 커밋 + 수정된 파일 + 마지막 세션 이후 신규/업데이트 메모리. 토큰 72% 절약.', group: 'context' },
@@ -1586,7 +1609,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'context_health', title: '헬스 감사', desc: '고아 링크, 중복, 깨진 파일 참조, 만료된 TTL, 오래된 세션. 점수 0–100.', group: 'context' },
 			{ name: 'context_export', title: 'Markdown으로 내보내기', desc: '시스템 프롬프트용 주입 가능한 markdown으로 메모리 내보내기. 토큰 82% 절약.', group: 'context' },
 			{ name: 'memory_compress', title: 'LLM 압축', desc: 'LLM 기반 2단계 압축: 요약 + 덮어쓰기. 사용 가능한 경우 Anthropic/OpenAI CLI 사용.', group: 'compress' },
-			{ name: 'memory_compress_all', title: '일괄 압축', desc: '일괄 압축: 100 토큰 미만의 모든 항목을 압축 버전으로 덮어쓰기. 결정적, LLM 불필요.', group: 'compress' },
 			{ name: 'memory_primer', title: '컨텍스트 프라이머', desc: '한 번의 호출 컨텍스트 프라이머: 상위 메모리 + 카테고리 + 세션 파일 변경 사항. 세션 시작 시 자동 주입.', group: 'compress' },
 			{ name: 'memory_sessions', title: '세션', desc: '활성 에이전트 세션을 표시하고 소프트 충돌을 감지.', group: 'sessions' },
 			{ name: 'memory_merge_sessions', title: '세션 병합', desc: '파일에 걸친 병렬 세션의 관찰을 병합. 중복 제거 및 자동 승격.', group: 'sessions' },
@@ -1600,7 +1622,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_search', title: '통합 검색', desc: '카테고리, 태그, 날짜 범위 필터로 메모리 검색. 태그 필터는 AND 로직 사용 — 지정된 모든 태그가 일치해야 함.', group: 'search' },
 			{ name: 'memory_tag', title: '일괄 태그 작업', desc: '한 번의 호출로 key 또는 id로 하나 이상의 항목에 태그 추가, 제거 또는 설정.', group: 'core' },
 			{ name: 'memory_reflect', title: '메모리 점검', desc: '지연도, 품질, 과도한 연결을 기준으로 항목을 결정적으로 순위화하여 주의나 정리가 필요한 부분을 드러냅니다. 제로 LLM.', group: 'core' },
-			{ name: 'memory_supersede', title: '항목 대체', desc: '항목을 더 새로운 항목으로 대체 처리(superseded_by/supersedes 링크 + supersededOn). 대체된 이전 항목은 대체 이전 시점의 as_of 시점별 쿼리에서만 다시 나타납니다.', group: 'core' },
 			{ name: 'memory_promote', title: '자동 승격', desc: '낮은 신뢰도의 초안을 결정적으로 활성 항목으로 승격(임계값 0.65, Jaccard 중복 제거 > 0.5). 기본값은 dryRun.', group: 'core' },
 		],
 	},
@@ -1620,7 +1641,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	faq: {
 		title: '자주 묻는 질문', subtitle: '에이전트에 메모리를 부여하기 위해 알아야 할 모든 것',
 		items: [
-			{ q: 'toon-memory란?', a: '40개 MCP 도구를 갖춘 AI 코딩 에이전트용 지속적 메모리 레이어. 결정, 패턴, 버그, 컨텍스트를 컴팩트 TOON 형식으로 저장하여 에이전트가 세션 간에 모든 것을 기억 — 세션당 80% 도구 호출 절감.' },
+			{ q: 'toon-memory란?', a: '35개 MCP 도구를 갖춘 AI 코딩 에이전트용 지속적 메모리 레이어. 결정, 패턴, 버그, 컨텍스트를 컴팩트 TOON 형식으로 저장하여 에이전트가 세션 간에 모든 것을 기억 — 세션당 80% 도구 호출 절감.' },
 			{ q: '지원되는 에이전트는?', a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro — MCP 서버를 통한 제로 구성의 15개 이상 에이전트.' },
 			{ q: '데이터는 어떻게 저장되나요?', a: '항목은 로컬 TOON 파일 (JSON보다 ~22% 작은 토큰 효율 형식, 실측)에 기록됩니다. 파일은 귀하의 것이며 다른 소스 파일처럼 커밋, diff, 백업이 가능합니다.' },
 			{ q: '메모리가 암호화되나요?', a: '네. memory_encrypt 도구로 암호화를 활성화하여 AES-256-GCM로 민감한 항목을 보호합니다. 키는 자동 생성되고 로컬에 유지됩니다.' },
@@ -1633,55 +1654,37 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ q: '스마트 리콜이란?', a: 'memory_smart_recall은 BM25 키워드 검색, 그래프 중심성, 품질 스코어링, 신선도 감쇠를 하나의 호출로 결합 — 수동 오케스트레이션 없이 모든 순위 전략의 최고를 실현.' },
 			{ q: '품질 스코어링은 어떻게 작동하나요?', a: '모든 항목은 태그 커버리지, 링크 풍부함, 내용 상세도, 신선도, 구체성에 따라 자동 품질 점수 (0-1)를 받습니다. 고품질 항목이 리콜 결과에서 먼저 표시됩니다.' },
 			{ q: '같은 키를 두 번 저장하면 어떻게 되나요?', a: '시스템이 속성을 대체하지 않고 병합합니다: 태그와 링크는 합집합, 품질과 신뢰도는 최댓값, 날짜가 업데이트됩니다. 항목이 시간이 지남에 따라 풍부해집니다.' },
-			{ q: '메모리 압축이란 무엇인가요?', a: 'memory_compress는 LLM이 관련 항목을 간결한 요약으로 압축하도록 합니다. memory_compress_all은 저품질 항목(태그 없음, 짧은 콘텐츠)을 결정적으로 제거합니다 — LLM 불필요. 둘 다 토큰 수를 줄입니다.' },
+			{ q: '메모리 압축이란 무엇인가요?', a: 'memory_compress는 LLM이 관련 항목을 간결한 요약으로 압축하도록 합니다. memory_consolidate(mode: "low-quality")은 저품질 항목(태그 없음, 짧은 콘텐츠)을 결정적으로 제거합니다 — LLM 불필요. 둘 다 토큰 수를 줄입니다.' },
 			{ q: '머신 간에 메모리를 동기화할 수 있나요?', a: '네. memory_export_gist로 GitHub Gist에 항목을 푸시한 다음 다른 머신에서 memory_import_gist를 사용합니다. 항목은 자동으로 병합됩니다(태그 합집합, 최대 신뢰도).' },
 		],
 	},
 	whatNew: {
-		title: 'v3.7.0 새로운 기능',
-		subtitle: 'RRF 순위, supersede 및 시점별 리콜, memory_reflect, memory_promote, 유형화된 엣지',
+		title: 'v4.0.0 새로운 기능',
+		subtitle: '정식 도구, memory_forget 수명주기 작업, memory_consolidate 모드, 5개 비권장 별칭 제거',
 		cards: [
 			{
-				icon: '🧭',
-				title: '메모리 점검',
-				body: 'memory_reflect는 지연도, 품질, 과도한 연결을 기준으로 항목을 결정적으로 순위화 — 제로 LLM. 한 번의 호출로 주의나 정리가 필요한 부분을 드러냅니다.',
-				stats: ['오래됨', '품질', '제로 LLM'],
-			},
-			{
 				icon: '🔄',
-				title: 'Supersede 및 해결',
-				body: 'memory_supersede는 항목을 더 새로운 항목으로 대체(superseded_by 링크 + 날짜). memory_resolve는 여전히 되돌릴 수 있습니다. as_of가 포함된 시점별 리콜은 메모리를 당시 그대로 반환.',
-				stats: ['superseded_by', 'supersededOn', '복원 가능'],
+				title: '정식 수명주기',
+				body: 'memory_forget이 단일 action 매개변수로 항목의 전체 수명주기를 관리합니다: soft(오래됨 표시), hard(영구 삭제), restore(재활성화), supersede(superseded_by 링크로 은퇴). 하나의 도구, 별칭 없음.',
+				stats: ['soft', 'hard', 'restore', 'supersede'],
 			},
 			{
-				icon: '🚀',
-				title: '초안 자동 승격',
-				body: 'memory_promote는 낮은 신뢰도의 초안을 결정적으로 활성 항목으로 승격 — 임계값 0.65, Jaccard 중복 제거 > 0.5, 기본값은 dryRun. LLM 불필요, 예상치 못한 일 없음.',
-				stats: ['임계값 0.65', 'Jaccard dedup', 'dryRun'],
-			},
-			{
-				icon: '🔗',
-				title: '유형화된 그래프 엣지',
-				body: '엣지가 이제 type:key 형식으로 유형을 전달 — relates, superseded_by, supersedes. 명시적 링크는 relates:key가 되어 항목이 어떻게 관련되는지도 알 수 있습니다 — 관련된다는 사실뿐만 아니라.',
-				stats: ['relates', 'superseded_by', 'supersedes'],
-			},
-			{
-				icon: '🏆',
-				title: 'RRF 순위',
-				body: '리콜이 Reciprocal Rank Fusion과 적응형 k=sqrt(n)으로 BM25 (×3) + 그래프 중심성 순위를 융합. 선형 스코어링과 동률임을 벤치마크로 확인 — 벤치마크 섹션 참조.',
-				stats: ['BM25×3', '중심성', '성능 동일'],
-			},
-			{
-				icon: '📅',
-				title: '시점별 리콜',
-				body: 'memory_recall과 memory_smart_recall이 as_of 날짜를 허용: 쿼리가 대체 이전 시점이면 대체된 항목이 다시 나타납니다. 어떤 날짜의 메모리도 그대로 감사할 수 있습니다.',
-				stats: ['as_of', '시간별 보기', '감사'],
+				icon: '🔀',
+				title: '통합 모드',
+				body: 'memory_consolidate(mode)가 정리 전략을 선택합니다: identical(동일 콘텐츠 중복 제거), similar(Jaccard로 유사 항목 병합), low-quality(minQuality로 일괄 정리). 결정론적, LLM 불필요.',
+				stats: ['identical', 'similar', 'low-quality'],
 			},
 			{
 				icon: '🧩',
-				title: '40개 MCP 도구 + 4개 리소스',
-				body: 'memory_reflect, memory_supersede, memory_promote 추가. memory_recall과 memory_smart_recall 업데이트(RRF + as_of). 총계: 40개 도구 + 4개 리소스.',
-				stats: ['+3 도구', '40 총계'],
+				title: '35개 MCP 도구 + 4개 리소스',
+				body: '비권장 별칭 5개 제거: memory_resolve, memory_suppress, memory_supersede, memory_merge_similar, memory_compress_all. MCP SDK에는 도구 수준의 deprecated 플래그가 없어 별칭은 노이즈만 추가했습니다. 현재: 35개 도구 + 4개 리소스.',
+				stats: ['-5 별칭', '35 총계', '4 리소스'],
+			},
+			{
+				icon: '⚡',
+				title: '직접 대체',
+				body: '제거된 별칭은 모두 정식 호출에 1:1로 매핑됩니다 — memory_resolve → memory_forget(action: "restore"), memory_suppress → memory_forget(action: "soft"), memory_supersede → memory_forget(action: "supersede"), memory_merge_similar → memory_consolidate(mode: "similar"), memory_compress_all → memory_consolidate(mode: "low-quality"). 스크립트는 깨지지 않습니다.',
+				stats: ['1:1 매핑', '동일한 동작'],
 			},
 		],
 	},
@@ -1734,9 +1737,17 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		cards: [
 			{
 			icon: '🧩',
-			title: '40 ferramentas MCP + 4 recursos',
-			body: 'Gerenciamento completo de memória via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, merge_similar, graph_path, context_brief, context_generate, context_diff, context_focus, context_health, context_export, visualize, pin, unpin, search, tag, reflect, supersede, promote. Mais recursos para leitura direta de contexto.',
-				tags: ['remember', 'recall', 'context', 'diff'],
+			title: '35 ferramentas MCP + 4 recursos',
+			body: 'Gerenciamento completo de memória via MCP — 35 ferramentas agrupadas por propósito, mais 4 recursos para leitura direta de contexto, incluindo um visualizador de grafo interativo.',
+				toolGroups: [
+					{ label: 'Memória Principal', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
+					{ label: 'Busca & Inteligência', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
+					{ label: 'Briefing de Contexto', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
+					{ label: 'Compressão', tools: ['memory_compress', 'memory_primer'] },
+					{ label: 'Sessões', tools: ['memory_sessions', 'memory_merge_sessions'] },
+					{ label: 'Sincronização & Segurança', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+				],
+				wide: true,
 			},
 			{
 				icon: '⭐',
@@ -1776,7 +1787,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	stats: {
 		items: [
-			{ number: '40', label: 'Ferramentas MCP' },
+			{ number: '35', label: 'Ferramentas MCP' },
 			{ number: '15', label: 'Agentes' },
 			{ number: '80%', label: 'Menos chamadas de ferramenta/sessão' },
 			{ number: '0', label: 'Configuração necessária' },
@@ -1937,7 +1948,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '40 ferramentas MCP, 4 recursos',
+		title: '35 ferramentas MCP, 4 recursos',
 		subtitle: 'Tudo que seu agente precisa para lembrar, recuperar e raciocinar',
 		resourcesLabel: 'Recursos:',
 		groups: {
@@ -1959,7 +1970,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_archive', title: 'Arquivar antigos', desc: 'Move entradas com mais de 30 dias para manter a memória limpa.', group: 'core' },
 			{ name: 'memory_smart_recall', title: 'Recall inteligente', desc: 'Busca unificada combinando BM25 + centralidade + qualidade + frescor em uma chamada.', group: 'search' },
 			{ name: 'memory_captured', title: 'Atividade capturada', desc: 'Exibe log de atividade capturado por hooks — promova observações para memória.', group: 'search' },
-			{ name: 'memory_consolidate', title: 'Consolidar', desc: 'Mescla entradas duplicadas com conteúdo idêntico de forma determinística. Detecção de quase-duplicatas via similaridade Jaccard.', group: 'search' },
+			{ name: 'memory_consolidate', title: 'Consolidar', desc: 'Mescla entradas duplicadas com conteúdo idêntico, detecta quase-duplicatas via similaridade Jaccard (>50%) ou remove entradas de baixa qualidade em lote — via parâmetro mode, sem LLM.', group: 'search' },
 			{ name: 'context_brief', title: 'Briefing de contexto', desc: 'Briefing de contexto em uma chamada: memória + sessões + saúde em markdown compacto. Zero LLM.', group: 'context' },
 			{ name: 'context_generate', title: 'Briefing completo', desc: 'Briefing em uma chamada: estrutura do projeto + estado git + memória + sessões. Substitui 6 chamadas manuais. Economiza 93% tokens.', group: 'context' },
 			{ name: 'context_diff', title: 'Briefing incremental', desc: 'Commits git + arquivos modificados + memória nova/atualizada desde a última sessão. Economiza 72% tokens.', group: 'context' },
@@ -1968,7 +1979,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'context_export', title: 'Exportar como Markdown', desc: 'Exporta memória como markdown injetável para system prompts. Economiza 82% tokens.', group: 'context' },
 			{ name: 'memory_sessions', title: 'Sessões', desc: 'Mostra sessões ativas do agente e detecta conflitos leves.', group: 'sessions' },
 			{ name: 'memory_compress', title: 'Compressão LLM', desc: 'Compressão em duas etapas com LLM: resumir + sobrescrever. Usa Anthropic/OpenAI CLI se disponível.', group: 'compress' },
-			{ name: 'memory_compress_all', title: 'Compressão em lote', desc: 'Compressão em lote: sobrescreve todas as entradas abaixo de 100 tokens com versão comprimida. Determinístico, sem LLM.', group: 'compress' },
 			{ name: 'memory_primer', title: 'Primer de contexto', desc: 'Primer de contexto em uma chamada: memórias principais + categorias + alterações de arquivos da sessão. Injetado automaticamente no início da sessão.', group: 'compress' },
 			{ name: 'memory_merge_sessions', title: 'Mesclar sessões', desc: 'Mescla observações entre sessões paralelas para um arquivo. Deduplica e promove automaticamente.', group: 'sessions' },
 			{ name: 'memory_export_gist', title: 'Exportar para Gist', desc: 'Exporta entradas de memória para um GitHub Gist (público ou privado). Usa GITHUB_TOKEN ou gh CLI.', group: 'sync' },
@@ -1981,7 +1991,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_search', title: 'Busca unificada', desc: 'Pesquisa na memória com filtros de categoria, tags e intervalo de datas. Filtro de tags usa lógica AND.', group: 'search' },
 			{ name: 'memory_tag', title: 'Operações em lote', desc: 'Adiciona, remove ou define tags em uma ou mais entradas por key ou id em uma única chamada.', group: 'core' },
 			{ name: 'memory_reflect', title: 'Memory Reflect', desc: 'Ranqueia entradas de forma determinística por obsolescência, qualidade e sobre-conexão para revelar o que precisa de atenção ou limpeza. Zero LLM.', group: 'core' },
-			{ name: 'memory_supersede', title: 'Supersede Entrada', desc: 'Marca uma entrada como substituída por uma mais nova (links superseded_by/supersedes + supersededOn). Entradas antigas reaparecem apenas em consultas ponto-no-tempo as_of anteriores à substituição.', group: 'core' },
 			{ name: 'memory_promote', title: 'Promoção Automática', desc: 'Promove rascunhos de baixa confiança a entradas ativas de forma determinística (limiar 0.65, dedup Jaccard > 0.5). dryRun por padrão.', group: 'core' },
 		],
 	},
@@ -2023,7 +2032,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		items: [
 			{
 				q: 'O que é toon-memory?',
-				a: 'Uma camada de memória persistente para agentes de IA com 40 ferramentas MCP. Armazena decisões, padrões, bugs e contexto em um formato TOON compacto para que seu agente lembre tudo entre sessões — com 80% menos chamadas de ferramenta por sessão.',
+				a: 'Uma camada de memória persistente para agentes de IA com 35 ferramentas MCP. Armazena decisões, padrões, bugs e contexto em um formato TOON compacto para que seu agente lembre tudo entre sessões — com 80% menos chamadas de ferramenta por sessão.',
 			},
 			{
 				q: 'Quais agentes são suportados?',
@@ -2075,7 +2084,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 			{
 				q: 'O que é compressão de memória?',
-				a: 'memory_compress permite que um LLM resuma entradas relacionadas em um resumo conciso. memory_compress_all remove entradas de baixa qualidade (sem tags, conteúdo curto) de forma determinística — sem LLM. Ambas reduzem a contagem de tokens.',
+				a: 'memory_compress permite que um LLM resuma entradas relacionadas em um resumo conciso. memory_consolidate(mode: "low-quality") remove entradas de baixa qualidade (sem tags, conteúdo curto) de forma determinística — sem LLM. Ambas reduzem a contagem de tokens.',
 			},
 			{
 				q: 'Posso sincronizar a memória entre máquinas?',
@@ -2084,50 +2093,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	whatNew: {
-		title: 'Novidades na v3.7.0',
-		subtitle: 'Ranking RRF, supersede e recall ponto-no-tempo, memory_reflect, memory_promote, arestas tipadas',
+		title: 'Novidades na v4.0.0',
+		subtitle: 'Ferramentas canônicas, ações de ciclo de vida em memory_forget, modos de memory_consolidate, 5 aliases obsoletos removidos',
 		cards: [
 			{
-				icon: '🧭',
-				title: 'Memory Reflect',
-				body: 'memory_reflect ranqueia entradas de forma determinística por obsolescência, qualidade e sobre-conexão — sem LLM. Detecte o que precisa de atenção ou limpeza em uma chamada.',
-				stats: ['Obsolescência', 'Qualidade', 'Zero LLM'],
-			},
-			{
 				icon: '🔄',
-				title: 'Supersede e Resolver',
-				body: 'memory_supersede substitui uma entrada por uma mais nova (link superseded_by + data). memory_resolve ainda pode revertê-la. O recall ponto-no-tempo com as_of retorna a memória como ela era.',
-				stats: ['superseded_by', 'supersededOn', 'Reversível'],
+				title: 'Ciclo de Vida Canônico',
+				body: 'memory_forget agora gerencia todo o ciclo de vida de uma entrada por meio de um único parâmetro action: soft (marcar obsoleta), hard (exclusão permanente), restore (reativar), supersede (aposentar com link superseded_by). Uma ferramenta, sem aliases.',
+				stats: ['soft', 'hard', 'restore', 'supersede'],
 			},
 			{
-				icon: '🚀',
-				title: 'Promoção Automática de Rascunhos',
-				body: 'memory_promote promove rascunhos de baixa confiança a entradas ativas de forma determinística — limiar 0.65, dedup Jaccard > 0.5, dryRun por padrão. Sem LLM, sem surpresas.',
-				stats: ['Limiar 0.65', 'Dedup Jaccard', 'dryRun'],
-			},
-			{
-				icon: '🔗',
-				title: 'Arestas Tipadas do Grafo',
-				body: 'Arestas agora carregam tipo escrito como type:key — relates, superseded_by, supersedes. Links explícitos viram relates:key: você sabe como as entradas se relacionam, não apenas que se relacionam.',
-				stats: ['relates', 'superseded_by', 'supersedes'],
-			},
-			{
-				icon: '🏆',
-				title: 'Ranking RRF',
-				body: 'O recall funde ranks de BM25 (×3) + centralidade com Reciprocal Rank Fusion e k adaptativo = sqrt(n). Paridade com a pontuação linear confirmada por benchmark — veja a seção Benchmarks.',
-				stats: ['BM25×3', 'Centralidade', 'Paridade'],
-			},
-			{
-				icon: '📅',
-				title: 'Recall Ponto-no-Tempo',
-				body: 'memory_recall e memory_smart_recall aceitam uma data as_of: entradas superseded reaparecem quando a consulta antecede a substituição. Audite a memória como ela era em qualquer data.',
-				stats: ['as_of', 'Vista temporal', 'Auditoria'],
+				icon: '🔀',
+				title: 'Modos de Consolidação',
+				body: 'memory_consolidate(mode) seleciona a estratégia de limpeza: identical (dedup de conteúdo idêntico), similar (mescla quase-duplicatas via Jaccard), low-quality (limpeza em lote com minQuality). Determinístico, sem LLM.',
+				stats: ['identical', 'similar', 'low-quality'],
 			},
 			{
 				icon: '🧩',
-				title: '40 Ferramentas MCP + 4 Recursos',
-				body: 'Adiciona memory_reflect, memory_supersede e memory_promote. Atualiza memory_recall e memory_smart_recall (RRF + as_of). Total: 40 ferramentas + 4 recursos.',
-				stats: ['+3 ferramentas', '40 total'],
+				title: '35 Ferramentas MCP + 4 Recursos',
+				body: 'Removidos 5 aliases obsoletos: memory_resolve, memory_suppress, memory_supersede, memory_merge_similar, memory_compress_all. O SDK do MCP não tem flag deprecated em nível de ferramenta, então os aliases só adicionavam ruído. Agora: 35 ferramentas + 4 recursos.',
+				stats: ['-5 aliases', '35 total', '4 recursos'],
+			},
+			{
+				icon: '⚡',
+				title: 'Substituição Direta',
+				body: 'Cada alias removido mapeia 1:1 para uma chamada canônica — memory_resolve → memory_forget(action: "restore"), memory_suppress → memory_forget(action: "soft"), memory_supersede → memory_forget(action: "supersede"), memory_merge_similar → memory_consolidate(mode: "similar"), memory_compress_all → memory_consolidate(mode: "low-quality"). Nada quebra.',
+				stats: ['Mapeamento 1:1', 'Mesmo comportamento'],
 			},
 		],
 	},
@@ -2187,9 +2178,17 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		cards: [
 			{
 			icon: '🧩',
-			title: '40 MCP-Tools + 4 Ressourcen',
-			body: 'Vollständiges Speicher-Management über MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, merge_similar, graph_path, context_brief, context_generate, context_diff, context_focus, context_health, context_export, visualize, pin, unpin, search, tag, reflect, supersede, promote. Plus Ressourcen für direktes Kontext-Lesen.',
-				tags: ['remember', 'recall', 'context', 'diff'],
+			title: '35 MCP-Tools + 4 Ressourcen',
+			body: 'Vollständiges Speicher-Management über MCP — 35 Tools nach Zweck gruppiert, plus 4 Ressourcen für direktes Kontext-Lesen inklusive interaktivem Graph-Viewer.',
+				toolGroups: [
+					{ label: 'Kernspeicher', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
+					{ label: 'Suche & Intelligenz', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
+					{ label: 'Kontext-Briefing', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
+					{ label: 'Komprimierung', tools: ['memory_compress', 'memory_primer'] },
+					{ label: 'Sitzungen', tools: ['memory_sessions', 'memory_merge_sessions'] },
+					{ label: 'Sync & Sicherheit', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+				],
+				wide: true,
 			},
 			{
 				icon: '⭐',
@@ -2229,7 +2228,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	stats: {
 		items: [
-			{ number: '40', label: 'MCP-Tools' },
+			{ number: '35', label: 'MCP-Tools' },
 			{ number: '15', label: 'Agenten' },
 			{ number: '80%', label: 'Weniger Tool-Aufrufe/Sitzung' },
 			{ number: '0', label: 'Benötigte Konfiguration' },
@@ -2390,7 +2389,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '40 MCP-Tools, 4 Ressourcen',
+		title: '35 MCP-Tools, 4 Ressourcen',
 		subtitle: 'Alles, was dein Agent zum Merken, Abrufen und Denken braucht',
 		resourcesLabel: 'Ressourcen:',
 		groups: {
@@ -2412,7 +2411,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_archive', title: 'Alte archivieren', desc: 'Verschiebt Einträge älter als 30 Tage, um den Speicher sauber zu halten.', group: 'core' },
 			{ name: 'memory_smart_recall', title: 'Smart Recall', desc: 'Einheitliche Suche kombiniert BM25 + Graph-Zentralität + Qualität + Frische in einem Aufruf.', group: 'search' },
 			{ name: 'memory_captured', title: 'Erfasste Aktivität', desc: 'Zeigt automatisch erfasste Hook-Aktivität an — befördere Beobachtungen zum Speicher.', group: 'search' },
-			{ name: 'memory_consolidate', title: 'Konsolidieren', desc: 'Führt doppelte Einträge mit identischem Inhalt deterministisch zusammen. Near-Duplicate-Erkennung über Jaccard-Ähnlichkeit.', group: 'search' },
+			{ name: 'memory_consolidate', title: 'Konsolidieren', desc: 'Führt doppelte Einträge mit identischem Inhalt deterministisch zusammen, erkennt Near-Duplicates über Jaccard-Ähnlichkeit (>50%) oder entfernt Einträge niedriger Qualität im Batch — über den mode-Parameter, ohne LLM.', group: 'search' },
 			{ name: 'context_brief', title: 'Kontext-Briefing', desc: 'Ein-Aufruf-Kontext-Briefing: Speicher + Sitzungen + Gesundheit in kompaktem Markdown. Null LLM.', group: 'context' },
 			{ name: 'context_generate', title: 'Vollständiges Projektbriefing', desc: 'Ein-Aufruf-Briefing: Projektstruktur + Git-Zustand + Speicher + Sitzungen. Ersetzt 6 manuelle Aufrufe. Spart 93% Token.', group: 'context' },
 			{ name: 'context_diff', title: 'Inkrementelles Briefing', desc: 'Git-Commits + geänderte Dateien + neue/aktualisierte Speicher-Einträge seit letzter Sitzung. Spart 72% Token.', group: 'context' },
@@ -2420,7 +2419,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'context_health', title: 'Gesundheits-Audit', desc: 'Verwaiste Links, Duplikate, defekte Dateiverweise, abgelaufene TTL, veraltete Sitzungen. Score 0–100.', group: 'context' },
 			{ name: 'context_export', title: 'Als Markdown exportieren', desc: 'Exportiert Speicher als injizierbares Markdown für System-Prompts. Spart 82% Token.', group: 'context' },
 			{ name: 'memory_compress', title: 'LLM-Komprimierung', desc: 'LLM-gestützte Zwei-Schritt-Komprimierung: Zusammenfassen + Überschreiben. Verwendet Anthropic/OpenAI CLI wenn verfügbar.', group: 'compress' },
-			{ name: 'memory_compress_all', title: 'Batch-Komprimierung', desc: 'Batch-Komprimierung: Überschreibt alle Einträge unter 100 Token mit komprimierter Version. Deterministisch, kein LLM.', group: 'compress' },
 			{ name: 'memory_primer', title: 'Kontext-Primer', desc: 'Ein-Aufruf-Kontext-Primer: Top-Speicher + Kategorien + Sitzungsdatei-Änderungen. Wird automatisch zu Sitzungsbeginn injiziert.', group: 'compress' },
 			{ name: 'memory_sessions', title: 'Sitzungen', desc: 'Zeigt aktive Agenten-Sitzungen und erkennt weiche Konflikte.', group: 'sessions' },
 			{ name: 'memory_merge_sessions', title: 'Sitzungen zusammenführen', desc: 'Führt Beobachtungen über parallele Sitzungen für eine Datei zusammen. Dedupliziert und befördert automatisch.', group: 'sessions' },
@@ -2434,7 +2432,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_search', title: 'Einheitliche Suche', desc: 'Durchsucht den Speicher mit Kategorie-, Tag- und Datumsbereichsfiltern. Tag-Filter verwendet UND-Logik.', group: 'search' },
 			{ name: 'memory_tag', title: 'Batch-Tag-Operationen', desc: 'Fügt Tags hinzu, entfernt oder setzt sie bei einem oder mehreren Einträgen per Key oder ID in einem Aufruf.', group: 'core' },
 			{ name: 'memory_reflect', title: 'Memory Reflect', desc: 'Sortiert Einträge deterministisch nach Veraltung, Qualität und Über-Verbindung, um aufzuzeigen, was Aufmerksamkeit oder Aufräumen braucht. Zero LLM.', group: 'core' },
-			{ name: 'memory_supersede', title: 'Eintrag ersetzen', desc: 'Markiert einen Eintrag als durch einen neueren ersetzt (superseded_by/supersedes-Links + supersededOn). Alte Einträge tauchen nur bei as_of-Zeitpunkt-Abfragen vor ihrer Ersetzung wieder auf.', group: 'core' },
 			{ name: 'memory_promote', title: 'Auto-Befördern', desc: 'Befördert Entwürfe mit geringer Konfidenz deterministisch zu aktiven Einträgen (Schwelle 0.65, Jaccard-Dedup > 0.5). Standardmäßig dryRun.', group: 'core' },
 		],
 	},
@@ -2476,7 +2473,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		items: [
 			{
 				q: 'Was ist toon-memory?',
-				a: 'Eine persistente Speicherschicht für KI-Coding-Agenten mit 40 MCP-Tools. Es speichert Entscheidungen, Muster, Bugs und Kontext in einem kompakten TOON-Format, damit dein Agent sich an alles zwischen Sitzungen erinnert — mit 80% weniger Tool-Aufrufen pro Sitzung.',
+				a: 'Eine persistente Speicherschicht für KI-Coding-Agenten mit 35 MCP-Tools. Es speichert Entscheidungen, Muster, Bugs und Kontext in einem kompakten TOON-Format, damit dein Agent sich an alles zwischen Sitzungen erinnert — mit 80% weniger Tool-Aufrufen pro Sitzung.',
 			},
 			{
 				q: 'Welche Agenten werden unterstützt?',
@@ -2528,7 +2525,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		{
 			q: 'Was ist Speicherkomprimierung?',
-			a: 'memory_compress lässt ein LLM verwandte Einträge zu einer knappen Zusammenfassung verdichten. memory_compress_all entfernt Einträge niedriger Qualität (kein Tags, kurzer Inhalt) deterministisch — kein LLM nötig. Beide reduzieren die Token-Anzahl.',
+			a: 'memory_compress lässt ein LLM verwandte Einträge zu einer knappen Zusammenfassung verdichten. memory_consolidate(mode: "low-quality") entfernt Einträge niedriger Qualität (kein Tags, kurzer Inhalt) deterministisch — kein LLM nötig. Beide reduzieren die Token-Anzahl.',
 		},
 		{
 			q: 'Kann ich Speicher zwischen Maschinen synchronisieren?',
@@ -2537,50 +2534,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	],
 },
 whatNew: {
-	title: 'Neu in v3.7.0',
-	subtitle: 'RRF-Ranking, supersede und zeitpunktbezogener Recall, memory_reflect, memory_promote, typisierte Kanten',
+	title: 'Neu in v4.0.0',
+	subtitle: 'Kanonische Werkzeuge, Lifecycle-Aktionen in memory_forget, memory_consolidate-Modi, 5 veraltete Aliase entfernt',
 	cards: [
 		{
-			icon: '🧭',
-			title: 'Memory Reflect',
-			body: 'memory_reflect sortiert Einträge deterministisch nach Veraltung, Qualität und Über-Verbindung — kein LLM. Erkenne in einem Aufruf, was Aufmerksamkeit oder Aufräumen braucht.',
-			stats: ['Veraltung', 'Qualität', 'Zero LLM'],
-		},
-		{
 			icon: '🔄',
-			title: 'Supersede & Wiederherstellen',
-			body: 'memory_supersede ersetzt einen Eintrag durch einen neueren (superseded_by-Link + Datum). memory_resolve kann ihn weiterhin rückgängig machen. Zeitpunktbezogener Recall mit as_of gibt den Speicher so zurück, wie er war.',
-			stats: ['superseded_by', 'supersededOn', 'Reversibel'],
+			title: 'Kanonischer Lifecycle',
+			body: 'memory_forget verwaltet jetzt den gesamten Eintrags-Lebenszyklus über einen einzigen action-Parameter: soft (als veraltet markieren), hard (dauerhaft löschen), restore (reaktivieren), supersede (mit superseded_by-Link ausmustern). Ein Werkzeug, keine Aliase.',
+			stats: ['soft', 'hard', 'restore', 'supersede'],
 		},
 		{
-			icon: '🚀',
-			title: 'Auto-Promote von Entwürfen',
-			body: 'memory_promote befördert Entwürfe mit geringer Konfidenz deterministisch zu aktiven Einträgen — Schwelle 0.65, Jaccard-Dedup > 0.5, standardmäßig dryRun. Kein LLM, keine Überraschungen.',
-			stats: ['Schwelle 0.65', 'Jaccard-Dedup', 'dryRun'],
-		},
-		{
-			icon: '🔗',
-			title: 'Typisierte Graph-Kanten',
-			body: 'Kanten tragen jetzt Typen im Format type:key — relates, superseded_by, supersedes. Explizite Links werden zu relates:key, sodass du erkennst, wie Einträge zusammenhängen — nicht nur, dass sie es tun.',
-			stats: ['relates', 'superseded_by', 'supersedes'],
-		},
-		{
-			icon: '🏆',
-			title: 'RRF-Ranking',
-			body: 'Recall fusioniert BM25 (×3)- und Graph-Zentralitäts-Ränge mit Reciprocal Rank Fusion und adaptivem k=sqrt(n). Parität mit linearer Bewertung per Benchmark bestätigt — siehe Abschnitt Benchmarks.',
-			stats: ['BM25×3', 'Zentralität', 'Parität'],
-		},
-		{
-			icon: '📅',
-			title: 'Zeitpunktbezogener Recall',
-			body: 'memory_recall und memory_smart_recall akzeptieren ein as_of-Datum: ersetzte Einträge tauchen wieder auf, wenn die Anfrage vor ihrer Ersetzung liegt. Prüfe den Speicher, wie er an jedem beliebigen Datum war.',
-			stats: ['as_of', 'Zeitliche Ansicht', 'Audit'],
+			icon: '🔀',
+			title: 'Konsolidierungs-Modi',
+			body: 'memory_consolidate(mode) wählt die Aufräumstrategie: identical (identische Inhalte deduplizieren), similar (Fast-Duplikate per Jaccard mergen), low-quality (Batch-Aufräumen mit minQuality). Deterministisch, kein LLM.',
+			stats: ['identical', 'similar', 'low-quality'],
 		},
 		{
 			icon: '🧩',
-			title: '40 MCP-Tools + 4 Ressourcen',
-			body: 'Fügt memory_reflect, memory_supersede und memory_promote hinzu. Aktualisiert memory_recall und memory_smart_recall (RRF + as_of). Gesamt: 40 Tools + 4 Ressourcen.',
-			stats: ['+3 Tools', '40 gesamt'],
+			title: '35 MCP-Tools + 4 Ressourcen',
+			body: '5 veraltete Aliase entfernt: memory_resolve, memory_suppress, memory_supersede, memory_merge_similar, memory_compress_all. Das MCP-SDK hat kein deprecated-Flag auf Werkzeugebene, also haben Aliase nur Lärm erzeugt. Jetzt: 35 Tools + 4 Ressourcen.',
+			stats: ['-5 Aliase', '35 gesamt', '4 Ressourcen'],
+		},
+		{
+			icon: '⚡',
+			title: 'Direkter Ersatz',
+			body: 'Jeder entfernte Alias mappt 1:1 auf einen kanonischen Aufruf — memory_resolve → memory_forget(action: "restore"), memory_suppress → memory_forget(action: "soft"), memory_supersede → memory_forget(action: "supersede"), memory_merge_similar → memory_consolidate(mode: "similar"), memory_compress_all → memory_consolidate(mode: "low-quality"). Nichts bricht.',
+			stats: ['1:1 Mapping', 'Gleiches Verhalten'],
 		},
 	],
 },
@@ -2640,9 +2619,17 @@ cta: {
 		cards: [
 			{
 			icon: '🧩',
-			title: '40 outils MCP + 4 ressources',
-			body: 'Gestion complète de la mémoire via MCP — remember, recall, forget, stats, summary, archive, diff, suggest, smart_recall, encrypt, decrypt, captured, consolidate, sessions, compress, compress_all, primer, merge_sessions, export_gist, import_gist, merge_similar, graph_path, context_brief, context_generate, context_diff, context_focus, context_health, context_export, visualize, pin, unpin, search, tag, reflect, supersede, promote. Plus des ressources pour la lecture directe du contexte.',
-				tags: ['remember', 'recall', 'context', 'diff'],
+			title: '35 outils MCP + 4 ressources',
+			body: 'Gestion complète de la mémoire via MCP — 35 outils groupés par fonction, plus 4 ressources pour la lecture directe du contexte, dont un visualiseur de graphe interactif.',
+				toolGroups: [
+					{ label: 'Mémoire Principale', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
+					{ label: 'Recherche & Intelligence', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
+					{ label: 'Briefing Contexte', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
+					{ label: 'Compression', tools: ['memory_compress', 'memory_primer'] },
+					{ label: 'Sessions', tools: ['memory_sessions', 'memory_merge_sessions'] },
+					{ label: 'Synchronisation & Sécurité', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+				],
+				wide: true,
 			},
 			{
 				icon: '⭐',
@@ -2682,7 +2669,7 @@ cta: {
 	},
 	stats: {
 		items: [
-			{ number: '40', label: 'Outils MCP' },
+			{ number: '35', label: 'Outils MCP' },
 			{ number: '15', label: 'Agents' },
 			{ number: '80%', label: 'Moins d\'appels d\'outil/session' },
 			{ number: '0', label: 'Configuration requise' },
@@ -2843,7 +2830,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '40 outils MCP, 4 ressources',
+		title: '35 outils MCP, 4 ressources',
 		subtitle: 'Tout ce dont votre agent a besoin pour mémoriser, rappeler et raisonner',
 		resourcesLabel: 'Ressources :',
 		groups: {
@@ -2865,7 +2852,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_archive', title: 'Archiver les anciens', desc: 'Déplace les entrées de plus de 30 jours pour garder la mémoire propre.', group: 'core' },
 			{ name: 'memory_smart_recall', title: 'Rappel intelligent', desc: 'Recherche unifiée combinant BM25 + centralité + qualité + fraîcheur en un seul appel.', group: 'search' },
 			{ name: 'memory_captured', title: 'Activité capturée', desc: 'Affiche le journal d\'activité capturé par les hooks — promouvez les observations en mémoire.', group: 'search' },
-			{ name: 'memory_consolidate', title: 'Consolider', desc: 'Fusionne les entrées en doublon avec un contenu identique de façon déterministe. Détection de quasi-doublons via similarité de Jaccard.', group: 'search' },
+			{ name: 'memory_consolidate', title: 'Consolider', desc: 'Fusionne les entrées en doublon avec un contenu identique, détecte les quasi-doublons via similarité de Jaccard (>50%) ou supprime par lot les entrées de faible qualité — via le paramètre mode, sans LLM.', group: 'search' },
 			{ name: 'context_brief', title: 'Brief de contexte', desc: 'Brief de contexte en un appel : mémoire + sessions + santé en markdown compact. Zéro LLM.', group: 'context' },
 			{ name: 'context_generate', title: 'Brief complet du projet', desc: 'Brief en un appel : structure du projet + état git + mémoire + sessions. Remplace 6 appels manuels. Économise 93% de tokens.', group: 'context' },
 			{ name: 'context_diff', title: 'Brief incrémental', desc: 'Commits git + fichiers modifiés + mémoire nouvelle/mise à jour depuis la dernière session. Économise 72% de tokens.', group: 'context' },
@@ -2873,7 +2860,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'context_health', title: 'Audit santé', desc: 'Liens orphelins, doublons, références cassées, TTL expirés, sessions obsolètes. Score 0–100.', group: 'context' },
 			{ name: 'context_export', title: 'Exporter en Markdown', desc: 'Exporte la mémoire en markdown injectable pour les system prompts. Économise 82% de tokens.', group: 'context' },
 			{ name: 'memory_compress', title: 'Compression LLM', desc: 'Compression en deux étapes par LLM : résumer + écraser. Utilise Anthropic/OpenAI CLI si disponible.', group: 'compress' },
-			{ name: 'memory_compress_all', title: 'Compression par lot', desc: 'Compression par lot : écrase toutes les entrées sous 100 tokens avec une version compressée. Déterministe, sans LLM.', group: 'compress' },
 			{ name: 'memory_primer', title: 'Amorce de contexte', desc: 'Amorce de contexte en un appel : mémoires principales + catégories + modifications de fichiers de session. Injecté automatiquement au début de la session.', group: 'compress' },
 			{ name: 'memory_sessions', title: 'Sessions', desc: 'Affiche les sessions agent actives et détecte les conflits doux.', group: 'sessions' },
 			{ name: 'memory_merge_sessions', title: 'Fusionner les sessions', desc: 'Fusionne les observations entre sessions parallèles pour un fichier. Déduplique et promeut automatiquement.', group: 'sessions' },
@@ -2887,7 +2873,6 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_search', title: 'Recherche unifiée', desc: 'Recherche dans la mémoire avec filtres par catégorie, tags et plage de dates. Le filtre de tags utilise la logique ET.', group: 'search' },
 			{ name: 'memory_tag', title: 'Opérations par lots', desc: 'Ajoute, supprime ou définit des tags sur une ou plusieurs entrées par key ou id en un seul appel.', group: 'core' },
 			{ name: 'memory_reflect', title: 'Réflexion mémoire', desc: 'Classe de manière déterministe les entrées par obsolescence, qualité et sur-connectivité pour révéler ce qui mérite attention ou nettoyage. Zéro LLM.', group: 'core' },
-			{ name: 'memory_supersede', title: 'Superseder une entrée', desc: 'Marque une entrée comme remplacée par une plus récente (liens superseded_by/supersedes + supersededOn). Les anciennes entrées ne réapparaissent que pour les requêtes as_of antérieures à leur supersession.', group: 'core' },
 			{ name: 'memory_promote', title: 'Promotion automatique', desc: 'Promeut les brouillons à faible confiance en entrées actives de manière déterministe (seuil 0.65, déduplication Jaccard > 0.5). dryRun par défaut.', group: 'core' },
 		],
 	},
@@ -2929,7 +2914,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		items: [
 			{
 				q: 'Qu\'est-ce que toon-memory ?',
-				a: 'Une couche de mémoire persistante pour les agents de code IA avec 40 outils MCP. Elle stocke les décisions, motifs, bugs et contexte dans un format TOON compact pour que votre agent se souvienne de tout entre les sessions — avec 80% moins d\'appels d\'outil par session.',
+				a: 'Une couche de mémoire persistante pour les agents de code IA avec 35 outils MCP. Elle stocke les décisions, motifs, bugs et contexte dans un format TOON compact pour que votre agent se souvienne de tout entre les sessions — avec 80% moins d\'appels d\'outil par session.',
 			},
 			{
 				q: 'Quels agents sont supportés ?',
@@ -2985,7 +2970,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		{
 			q: 'Qu\'est-ce que la compression mémoire ?',
-			a: 'memory_compress permet à un LLM de résumer des entrées similaires en un résumé concis. memory_compress_all supprime les entrées de faible qualité (pas de tags, contenu court) de manière déterministe — sans LLM. Les deux réduisent le nombre de tokens.',
+			a: 'memory_compress permet à un LLM de résumer des entrées similaires en un résumé concis. memory_consolidate(mode: "low-quality") supprime les entrées de faible qualité (pas de tags, contenu court) de manière déterministe — sans LLM. Les deux réduisent le nombre de tokens.',
 		},
 		{
 			q: 'Puis-je synchroniser la mémoire entre machines ?',
@@ -2994,50 +2979,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	],
 },
 whatNew: {
-	title: 'Nouveautés dans v3.7.0',
-	subtitle: 'Classement RRF, supersede et rappel à une date, memory_reflect, memory_promote, arêtes typées',
+	title: 'Nouveautés dans v4.0.0',
+	subtitle: 'Outils canoniques, actions de cycle de vie dans memory_forget, modes de memory_consolidate, 5 alias obsolètes supprimés',
 	cards: [
 		{
-			icon: '🧭',
-			title: 'Réflexion mémoire',
-			body: 'memory_reflect classe de manière déterministe les entrées par obsolescence, qualité et sur-connectivité — sans LLM. Révélez ce qui mérite attention ou nettoyage en un seul appel.',
-			stats: ['Obsolescence', 'Qualité', 'Zéro LLM'],
-		},
-		{
 			icon: '🔄',
-			title: 'Superseder et résoudre',
-			body: 'memory_supersede remplace une entrée par une plus récente (lien superseded_by + date). memory_resolve peut toujours la restaurer. Le rappel à une date avec as_of retourne la mémoire telle qu\'elle était.',
-			stats: ['superseded_by', 'supersededOn', 'Réversible'],
+			title: 'Cycle de vie canonique',
+			body: 'memory_forget gère désormais tout le cycle de vie d\'une entrée via un seul paramètre action : soft (marquer obsolète), hard (suppression définitive), restore (réactiver), supersede (retirer avec un lien superseded_by). Un seul outil, aucun alias.',
+			stats: ['soft', 'hard', 'restore', 'supersede'],
 		},
 		{
-			icon: '🚀',
-			title: 'Promotion automatique des brouillons',
-			body: 'memory_promote promeut les brouillons à faible confiance en entrées actives de manière déterministe — seuil 0.65, déduplication Jaccard > 0.5, dryRun par défaut. Sans LLM, sans surprises.',
-			stats: ['Seuil 0.65', 'Dédup Jaccard', 'dryRun'],
-		},
-		{
-			icon: '🔗',
-			title: 'Arêtes typées du graphe',
-			body: 'Les arêtes portent désormais des types écrits comme type:key — relates, superseded_by, supersedes. Les liens explicites deviennent relates:key pour savoir comment les entrées se relient, pas seulement qu\'elles se relient.',
-			stats: ['relates', 'superseded_by', 'supersedes'],
-		},
-		{
-			icon: '🏆',
-			title: 'Classement RRF',
-			body: 'Le rappel fusionne BM25 (×3) et centralité du graphe avec Reciprocal Rank Fusion et k=sqrt(n) adaptatif. Parité avec la notation linéaire confirmée par benchmark — voir la section Benchmarks.',
-			stats: ['BM25×3', 'Centralité', 'Parité'],
-		},
-		{
-			icon: '📅',
-			title: 'Rappel à une date',
-			body: 'memory_recall et memory_smart_recall acceptent une date as_of : les entrées superseded réapparaissent quand la requête précède leur supersession. Auditez la mémoire telle qu\'elle était à n\'importe quelle date.',
-			stats: ['as_of', 'Vue temporelle', 'Audit'],
+			icon: '🔀',
+			title: 'Modes de consolidation',
+			body: 'memory_consolidate(mode) choisit la stratégie de nettoyage : identical (déduplique le contenu identique), similar (fusionne les quasi-doublons via Jaccard), low-quality (nettoyage par lot avec minQuality). Déterministe, sans LLM.',
+			stats: ['identical', 'similar', 'low-quality'],
 		},
 		{
 			icon: '🧩',
-			title: '40 Outils MCP + 4 Ressources',
-			body: 'Ajoute memory_reflect, memory_supersede et memory_promote. Met à jour memory_recall et memory_smart_recall (RRF + as_of). Total : 40 outils + 4 ressources.',
-			stats: ['+3 outils', '40 total'],
+			title: '35 Outils MCP + 4 Ressources',
+			body: '5 alias obsolètes supprimés : memory_resolve, memory_suppress, memory_supersede, memory_merge_similar, memory_compress_all. Le SDK MCP n\'a pas de flag deprecated au niveau des outils, donc les alias n\'ajoutaient que du bruit. Maintenant : 35 outils + 4 ressources.',
+			stats: ['-5 alias', '35 total', '4 ressources'],
+		},
+		{
+			icon: '⚡',
+			title: 'Remplacement direct',
+			body: 'Chaque alias supprimé mappe 1:1 vers un appel canonique — memory_resolve → memory_forget(action: "restore"), memory_suppress → memory_forget(action: "soft"), memory_supersede → memory_forget(action: "supersede"), memory_merge_similar → memory_consolidate(mode: "similar"), memory_compress_all → memory_consolidate(mode: "low-quality"). Rien ne casse.',
+			stats: ['Mapping 1:1', 'Même comportement'],
 		},
 	],
 },

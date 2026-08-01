@@ -6,14 +6,16 @@ interface Props {
 }
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
-const t = c.viewerSection || c.graphSection;
-const points = ((t.features || t.points) as string[]) || [];
+const g = c.graphSection;
+const points = (g.points as string[]) || [];
+const viewer = (c as unknown as { viewerSection?: { capsLabel?: string; caps?: string[] } }).viewerSection;
+const caps = viewer?.caps || [];
 ---
 
 <section id="viewer" class="content-section graph-showcase">
 	<div class="section-header">
-		<h2>{t.title}</h2>
-		<p>{t.subtitle}</p>
+		<h2>{g.title}</h2>
+		<p>{g.subtitle}</p>
 	</div>
 
 	<div class="graph-grid">
@@ -21,14 +23,70 @@ const points = ((t.features || t.points) as string[]) || [];
 			<ul class="graph-points">
 				{points.map((p) => <li set:html={p} />)}
 			</ul>
-			<pre class="code-block graph-code"><code>{`npx toon-memory viewer        # CLI (HTTP server)
-memory_visualize()             # Inline in MCP Apps-compatible hosts`}</code></pre>
-			<p class="graph-caption">Press <kbd>r</kbd> in terminal to reload, or call <code>memory_visualize()</code> for inline rendering.</p>
+			{caps.length > 0 && (
+				<div class="graph-caps">
+					{viewer?.capsLabel && <span class="graph-caps-label">{viewer.capsLabel}</span>}
+					<div class="graph-caps-list">
+						{caps.map((cap) => <span class="graph-cap">{cap}</span>)}
+					</div>
+				</div>
+			)}
+			<p class="graph-caption" set:html={g.caption}></p>
 		</div>
 
 		<div class="graph-viz">
-			<iframe src="/toon-memory/viewer/embed.html" class="viewer-iframe" title="Interactive memory graph viewer" loading="lazy" allow="fullscreen"></iframe>
-			<p class="graph-caption">Interactive graph — click nodes, search, explore paths in real time</p>
+			<button type="button" class="viewer-launch" data-launch="viewer" aria-label="Launch interactive graph viewer">
+				<img src="/toon-memory/viewer/graph-full.png" alt="Memory graph viewer preview" loading="lazy" width="1200" height="900" />
+				<span class="viewer-play" aria-hidden="true"></span>
+				<span class="viewer-launch-label">Launch interactive viewer</span>
+			</button>
+			<p class="graph-caption">Run it: <code>npx toon-memory viewer</code> — or call <code>memory_visualize()</code> for inline rendering.</p>
+
+			<div class="viewer-modal" data-modal="viewer" role="dialog" aria-modal="true" aria-label="Memory graph viewer" hidden>
+				<div class="viewer-modal-backdrop" data-modal-close></div>
+				<div class="viewer-modal-card">
+					<div class="viewer-modal-controls">
+						<button type="button" class="viewer-modal-btn" data-fullscreen aria-label="Toggle fullscreen" title="Toggle fullscreen">⛶</button>
+						<button type="button" class="viewer-modal-btn" data-modal-close aria-label="Close" title="Close">&times;</button>
+					</div>
+					<iframe class="viewer-modal-frame" data-src="/toon-memory/viewer/embed.html" title="Interactive memory graph viewer" allow="fullscreen"></iframe>
+				</div>
+			</div>
 		</div>
 	</div>
 </section>
+
+<script>
+	const btn = document.querySelector<HTMLButtonElement>('[data-launch="viewer"]');
+	const modal = document.querySelector<HTMLElement>('[data-modal="viewer"]');
+	if (btn && modal) {
+		const frame = modal.querySelector<HTMLIFrameElement>('.viewer-modal-frame');
+		const open = () => {
+			if (frame && !frame.src && frame.dataset.src) frame.src = frame.dataset.src;
+			modal.hidden = false;
+			document.body.classList.add('modal-open');
+		};
+		const close = () => {
+			if (document.fullscreenElement) document.exitFullscreen();
+			modal.hidden = true;
+			document.body.classList.remove('modal-open');
+		};
+		btn.addEventListener('click', open);
+		modal.querySelectorAll<HTMLElement>('[data-modal-close]').forEach((el) => el.addEventListener('click', close));
+		const fsBtn = modal.querySelector<HTMLButtonElement>('[data-fullscreen]');
+		if (fsBtn) {
+			fsBtn.addEventListener('click', () => {
+				if (document.fullscreenElement) document.exitFullscreen();
+				else if (modal.requestFullscreen) modal.requestFullscreen();
+			});
+			document.addEventListener('fullscreenchange', () => {
+				const active = document.fullscreenElement === modal;
+				fsBtn.textContent = active ? '⤡' : '⛶';
+				fsBtn.classList.toggle('is-fullscreen', active);
+			});
+		}
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && !modal.hidden) close();
+		});
+	}
+</script>

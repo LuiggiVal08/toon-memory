@@ -30,7 +30,7 @@ A persistent memory system for AI coding agents. It remembers decisions, pattern
 |------|-------------|
 | `memory_remember` | Save a decision, pattern, bug, or knowledge (with optional TTL and auto-tag inference) |
 | `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL entries) |
-| `memory_forget` | Remove an entry by key or id |
+| `memory_forget` | Lifecycle ops by key/id: `action: "soft"` (default) marks obsolete, `"hard"` deletes, `"restore"` reactivates, `"supersede"` retires with `superseded_by` link |
 | `memory_stats` | View memory state (including TTL stats) |
 | `memory_summary` | Save/retrieve file summaries |
 | `memory_archive` | Archive old entries and expired TTL entries |
@@ -38,7 +38,7 @@ A persistent memory system for AI coding agents. It remembers decisions, pattern
 | `memory_smart_recall` | Unified retrieval: BM25 + graph + decay + quality in one call (use at session start) |
 | `memory_suggest` | Find related entries for a given context |
 | `memory_captured` | Show activity log captured automatically by hooks |
-| `memory_consolidate` | Deduplicate identical entries (keeps first, deterministic, no LLM) |
+| `memory_consolidate` | Cleanup: `mode: "identical"` (default) dedupes identical entries, `"similar"` merges near-duplicates, `"low-quality"` batch-removes low-quality entries |
 | `memory_sessions` | Show active agent sessions and detect file conflicts |
 | `context_brief` | One-call context briefing: memory + sessions + health in compact markdown |
 | `memory_encrypt` | Enable AES-256-GCM encryption |
@@ -50,12 +50,10 @@ A persistent memory system for AI coding agents. It remembers decisions, pattern
 | `context_health` | Memory health audit with score 0-100 |
 | `context_export` | Export memory as markdown for system prompts |
 | `memory_compress` | LLM-powered compression of selected entries |
-| `memory_compress_all` | Batch compression of low-quality entries |
 | `memory_primer` | Auto-generated knowledge map for session start |
 | `memory_merge_sessions` | Merge observations across parallel sessions |
 | `memory_export_gist` | Export memory to a private GitHub Gist |
 | `memory_import_gist` | Import memory from a GitHub Gist |
-| `memory_merge_similar` | Find and merge near-duplicates by Jaccard similarity |
 | `memory_graph_path` | BFS shortest path between two entries |
 | `memory_visualize` | Open interactive memory graph viewer |
 | `memory_pin` | Pin entry with priority 1-5 for top recall placement |

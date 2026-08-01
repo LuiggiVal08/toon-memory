@@ -1,6 +1,6 @@
 ---
-title: "40 MCP-Tools für persistenen AI-Speicher"
-description: "40 MCP-Tools für persistenen AI-Agent-Speicher — memory_remember, memory_recall, memory_smart_recall, context_generate und mehr. Token-effizienter, graph-bewusster Abruf für Claude, Cursor, OpenCode."
+title: "35 MCP-Tools für persistenen AI-Speicher"
+description: "35 MCP-Tools für persistenen AI-Agent-Speicher — memory_remember, memory_recall, memory_smart_recall, context_generate und mehr. Token-effizienter, graph-bewusster Abruf für Claude, Cursor, OpenCode."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## Überblick
 
-toon-memory bietet 40 MCP-Tools und 4 MCP-Ressourcen zur Verwaltung des persistenten Speichers:
+toon-memory bietet 35 MCP-Tools und 4 MCP-Ressourcen zur Verwaltung des persistenten Speichers:
 
 ## Tools
 
@@ -42,10 +42,7 @@ toon-memory bietet 40 MCP-Tools und 4 MCP-Ressourcen zur Verwaltung des persiste
 | `memory_unpin` | **Eintrag lösen**: entfernt die Anheft-Markierung eines Eintrags |
 | `memory_search` | **Einheitliche Suche mit Filtern**: wie `memory_recall` plus Kategorie-, Tag- und Datumsbereichs-Filter |
 | `memory_tag` | **Batch-Tag-Operationen**: fügt Tags hinzu, entfernt oder setzt sie bei einem oder mehreren Einträgen per Key oder ID |
-| `memory_resolve` | **Eintrag wiederherstellen**: stellt einen soft-gelöschten (obsoleten) Eintrag wieder auf aktiv |
-| `memory_suppress` | **Eintrag ausblenden**: blendet einen Eintrag aus den Abrufergebnissen aus, ohne ihn zu löschen (status=suppressed) |
 | `memory_reflect` | **Speicher-Reflexion**: ordnet Einträge deterministisch nach Veraltung, Qualität und Überverbindung, um aufzuzeigen, was Aufmerksamkeit oder Bereinigung braucht. Kein LLM |
-| `memory_supersede` | **Eintrag ersetzen**: markiert ihn als durch einen neueren ersetzt (`status=obsolete`, `superseded_by`/`supersedes`-Links, `supersededOn`-Datum). Alte Einträge erscheinen nur bei `as_of`-Abfragen vor ihrem Ersatzdatum wieder |
 | `memory_promote` | **Entwürfe automatisch promoten**: befördert Einträge mit niedriger Konfidenz deterministisch in den aktiven Status (Schwelle 0.65, Jaccard-Dedup > 0.5, `dryRun` standardmäßig) |
 
 ## MCP-Ressourcen

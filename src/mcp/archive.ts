@@ -4,6 +4,7 @@ import { readMemory, writeMemory, safeWrite } from "./memory-io"
 import { ensureMemoryFile, MEMORY_FILE, MEMORY_DIR, getMaxEntries, ARCHIVE_DAYS, ARCHIVE_FILE } from "./config"
 import { isExpired } from "./entries"
 import { entryScoreForLine } from "./scoring"
+import { parseToonLine } from "../lib/utils"
 
 /**
  * Archive entries older than ARCHIVE_DAYS or with expired TTL.
@@ -26,7 +27,7 @@ export function archiveOldEntries(opts: { trimToMax?: boolean } = {}): { archive
   const toArchive = new Set<number>()
 
   entryLines.forEach((line, idx) => {
-    const parts = line.trim().split("|")
+    const parts = parseToonLine(line)
     if (parts.length < 7) return
     const date = parts[6]
     const ttl = parts[7] || ""
@@ -108,7 +109,7 @@ export function pruneExpiredEntries(): number {
 
     const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
     const kept = entryLines.filter((l) => {
-      const parts = l.trim().split("|")
+      const parts = parseToonLine(l)
       if (parts.length < 8) return true
       const ttl = parts[7] || ""
       if (ttl && isExpired(ttl)) {

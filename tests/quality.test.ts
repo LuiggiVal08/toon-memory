@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { qualityScore, mergeEntries, generateSmartRecall, generateSystemPrimer } from "../src/lib/quality"
+import { parseToonLine } from "../src/lib/utils"
 
 describe("qualityScore", () => {
   const today = new Date().toISOString().split("T")[0]
@@ -49,7 +50,7 @@ describe("mergeEntries", () => {
     const existing = `id1|decision|test-key|Old content|file.ts|redis;cache|2026-07-01||0||0.50|0.8`
     const incoming = `id2|decision|test-key|New content|file.ts|redis;db|${today}||0||0.60|1.0`
     const merged = mergeEntries(existing, incoming)
-    const parts = merged.split("|")
+    const parts = parseToonLine(merged)
     const tags = parts[5].split(";")
     expect(tags).toContain("redis")
     expect(tags).toContain("cache")
@@ -60,7 +61,7 @@ describe("mergeEntries", () => {
     const existing = `id1|decision|test-key|Content|file.ts|tag|2026-07-01||0||0.50|0.8`
     const incoming = `id2|decision|test-key|Content|file.ts|tag|${today}||0||0.60|1.0`
     const merged = mergeEntries(existing, incoming)
-    const parts = merged.split("|")
+    const parts = parseToonLine(merged)
     expect(parts[6]).toBe(today)
   })
 
@@ -68,7 +69,7 @@ describe("mergeEntries", () => {
     const existing = `id1|decision|test-key|Content|file.ts|tag|2026-07-01||0||0.50|0.6`
     const incoming = `id2|decision|test-key|Content|file.ts|tag|${today}||0||0.60|1.0`
     const merged = mergeEntries(existing, incoming)
-    const parts = merged.split("|")
+    const parts = parseToonLine(merged)
     expect(parseFloat(parts[11])).toBe(1.0)
   })
 
@@ -76,7 +77,7 @@ describe("mergeEntries", () => {
     const existing = `id1|decision|test-key|Content|file.ts|tag|2026-07-01||0|link-a|0.50|0.8`
     const incoming = `id2|decision|test-key|Content|file.ts|tag|${today}||0|link-b|0.60|1.0`
     const merged = mergeEntries(existing, incoming)
-    const parts = merged.split("|")
+    const parts = parseToonLine(merged)
     const links = parts[9].split(" ")
     expect(links).toContain("link-a")
     expect(links).toContain("link-b")
@@ -86,7 +87,7 @@ describe("mergeEntries", () => {
     const existing = `id1|decision|test-key|Content|file.ts|tag|2026-07-01||0||0.50|0.8`
     const incoming = `id2|decision|test-key|New content|file.ts|tag|${today}||0||0.60|1.0`
     const merged = mergeEntries(existing, incoming)
-    const parts = merged.split("|")
+    const parts = parseToonLine(merged)
     expect(parts[0]).toBe("id1")
   })
 
@@ -100,7 +101,7 @@ describe("mergeEntries", () => {
     const existing = `id1|decision|old-key|Old content|f.ts|validation;superseded|2026-07-01||0|superseded_by:new-key|0.50|0.8|2026-07-01|0||agent|obsolete|2026-07-10`
     const incoming = `id2|decision|old-key|Old content|f.ts|validation|2026-07-20||0||0.60|1.0`
     const merged = mergeEntries(existing, incoming)
-    const parts = merged.split("|")
+    const parts = parseToonLine(merged)
     expect(parts[17]).toBe("2026-07-10")
     expect(parts[9]).toContain("superseded_by:new-key")
     expect(parts[16]).toBe("obsolete") // obsolete entries stay obsolete across merges

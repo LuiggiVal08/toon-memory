@@ -17,13 +17,416 @@ import { qualityScore, mergeEntries, generateSmartRecall } from "../lib/quality"
 import { generateContextBrief, generateContextGenerate, generateContextDiff, generateContextFocus, generateContextHealth, generateContextExport } from "../lib/context"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS, getCurrentSessionFiles } from "../lib/sessions"
 import { fileMtimes } from "../lib/git"
-import { normalize, isExpiredLocal, tokenize, importance } from "../lib/utils"
+import { normalize, isExpiredLocal, tokenize, importance, parseToonLine, toToonLine, escField, unescField } from "../lib/utils"
 import { expandSynonyms } from "../lib/synonyms"
 
 /**
  * Register all 22 memory tools.
  */
 export function registerTools(server: McpServer): void {
+
+type ToolText = { type: "text"; text: string }
+
+// ── Shared lifecycle helpers (backing canonical memory_forget) ──
+
+function softDelete(key: string): { content: ToolText[] } {
+  const data = readMemory()
+  const lines = data.split("\n")
+  const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+
+  if (headerIdx === -1) {
+    return { content: [{ type: "text", text: "No entries in memory" }] }
+  }
+
+  let found = false
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line.startsWith("  ") || !line.includes("|")) continue
+    if (line.startsWith("  summaries:")) break
+    const parts = parseToonLine(line)
+    if (parts[0] === key || parts[2] === key) {
+      while (parts.length < 17) parts.push("")
+      parts[16] = "obsolete"
+      lines[i] = toToonLine(parts)
+      found = true
+      break
+    }
+  }
+
+  writeMemory(lines.join("\n"))
+
+  if (!found) {
+    return { content: [{ type: "text", text: `"${key}" not found in memory.` }] }
+  }
+
+  return { content: [{ type: "text", text: `"${key}" marked as obsolete. Use memory_forget(key, action: 'restore') to restore.` }] }
+}
+
+function hardDelete(key: string): { content: ToolText[] } {
+  const data = readMemory()
+  const lines = data.split("\n")
+  const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+
+  if (headerIdx === -1) {
+    return { content: [{ type: "text", text: "No entries in memory" }] }
+  }
+
+  const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
+  const filtered = entryLines.filter((l) => {
+    const parts = parseToonLine(l)
+    return parts[0] !== key && parts[2] !== key
+  })
+
+  const removed = entryLines.length - filtered.length
+  const match = lines[headerIdx].match(/\[(\d+)\|/)
+  const count = match ? parseInt(match[1]) : 0
+  lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count - removed}|`)
+  lines.splice(headerIdx + 1, entryLines.length, ...filtered.map((l) => `  ${l.trim()}`))
+
+  writeMemory(lines.join("\n"))
+
+  if (removed === 0) {
+    return { content: [{ type: "text", text: `"${key}" not found in memory.` }] }
+  }
+
+  return { content: [{ type: "text", text: `"${key}" permanently deleted. ${count - removed} entries remaining.` }] }
+}
+
+function restoreEntry(key: string): { content: ToolText[] } {
+  const data = readMemory()
+  const lines = data.split("\n")
+  const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+
+  if (headerIdx === -1) {
+    return { content: [{ type: "text", text: "No entries in memory" }] }
+  }
+
+  let found = false
+  let wasObsolete = false
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line.startsWith("  ") || !line.includes("|")) continue
+    if (line.startsWith("  summaries:")) break
+    const parts = parseToonLine(line)
+    if (parts[0] === key || parts[2] === key) {
+      while (parts.length < 17) parts.push("")
+      wasObsolete = parts[16] === "obsolete"
+      parts[16] = "active"
+      lines[i] = toToonLine(parts)
+      found = true
+      break
+    }
+  }
+
+  if (!found) {
+    return { content: [{ type: "text", text: `"${key}" not found in memory.` }] }
+  }
+
+  writeMemory(lines.join("\n"))
+
+  const msg = wasObsolete ? `"${key}" restored to active status.` : `"${key}" marked as resolved.`
+  return { content: [{ type: "text", text: `✅ ${msg}` }] }
+}
+
+function supersedeEntry(old_key: string, new_key: string, reason: string): { content: ToolText[] } {
+  const data = readMemory()
+  const lines = data.split("\n")
+  const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+  if (headerIdx === -1) {
+    return { content: [{ type: "text", text: "No entries in memory" }] }
+  }
+
+  const today = new Date().toISOString().split("T")[0]
+
+  let oldIdx = -1
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line.startsWith("  ") || !line.includes("|")) continue
+    if (line.startsWith("  summaries:")) break
+    const parts = parseToonLine(line)
+    if (parts[0] === old_key || parts[2] === old_key) {
+      oldIdx = i
+      break
+    }
+  }
+
+  if (oldIdx === -1) {
+    return { content: [{ type: "text", text: `❌ "${old_key}" not found in memory.` }] }
+  }
+
+  let newIdx = -1
+  let newKey = ""
+  if (new_key) {
+    for (let i = headerIdx + 1; i < lines.length; i++) {
+      const line = lines[i]
+      if (!line.startsWith("  ") || !line.includes("|")) continue
+      if (line.startsWith("  summaries:")) break
+      const parts = parseToonLine(line)
+      if (parts[0] === new_key || parts[2] === new_key) {
+        newIdx = i
+        newKey = parts[2]
+        break
+      }
+    }
+    if (newIdx === -1) {
+      return { content: [{ type: "text", text: `❌ Replacement "${new_key}" not found in memory.` }] }
+    }
+  }
+
+  const oldParts = parseToonLine(lines[oldIdx])
+  const oldKey = oldParts[2]
+
+  const tags = (oldParts[5] || "").split(";").map((t) => t.trim()).filter(Boolean)
+  if (!tags.includes("superseded")) tags.push("superseded")
+
+  const links = (oldParts[9] || "").split(/[\s;]+/).filter(Boolean)
+  if (newKey) {
+    const edge = formatLink("superseded_by", newKey)
+    if (!links.includes(edge)) links.push(edge)
+  }
+
+  let content = oldParts[3] || ""
+  if (reason && !content.includes(reason)) {
+    const flat = reason.replace(/[\r\n]+/g, " ").trim()
+    content = `${content} ⏳ Superseded (${today}): ${flat}`
+  }
+
+  while (oldParts.length < 18) oldParts.push("")
+  oldParts[3] = content
+  oldParts[5] = tags.join(";")
+  oldParts[9] = links.join(" ")
+  oldParts[16] = "obsolete"
+  oldParts[17] = today
+  lines[oldIdx] = toToonLine(oldParts)
+
+  if (newIdx !== -1) {
+    const newParts = parseToonLine(lines[newIdx])
+    const newLinks = (newParts[9] || "").split(/[\s;]+/).filter(Boolean)
+    const edge = formatLink("supersedes", oldKey)
+    if (!newLinks.includes(edge)) {
+      newLinks.push(edge)
+      newParts[9] = newLinks.join(" ")
+      lines[newIdx] = toToonLine(newParts)
+    }
+  }
+
+  writeMemory(lines.join("\n"))
+
+  const target = newKey ? ` by "${newKey}"` : " (retired)"
+  return {
+    content: [{
+      type: "text",
+      text: `⏳ "${oldKey}" superseded${target} on ${today}.\n\nOld entry is now status=obsolete (hidden from normal recalls).\n  · link: superseded_by${newKey ? `:${newKey}` : ""}\n  · tag: superseded\n\nTo see what was true before: memory_recall(query: "${oldKey}", as_of: "${today}")\nTo restore: memory_forget(key: "${oldKey}", action: 'restore')${reason ? `\n\nReason: ${reason}` : ""}`,
+    }],
+  }
+}
+
+// ── Shared cleanup helpers (backing canonical memory_consolidate) ──
+
+function runConsolidate(): { content: ToolText[] } {
+  const result = consolidateEntries()
+  if (result.removed === 0) {
+    return { content: [{ type: "text", text: `✅ Memory already consolidated (${result.kept} entries, 0 duplicates)` }] }
+  }
+  return {
+    content: [{
+      type: "text",
+      text: `🧹 Consolidated ${result.removed} duplicate entries.\n${result.kept} active entries remaining.\nDuplicates: ${result.duplicates.join(", ")}`,
+    }],
+  }
+}
+
+function runMergeSimilar(dryRun: boolean): { content: ToolText[] } {
+  const data = readMemory()
+  const lines = data.split("\n")
+  const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+  if (headerIdx === -1) {
+    return { content: [{ type: "text", text: "No entries in memory." }] }
+  }
+
+  const parsed: Array<{ lineIdx: number; id: string; cat: string; key: string; content: string; file: string; tags: string; date: string; ttl: string; accessed: number; words: Set<string>; line: string }> = []
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line.startsWith("  ") || !line.includes("|")) continue
+    if (line.startsWith("  summaries:")) break
+    const parts = parseToonLine(line)
+    if (parts.length < 7) continue
+    const [id, cat, key, content, file, tags, date, ttl, accessedRaw] = parts
+    const words = new Set(normalize(`${key} ${content} ${tags}`).split(" ").filter(Boolean))
+    parsed.push({ lineIdx: i, id, cat, key, content, file, tags, date, ttl, accessed: parseInt(accessedRaw) || 0, words, line })
+  }
+
+  if (parsed.length < 2) {
+    return { content: [{ type: "text", text: "✅ Not enough entries to compress." }] }
+  }
+
+  const mergePairs: Array<{ a: number; b: number; similarity: number }> = []
+  for (let i = 0; i < parsed.length; i++) {
+    for (let j = i + 1; j < parsed.length; j++) {
+      const a = parsed[i], b = parsed[j]
+      const intersection = new Set([...a.words].filter((w) => b.words.has(w)))
+      const union = new Set([...a.words, ...b.words])
+      const similarity = union.size > 0 ? intersection.size / union.size : 0
+      if (similarity > 0.5) {
+        mergePairs.push({ a: i, b: j, similarity })
+      }
+    }
+  }
+
+  if (mergePairs.length === 0) {
+    return { content: [{ type: "text", text: "✅ No similar entries found to merge." }] }
+  }
+
+  mergePairs.sort((x, y) => y.similarity - x.similarity)
+  const merged = new Set<number>()
+  const mergeActions: string[] = []
+
+  for (const pair of mergePairs) {
+    if (merged.has(pair.a) || merged.has(pair.b)) continue
+    const a = parsed[pair.a], b = parsed[pair.b]
+
+    const mergedTags = [...new Set([...a.tags.split(";"), ...b.tags.split(";")])].filter(Boolean).join(";")
+    const longer = a.content.length >= b.content.length ? a : b
+    const shorter = a.content.length < b.content.length ? a : b
+    const newContent = longer.content
+    const newDate = a.date > b.date ? a.date : b.date
+    const newAccessed = a.accessed + b.accessed
+
+    mergeActions.push(`  [${longer.cat}] ${longer.key} ← ${shorter.key} (similarity: ${(pair.similarity * 100).toFixed(0)}%)`)
+
+    if (!dryRun) {
+      const lp = parseToonLine(longer.line)
+      const mergedLine = toToonLine([longer.id, longer.cat, longer.key, newContent, longer.file, mergedTags, newDate, longer.ttl, String(newAccessed), lp[9] || "", lp[10] || "", lp[11] || "", lp[12] || ""])
+      lines[longer.lineIdx] = mergedLine
+      merged.add(pair.b)
+    }
+  }
+
+  if (dryRun) {
+    const previewLines: string[] = [
+      `🔍 Dry run — ${mergePairs.length} merge candidate(s) found:`,
+      "",
+    ]
+    for (const pair of mergePairs) {
+      const a = parsed[pair.a], b = parsed[pair.b]
+      const mergedTags = [...new Set([...a.tags.split(";"), ...b.tags.split(";")])].filter(Boolean).join(";")
+      const longer = a.content.length >= b.content.length ? a : b
+      const shorter = a.content.length < b.content.length ? a : b
+      previewLines.push(`  ── Pair: [${a.cat}] ${a.key}  ↔  [${b.cat}] ${b.key}`)
+      previewLines.push(`     Similarity: ${(pair.similarity * 100).toFixed(0)}%`)
+      previewLines.push(`     A tags: ${a.tags || "(none)"}`)
+      previewLines.push(`     B tags: ${b.tags || "(none)"}`)
+      previewLines.push(`     → Merged tags: ${mergedTags || "(none)"}`)
+      previewLines.push(`     → Content winner: "${longer.key}" (${longer.content.length} chars vs ${shorter.content.length})`)
+      previewLines.push(`     → Result content: ${longer.content.slice(0, 120)}${longer.content.length > 120 ? "…" : ""}`)
+      previewLines.push("")
+    }
+    previewLines.push(`Would merge ${merged.size} entries into ${parsed.length - merged.size} entries.`)
+    previewLines.push("Run with dryRun: false to apply.")
+    return {
+      content: [{
+        type: "text",
+        text: previewLines.join("\n"),
+      }],
+    }
+  }
+
+  // Rebuild the entries section, preserving version + header lines.
+  const kept = parsed.filter((_, i) => !merged.has(i)).map((p) => lines[p.lineIdx])
+  lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${kept.length}|`)
+  lines.splice(headerIdx + 1, parsed.length, ...kept.map((l) => `  ${l.trim()}`))
+  writeMemory(lines.join("\n"))
+
+  return {
+    content: [{
+      type: "text",
+      text: `✅ Merged ${merged.size} entries into ${parsed.length - merged.size} entries.\n\n${mergeActions.join("\n")}`
+    }],
+  }
+}
+
+function runCompressAll(minQuality: number, dryRun: boolean): { content: ToolText[] } {
+  const data = readMemory()
+  const lines = data.split("\n")
+  const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+  if (headerIdx === -1) {
+    return { content: [{ type: "text", text: "No entries in memory." }] }
+  }
+
+  const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
+
+  const candidates: { idx: number; line: string; quality: number; key: string }[] = []
+  for (let i = 0; i < entryLines.length; i++) {
+    const line = entryLines[i].trim()
+    const parts = parseToonLine(line)
+    if (parts.length < 11) continue
+    const quality = parseFloat(parts[10]) || 0
+    const tags = parts[5] || ""
+    const key = parts[2]
+    const content = parts[3] || ""
+
+    const isCandidate = quality < minQuality || !tags || content.length < 20
+    if (isCandidate) {
+      candidates.push({ idx: i, line, quality, key })
+    }
+  }
+
+  if (candidates.length === 0) {
+    return {
+      content: [{
+        type: "text",
+        text: `✅ No compression candidates found. All entries have quality >= ${minQuality} or have tags.`
+      }],
+    }
+  }
+
+  const byCategory = new Map<string, typeof candidates>()
+  for (const c of candidates) {
+    const parts = parseToonLine(c.line)
+    const cat = parts[1] || "unknown"
+    if (!byCategory.has(cat)) byCategory.set(cat, [])
+    byCategory.get(cat)!.push(c)
+  }
+
+  const sections: string[] = [
+    `📦 Compression candidates: ${candidates.length} entries below quality ${minQuality}`,
+    "",
+    "By category:",
+  ]
+
+  for (const [cat, items] of byCategory) {
+    sections.push(`  ${cat}: ${items.length} entries`)
+    for (const item of items.slice(0, 3)) {
+      const parts = parseToonLine(item.line)
+      sections.push(`    - ${item.key} (Q: ${item.quality.toFixed(2)}) — ${(parts[3] || "").slice(0, 60)}`)
+    }
+    if (items.length > 3) {
+      sections.push(`    ... and ${items.length - 3} more`)
+    }
+  }
+
+  if (dryRun) {
+    sections.push("", "🔍 Dry run — no changes made. Use dryRun: false to compress.")
+    return { content: [{ type: "text", text: sections.join("\n") }] }
+  }
+
+  const removeKeys = new Set(candidates.map((c) => c.key))
+  const kept = entryLines.filter((l) => {
+    const parts = parseToonLine(l)
+    return !removeKeys.has(parts[2])
+  })
+
+  const match = lines[headerIdx].match(/\[(\d+)\|/)
+  const count = match ? parseInt(match[1]) : 0
+  lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${kept.length}|`)
+  lines.splice(headerIdx + 1, entryLines.length, ...kept.map((l) => `  ${l.trim()}`))
+  writeMemory(lines.join("\n"))
+
+  sections.push("", `🗑️ Removed ${candidates.length} low-quality entries. ${kept.length} entries remaining.`)
+  sections.push("💡 Use memory_compress to merge related entries before removing them.")
+
+  return { content: [{ type: "text", text: sections.join("\n") }] }
+}
 
 // ── memory_remember ──────────────────────────────────────────────────────────
 
@@ -63,7 +466,7 @@ server.registerTool(
       const line = lines[i]
       if (!line.startsWith("  ") || !line.includes("|")) continue
       if (line.startsWith("  summaries:")) break
-      const parts = line.trim().split("|")
+      const parts = parseToonLine(line)
       if (parts[2] === key) {
         existingIdx = i
         existingId = parts[0]
@@ -76,18 +479,18 @@ server.registerTool(
     const config = loadConfig()
     const verbatim = config.verbatim === true
     const resolvedTags = tags ? tags : (verbatim ? "" : inferTags(content, key, config.vocab))
-    const existingParts = existingIdx !== -1 ? lines[existingIdx].trim().split("|") : []
+    const existingParts = existingIdx !== -1 ? parseToonLine(lines[existingIdx]) : []
     const resolvedLinks = links
       ? links.split(/[\s;]+/).filter(Boolean).join(" ")
       : existingParts[9] || ""
-    let newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|0|${resolvedLinks}|||||${path_scope || ""}|${origin}`
+    let newEntry = toToonLine([entryId, category, key, content, file || "", resolvedTags, date, resolvedTtl, "0", resolvedLinks, "", "", "", path_scope || "", origin])
     let action = "Saved"
     let mergeInfo = ""
     const tagsInferred = !tags && resolvedTags ? true : false
 
     if (existingIdx !== -1) {
       newEntry = mergeEntries(lines[existingIdx].trim(), newEntry)
-      lines[existingIdx] = `  ${newEntry}`
+      lines[existingIdx] = newEntry
       action = "Updated"
       mergeInfo = "\nMerge: tags combined, date and links updated"
     } else {
@@ -95,10 +498,10 @@ server.registerTool(
       const lastAccessed = ""
       const quality = verbatim ? 0.5 : qualityScore(resolvedTags, resolvedLinks, content, date, accessed, lastAccessed, origin)
       const confidence = 1.0
-      newEntry = `${entryId}|${category}|${key}|${content}|${file || ""}|${resolvedTags}|${date}|${resolvedTtl}|${accessed}|${resolvedLinks}|${quality.toFixed(2)}|${confidence}|${lastAccessed}|0|${path_scope || ""}|${origin}|active`
+      newEntry = toToonLine([entryId, category, key, content, file || "", resolvedTags, date, resolvedTtl, String(accessed), resolvedLinks, quality.toFixed(2), String(confidence), lastAccessed, "0", path_scope || "", origin, "active"])
       const match = lines[headerIdx].match(/\[(\d+)\|/)
       const count = match ? parseInt(match[1]) : 0
-      lines.splice(headerIdx + 1, 0, `  ${newEntry}`)
+      lines.splice(headerIdx + 1, 0, newEntry)
       lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count + 1}|`)
     }
 
@@ -194,75 +597,26 @@ server.registerTool(
 server.registerTool(
   "memory_forget",
   {
-    title: "Delete from Memory",
-    description: "Delete a memory entry by its key or id.",
+    title: "Forget from Memory",
+    description: "Lifecycle operations for a memory entry: soft (default) marks it obsolete and hides it from recalls, hard permanently removes it, restore brings it back to active, supersede retires it with a typed superseded_by edge to a newer entry.",
     inputSchema: {
-      key: z.string().describe("Key or id of the entry to delete"),
-      hard: z.boolean().optional().default(false).describe("If true, permanently remove the entry. If false (default), softly marks as obsolete (status=obsolete) so it can be resolved or restored later."),
+      key: z.string().describe("Key or id of the entry"),
+      action: z.enum(["soft", "hard", "restore", "supersede"]).optional().default("soft").describe("soft: mark obsolete (default). hard: permanently remove. restore: bring an obsolete entry back to active. supersede: mark obsolete with a superseded_by link to new_key."),
+      new_key: z.string().optional().default("").describe("Replacement entry key or id (only used with action: supersede)."),
+      reason: z.string().optional().default("").describe("Optional note appended to the old entry (only used with action: supersede)."),
     },
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
   },
-  async ({ key, hard }) => {
-    const data = readMemory()
-    const lines = data.split("\n")
-    const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
-
-    if (headerIdx === -1) {
-      return { content: [{ type: "text" as const, text: "No entries in memory" }] }
-    }
-
-    if (hard) {
-      const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
-      const filtered = entryLines.filter((l) => {
-        const parts = l.trim().split("|")
-        return parts[0] !== key && parts[2] !== key
-      })
-
-      const removed = entryLines.length - filtered.length
-      const match = lines[headerIdx].match(/\[(\d+)\|/)
-      const count = match ? parseInt(match[1]) : 0
-      lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count - removed}|`)
-      lines.splice(headerIdx + 1, entryLines.length, ...filtered.map((l) => `  ${l.trim()}`))
-
-      writeMemory(lines.join("\n"))
-
-      if (removed === 0) {
-        return {
-          content: [{ type: "text" as const, text: `"${key}" not found in memory.` }],
-        }
-      }
-
-      return {
-        content: [{ type: "text" as const, text: `"${key}" permanently deleted. ${count - removed} entries remaining.` }],
-      }
-    }
-
-    // Soft-delete: mark status as "obsolete"
-    let found = false
-    for (let i = headerIdx + 1; i < lines.length; i++) {
-      const line = lines[i]
-      if (!line.startsWith("  ") || !line.includes("|")) continue
-      if (line.startsWith("  summaries:")) break
-      const parts = line.trim().split("|")
-      if (parts[0] === key || parts[2] === key) {
-        while (parts.length < 17) parts.push("")
-        parts[16] = "obsolete"
-        lines[i] = `  ${parts.join("|")}`
-        found = true
-        break
-      }
-    }
-
-    writeMemory(lines.join("\n"))
-
-    if (!found) {
-      return {
-        content: [{ type: "text" as const, text: `"${key}" not found in memory.` }],
-      }
-    }
-
-    return {
-      content: [{ type: "text" as const, text: `"${key}" marked as obsolete. Use memory_resolve(key: "${key}") to restore.` }],
+  async ({ key, action, new_key, reason }) => {
+    switch (action) {
+      case "hard":
+        return hardDelete(key)
+      case "restore":
+        return restoreEntry(key)
+      case "supersede":
+        return supersedeEntry(key, new_key, reason)
+      default:
+        return softDelete(key)
     }
   }
 )
@@ -281,7 +635,7 @@ server.registerTool(
     const data = readMemory()
     const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
     const entries = lines.map((l) => {
-      const parts = l.trim().split("|")
+      const parts = parseToonLine(l)
       return { category: parts[1] || "unknown", ttl: parts[7] || "", quality: parts[10] || "", origin: parts.length > 15 ? parts[15] || "" : "", status: parts.length > 16 ? parts[16] || "" : "" }
     })
 
@@ -323,7 +677,7 @@ server.registerTool(
       "",
       `Last 5 entries:`,
       ...lines.slice(-5).map((l) => {
-        const parts = l.trim().split("|")
+        const parts = parseToonLine(l)
         const ttlInfo = parts[7] ? ` | TTL: ${parts[7]}` : ""
         const qualityInfo = parts[10] ? ` | Q: ${parts[10]}` : ""
         const accessInfo = parts[8] && parseInt(parts[8]) > 0 ? ` | accessed: ${parts[8]}x` : ""
@@ -336,7 +690,7 @@ server.registerTool(
       ...lines
         .filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
         .map((l) => {
-          const parts = l.trim().split("|")
+          const parts = parseToonLine(l)
           return { key: parts[2], accessed: parts.length > 8 ? parseInt(parts[8]) || 0 : 0, quality: parts[10] || "" }
         })
         .filter((e) => e.accessed > 0)
@@ -349,7 +703,7 @@ server.registerTool(
     const coldEntries = lines
       .filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
       .map((l) => {
-        const p = l.trim().split("|")
+        const p = parseToonLine(l)
         return {
           key: p[2],
           cat: p[1],
@@ -409,7 +763,7 @@ server.registerTool(
     const results = lines
       .map((line) => {
         const trimmed = line.trim()
-        const parts = trimmed.split("|")
+        const parts = parseToonLine(trimmed)
         if (parts.length < 7) return null
         const [id, cat, key, content, file, tags, date] = parts
         if (date < sinceDate) return null
@@ -531,7 +885,7 @@ server.registerTool(
         return { content: [{ type: "text" as const, text: `No summary for "${file}"` }] }
       }
 
-      const summaryText = match.replace(`  ${file}: `, "")
+      const summaryText = unescField(match.replace(`  ${file}: `, ""))
       return { content: [{ type: "text" as const, text: summaryText }] }
     }
 
@@ -547,9 +901,9 @@ server.registerTool(
     const existingIdx = summaryLines.findIndex((l) => l.startsWith(`  ${file}:`))
 
     if (existingIdx !== -1) {
-      summaryLines[existingIdx] = `  ${file}: ${summary}`
+      summaryLines[existingIdx] = `  ${file}: ${escField(summary)}`
     } else {
-      summaryLines.push(`  ${file}: ${summary}`)
+      summaryLines.push(`  ${file}: ${escField(summary)}`)
     }
 
     lines.splice(summaryIdx + 1, lines.length - summaryIdx - 1, ...summaryLines)
@@ -711,20 +1065,22 @@ server.registerTool(
   "memory_consolidate",
   {
     title: "Consolidate Memory",
-    description: "Consolidate memory by removing entries with identical content (keeps the first). Deterministic, no LLM.",
-    inputSchema: {},
+    description: "Cleanup operations, all deterministic (no LLM): identical removes duplicate entries (keeps the first), similar merges entries with >50% word overlap (keeps longer content, combines tags), low-quality removes entries below minQuality or without tags.",
+    inputSchema: {
+      mode: z.enum(["identical", "similar", "low-quality"]).optional().default("identical").describe("identical: dedupe entries with identical content (default). similar: merge entries with >50% word overlap. low-quality: remove entries below minQuality or without tags."),
+      minQuality: z.number().optional().default(0.3).describe("Entries below this quality score are candidates (only used with mode: low-quality)."),
+      dryRun: z.boolean().optional().default(false).describe("If true, show what would change without writing."),
+    },
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
   },
-  async () => {
-    const result = consolidateEntries()
-    if (result.removed === 0) {
-      return { content: [{ type: "text" as const, text: `✅ Memory already consolidated (${result.kept} entries, 0 duplicates)` }] }
-    }
-    return {
-      content: [{
-        type: "text" as const,
-        text: `🧹 Consolidated ${result.removed} duplicate entries.\n${result.kept} active entries remaining.\nDuplicates: ${result.duplicates.join(", ")}`,
-      }],
+  async ({ mode, minQuality, dryRun }) => {
+    switch (mode) {
+      case "similar":
+        return runMergeSimilar(dryRun)
+      case "low-quality":
+        return runCompressAll(minQuality, dryRun)
+      default:
+        return runConsolidate()
     }
   }
 )
@@ -1074,108 +1430,6 @@ server.registerTool(
   }
 )
 
-// ── memory_compress_all ────────────────────────────────────────────────
-
-server.registerTool(
-  "memory_compress_all",
-  {
-    title: "Lazy Batch Compression",
-    description: "Compress all low-quality entries (no tags, low quality score) in one pass. Deterministic, no LLM — merges entries with similar content and removes empty/stale ones. Inspired by MemPalace's lazy compression.",
-    inputSchema: {
-      minQuality: z.number().optional().default(0.3).describe("Entries below this quality score are compression candidates (0-1). Default: 0.3."),
-      dryRun: z.boolean().optional().default(false).describe("If true, show what would be compressed without making changes."),
-    },
-    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
-  },
-  async ({ minQuality, dryRun }) => {
-    const data = readMemory()
-    const lines = data.split("\n")
-    const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
-    if (headerIdx === -1) {
-      return { content: [{ type: "text" as const, text: "No entries in memory." }] }
-    }
-
-    const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
-
-    // Find compression candidates: low quality, no tags, or stale
-    const candidates: { idx: number; line: string; quality: number; key: string }[] = []
-    for (let i = 0; i < entryLines.length; i++) {
-      const line = entryLines[i].trim()
-      const parts = line.split("|")
-      if (parts.length < 11) continue
-      const quality = parseFloat(parts[10]) || 0
-      const tags = parts[5] || ""
-      const key = parts[2]
-      const content = parts[3] || ""
-
-      // Candidates: low quality OR no tags OR very short content
-      const isCandidate = quality < minQuality || !tags || content.length < 20
-      if (isCandidate) {
-        candidates.push({ idx: i, line, quality, key })
-      }
-    }
-
-    if (candidates.length === 0) {
-      return {
-        content: [{
-          type: "text" as const,
-          text: `✅ No compression candidates found. All entries have quality >= ${minQuality} or have tags.`
-        }],
-      }
-    }
-
-    // Group candidates by category for potential merging
-    const byCategory = new Map<string, typeof candidates>()
-    for (const c of candidates) {
-      const parts = c.line.split("|")
-      const cat = parts[1] || "unknown"
-      if (!byCategory.has(cat)) byCategory.set(cat, [])
-      byCategory.get(cat)!.push(c)
-    }
-
-    const sections: string[] = [
-      `📦 Compression candidates: ${candidates.length} entries below quality ${minQuality}`,
-      "",
-      "By category:",
-    ]
-
-    for (const [cat, items] of byCategory) {
-      sections.push(`  ${cat}: ${items.length} entries`)
-      for (const item of items.slice(0, 3)) {
-        const parts = item.line.split("|")
-        sections.push(`    - ${item.key} (Q: ${item.quality.toFixed(2)}) — ${(parts[3] || "").slice(0, 60)}`)
-      }
-      if (items.length > 3) {
-        sections.push(`    ... and ${items.length - 3} more`)
-      }
-    }
-
-    if (dryRun) {
-      sections.push("", "🔍 Dry run — no changes made. Use dryRun: false to compress.")
-      return { content: [{ type: "text" as const, text: sections.join("\n") }] }
-    }
-
-    // Remove candidates (conservative: just remove the lowest quality ones)
-    // Don't auto-merge — let the agent decide via memory_compress
-    const removeKeys = new Set(candidates.map((c) => c.key))
-    const kept = entryLines.filter((l) => {
-      const parts = l.trim().split("|")
-      return !removeKeys.has(parts[2])
-    })
-
-    const match = lines[headerIdx].match(/\[(\d+)\|/)
-    const count = match ? parseInt(match[1]) : 0
-    lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${kept.length}|`)
-    lines.splice(headerIdx + 1, entryLines.length, ...kept.map((l) => `  ${l.trim()}`))
-    writeMemory(lines.join("\n"))
-
-    sections.push("", `🗑️ Removed ${candidates.length} low-quality entries. ${kept.length} entries remaining.`)
-    sections.push("💡 Use memory_compress to merge related entries before removing them.")
-
-    return { content: [{ type: "text" as const, text: sections.join("\n") }] }
-  }
-)
-
 // ── memory_export_gist ─────────────────────────────────────────────────
 
 server.registerTool(
@@ -1343,7 +1597,7 @@ server.registerTool(
           const tags = e.tags.join(";")
           const links = e.links.join(" ")
           const q = qualityScore(tags, links, e.content, e.date, e.accessed, e.lastAccessed)
-          return `  ${e.id}|${e.category}|${e.key}|${e.content}|${e.file}|${tags}|${e.date}|${e.ttl}|${e.accessed}|${links}|${q.toFixed(2)}|1|${e.lastAccessed}`
+          return toToonLine([e.id, e.category, e.key, e.content, e.file, tags, e.date, e.ttl, String(e.accessed), links, q.toFixed(2), "1", e.lastAccessed])
         }),
       ]
       safeWrite(MEMORY_FILE, lines.join("\n"))
@@ -1409,7 +1663,7 @@ server.registerTool(
       observations = data.split("\n")
         .filter((l) => l.startsWith("  ") && l.includes("|"))
         .map((l) => {
-          const p = l.trim().split("|")
+          const p = parseToonLine(l)
           return { ts: p[0] || "", session: p[1] || "", agent: p[2] || "", branch: p[3] || "", tool: p[4] || "", file: p[6] || "", summary: p[7] || "" }
         })
         .filter((o) => sessionIds.has(o.session))
@@ -1477,7 +1731,7 @@ server.registerTool(
         const file = obs.file || ""
         const tags = `session-merge;${obs.agent};${obs.branch}`
         const quality = qualityScore(tags, "", content, date)
-        const entry = `${newId}|knowledge|${key}|${content}|${file}|${tags}|${date}||0||${quality.toFixed(2)}|1|`
+        const entry = toToonLine([newId, "knowledge", key, content, file, tags, date, "", "0", "", quality.toFixed(2), "1", ""])
 
         // Append to memory
         const lines = data.split("\n")
@@ -1488,7 +1742,7 @@ server.registerTool(
         }
         const match = lines[headerIdx].match(/\[(\d+)\|/)
         const count = match ? parseInt(match[1]) : 0
-        lines.splice(headerIdx + 1, 0, `  ${entry}`)
+        lines.splice(headerIdx + 1, 0, entry)
         lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count + 1}|`)
         writeMemory(lines.join("\n"))
         existingKeys.add(key)
@@ -1501,129 +1755,6 @@ server.registerTool(
     }
 
     return { content: [{ type: "text" as const, text: sections.join("\n") }] }
-  }
-)
-
-// ── memory_merge_similar ─────────────────────────────────────────────
-
-server.registerTool(
-  "memory_merge_similar",
-  {
-    title: "Merge Similar Entries",
-    description: "Find entries with overlapping content (>50% word similarity) and merge them. Deterministic, no LLM. Keeps the longer content and combines tags.",
-    inputSchema: {
-      dryRun: z.boolean().optional().default(false).describe("If true, show what would be merged without making changes."),
-    },
-    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
-  },
-  async ({ dryRun }) => {
-    const data = readMemory()
-    const entries = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
-
-    if (entries.length < 2) {
-      return { content: [{ type: "text" as const, text: "✅ Not enough entries to compress." }] }
-    }
-
-    // Parse entries and compute similarity
-    const parsed = entries.map((line) => {
-      const parts = line.trim().split("|")
-      if (parts.length < 7) return null
-      const [id, cat, key, content, file, tags, date, ttl, accessedRaw] = parts
-      const words = new Set(normalize(`${key} ${content} ${tags}`).split(" ").filter(Boolean))
-      return { id, cat, key, content, file, tags, date, ttl, accessed: parseInt(accessedRaw) || 0, words, line }
-    }).filter(Boolean) as Array<{ id: string; cat: string; key: string; content: string; file: string; tags: string; date: string; ttl: string; accessed: number; words: Set<string>; line: string }>
-
-    // Find pairs with >50% word overlap (Jaccard similarity)
-    const mergePairs: Array<{ a: number; b: number; similarity: number }> = []
-    for (let i = 0; i < parsed.length; i++) {
-      for (let j = i + 1; j < parsed.length; j++) {
-        const a = parsed[i], b = parsed[j]
-        const intersection = new Set([...a.words].filter((w) => b.words.has(w)))
-        const union = new Set([...a.words, ...b.words])
-        const similarity = union.size > 0 ? intersection.size / union.size : 0
-        if (similarity > 0.5) {
-          mergePairs.push({ a: i, b: j, similarity })
-        }
-      }
-    }
-
-    if (mergePairs.length === 0) {
-      return { content: [{ type: "text" as const, text: "✅ No similar entries found to merge." }] }
-    }
-
-    // Sort by similarity (highest first) and merge greedily
-    mergePairs.sort((x, y) => y.similarity - x.similarity)
-    const merged = new Set<number>()
-    const mergeActions: string[] = []
-
-    for (const pair of mergePairs) {
-      if (merged.has(pair.a) || merged.has(pair.b)) continue
-      const a = parsed[pair.a], b = parsed[pair.b]
-
-      // Merge: keep the entry with more content, combine tags
-      const mergedTags = [...new Set([...a.tags.split(";"), ...b.tags.split(";")])].filter(Boolean).join(";")
-      const longer = a.content.length >= b.content.length ? a : b
-      const shorter = a.content.length < b.content.length ? a : b
-      const newContent = longer.content
-      const newDate = a.date > b.date ? a.date : b.date
-      const newAccessed = a.accessed + b.accessed
-
-      mergeActions.push(`  [${longer.cat}] ${longer.key} ← ${shorter.key} (similarity: ${(pair.similarity * 100).toFixed(0)}%)`)
-
-      if (!dryRun) {
-        // Update the longer entry with merged data
-        const mergedLine = `  ${longer.id}|${longer.cat}|${longer.key}|${newContent}|${longer.file}|${mergedTags}|${newDate}|${longer.ttl}|${newAccessed}|${longer.line.split("|")[9] || ""}|${longer.line.split("|")[10] || ""}|${longer.line.split("|")[11] || ""}|${longer.line.split("|")[12] || ""}`
-        // Replace in entries array
-        entries[entries.indexOf(longer.line)] = mergedLine
-        merged.add(pair.b)
-      }
-    }
-
-    if (dryRun) {
-      // Detailed preview: show what each merge produces
-      const previewLines: string[] = [
-        `🔍 Dry run — ${mergePairs.length} merge candidate(s) found:`,
-        "",
-      ]
-      for (const pair of mergePairs) {
-        const a = parsed[pair.a], b = parsed[pair.b]
-        const mergedTags = [...new Set([...a.tags.split(";"), ...b.tags.split(";")])].filter(Boolean).join(";")
-        const longer = a.content.length >= b.content.length ? a : b
-        const shorter = a.content.length < b.content.length ? a : b
-        previewLines.push(`  ── Pair: [${a.cat}] ${a.key}  ↔  [${b.cat}] ${b.key}`)
-        previewLines.push(`     Similarity: ${(pair.similarity * 100).toFixed(0)}%`)
-        previewLines.push(`     A tags: ${a.tags || "(none)"}`)
-        previewLines.push(`     B tags: ${b.tags || "(none)"}`)
-        previewLines.push(`     → Merged tags: ${mergedTags || "(none)"}`)
-        previewLines.push(`     → Content winner: "${longer.key}" (${longer.content.length} chars vs ${shorter.content.length})`)
-        previewLines.push(`     → Result content: ${longer.content.slice(0, 120)}${longer.content.length > 120 ? "…" : ""}`)
-        previewLines.push("")
-      }
-      previewLines.push(`Would merge ${merged.size} entries into ${entries.length - merged.size} entries.`)
-      previewLines.push("Run with dryRun: false to apply.")
-      return {
-        content: [{
-          type: "text" as const,
-          text: previewLines.join("\n"),
-        }],
-      }
-    }
-
-    // Remove merged entries and write back
-    const newLines = entries.filter((_, i) => !merged.has(i))
-    const headerIdx = newLines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
-    if (headerIdx !== -1) {
-      const count = newLines.filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:")).length
-      newLines[headerIdx] = newLines[headerIdx].replace(/\[\d+\|/, `[${count}|`)
-    }
-    writeMemory(newLines.join("\n"))
-
-    return {
-      content: [{
-        type: "text" as const,
-        text: `✅ Merged ${merged.size} entries into ${entries.length - merged.size} entries.\n\n${mergeActions.join("\n")}`
-      }],
-    }
   }
 )
 
@@ -1749,7 +1880,7 @@ server.registerTool(
       const line = lines[i]
       if (!line.startsWith("  ") || !line.includes("|")) continue
       if (line.startsWith("  summaries:")) break
-      const parts = line.trim().split("|")
+      const parts = parseToonLine(line)
       if (parts[2] === key) {
         existingIdx = i
         existingId = parts[0]
@@ -1759,13 +1890,13 @@ server.registerTool(
 
     if (existingIdx !== -1) {
       // Update existing checkpoint
-      const parts = lines[existingIdx].trim().split("|")
+      const parts = parseToonLine(lines[existingIdx])
       parts[3] = content
       parts[6] = date
       parts[7] = ttl7d
       while (parts.length < 14) parts.push("")
       parts[13] = "0"
-      lines[existingIdx] = `  ${parts.join("|")}`
+      lines[existingIdx] = toToonLine(parts)
       writeMemory(lines.join("\n"))
       return {
         content: [{ type: "text" as const, text: `📝 Checkpoint updated: ${key}\n⏰ TTL: ${ttl7d} (7d)\n${note ? `\n${note}` : ""}` }],
@@ -1775,11 +1906,11 @@ server.registerTool(
     // Create new checkpoint entry
     const newId = `cp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
     const quality = qualityScore("checkpoint", "", content, date)
-    const newEntry = `${newId}|knowledge|${key}|${content}||checkpoint|${date}|${ttl7d}|0||${quality.toFixed(2)}|1|${now.toISOString()}|0`
+    const newEntry = toToonLine([newId, "knowledge", key, content, "", "checkpoint", date, ttl7d, "0", "", quality.toFixed(2), "1", now.toISOString(), "0"])
 
     const match = lines[headerIdx].match(/\[(\d+)\|/)
     const count = match ? parseInt(match[1]) : 0
-    lines.splice(headerIdx + 1, 0, `  ${newEntry}`)
+    lines.splice(headerIdx + 1, 0, newEntry)
     lines[headerIdx] = lines[headerIdx].replace(/\[\d+\|/, `[${count + 1}|`)
     writeMemory(lines.join("\n"))
 
@@ -1821,11 +1952,11 @@ server.registerTool(
       const line = lines[i]
       if (!line.startsWith("  ") || !line.includes("|")) continue
       if (line.startsWith("  summaries:")) break
-      const parts = line.trim().split("|")
+      const parts = parseToonLine(line)
       if (parts[0] === key || parts[2] === key) {
         while (parts.length < 14) parts.push("")
         parts[13] = String(clampedPriority)
-        lines[i] = `  ${parts.join("|")}`
+        lines[i] = toToonLine(parts)
         found = true
         break
       }
@@ -1866,11 +1997,11 @@ server.registerTool(
       const line = lines[i]
       if (!line.startsWith("  ") || !line.includes("|")) continue
       if (line.startsWith("  summaries:")) break
-      const parts = line.trim().split("|")
+      const parts = parseToonLine(line)
       if (parts[0] === key || parts[2] === key) {
         if (parts.length > 13) {
           parts[13] = "0"
-          lines[i] = `  ${parts.join("|")}`
+          lines[i] = toToonLine(parts)
         }
         found = true
         break
@@ -2008,7 +2139,7 @@ server.registerTool(
       const line = lines[i]
       if (!line.startsWith("  ") || !line.includes("|")) continue
       if (line.startsWith("  summaries:")) break
-      const parts = line.trim().split("|")
+      const parts = parseToonLine(line)
       const entryId = parts[0]
       const entryKey = parts[2]
 
@@ -2026,7 +2157,7 @@ server.registerTool(
       }
 
       parts[5] = newTags.join(";")
-      lines[i] = `  ${parts.join("|")}`
+      lines[i] = toToonLine(parts)
       modified++
       modifiedKeys.push(entryKey)
     }
@@ -2042,213 +2173,6 @@ server.registerTool(
       content: [{
         type: "text" as const,
         text: `🏷️ ${actionLabel} tags on ${modified} entries:\n  Tags: ${tagsToApply.join(";")}\n  Entries: ${modifiedKeys.join(", ")}`,
-      }],
-    }
-  }
-)
-
-// ── memory_resolve ───────────────────────────────────────────────────────────
-
-server.registerTool(
-  "memory_resolve",
-  {
-    title: "Resolve Entry",
-    description: "Restore an obsolete entry back to active status, or mark an entry as resolved. Reverses soft-delete.",
-    inputSchema: {
-      key: z.string().describe("Key or id of the entry to resolve/restore"),
-    },
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  },
-  async ({ key }) => {
-    const data = readMemory()
-    const lines = data.split("\n")
-    const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
-
-    if (headerIdx === -1) {
-      return { content: [{ type: "text" as const, text: "No entries in memory" }] }
-    }
-
-    let found = false
-    let wasObsolete = false
-    for (let i = headerIdx + 1; i < lines.length; i++) {
-      const line = lines[i]
-      if (!line.startsWith("  ") || !line.includes("|")) continue
-      if (line.startsWith("  summaries:")) break
-      const parts = line.trim().split("|")
-      if (parts[0] === key || parts[2] === key) {
-        while (parts.length < 17) parts.push("")
-        wasObsolete = parts[16] === "obsolete"
-        parts[16] = "active"
-        lines[i] = `  ${parts.join("|")}`
-        found = true
-        break
-      }
-    }
-
-    if (!found) {
-      return { content: [{ type: "text" as const, text: `"${key}" not found in memory.` }] }
-    }
-
-    writeMemory(lines.join("\n"))
-
-    const msg = wasObsolete ? `"${key}" restored to active status.` : `"${key}" marked as resolved.`
-    return { content: [{ type: "text" as const, text: `✅ ${msg}` }] }
-  }
-)
-
-// ── memory_suppress ──────────────────────────────────────────────────────────
-
-server.registerTool(
-  "memory_suppress",
-  {
-    title: "Suppress Entry",
-    description: "Suppress a memory entry so it's hidden from normal recalls. Sets status to 'obsolete'. Use memory_resolve to restore.",
-    inputSchema: {
-      key: z.string().describe("Key or id of the entry to suppress"),
-    },
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
-  },
-  async ({ key }) => {
-    const data = readMemory()
-    const lines = data.split("\n")
-    const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
-
-    if (headerIdx === -1) {
-      return { content: [{ type: "text" as const, text: "No entries in memory" }] }
-    }
-
-    let found = false
-    for (let i = headerIdx + 1; i < lines.length; i++) {
-      const line = lines[i]
-      if (!line.startsWith("  ") || !line.includes("|")) continue
-      if (line.startsWith("  summaries:")) break
-      const parts = line.trim().split("|")
-      if (parts[0] === key || parts[2] === key) {
-        while (parts.length < 17) parts.push("")
-        parts[16] = "obsolete"
-        lines[i] = `  ${parts.join("|")}`
-        found = true
-        break
-      }
-    }
-
-    if (!found) {
-      return { content: [{ type: "text" as const, text: `"${key}" not found in memory.` }] }
-    }
-
-    writeMemory(lines.join("\n"))
-    return { content: [{ type: "text" as const, text: `"${key}" suppressed. Use memory_resolve(key: "${key}") to restore.` }] }
-  }
-)
-
-// ── memory_supersede ─────────────────────────────────────────────────────────
-
-server.registerTool(
-  "memory_supersede",
-  {
-    title: "Supersede Entry",
-    description: "Mark an entry as superseded (obsolete) by a newer entry, using typed graph edges (superseded_by / supersedes). The old entry stays in the file for history but is hidden from normal recalls. Use memory_recall(as_of: date) to see what was true at a point in time.",
-    inputSchema: {
-      old_key: z.string().describe("Key or id of the entry being superseded"),
-      new_key: z.string().optional().default("").describe("Key or id of the replacement entry (can be empty if the topic is simply retired)."),
-      reason: z.string().optional().default("").describe("Optional note explaining why it was superseded. Appended to the old entry's content."),
-    },
-    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
-  },
-  async ({ old_key, new_key, reason }) => {
-    const data = readMemory()
-    const lines = data.split("\n")
-    const headerIdx = lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
-    if (headerIdx === -1) {
-      return { content: [{ type: "text" as const, text: "No entries in memory" }] }
-    }
-
-    const today = new Date().toISOString().split("T")[0]
-
-    let oldIdx = -1
-    for (let i = headerIdx + 1; i < lines.length; i++) {
-      const line = lines[i]
-      if (!line.startsWith("  ") || !line.includes("|")) continue
-      if (line.startsWith("  summaries:")) break
-      const parts = line.trim().split("|")
-      if (parts[0] === old_key || parts[2] === old_key) {
-        oldIdx = i
-        break
-      }
-    }
-
-    if (oldIdx === -1) {
-      return { content: [{ type: "text" as const, text: `❌ "${old_key}" not found in memory.` }] }
-    }
-
-    let newIdx = -1
-    let newKey = ""
-    if (new_key) {
-      for (let i = headerIdx + 1; i < lines.length; i++) {
-        const line = lines[i]
-        if (!line.startsWith("  ") || !line.includes("|")) continue
-        if (line.startsWith("  summaries:")) break
-        const parts = line.trim().split("|")
-        if (parts[0] === new_key || parts[2] === new_key) {
-          newIdx = i
-          newKey = parts[2]
-          break
-        }
-      }
-      if (newIdx === -1) {
-        return { content: [{ type: "text" as const, text: `❌ Replacement "${new_key}" not found in memory.` }] }
-      }
-    }
-
-    const oldParts = lines[oldIdx].trim().split("|")
-    const oldKey = oldParts[2]
-
-    // Tag the old entry as superseded.
-    const tags = (oldParts[5] || "").split(";").map((t) => t.trim()).filter(Boolean)
-    if (!tags.includes("superseded")) tags.push("superseded")
-
-    // Add the typed link old --superseded_by--> new.
-    const links = (oldParts[9] || "").split(/[\s;]+/).filter(Boolean)
-    if (newKey) {
-      const edge = formatLink("superseded_by", newKey)
-      if (!links.includes(edge)) links.push(edge)
-    }
-
-    // Append the reason to the content (kept in history). Records are single-line, so
-    // newlines in the reason would corrupt the | delimited format — flatten them.
-    let content = oldParts[3] || ""
-    if (reason && !content.includes(reason)) {
-      const flat = reason.replace(/[\r\n]+/g, " ").trim()
-      content = `${content} ⏳ Superseded (${today}): ${flat}`
-    }
-
-    while (oldParts.length < 18) oldParts.push("")
-    oldParts[3] = content
-    oldParts[5] = tags.join(";")
-    oldParts[9] = links.join(" ")
-    oldParts[16] = "obsolete"
-    oldParts[17] = today
-    lines[oldIdx] = `  ${oldParts.join("|")}`
-
-    // Mirror link on the replacement: new --supersedes--> old.
-    if (newIdx !== -1) {
-      const newParts = lines[newIdx].trim().split("|")
-      const newLinks = (newParts[9] || "").split(/[\s;]+/).filter(Boolean)
-      const edge = formatLink("supersedes", oldKey)
-      if (!newLinks.includes(edge)) {
-        newLinks.push(edge)
-        newParts[9] = newLinks.join(" ")
-        lines[newIdx] = `  ${newParts.join("|")}`
-      }
-    }
-
-    writeMemory(lines.join("\n"))
-
-    const target = newKey ? ` by "${newKey}"` : " (retired)"
-    return {
-      content: [{
-        type: "text" as const,
-        text: `⏳ "${oldKey}" superseded${target} on ${today}.\n\nOld entry is now status=obsolete (hidden from normal recalls).\n  · link: superseded_by${newKey ? `:${newKey}` : ""}\n  · tag: superseded\n\nTo see what was true before: memory_recall(query: "${oldKey}", as_of: "${today}")\nTo restore: memory_resolve(key: "${oldKey}")${reason ? `\n\nReason: ${reason}` : ""}`,
       }],
     }
   }
@@ -2387,7 +2311,7 @@ server.registerTool(
     // 6. Superseded-but-active (tag/link present but status not obsolete)
     const pending = entries.filter((e) => e.status === "active" && (e.tags.includes("superseded") || typedLinks(e.links).some((l) => l.type === "superseded_by")))
     if (pending.length > 0) {
-      sections.push("", "🔎 Superseded tag but still active (fix with memory_supersede):")
+      sections.push("", "🔎 Superseded tag but still active (fix with memory_forget action: 'supersede'):")
       for (const e of pending.slice(0, cap)) {
         sections.push(`  [${e.category}] ${e.key}`)
       }
@@ -2396,7 +2320,7 @@ server.registerTool(
     // 7. Drafts pending review
     const drafts = entries.filter((e) => e.status === "draft")
     if (drafts.length > 0) {
-      sections.push("", "📝 Drafts pending review (promote with memory_promote / memory_resolve):")
+      sections.push("", "📝 Drafts pending review (promote with memory_promote / memory_forget action: 'restore'):")
       for (const e of drafts.slice(0, cap)) {
         sections.push(`  [${e.category}] ${e.key} — ${e.content.slice(0, 70)}`)
       }
@@ -2524,9 +2448,9 @@ server.registerTool(
       if (status === "draft") tags.push("draft")
       const content = (o.summary || "").slice(0, 500)
       const quality = qualityScore(tags.join(";"), "", content, date)
-      const entry = `${newId}|knowledge|${key}|${content}|${o.file || ""}|${tags.join(";")}|${date}||0||${quality.toFixed(2)}|${conf.toFixed(2)}|${date}|0||inferred|${status}`
+      const entry = toToonLine([newId, "knowledge", key, content, o.file || "", tags.join(";"), date, "", "0", "", quality.toFixed(2), conf.toFixed(2), date, "0", "", "inferred", status])
 
-      lines.splice(headerIdx + 1, 0, `  ${entry}`)
+      lines.splice(headerIdx + 1, 0, entry)
       count++
       existingKeys.add(key)
       if (status === "draft") drafted++
@@ -2539,7 +2463,7 @@ server.registerTool(
     return {
       content: [{
         type: "text" as const,
-        text: `📤 Promoted ${promoted} active + ${drafted} draft from the capture log.\n\n${actions.join("\n")}\n\nDrafts are hidden from recalls until promoted — use memory_resolve(key) to activate, or review with memory_reflect.`
+        text: `📤 Promoted ${promoted} active + ${drafted} draft from the capture log.\n\n${actions.join("\n")}\n\nDrafts are hidden from recalls until promoted — use memory_forget(key, action: 'restore') to activate, or review with memory_reflect.`
       }],
     }
   }

@@ -3,6 +3,7 @@ import { registerAppResource } from "@modelcontextprotocol/ext-apps/server"
 import { createUIResource } from "@mcp-ui/server"
 import { readMemory } from "./memory-io"
 import { isExpired } from "./entries"
+import { parseToonLine } from "../lib/utils"
 import { generateSystemPrimer } from "../lib/quality"
 import { buildViewerData } from "../viewer/data"
 import { generateHtml } from "../viewer/html"
@@ -29,7 +30,7 @@ export function registerResources(server: McpServer): void {
       const data = readMemory()
       const lines = data.split("\n").filter((l) => l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:"))
       const entries = lines.map((l) => {
-        const parts = l.trim().split("|")
+        const parts = parseToonLine(l)
         return { category: parts[1] || "unknown", ttl: parts[7] || "" }
       })
       const byCategory: Record<string, number> = {}

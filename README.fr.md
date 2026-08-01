@@ -63,7 +63,7 @@ Lisez [Comment toon-memory rend votre agent IA plus intelligent](https://luiggiv
 
 ## Fonctionnalités
 
-- **29 outils MCP** — Gestion complète de la mémoire via le Model Context Protocol, incluant `memory_smart_recall` (rappel unifié), `memory_sessions` pour la coordination multi-session, et les outils `context_*` pour la génération de contexte en un seul appel (briefing, diff, focus, audit de santé, export)
+- **35 outils MCP** — Gestion complète de la mémoire via le Model Context Protocol, incluant `memory_smart_recall` (rappel unifié), `memory_sessions` pour la coordination multi-session, et les outils `context_*` pour la génération de contexte en un seul appel (briefing, diff, focus, audit de santé, export)
 - **Ressources MCP** — Lire la mémoire comme contexte sans invoquer d'outils, incluant un System Primer (carte de connaissances auto-générée)
 - **15 agents supportés** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Installateur interactif** — Sélectionnez les agents à configurer depuis un menu
@@ -178,15 +178,13 @@ memory_remember   # Sauvegarder les décisions importantes
 | `memory_backup` | Crée une sauvegarde horodatée du fichier mémoire (auto-nettoyage aux 10 plus récentes) |
 | `memory_captured` | Liste les activités capturées automatiquement par les hooks (opt-in) ou vide le journal |
 | `memory_checkpoint` | **Point de contrôle** : crée un instantané de l'état actuel de la mémoire avec TTL de 7j. Utile pour référence de restauration pendant les longues sessions |
-| `memory_consolidate` | Fusionne-dédoublonne les entrées : les entrées de même clé sont fusionnées (union des tags, confiance max, date la plus récente), puis les doublons exacts sont supprimés (déterministe, sans LLM) |
+| `memory_consolidate` | **Opérations de nettoyage** déterministes (sans LLM) : `mode: "identical"` (défaut) dédoublonne les entrées de contenu identique, `"similar"` fusionne les quasi-doublons (Jaccard >50%), `"low-quality"` nettoie en lot les entrées de basse qualité (`minQuality`, `dryRun`) |
 | `memory_sessions` | Affiche les sessions d'agents actives (branche, fichiers, dernière présence) et les conflits doux pour le travail en parallèle |
 | `memory_compress` | Compression LLM en deux étapes : résumer + écraser. Utilise Anthropic/OpenAI CLI si disponible |
-| `memory_compress_all` | Compression par lot : écrase toutes les entrées sous 100 tokens avec une version compressée. Déterministe, pas de LLM |
 | `memory_primer` | Primer de contexte en un appel : mémoire principale + catégories + changements de fichiers. Injecté automatiquement au démarrage de session |
 | `memory_merge_sessions` | Fusionne les observations entre sessions parallèles pour un fichier. Déduplique et promeut automatiquement |
 | `memory_export_gist` | Exporte les entrées vers un GitHub Gist (public ou privé). Utilise GITHUB_TOKEN ou gh CLI |
 | `memory_import_gist` | Importe les entrées depuis un GitHub Gist. Fusionne avec les entrées existantes (union de tags, confiance max) |
-| `memory_merge_similar` | Trouver les entrées avec >50% de similarité de mots (Jaccard) et les fusionner de manière déterministe. `dryRun: true` affiche un aperçu détaillé de la fusion |
 | `memory_graph_path` | Plus court chemin BFS entre deux entrées dans le graphe de connaissances |
 | `context_brief` | **Briefing de contexte en un appel** : mémoire + sessions + santé en markdown compact. Remplace 5-6 appels mémoire_* séparés. Zéro LLM, pure agrégation déterministe |
 | `context_generate` | **Briefing projet complet** : combine la structure du projet, l'état git, les entrées mémoire et les sessions actives en un seul appel. Remplace 5-6 appels d'outils manuels |
@@ -1169,7 +1167,7 @@ toon-memory/
 │   │   ├── setup.ts             # Commandes CLI
 │   │   └── toon-memory.ts       # Exécuteur CLI
 │   ├── mcp/
-│   │   └── server.ts            # Serveur MCP (29 outils + 3 ressources)
+│   │   └── server.ts            # Serveur MCP (35 outils + 4 ressources)
 │   ├── lib/
 │   │   ├── lock.ts              # Verrou de fichier consultatif + écriture atomique
 │   │   ├── sessions.ts          # Coordination multi-session
