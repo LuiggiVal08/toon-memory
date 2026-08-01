@@ -1,0 +1,262 @@
+{
+  "corpus": "benchmarks/retrieval-corpus.toon",
+  "snapshot": "2026-08-01",
+  "note": "LongMemEval-style retrieval test set hand-authored over the frozen toon-memory project corpus (187 real entries). Each query has a gold set of relevant entry keys and an optional asOf date to test temporal views. Excluded from the snapshot: 2 infrastructure meta-entries carrying priority:1 (data-toon-migration-3-entries, toon-format-escape-fields) that describe the data file itself and would otherwise occupy the top rank on every query, skewing retrieval metrics.",
+  "categories": ["core-fact", "temporal", "knowledge-updating", "multi-hop", "meta-session", "distractor"],
+  "queries": [
+    {
+      "id": "cf-01",
+      "q": "viewer physics sliders charge distance center defaults",
+      "gold": ["viewer-physics-controls", "graph-physics-controls"],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-02",
+      "q": "how are entry ids generated 8 hex format",
+      "gold": ["entry-id-generation"],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-03",
+      "q": "node radius formula access count viewer",
+      "gold": ["viewer-node-edge-sizing", "graph-node-radius"],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-04",
+      "q": "d3 force simulation parameters charge distance collision",
+      "gold": ["graph-force-layout", "viewer-force-graph"],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-05",
+      "q": "publish workflow npm mcp registry parallel jobs build guard",
+      "gold": ["publish-workflow-parallel-jobs", "v3-7-0-released"],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-06",
+      "q": "bm25 ranking parameters k1 b length normalization",
+      "gold": ["bm25-search-ranking", "bm25-vs-embeddings-decision"],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-07",
+      "q": "aes 256 gcm encryption env var key memory",
+      "gold": ["crypto-module", "aes256gcm-encrypt", "encrypt-decrypt"],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-08",
+      "q": "access count tracking bump on recall last accessed",
+      "gold": ["scoring-access-tracking", "quality-access-tracking"],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-09",
+      "q": "lock file concurrency pid stale timeout",
+      "gold": ["lock-file-mechanism", "file-locking-pattern"],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-10",
+      "q": "observations auto prune threshold bloat",
+      "gold": ["observation-auto-prune"],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-11",
+      "q": "quality score formula freshness access tag link",
+      "gold": ["quality-score-formula", "quality-scoring-pattern"],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-12",
+      "q": "capture hooks per agent config files claude cursor",
+      "gold": ["capture-hooks-per-agent"],
+      "category": "core-fact"
+    },
+    {
+      "id": "tmp-01",
+      "q": "latest published version of the package",
+      "gold": ["v3-7-0-released"],
+      "category": "temporal"
+    },
+    {
+      "id": "tmp-02",
+      "q": "which release added the interactive graph viewer",
+      "gold": ["v3.2.0-release", "viewer-standalone"],
+      "category": "temporal"
+    },
+    {
+      "id": "tmp-03",
+      "q": "v3.1.0 release what did it include",
+      "gold": ["v3.1.0-release"],
+      "category": "temporal"
+    },
+    {
+      "id": "tmp-04",
+      "q": "tool count evolution over versions history",
+      "gold": ["mcp-tool-history"],
+      "category": "temporal"
+    },
+    {
+      "id": "tmp-05",
+      "q": "release history up to july 29",
+      "gold": ["v3.2.0-release", "v3.1.0-release"],
+      "category": "temporal",
+      "asOf": "2026-07-29"
+    },
+    {
+      "id": "tmp-06",
+      "q": "recall ranking design as of july 29 before rrf",
+      "gold": ["bm25-ranking", "graph-centrality", "bm25-search-ranking", "auto-linking-depth"],
+      "category": "temporal",
+      "asOf": "2026-07-29"
+    },
+    {
+      "id": "ku-01",
+      "q": "which library validates mcp tool input schemas",
+      "gold": ["zod-schema-validation"],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "ku-02",
+      "q": "how does recall rank results now current design",
+      "gold": ["rrf-fusion-final-design", "competitive-roadmap-2026-07"],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "ku-03",
+      "q": "soft delete restore and mark obsolete tools",
+      "gold": ["new-tools-usage", "engram-features-implemented"],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "ku-04",
+      "q": "unified retrieval combines bm25 graph decay quality",
+      "gold": ["smart-recall"],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "ku-05",
+      "q": "duplicate key merge upsert behavior on remember",
+      "gold": ["auto-merge-on-duplicate"],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "mh-01",
+      "q": "minimap fullscreen zoom desync update handler",
+      "gold": ["embed-minimap-fullscreen-bug", "graph-minimap-render", "viewer-zoom-controls"],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-02",
+      "q": "clicking sidebar entry selects node and opens detail",
+      "gold": ["viewer-sidebar-graph-sync", "sidebar-entry-list-pattern", "viewer-highlight-system"],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-03",
+      "q": "mcp apps ui resource viewer initialize extension",
+      "gold": ["viewer-mcp-apps-integration", "mcp-apps-extensions-init-handler", "resources-registration"],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-04",
+      "q": "live mode sse refresh when observations change",
+      "gold": ["viewer-live-observations-bridge", "viewer-serve-mode", "observations-module"],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-05",
+      "q": "drift detection file mtime reduces quality",
+      "gold": ["drift-detection", "git-integration", "quality-scoring-pattern"],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-06",
+      "q": "single connected component orphan bridge buildGraph",
+      "gold": ["graph-single-component-bridge", "shared-tag-auto-linking", "entry-linking-patterns"],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-07",
+      "q": "auto promote frequently used observations to memory",
+      "gold": ["session-auto-promotion-details", "session-auto-promotion", "observations-module"],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-08",
+      "q": "viewer data flow build and inject json html",
+      "gold": ["viewer-data-flow", "viewer-html-generation", "viewer-static-snapshot"],
+      "category": "multi-hop"
+    },
+    {
+      "id": "ms-01",
+      "q": "opencode plugin tool execute after recall file path",
+      "gold": ["opencode-plugin-auto-loading", "opencode-plugin", "intelligent-auto-loading"],
+      "category": "meta-session"
+    },
+    {
+      "id": "ms-02",
+      "q": "session conflict detection parallel branches files",
+      "gold": ["session-conflict-detection", "session-store-details", "session-start-hook"],
+      "category": "meta-session"
+    },
+    {
+      "id": "ms-03",
+      "q": "viewer stats panel category bars tag cloud",
+      "gold": ["viewer-stats-panel", "stats-tab"],
+      "category": "meta-session"
+    },
+    {
+      "id": "ms-04",
+      "q": "entry detail panel shows metadata links pills",
+      "gold": ["viewer-detail-panel"],
+      "category": "meta-session"
+    },
+    {
+      "id": "ms-05",
+      "q": "graph legend category colors decision pattern bug",
+      "gold": ["graph-legend", "d3-graph-viewer"],
+      "category": "meta-session"
+    },
+    {
+      "id": "ds-01",
+      "q": "jaccard similarity merge near duplicate entries",
+      "gold": ["jaccard-merge", "near-duplicate-detection", "consolidation-module"],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-02",
+      "q": "gist export cloud sync github token fetch",
+      "gold": ["export-gist-format", "export-import", "no-cloud-decision"],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-03",
+      "q": "encryption secrets environment variables security policy",
+      "gold": ["security-env-keys", "security-no-secrets"],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-04",
+      "q": "auto tag entries from package json dependencies",
+      "gold": ["vocab-autotag", "entries-module"],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-05",
+      "q": "backup snapshot before archive consolidation operations",
+      "gold": ["backup-rotation-pattern", "memory-backup"],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-06",
+      "q": "context brief replaces several calls session start",
+      "gold": ["context-brief-architecture", "context-generation-tools", "token-efficient-context"],
+      "category": "distractor"
+    }
+  ]
+}

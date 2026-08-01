@@ -290,6 +290,8 @@ export interface GraphRecallOpts {
 	/** Temporal view (YYYY-MM-DD): include entries valid on that date.
 	 *  Entries superseded AFTER `asOf` still count; entries created after `asOf` are excluded. */
 	asOf?: string
+	/** Reference date (YYYY-MM-DD) for recency/decay/TTL scoring. Defaults to the wall clock. */
+	today?: string
 }
 
 /**
@@ -431,7 +433,7 @@ export function graphRecallDetailed(
 		if (tagsFilter.length > 0 && !tagsFilter.every((t) => e.tags.includes(t))) continue
 		if (from_date && e.date < from_date) continue
 		if (to_date && e.date > to_date) continue
-		if (e.ttl && isExpiredLocal(e.ttl)) continue
+		if (e.ttl && isExpiredLocal(e.ttl, opts.today)) continue
 		if (opts.path_scope && e.path_scope && !globMatch(opts.path_scope, e.path_scope)) continue
 		const text = normalize(
 			`${e.id} ${e.category} ${e.key} ${e.content} ${e.file} ${e.tags.join(" ")}`
@@ -457,10 +459,10 @@ export function graphRecallDetailed(
 			...visibleEntries
 				.sort((a, b) => {
 					if (a.priority !== b.priority) return b.priority - a.priority
-					return importance(b) - importance(a)
+					return importance(b, opts.today) - importance(a, opts.today)
 				})
 				.slice(0, opts.limit ?? 6)
-				.map((e) => ({ e, s: importance(e) }))
+				.map((e) => ({ e, s: importance(e, opts.today) }))
 		)
 	} else {
 		// BFS from all seeds, recording the shortest hop distance to each node.
@@ -498,7 +500,7 @@ export function graphRecallDetailed(
 					const decay = Math.pow(DECAY, dist)
 					let s = fused
 						? fused.get(k) || 0
-						: (bm25.get(k) || 0) + W_CENT * (cent.get(k) || 0) + W_IMP * importance(e)
+						: (bm25.get(k) || 0) + W_CENT * (cent.get(k) || 0) + W_IMP * importance(e, opts.today)
 					if (!fused && seedKeys.has(k)) s += SEED_BONUS
 					if (opts.sessionFiles && opts.sessionFiles.length > 0 && e.file) {
 						const entryFile = e.file.split(":")[0]

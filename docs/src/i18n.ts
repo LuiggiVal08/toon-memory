@@ -319,6 +319,21 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				],
 				note: 'Measured with <code>gpt-tokenizer</code> (cl100k_base) over 16 representative memory entries, comparing the real on-disk TOON format against compact JSON. Reproducible: <code>npm run bench</code>.',
 			},
+			retrieval: {
+				subtitle: 'LongMemEval-style retrieval over a frozen 187-entry snapshot of real project memory — 42 hand-authored gold queries',
+				what: 'The unified recall pipeline finds the right entry in the top 5',
+				metricLabel: 'Metric',
+				linear: 'Linear',
+				rrf: 'RRF',
+				smart: 'Unified',
+				metricRows: [
+					{ metric: 'R@5', gloss: 'gold entry in the top 5', linear: '0.643', rrf: '0.861', smart: '0.829' },
+					{ metric: 'nDCG@5', gloss: 'ordering quality', linear: '0.654', rrf: '0.764', smart: '0.739' },
+					{ metric: 'MRR@5', gloss: 'position of the right hit', linear: '0.776', rrf: '0.788', smart: '0.760' },
+				],
+				result: '97.6% of queries answered from the top-5',
+				note: 'Real <code>data.toon</code> snapshot (187 entries, 2026-08-01) with a deterministic <code>today</code> parameter so recency and decay can\'t drift the results; read-only, no access tracking. Two priority meta-entries that describe the data file itself are excluded. The measured code is the production pipeline (src/lib), bundled in-memory — no faithful copies. Reproducible: <code>npm run bench:retrieval</code>.',
+			},
 		},
 		tools: {
 			title: '35 MCP tools, 4 resources',

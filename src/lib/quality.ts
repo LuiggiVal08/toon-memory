@@ -188,7 +188,7 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 export function generateSmartRecall(
 	data: string,
 	intent: string,
-	opts: { limit?: number; category?: string; bumpAccess?: (ids: string[]) => void; fileMtimes?: Map<string, string>; sessionFiles?: string[]; rrf?: boolean } = {}
+	opts: { limit?: number; category?: string; bumpAccess?: (ids: string[]) => void; fileMtimes?: Map<string, string>; sessionFiles?: string[]; rrf?: boolean; today?: string } = {}
 ): string {
 	const entries = parseEntries(data)
 	if (entries.length === 0) return "Empty memory."
@@ -205,7 +205,7 @@ export function generateSmartRecall(
 
 	const eligible = entries.filter((e) => {
 		if (category && e.category !== category) return false
-		if (e.ttl && isExpiredLocal(e.ttl)) return false
+		if (e.ttl && isExpiredLocal(e.ttl, opts.today)) return false
 		if (e.status === "obsolete" || e.status === "draft") return false
 		return true
 	})
@@ -231,7 +231,7 @@ export function generateSmartRecall(
 			const matchesQuery = exactMatch || fuzzy
 			const bm25Score = bm25.get(e.key) || 0
 			const centScore = cent.get(e.key) || 0
-			const impScore = importance(e)
+			const impScore = importance(e, opts.today)
 			// Drift penalty: if the linked file was modified after the entry was created
 			let drift = 0
 			if (mtimes && e.file) {
@@ -279,7 +279,7 @@ export function generateSmartRecall(
 		const top = eligible
 			.sort((a, b) => {
 				if (a.priority !== b.priority) return b.priority - a.priority
-				return importance(b) - importance(a)
+				return importance(b, opts.today) - importance(a, opts.today)
 			})
 			.slice(0, limit)
 		if (top.length === 0) return "No entries in memory."

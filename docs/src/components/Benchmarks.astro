@@ -9,6 +9,20 @@ const c = getContent(lang);
 const b = c.benchmarks;
 const rankWhat = (b.ranking as unknown as { what?: string }).what;
 
+type RetrievalRow = { metric: string; gloss: string; linear: string; rrf: string; smart: string };
+type RetrievalBlock = {
+	subtitle?: string;
+	what?: string;
+	metricLabel?: string;
+	linear?: string;
+	rrf?: string;
+	smart?: string;
+	metricRows?: RetrievalRow[];
+	result?: string;
+	note?: string;
+};
+const retrieval = (b as unknown as { retrieval?: RetrievalBlock }).retrieval;
+
 const jsonTokens = 1097;
 const toonTokens = 850;
 const formatBarPct = Math.round((toonTokens / jsonTokens) * 100);
@@ -121,6 +135,39 @@ const wfTiles: WfTile[] = wfCards
 	</div>
 
 	<p class="savings-note" set:html={b.workflow.note}></p>
+
+	{
+		retrieval && (
+			<div class="metric-tile retrieval-tile">
+				<span class="tile-kicker">{b.tabs.ranking} — retrieval</span>
+				{retrieval.what && <h3 class="tile-title">{retrieval.what}</h3>}
+				<p class="tile-subtitle">{retrieval.subtitle}</p>
+				<div class="retrieval-table">
+					<div class="retrieval-row retrieval-head">
+						<span class="retrieval-metric">{retrieval.metricLabel}</span>
+						<span>{retrieval.linear}</span>
+						<span class="retrieval-best">{retrieval.rrf}</span>
+						<span>{retrieval.smart}</span>
+					</div>
+					{
+						retrieval.metricRows?.map((r: RetrievalRow) => (
+							<div class="retrieval-row">
+								<span class="retrieval-metric">
+									{r.metric}
+									<em>{r.gloss}</em>
+								</span>
+								<span>{r.linear}</span>
+								<span class="retrieval-best">{r.rrf}</span>
+								<span>{r.smart}</span>
+							</div>
+						))
+					}
+				</div>
+				<span class="tile-result">{retrieval.result}</span>
+				<p class="tile-note" set:html={retrieval.note}></p>
+			</div>
+		)
+	}
 </section>
 
 <script>
@@ -328,6 +375,54 @@ const wfTiles: WfTile[] = wfCards
 		font-size: 0.8rem;
 		color: var(--text-muted);
 		line-height: 1.55;
+	}
+	.retrieval-tile {
+		margin-top: 1.5rem;
+		border-color: var(--color-accent-lavender-dim);
+		background: linear-gradient(180deg, var(--color-accent-brand-ghost-wash), var(--bg-card));
+	}
+	.retrieval-table {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		margin-top: 0.35rem;
+	}
+	.retrieval-row {
+		display: grid;
+		grid-template-columns: 10rem 1fr 1fr 1fr;
+		align-items: baseline;
+		gap: 0.5rem;
+		font-size: 0.95rem;
+	}
+	.retrieval-head {
+		font-size: 0.78rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--text-muted);
+	}
+	.retrieval-metric {
+		display: flex;
+		flex-direction: column;
+		font-weight: 700;
+	}
+	.retrieval-metric em {
+		font-style: normal;
+		font-size: 0.72rem;
+		font-weight: 500;
+		color: var(--text-muted);
+	}
+	.retrieval-best {
+		font-weight: 800;
+		background: var(--gradient);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+	@media (max-width: 600px) {
+		.retrieval-row {
+			grid-template-columns: 6rem 1fr 1fr 1fr;
+		}
 	}
 	@media (max-width: 900px) {
 		.bench-grid {

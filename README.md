@@ -1217,6 +1217,20 @@ MRR           0.917               0.917   (parity)
 
 RRF matches the previous linear weighted score at **zero ranking cost**, while simplifying the scoring pipeline (BM25×3 + centrality, no importance/recency noise). Graph mode supersession is honored: obsolete entries stay excluded except for `as_of` point-in-time queries.
 
+### Retrieval benchmark (LongMemEval-style, measured)
+
+Since v4.1.0, retrieval is benchmarked against a **frozen snapshot of real project memory** — a LongMemEval-style test set with hand-authored gold queries. Corpus: 187 real `data.toon` entries (snapshot `2026-08-01`), 42 gold queries across 6 categories (core-fact, temporal, knowledge-updating, multi-hop, meta/session, distractor). The measured code is the **production pipeline** (`src/lib`), bundled in-memory with esbuild — no faithful copies. A deterministic `today` parameter pins recency/decay so results can't drift with the wall clock; runs are read-only (no access tracking). Two priority meta-entries that describe the data file itself are excluded. See `benchmarks/retrieval-corpus.toon`, `benchmarks/gold-queries.json` (`npm run bench:retrieval`):
+
+```
+Mode            R@5     nDCG@5  MRR@5   answerable
+─────────────   ─────   ─────   ─────   ──────────
+linear         0.643   0.654   0.776   81.0%
+rrf            0.861   0.764   0.788   97.6%
+smart (unified) 0.829  0.739   0.760   92.5%
+```
+
+RRF is the top-ranked mode (0.861 R@5, 97.6% of queries answerable from the top-5); `memory_smart_recall` stays competitive in a single call.
+
 ---
 
 ## Troubleshooting

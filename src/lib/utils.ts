@@ -6,17 +6,18 @@
 export const normalize = (s: string): string =>
 	s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim()
 
-export const isExpiredLocal = (ttl: string): boolean => {
+export const isExpiredLocal = (ttl: string, today = new Date().toISOString().split("T")[0]): boolean => {
 	if (!ttl) return false
-	const today = new Date().toISOString().split("T")[0]
 	return ttl <= today
 }
 
 /** Lightweight importance score: recency (60%) + frequency (40%). */
-export function importance(e: { date: string; accessed: number }): number {
-	const today = new Date().toISOString().split("T")[0]
+export function importance(
+	e: { date: string; accessed: number },
+	today = new Date().toISOString().split("T")[0]
+): number {
 	const days =
-		(Date.now() - new Date(`${e.date || today}T00:00:00`).getTime()) / 86400000
+		(Date.parse(`${today}T00:00:00`) - Date.parse(`${e.date || today}T00:00:00`)) / 86400000
 	const recency = Math.min(1, Math.max(0, 30 - days) / 30)
 	const freq = Math.min(1, e.accessed / 5)
 	return recency * 0.6 + freq * 0.4

@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.1.0] - 2026-08-01
+
+### Added
+- **LongMemEval-style retrieval benchmark** — Retrieval is now measured against a frozen snapshot of real project memory. Corpus: 187 real `data.toon` entries (snapshot `2026-08-01`), 42 hand-authored gold queries across 6 categories (core-fact, temporal, knowledge-updating, multi-hop, meta/session, distractor). The measured code is the **production pipeline** (`src/lib`), bundled in-memory with esbuild — no faithful copies. Benchmark artifacts in `benchmarks/` (`retrieval-corpus.toon`, `gold-queries.json`, `retrieval-results.json`); reproducible via `npm run bench:retrieval`
+- **Deterministic recall** — New optional `today` parameter on `memory_recall` / `memory_smart_recall` pins the reference date for recency, staleness decay, and TTL expiry, so results are reproducible regardless of the wall clock (default remains the current date, backward compatible)
+- **Retrieval metrics (R@5 / nDCG@5 / MRR@5)** — RRF mode: 0.861 / 0.764 / 0.788 (97.6% of queries answerable from the top-5); smart (unified) mode: 0.829 / 0.739 / 0.760. Docs home gains a Retrieval block (English) with the numbers and methodology
+
+### Changed
+- Docs home benchmarks section: added retrieval metrics block (en locale; other locales guarded)
+
+## [4.0.0] - 2026-08-01
+
+### Changed
+- Removed 5 deprecated tool aliases — 35 canonical MCP tools + 4 resources
+
 ## [3.7.0] - 2026-07-31
 
 ### Added
