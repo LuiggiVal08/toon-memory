@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.1.1] - 2026-08-01
+
+### Fixed
+- **CLI `-h`/`--help` handling** — `toon-memory init` and `toon-memory viewer` now accept `-h`/`--help` and print their usage instead of misparsing args; `viewer --export` no longer misparses a missing `--port` value and warns when `--port` is passed alongside `--export`
+- **CLI help text** — `toon-memory` top-level help now documents the `viewer` subcommand
+
 ## [4.1.0] - 2026-08-01
 
 ### Added
