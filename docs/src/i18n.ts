@@ -10,8 +10,8 @@ export const content = {
 			github: 'GitHub',
 		},
 		hero: {
-			tagline: 'MCP memory server for AI coding agents — recall context across sessions',
-			subtitle: 'Your agent remembers decisions, patterns, and bugs between sessions.',
+			tagline: 'Your AI coding agent keeps the context it needs — across every session',
+			subtitle: 'Decisions, patterns, and bugs survive restarts, so you never re-explain the same thing twice.',
 			getStarted: 'Get Started',
 			viewGithub: 'View on GitHub',
 			copy: 'Copy',
@@ -45,8 +45,8 @@ export const content = {
 			cards: [
 			{
 				icon: '🧩',
-				title: '35 MCP Tools + 4 Resources',
-				body: 'Full memory management via MCP — 35 tools grouped by purpose, plus 4 resources for direct context reading including an interactive graph viewer.',
+				title: 'A memory toolkit, not a protocol',
+				body: 'Everything your agent needs to remember, recall, and reason — grouped by purpose, with resources for direct context reading and an interactive graph viewer.',
 				toolGroups: [
 					{ label: 'Core Memory', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
 					{ label: 'Search & Intelligence', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
@@ -119,7 +119,7 @@ export const content = {
 		},
 		stats: {
 			items: [
-				{ number: '35', label: 'MCP Tools' },
+				{ number: '97.6%', label: 'Recall from top-5 (R@5 0.861)' },
 				{ number: '15', label: 'Agents' },
 				{ number: '80%', label: 'Fewer Tool Calls / session' },
 				{ number: '0', label: 'Config Needed' },
@@ -164,11 +164,11 @@ toon-memory:
 					n: 5,
 					title: 'Context',
 					body: 'One call gives your agent everything: project, git, memory, sessions. 80% fewer tool calls.',
-					code: `context_generate({})
+				code: `context_generate({})
 // # Project Briefing (full)
-// ## Project — toon-memory v4.2.0
+// ## Project — toon-memory v4.3.0
 // ## Git — branch: main, 3 commits
-// ## Memory — 30 entries, 18 edges
+// ## Memory — 26 entries, 18 edges
 // ## Sessions — 2 active`,
 				},
 			],
@@ -323,7 +323,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 		},
 		tools: {
-			title: '35 MCP tools, 4 resources',
+			title: 'A complete memory toolkit',
 			subtitle: 'Everything your agent needs to remember, recall, and reason',
 			resourcesLabel: 'Resources:',
 			groups: {
@@ -425,7 +425,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			items: [
 				{
 					q: 'What is toon-memory?',
-					a: 'A persistent memory layer for AI coding agents with 35 MCP tools. It stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything between sessions — with 80% fewer tool calls per session.',
+					a: 'A memory layer that gives your AI coding agent continuity — it stores decisions, patterns, bugs, and context in a compact TOON format so your agent remembers everything across sessions, with 80% fewer tool calls per session.',
 				},
 				{
 					q: 'Which agents are supported?',
@@ -486,9 +486,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			],
 		},
 		whatNew: {
-			title: "What's New in v4.2.0",
-			subtitle: 'Explain WHY, token budgets, version supersession, negative memories, extended stats, language & folder ranking',
+			title: "What's New in v4.3.0",
+			subtitle: 'Explicit importance levels, plus Explain WHY, token budgets, version supersession, and smarter ranking',
 			cards: [
+				{
+					icon: '🎯',
+					title: 'Explicit importance',
+					body: '`memory_remember({ importance })` sets `critical`, `high`, `medium`, or `low` — critical decisions surface first (+0.3), low notes stay out of the way (−0.1). Empty = auto (recency + frequency).',
+					stats: ['critical +0.3', 'high +0.15', 'low −0.1'],
+				},
 				{
 					icon: '🤔',
 					title: 'Explain WHY',
@@ -520,7 +526,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					stats: ['hit rate', 'duplicates', 'dead'],
 				},
 				{
-					icon: '🎯',
+					icon: '🏷️',
 					title: 'Smarter ranking',
 					body: 'Recall adds a language-family boost (+0.1) for entries written in the same script (latin/CJK/cyrillic/…) and a folder-match boost (+0.05) when `path_scope` matches the current file.',
 					stats: ['lang +0.1', 'folder +0.05'],
@@ -548,8 +554,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			github: 'GitHub',
 		},
 		hero: {
-			tagline: 'Servidor de memoria MCP para agentes de IA — recupera contexto entre sesiones',
-			subtitle: 'Tu agente recuerda decisiones, patrones y bugs entre sesiones.',
+			tagline: 'Tu agente de IA conserva el contexto que necesita — en cada sesión',
+			subtitle: 'Las decisiones, patrones y bugs sobreviven a los reinicios, así no repites lo mismo dos veces.',
 			getStarted: 'Empezar',
 			viewGithub: 'Ver en GitHub',
 			copy: 'Copiar',
@@ -583,8 +589,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			cards: [
 			{
 				icon: '🧩',
-				title: '35 herramientas MCP + 4 recursos',
-				body: 'Gestión completa de memoria vía MCP — 35 herramientas agrupadas por propósito, más 4 recursos para lectura directa de contexto, incluido un visor de grafo interactivo.',
+				title: 'Un kit de memoria, no un protocolo',
+				body: 'Todo lo que tu agente necesita para recordar, recuperar y razonar — agrupado por propósito, con recursos para lectura directa de contexto y un visor de grafo interactivo.',
 				toolGroups: [
 					{ label: 'Memoria Principal', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
 					{ label: 'Búsqueda e Inteligencia', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
@@ -657,7 +663,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		stats: {
 			items: [
-				{ number: '35', label: 'Herramientas MCP' },
+				{ number: '97.6%', label: 'Recall en top-5 (R@5 0.861)' },
 				{ number: '15', label: 'Agentes' },
 				{ number: '80%', label: 'Menos tool calls por sesión' },
 				{ number: '0', label: 'Config necesaria' },
@@ -693,7 +699,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					body: 'Una llamada le da a tu agente todo: proyecto, git, memoria, sesiones. 80% menos tool calls.',
 					code: `context_generate({})
 // # Briefing del proyecto (completo)
-// ## Proyecto — toon-memory v2.6.0
+// ## Proyecto — toon-memory v4.3.0
 // ## Git — branch: main, 3 commits
 // ## Memoria — 26 entradas, 18 edges
 // ## Sesiones — 2 activas`,
@@ -850,7 +856,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 		},
 	tools: {
-		title: '35 herramientas MCP, 4 recursos',
+		title: 'Un kit de memoria completo',
 		subtitle: 'Todo lo que tu agente necesita para recordar, recuperar y razonar',
 		resourcesLabel: 'Recursos:',
 		groups: {
@@ -1013,9 +1019,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	whatNew: {
-		title: 'Novedades en v4.2.0',
-		subtitle: 'Explain WHY, presupuestos de tokens, supersesión por versión, memorias negativas, estadísticas extendidas, ranking por idioma y carpeta',
+		title: 'Novedades en v4.3.0',
+		subtitle: 'Niveles de importancia explícita, más Explain WHY, presupuestos de tokens, supersesión por versión y ranking más inteligente',
 		cards: [
+			{
+				icon: '🎯',
+				title: 'Importancia explícita',
+				body: '`memory_remember({ importance })` define `critical`, `high`, `medium` o `low` — las decisiones críticas aparecen primero (+0.3), las notas bajas quedan fuera del camino (−0.1). Vacío = automático (recencia + frecuencia).',
+				stats: ['critical +0.3', 'high +0.15', 'low −0.1'],
+			},
 			{
 				icon: '🤔',
 				title: 'Explicar POR QUÉ',
@@ -1047,7 +1059,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				stats: ['hit rate', 'duplicados', 'obsoletas'],
 			},
 			{
-				icon: '🎯',
+				icon: '🏷️',
 				title: 'Ranking más inteligente',
 				body: 'El recall añade un boost de familia de idioma (+0.1) para entradas en la misma escritura (latín/CJK/cirílico/…) y un boost de coincidencia de carpeta (+0.05) cuando `path_scope` coincide con el archivo actual.',
 				stats: ['idioma +0.1', 'carpeta +0.05'],
@@ -1075,8 +1087,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		github: 'GitHub',
 	},
 	hero: {
-		tagline: '面向 AI 编程代理的 MCP 记忆服务器 — 跨会话召回上下文',
-		subtitle: '你的代理在会话之间记住决策、模式和 bug。',
+		tagline: '你的 AI 编程代理保留所需的上下文 — 跨越每一次会话',
+		subtitle: '决策、模式和 bug 在重启后依然存在，因此你永远不必重复解释同一件事。',
 		getStarted: '快速开始',
 		viewGithub: '在 GitHub 上查看',
 		copy: '复制',
@@ -1097,8 +1109,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		cards: [
 			{
 				icon: '🧩',
-				title: '35 个 MCP 工具 + 4 个资源',
-				body: '通过 MCP 实现完整的记忆管理 — 35 个工具按用途分组，外加 4 个直接上下文读取资源，包括交互式图谱查看器。',
+				title: '记忆工具集，而非协议',
+				body: '你的代理记忆、召回和推理所需的一切 — 按用途分组，并提供直接读取上下文的资源和交互式图谱查看器。',
 				toolGroups: [
 					{ label: '核心记忆', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
 					{ label: '搜索与智能', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
@@ -1117,7 +1129,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '支持 15+ 个 AI 编程代理', subtitle: '零配置 — toon-memory 自动检测并配置每个代理' },
-	stats: { items: [{ number: '35', label: 'MCP 工具' }, { number: '15', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
+	stats: { items: [{ number: '97.6%', label: '从前 5 名召回（R@5 0.861）' }, { number: '15', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
 	howItWorks: {
 		title: '它是如何工作的？',
 		subtitle: '从失忆到记忆的四个步骤',
@@ -1125,7 +1137,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ n: 1, title: '安装', body: '一条命令。15+ 个代理零配置。', code: 'npm install -g toon-memory' },
 			{ n: 2, title: '记忆', body: '在工作时保存决策、模式和 bug — 支持自动标签推断和可选 TTL。', code: 'memory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})' },
 			{ n: 3, title: '召回', body: '你的代理按需查询记忆 — 无需重复解释，不浪费 token。', code: 'memory_recall({ query: "validation" })\n// [decision] use-zod (a1b2c3d4)\n//   Use Zod for validation — src/types.ts' },
-			{ n: 4, title: '上下文', body: '一次调用为你的代理提供全部信息：项目、git、记忆、会话。减少 80% 的工具调用。', code: 'context_generate({})\n// # Project Briefing (full)\n// ## Project — toon-memory v2.6.0\n// ## Git — branch: main, 3 commits\n// ## Memory — 26 entries, 18 edges\n// ## Sessions — 2 active' },
+			{ n: 4, title: '上下文', body: '一次调用为你的代理提供全部信息：项目、git、记忆、会话。减少 80% 的工具调用。', code: 'context_generate({})\n// # Project Briefing (full)\n// ## Project — toon-memory v4.3.0\n// ## Git — branch: main, 3 commits\n// ## Memory — 26 entries, 18 edges\n// ## Sessions — 2 active' },
 		],
 	},
 	tips: {
@@ -1184,7 +1196,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '35 个 MCP 工具，4 个资源', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
+		title: '完整的记忆工具集', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
 		groups: {
 			core: '核心记忆',
 			search: '搜索与智能',
@@ -1264,9 +1276,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	whatNew: {
-		title: 'v4.2.0 新功能',
-		subtitle: 'Explain WHY、Token 预算、版本取代、负面记忆、扩展统计、语言与文件夹排序',
+		title: 'v4.3.0 新功能',
+		subtitle: '显式重要性等级，外加 Explain WHY、Token 预算、版本取代和更智能的排序',
 		cards: [
+			{
+				icon: '🎯',
+				title: '显式重要性',
+				body: '`memory_remember({ importance })` 设置 `critical`、`high`、`medium` 或 `low` — 关键决策优先显示（+0.3），低级笔记不占位置（−0.1）。留空 = 自动（时效 + 频率）。',
+				stats: ['critical +0.3', 'high +0.15', 'low −0.1'],
+			},
 			{
 				icon: '🤔',
 				title: '解释原因',
@@ -1311,8 +1329,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	ja: {
 	nav: { docs: 'ドキュメント', features: '機能', viewer: 'ビューアー', benchmarks: 'ベンチマーク', faq: 'FAQ', npm: 'npm', github: 'GitHub' },
 	hero: {
-		tagline: 'AI コーディングエージェント向け MCP メモリサーバー — セッション間でコンテキストを取得',
-		subtitle: 'エージェントがセッション間で意思決定、パターン、バグを記憶します。',
+		tagline: 'AI コーディングエージェントは必要なコンテキストを保持します — あらゆるセッションを超えて',
+		subtitle: '意思決定、パターン、バグは再起動後も残るので、同じことを二度説明する必要はありません。',
 		getStarted: 'はじめに', viewGithub: 'GitHub で見る', copy: 'コピー', copied: 'コピーしました！', installCmd: 'npm install -g toon-memory',
 	},
 	problem: {
@@ -1328,8 +1346,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		cards: [
 			{
 				icon: '🧩',
-				title: '35 個の MCP ツール + 4 個のリソース',
-				body: 'MCP 経由で完全なメモリ管理 — 用途ごとにグループ化した 35 個のツールと、対話型グラフビューアを含む直接コンテキスト読み取り用の 4 個のリソース。',
+				title: 'プロトコルではなくメモリツールキット',
+				body: 'エージェントが記憶、リコール、推論するために必要なすべて — 目的ごとにグループ化され、直接コンテキスト読み取り用のリソースと対話型グラフビューアを備えています。',
 				toolGroups: [
 					{ label: 'コアメモリ', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
 					{ label: '検索＆インテリジェンス', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
@@ -1348,14 +1366,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '15 以上の AI コーディングエージェントに対応', subtitle: 'ゼロコンフィグ — toon-memory が自動検出し、各エージェントを設定' },
-	stats: { items: [				{ number: '35', label: 'MCP ツール' }, { number: '15', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
+	stats: { items: [				{ number: '97.6%', label: 'トップ5からのリコール (R@5 0.861)' }, { number: '15', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
 	howItWorks: {
 		title: 'どのように機能するのか？', subtitle: '記憶喪失からメモリへの 4 つのステップ',
 		steps: [
 			{ n: 1, title: 'インストール', body: 'ワンコマンド。15 以上のエージェントにゼロコンフィグ。', code: 'npm install -g toon-memory' },
 			{ n: 2, title: '記憶する', body: '作業しながら意思決定、パターン、バグを保存 — 自動タグ推論とオプションの TTL 対応。', code: 'memory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})' },
 			{ n: 3, title: 'リコール', body: 'エージェントがオンデマンドでメモリをクエリ — 再説明不要、トークン浪費なし。', code: 'memory_recall({ query: "validation" })\n// [decision] use-zod (a1b2c3d4)\n//   Use Zod for validation — src/types.ts' },
-			{ n: 4, title: 'コンテキスト', body: '1 回の呼び出しでエージェントにすべてを提供：プロジェクト、git、メモリ、セッション。ツール呼び出しを 80% 削減。', code: 'context_generate({})\n// # Project Briefing (full)\n// ## Project — toon-memory v2.6.0\n// ## Git — branch: main, 3 commits\n// ## Memory — 26 entries, 18 edges\n// ## Sessions — 2 active' },
+			{ n: 4, title: 'コンテキスト', body: '1 回の呼び出しでエージェントにすべてを提供：プロジェクト、git、メモリ、セッション。ツール呼び出しを 80% 削減。', code: 'context_generate({})\n// # Project Briefing (full)\n// ## Project — toon-memory v4.3.0\n// ## Git — branch: main, 3 commits\n// ## Memory — 26 entries, 18 edges\n// ## Sessions — 2 active' },
 		],
 	},
 	tips: {
@@ -1414,7 +1432,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '35 個の MCP ツール、4 個のリソース', subtitle: 'エージェントが記憶、リコール、推論するために必要なすべて', resourcesLabel: 'リソース：',
+		title: '完全なメモリツールキット', subtitle: 'エージェントが記憶、リコール、推論するために必要なすべて', resourcesLabel: 'リソース：',
 		groups: {
 			core: 'コアメモリ',
 			search: '検索＆インテリジェンス',
@@ -1492,9 +1510,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	whatNew: {
-		title: 'v4.2.0 新機能',
-		subtitle: 'WHYを説明、トークンバジェット、バージョンスーパーセード、否定的メモリ、拡張統計、言語とフォルダのランキング',
+		title: 'v4.3.0 新機能',
+		subtitle: '明示的な重要度レベル、WHYを説明、トークンバジェット、バージョンスーパーセード、よりスマートなランキング',
 		cards: [
+			{
+				icon: '🎯',
+				title: '明示的な重要度',
+				body: '`memory_remember({ importance })`で`critical`、`high`、`medium`、`low`を設定 — 重要な意思決定は最初に表示（+0.3）、低いメモは邪魔になりません（−0.1）。空＝自動（鮮度＋頻度）。',
+				stats: ['critical +0.3', 'high +0.15', 'low −0.1'],
+			},
 			{
 				icon: '🤔',
 				title: 'WHYを説明',
@@ -1539,8 +1563,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	ko: {
 	nav: { docs: '문서', features: '기능', viewer: '뷰어', benchmarks: '벤치마크', faq: 'FAQ', npm: 'npm', github: 'GitHub' },
 	hero: {
-		tagline: 'AI 코딩 에이전트를 위한 MCP 메모리 서버 — 세션 간 컨텍스트 회수',
-		subtitle: '에이전트가 세션 간에 결정, 패턴, 버그를 기억합니다.',
+		tagline: 'AI 코딩 에이전트가 필요한 컨텍스트를 유지합니다 — 모든 세션에서',
+		subtitle: '결정, 패턴, 버그가 재시작 후에도 살아남으므로 같은 것을 두 번 설명할 필요가 없습니다.',
 		getStarted: '시작하기', viewGithub: 'GitHub에서 보기', copy: '복사', copied: '복사됨!', installCmd: 'npm install -g toon-memory',
 	},
 	problem: {
@@ -1556,8 +1580,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		cards: [
 			{
 				icon: '🧩',
-				title: '35개 MCP 도구 + 4개 리소스',
-				body: 'MCP를 통한 완전한 메모리 관리 — 용도별로 그룹화된 35개 도구와 대화형 그래프 뷰어를 포함한 직접 컨텍스트 읽기용 리소스 4개.',
+				title: '프로토콜이 아닌 메모리 도구 키트',
+				body: '에이전트가 기억하고, 회상하고, 추론하는 데 필요한 모든 것 — 용도별로 그룹화, 직접 컨텍스트 읽기를 위한 리소스와 인터랙티브 그래프 뷰어 포함.',
 				toolGroups: [
 					{ label: '핵심 메모리', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
 					{ label: '검색 및 인텔리전스', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
@@ -1576,14 +1600,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '15개 이상의 AI 코딩 에이전트 지원', subtitle: '제로 구성 — toon-memory가 각 에이전트를 자동 감지하고 구성' },
-	stats: { items: [				{ number: '35', label: 'MCP 도구' }, { number: '15', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
+	stats: { items: [				{ number: '97.6%', label: '상위 5개에서 리콜 (R@5 0.861)' }, { number: '15', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
 	howItWorks: {
 		title: '어떻게 작동하나요?', subtitle: '기억 상실에서 메모리까지 4단계',
 		steps: [
 			{ n: 1, title: '설치', body: '하나의 명령어. 15개 이상의 에이전트에 제로 구성.', code: 'npm install -g toon-memory' },
 			{ n: 2, title: '기억', body: '작업하면서 결정, 패턴, 버그를 저장 — 자동 태그 추론과 선택적 TTL 포함.', code: 'memory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})' },
 			{ n: 3, title: '리콜', body: '에이전트가 필요할 때 메모리를 쿼리 — 재설명 불필요, 토큰 낭비 없음.', code: 'memory_recall({ query: "validation" })\n// [decision] use-zod (a1b2c3d4)\n//   Use Zod for validation — src/types.ts' },
-			{ n: 4, title: '컨텍스트', body: '한 번의 호출로 에이전트에 모든 것을 제공: 프로젝트, git, 메모리, 세션. 도구 호출 80% 절감.', code: 'context_generate({})\n// # Project Briefing (full)\n// ## Project — toon-memory v2.6.0\n// ## Git — branch: main, 3 commits\n// ## Memory — 26 entries, 18 edges\n// ## Sessions — 2 active' },
+			{ n: 4, title: '컨텍스트', body: '한 번의 호출로 에이전트에 모든 것을 제공: 프로젝트, git, 메모리, 세션. 도구 호출 80% 절감.', code: 'context_generate({})\n// # Project Briefing (full)\n// ## Project — toon-memory v4.3.0\n// ## Git — branch: main, 3 commits\n// ## Memory — 26 entries, 18 edges\n// ## Sessions — 2 active' },
 		],
 	},
 	tips: {
@@ -1642,7 +1666,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '35개 MCP 도구, 4개 리소스', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
+		title: '완전한 메모리 도구 키트', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
 		groups: {
 			core: '핵심 메모리',
 			search: '검색 및 인텔리전스',
@@ -1720,9 +1744,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	whatNew: {
-		title: 'v4.2.0 새로운 기능',
-		subtitle: 'Explain WHY, 토큰 예산, 버전 대체, 부정적 메모리, 확장 통계, 언어 및 폴더 순위',
+		title: 'v4.3.0 새로운 기능',
+		subtitle: '명시적 중요도 수준, 그리고 Explain WHY, 토큰 예산, 버전 대체, 더 똑똑한 순위',
 		cards: [
+			{
+				icon: '🎯',
+				title: '명시적 중요도',
+				body: '`memory_remember({ importance })`는 `critical`, `high`, `medium`, `low`를 설정합니다 — 중요한 결정이 먼저 표시되고(+0.3), 낮은 메모는 방해하지 않습니다(−0.1). 비워 두면 자동(최신성 + 빈도).',
+				stats: ['critical +0.3', 'high +0.15', 'low −0.1'],
+			},
 			{
 				icon: '🤔',
 				title: 'WHY 설명',
@@ -1775,8 +1805,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		github: 'GitHub',
 	},
 	hero: {
-		tagline: 'Servidor de memória MCP para agentes de IA — recupere contexto entre sessões',
-		subtitle: 'Seu agente lembra decisões, padrões e bugs entre sessões.',
+		tagline: 'Seu agente de IA mantém o contexto de que precisa — em todas as sessões',
+		subtitle: 'Decisões, padrões e bugs sobrevivem a reinícios, para que você nunca reexplique a mesma coisa duas vezes.',
 		getStarted: 'Começar',
 		viewGithub: 'Ver no GitHub',
 		copy: 'Copiar',
@@ -1810,8 +1840,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		cards: [
 			{
 			icon: '🧩',
-			title: '35 ferramentas MCP + 4 recursos',
-			body: 'Gerenciamento completo de memória via MCP — 35 ferramentas agrupadas por propósito, mais 4 recursos para leitura direta de contexto, incluindo um visualizador de grafo interativo.',
+			title: 'Um kit de memória, não um protocolo',
+			body: 'Tudo o que seu agente precisa para lembrar, recuperar e raciocinar — agrupado por propósito, com recursos para leitura direta de contexto e um visualizador de grafo interativo.',
 				toolGroups: [
 					{ label: 'Memória Principal', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
 					{ label: 'Busca & Inteligência', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
@@ -1860,7 +1890,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	stats: {
 		items: [
-			{ number: '35', label: 'Ferramentas MCP' },
+			{ number: '97.6%', label: 'Recall no top-5 (R@5 0.861)' },
 			{ number: '15', label: 'Agentes' },
 			{ number: '80%', label: 'Menos chamadas de ferramenta/sessão' },
 			{ number: '0', label: 'Configuração necessária' },
@@ -1896,7 +1926,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				body: 'Uma chamada dá ao seu agente tudo: projeto, git, memória, sessões. 80% menos chamadas de ferramenta.',
 				code: `context_generate({})
 // # Project Briefing (full)
-// ## Project — toon-memory v2.6.0
+// ## Project — toon-memory v4.3.0
 // ## Git — branch: main, 3 commits
 // ## Memory — 26 entries, 18 edges
 // ## Sessions — 2 active`,
@@ -2024,7 +2054,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '35 ferramentas MCP, 4 recursos',
+		title: 'Um kit de memória completo',
 		subtitle: 'Tudo que seu agente precisa para lembrar, recuperar e raciocinar',
 		resourcesLabel: 'Recursos:',
 		groups: {
@@ -2169,9 +2199,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	whatNew: {
-		title: 'Novidades na v4.2.0',
-		subtitle: 'Explain WHY, orçamento de tokens, supersessão por versão, memórias negativas, estatísticas estendidas, ranking por idioma e pasta',
+		title: 'Novidades na v4.3.0',
+		subtitle: 'Níveis de importância explícitos, além de Explain WHY, orçamento de tokens, supersessão por versão e ranking mais inteligente',
 		cards: [
+			{
+				icon: '🎯',
+				title: 'Importância explícita',
+				body: '`memory_remember({ importance })` define `critical`, `high`, `medium` ou `low` — decisões críticas aparecem primeiro (+0.3), notas de baixa importância ficam fora do caminho (−0.1). Vazio = automático (recência + frequência).',
+				stats: ['critical +0.3', 'high +0.15', 'low −0.1'],
+			},
 			{
 				icon: '🤔',
 				title: 'Explicar POR QUÊ',
@@ -2231,8 +2267,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		github: 'GitHub',
 	},
 	hero: {
-		tagline: 'MCP-Speicherserver für KI-Coding-Agenten — Kontext über Sitzungen hinweg abrufen',
-		subtitle: 'Dein Agent erinnert sich an Entscheidungen, Muster und Bugs zwischen Sitzungen.',
+		tagline: 'Dein KI-Coding-Agent behält den Kontext, den er braucht — in jeder Sitzung',
+		subtitle: 'Entscheidungen, Muster und Bugs überleben Neustarts, sodass du nie wieder dasselbe zweimal erklären musst.',
 		getStarted: 'Loslegen',
 		viewGithub: 'Auf GitHub ansehen',
 		copy: 'Kopieren',
@@ -2266,8 +2302,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		cards: [
 			{
 			icon: '🧩',
-			title: '35 MCP-Tools + 4 Ressourcen',
-			body: 'Vollständiges Speicher-Management über MCP — 35 Tools nach Zweck gruppiert, plus 4 Ressourcen für direktes Kontext-Lesen inklusive interaktivem Graph-Viewer.',
+			title: 'Ein Speicher-Toolkit, kein Protokoll',
+			body: 'Alles, was dein Agent zum Merken, Abrufen und Denken braucht — nach Zweck gruppiert, mit Ressourcen für direktes Kontext-Lesen und einem interaktiven Graph-Viewer.',
 				toolGroups: [
 					{ label: 'Kernspeicher', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
 					{ label: 'Suche & Intelligenz', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
@@ -2316,7 +2352,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	stats: {
 		items: [
-			{ number: '35', label: 'MCP-Tools' },
+			{ number: '97.6%', label: 'Recall aus den Top-5 (R@5 0.861)' },
 			{ number: '15', label: 'Agenten' },
 			{ number: '80%', label: 'Weniger Tool-Aufrufe/Sitzung' },
 			{ number: '0', label: 'Benötigte Konfiguration' },
@@ -2352,7 +2388,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				body: 'Ein Aufruf gibt deinem Agenten alles: Projekt, Git, Speicher, Sitzungen. 80% weniger Tool-Aufrufe.',
 				code: `context_generate({})
 // # Project Briefing (full)
-// ## Project — toon-memory v2.6.0
+// ## Project — toon-memory v4.3.0
 // ## Git — branch: main, 3 commits
 // ## Memory — 26 entries, 18 edges
 // ## Sessions — 2 active`,
@@ -2480,7 +2516,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '35 MCP-Tools, 4 Ressourcen',
+		title: 'Ein vollständiges Speicher-Toolkit',
 		subtitle: 'Alles, was dein Agent zum Merken, Abrufen und Denken braucht',
 		resourcesLabel: 'Ressourcen:',
 		groups: {
@@ -2625,9 +2661,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	],
 },
 whatNew: {
-	title: 'Neu in v4.2.0',
-	subtitle: 'Explain WHY, Token-Budgets, Versions-Ersetzung, negative Erinnerungen, erweiterte Statistiken, Sprach- & Ordner-Ranking',
+	title: 'Neu in v4.3.0',
+	subtitle: 'Explizite Wichtigkeitsstufen, plus Explain WHY, Token-Budgets, Versions-Ersetzung und intelligenteres Ranking',
 	cards: [
+		{
+			icon: '🎯',
+			title: 'Explizite Wichtigkeit',
+			body: '`memory_remember({ importance })` setzt `critical`, `high`, `medium` oder `low` — kritische Entscheidungen erscheinen zuerst (+0.3), niedrige Notizen bleiben im Hintergrund (−0.1). Leer = automatisch (Aktualität + Häufigkeit).',
+			stats: ['critical +0.3', 'high +0.15', 'low −0.1'],
+		},
 		{
 			icon: '🤔',
 			title: 'Explain WHY',
@@ -2687,8 +2729,8 @@ cta: {
 		github: 'GitHub',
 	},
 	hero: {
-		tagline: 'Serveur de mémoire MCP pour agents de code IA — récupérez le contexte entre les sessions',
-		subtitle: 'Votre agent se souvient des décisions, motifs et bugs entre les sessions.',
+		tagline: 'Votre agent de code IA garde le contexte dont il a besoin — à chaque session',
+		subtitle: 'Les décisions, motifs et bugs survivent aux redémarrages, pour ne jamais réexpliquer deux fois la même chose.',
 		getStarted: 'Commencer',
 		viewGithub: 'Voir sur GitHub',
 		copy: 'Copier',
@@ -2722,8 +2764,8 @@ cta: {
 		cards: [
 			{
 			icon: '🧩',
-			title: '35 outils MCP + 4 ressources',
-			body: 'Gestion complète de la mémoire via MCP — 35 outils groupés par fonction, plus 4 ressources pour la lecture directe du contexte, dont un visualiseur de graphe interactif.',
+			title: 'Un kit de mémoire, pas un protocole',
+			body: 'Tout ce dont votre agent a besoin pour mémoriser, rappeler et raisonner — groupé par fonction, avec des ressources pour la lecture directe du contexte et un visualiseur de graphe interactif.',
 				toolGroups: [
 					{ label: 'Mémoire Principale', tools: ['memory_remember', 'memory_recall', 'memory_forget', 'memory_stats', 'memory_diff', 'memory_suggest', 'memory_summary', 'memory_archive', 'memory_checkpoint', 'memory_visualize', 'memory_pin', 'memory_unpin', 'memory_tag', 'memory_reflect', 'memory_promote'] },
 					{ label: 'Recherche & Intelligence', tools: ['memory_smart_recall', 'memory_captured', 'memory_consolidate', 'memory_graph_path', 'memory_search'] },
@@ -2772,7 +2814,7 @@ cta: {
 	},
 	stats: {
 		items: [
-			{ number: '35', label: 'Outils MCP' },
+			{ number: '97.6%', label: 'Rappel depuis le top-5 (R@5 0.861)' },
 			{ number: '15', label: 'Agents' },
 			{ number: '80%', label: 'Moins d\'appels d\'outil/session' },
 			{ number: '0', label: 'Configuration requise' },
@@ -2936,7 +2978,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '35 outils MCP, 4 ressources',
+		title: 'Un kit mémoire complet',
 		subtitle: 'Tout ce dont votre agent a besoin pour mémoriser, rappeler et raisonner',
 		resourcesLabel: 'Ressources :',
 		groups: {
@@ -3085,9 +3127,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	],
 },
 whatNew: {
-	title: 'Nouveautés dans v4.2.0',
-	subtitle: 'Explain WHY, budgets de tokens, remplacement par version, mémoires négatives, statistiques étendues, classement langue & dossier',
+	title: 'Nouveautés dans v4.3.0',
+	subtitle: 'Niveaux d\'importance explicites, plus Explain WHY, budgets de tokens, remplacement par version et classement plus intelligent',
 	cards: [
+		{
+			icon: '🎯',
+			title: 'Importance explicite',
+			body: '`memory_remember({ importance })` définit `critical`, `high`, `medium` ou `low` — les décisions critiques remontent en premier (+0.3), les notes de faible importance restent discrètes (−0.1). Vide = automatique (récence + fréquence).',
+			stats: ['critical +0.3', 'high +0.15', 'low −0.1'],
+		},
 		{
 			icon: '🤔',
 			title: 'Explain WHY',

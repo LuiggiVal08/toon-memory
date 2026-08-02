@@ -16,7 +16,7 @@ toon-memory는 영구 메모리를 관리하기 위한 35개의 MCP 도구와 4�
 
 | 도구 | 설명 |
 |------|------|
-| `memory_remember` | 결정, 패턴, 버그, 지식 또는 **warning**("하지 마세요" 부정적 메모리, 리콜 부스트 포함) 저장 (선택적 TTL, 자동 태그 추론, `links`, 자동 품질 점수, 중복 병합, 신뢰도) |
+| `memory_remember` | 결정, 패턴, 버그, 지식 또는 **warning**("하지 마세요" 부정적 메모리, 리콜 부스트 포함) 저장 (선택적 TTL, 자동 태그 추론, `links`, 자동 품질 점수, 중복 병합, 신뢰도, 선택적 `importance`: `critical`/`high`/`medium`/`low`) |
 | `memory_recall` | 메모리 검색 (파일 읽기 전에 사용, 만료된 TTL 필터링). `mode: "graph"`는 더 높은 정확도를 위해 관계 인식 서브그래프를 확장합니다. 순위는 RRF 융합(BM25×3 + 그래프 중심성, 적응형 k)을 사용합니다. `rrf: false`로 기존 선형 점수를 사용할 수 있습니다. `sessionBias`는 현재 git 브랜치의 항목에 부스트를 줍니다. `pathScope`는 결과를 파일 경로로 제한합니다 (globMatch 지원). `budget`: `"tiny"`(상위 3), `"normal"`(상위 10) 또는 `"deep"`(상위 20). `as_of`는 특정 시점 이후에 superseded된 항목을 다시 포함합니다. `explain: true`는 항목별 이유 줄을 추가합니다 (왜 가져왔는지). `budget_tokens`는 예상 토큰 수로 출력을 제한합니다 (`0` = 제한 없음) |
 | `memory_forget` | 키 또는 id로 항목 삭제 |
 | `memory_stats` | 메모리 상태 확인 (TTL 통계, 품질 분포, 품질/접근 임계값 아래의 콜드 메모리와 함께 **적중률/중복/폐기** 지표: 최소 1회 리콜된 항목 %, 완전 동일 콘텐츠 %, obsolete 항목 % 포함) |
@@ -129,7 +129,7 @@ memory_recall({ query: "redis", explain: true })
 //   ↳ 92% relevance · used 14× · used today · importance HIGH
 ```
 
-`↳` 이유 줄은 결정론적입니다 (관련성 %, 접근 횟수, 마지막 사용 시각, 중요도) — LLM이 관여하지 않습니다. 에이전트가 해당 항목을 *왜* 보여주는지 알고 싶을 때 `explain: true`를 사용하세요.
+`↳` 이유 줄은 결정론적입니다 (관련성 %, 접근 횟수, 마지막 사용 시각, 중요도) — LLM이 관여하지 않습니다. 에이전트가 해당 항목을 *왜* 보여주는지 알고 싶을 때 `explain: true`를 사용하세요. 명시적 `importance` 수준으로 저장된 항목도 이를 보고합니다 (예: `· explicit critical`).
 
 ### `budget_tokens`로 출력 제한
 
@@ -315,6 +315,7 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 - **홉당 감쇠** — 시드에서 `d`홉 떨어진 노드는 `0.5^d`를 곱하여 원격 컨텍스트가 근처 컨텍스트보다 낮게 유지됨
 - **언어 패밀리** — 쿼리와 같은 문자 체계(latin/CJK/cyrillic/…)로 작성된 항목에 `languageFamily()`로 +0.1 부스트
 - **폴더 매치** — `path_scope`가 현재 파일과 일치하는 항목에 +0.05 부스트
+- **명시적 중요도** — `memory_remember({ importance })`로 `critical` (+0.3), `high` (+0.15), `medium` (0), 또는 `low` (−0.1)를 설정할 수 있습니다; `critical` 결정은 `low` 메모보다 먼저 표시되며, 수준은 `explain` 이유와 `budget: "deep"` 출력에 나타납니다. 비어 있음 = 자동 (최신성 + 빈도)
 
 `graph` 모드에서 검색은 키워드 매칭을 시드로 하고, `hops`까지 이고 서브그래프를 확장한 다음 결합 점수 기준 상위 `limit`(기본값 6)을 반환합니다. `memory_smart_recall`은 이 모든 신호를 하나의 호출로 결합합니다.
 
@@ -352,6 +353,7 @@ memory_smart_recall({ intent: "redis cache configuration", hops: 2 })
 - **신뢰도**: 두 점수 중 최대값
 - **내용**: 그대로 유지 (덮어쓰기 없음)
 - **날짜**: 현재 시간으로 업데이트
+- **중요도**: 더 높은 명시적 수준이 이깁니다 (critical > high > medium > low)
 
 이는 항목을 다시 저장하면 교체하는 대신 풍부하게 함을 의미합니다.
 

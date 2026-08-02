@@ -20,7 +20,7 @@ import {
 	buildReason,
 	type GraphEntry,
 } from "./graph"
-import { normalize, isExpiredLocal, tokenize, importance, isPrivate, estimateTokens, languageFamily, parseToonLine, toToonLine } from "./utils"
+import { normalize, isExpiredLocal, tokenize, importance, importanceBoost, importanceRank, isPrivate, estimateTokens, languageFamily, parseToonLine, toToonLine } from "./utils"
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
 
@@ -180,7 +180,12 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 	// Preserve superseded_on (field 17) from the existing entry.
 	const existingSupersededOn = ep.length > 17 ? ep[17] || "" : ""
 
-	return toToonLine([id, category, key, content, file, mergedTags, date, ttl, String(accessed), mergedLinks, quality.toFixed(2), String(confidence), lastAccessed, String(priority), path_scope, origin, status, existingSupersededOn])
+	// Take the more important explicit level (field 18). Empty (auto) counts as medium.
+	const existingImportance = ep.length > 18 ? ep[18] || "" : ""
+	const newImportance = np.length > 18 ? np[18] || "" : ""
+	const importance = importanceRank(newImportance) >= importanceRank(existingImportance) ? newImportance : existingImportance
+
+	return toToonLine([id, category, key, content, file, mergedTags, date, ttl, String(accessed), mergedLinks, quality.toFixed(2), String(confidence), lastAccessed, String(priority), path_scope, origin, status, existingSupersededOn, importance])
 }
 
 /**
@@ -272,12 +277,14 @@ export function generateSmartRecall(
 			if (e.path_scope && globMatch(e.path_scope, ".")) folderBoost = 0.05
 			// Negative-memory boost: warnings are cheap to ignore and expensive to repeat.
 			const warningBoost = e.category === "warning" ? 0.2 : 0
+			// Explicit importance boost: critical/high entries surface first, low last.
+			const impBoost = importanceBoost(e.importance)
 			let combined: number
 			if (opts.rrf) {
-				combined = (fused?.get(e.key) ?? 0) - drift + sessionBias + langBoost + folderBoost + warningBoost
+				combined = (fused?.get(e.key) ?? 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost
 			} else {
 				combined =
-					bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift + sessionBias + langBoost + folderBoost + warningBoost
+					bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost
 			}
 			return { entry: e, score: combined, matchesQuery, priority: e.priority, bm25Score }
 		})
@@ -304,6 +311,9 @@ export function generateSmartRecall(
 		const top = eligible
 			.sort((a, b) => {
 				if (a.priority !== b.priority) return b.priority - a.priority
+				const ia = importanceRank(a.importance)
+				const ib = importanceRank(b.importance)
+				if (ia !== ib) return ib - ia
 				return importance(b, opts.today) - importance(a, opts.today)
 			})
 			.slice(0, limit)

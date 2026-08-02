@@ -2,7 +2,7 @@
 
 # toon-memory
 
-> Serveur MCP de mémoire pour les agents IA de programmation — retenez les décisions, les motifs et les bogues entre les sessions.
+> Donnez à votre agent de code IA une mémoire qui survit à la session — les décisions, les motifs et les bogues sont mémorisés à travers chaque session.
 
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -40,7 +40,7 @@
 
 Vous avez déjà vécu cette situation où votre agent IA oublie tout de la session d'hier ? Vous lui réexpliquez la même décision d'architecture pour la troisième fois, et il propose encore l'approche que vous avez déjà rejetée ?
 
-**toon-memory résout ce problème.** Il donne à votre agent IA une mémoire persistante qui survit aux redémarrages, pour qu'il apprenne réellement de votre projet au fil du temps.
+**toon-memory résout ce problème.** Il donne à votre agent IA une continuité — une mémoire qui survit aux redémarrages, pour qu'il apprenne réellement de votre projet au fil du temps. Vous ne réexpliquez jamais deux fois la même décision.
 
 📖 **[Lire la documentation](https://luiggival08.github.io/toon-memory/)**
 
@@ -65,7 +65,7 @@ Lisez [Comment toon-memory rend votre agent IA plus intelligent](https://luiggiv
 
 ## Fonctionnalités
 
-- **35 outils MCP** — Gestion complète de la mémoire via le Model Context Protocol, incluant `memory_smart_recall` (rappel unifié avec biais de session), `memory_sessions` pour la coordination multi-session, les outils `context_*` pour la génération de contexte en un seul appel (briefing, diff, focus, audit de santé, export), `memory_compress` (compression propulsée par LLM), `memory_consolidate` (dédoublonnage/fusion/nettoyage déterministes), `memory_primer` (contexte auto-injecté), `memory_merge_sessions` (fusion inter-sessions), `memory_pin`/`memory_unpin` (épingler les entrées importantes avec priorité 1-5), `memory_checkpoint` (instantané de session avec TTL de 7j), `memory_search` (recherche unifiée avec filtres de tags + biais de session), `memory_tag` (opérations de tags par lot), `memory_export_gist`/`memory_import_gist` (synchronisation GitHub Gist), `memory_forget` (suppression douce/dure, restauration, remplacement), `memory_reflect` (réflexion sur l'obsolescence/qualité), et `memory_promote` (promotion automatique des brouillons à faible confiance)
+- **Un kit mémoire complet** — Gestion complète de la mémoire via le Model Context Protocol, incluant `memory_smart_recall` (rappel unifié avec biais de session), `memory_sessions` pour la coordination multi-session, les outils `context_*` pour la génération de contexte en un seul appel (briefing, diff, focus, audit de santé, export), `memory_compress` (compression propulsée par LLM), `memory_consolidate` (dédoublonnage/fusion/nettoyage déterministes), `memory_primer` (contexte auto-injecté), `memory_merge_sessions` (fusion inter-sessions), `memory_pin`/`memory_unpin` (épingler les entrées importantes avec priorité 1-5), `memory_checkpoint` (instantané de session avec TTL de 7j), `memory_search` (recherche unifiée avec filtres de tags + biais de session), `memory_tag` (opérations de tags par lot), `memory_export_gist`/`memory_import_gist` (synchronisation GitHub Gist), `memory_forget` (suppression douce/dure, restauration, remplacement), `memory_reflect` (réflexion sur l'obsolescence/qualité), et `memory_promote` (promotion automatique des brouillons à faible confiance)
 - **Ressources MCP** — Lire la mémoire comme contexte sans invoquer d'outils, incluant un System Primer (carte de connaissances auto-générée)
 - **15 agents supportés** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Installateur interactif** — Sélectionnez les agents à configurer depuis un menu
@@ -112,6 +112,7 @@ Lisez [Comment toon-memory rend votre agent IA plus intelligent](https://luiggiv
 - **Remplacement par version** — `memory_consolidate(mode: "versions")` détecte les entrées décrivant le même sujet à différentes versions de bibliothèque (par ex. « Utilisez React 18 » vs « Utilisez React 19 ») et retire les plus anciennes en faveur de la plus récente
 - **Mémoires négatives** — une catégorie `warning` pour les faits « ne PAS faire ceci » ; les entrées `warning` reçoivent un boost de rappel pour que l'agent voie les pièges avant de les répéter
 - **Classement langue + dossier** — le rappel booste les entrées écrites dans la même famille d'écriture (latin/CJK/cyrillique/…) et les entrées dont le `path_scope` correspond au fichier courant
+- **Importance explicite** — `memory_remember({ importance })` définit `critical`, `high`, `medium` ou `low`. Les décisions critiques remontent en premier (+0.3), les notes de faible importance restent discrètes (−0.1) ; vide = automatique (récence + fréquence). Ré-enregistrer conserve le niveau le plus élevé
 
 ---
 
@@ -318,6 +319,21 @@ memory_remember({
 ```
 
 > **Astuce :** Utilisez le TTL pour le contexte temporaire comme les délais, les informations de sprint, ou les notes à durée limitée. Les entrées avec TTL expiré sont automatiquement filtrées des résultats de recherche.
+
+#### Définir une importance explicite
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "db-choice",
+  content: "We chose Postgres over MySQL — JSONB for flexible schemas, better extension ecosystem",
+  importance: "critical"
+})
+// 🧠 Guardado: decision/db-choice (a1b2c3d4)
+// 🎯 Importance: critical (+0.3 boost) — surfaces above routine entries
+```
+
+> **Astuce :** Marquez les décisions fondamentales comme `critical` pour qu'elles se classent toujours en haut du rappel. `importance` accepte `critical`, `high`, `medium` ou `low` ; laissez-le vide pour laisser le système classer automatiquement par récence et fréquence.
 
 #### Tags auto-inférés
 

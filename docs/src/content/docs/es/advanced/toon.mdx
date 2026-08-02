@@ -19,12 +19,12 @@ TOON (Token-Oriented Object Notation) es un formato de datos diseñado para LLMs
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
-  a1b2c3d4|decision|use-zod|Usar Zod para validación|src/types.ts|validation;types|2026-07-10||0|patterns/zod-schemas|0.80|1.00
-  e5f6g7h8|pattern|pydantic-configs|El proyecto usa Pydantic v2|config.py|python;patterns|2026-07-10||0||0.72|1.00
-  i9j0k1l2|bug|redis-pool-fix|Se agregó max_connections=20|redis.ts|redis;fix|2026-07-10|7d|3||0.68|0.85
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority|path_scope|origin|status|supersededOn|importance}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0|patterns/zod-schemas|0.80|1.00||0||agent|||
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.72|1.00||0|||||high
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d|3||0.68|0.85||0||agent|obsolete||
 summaries:
-  src/services/redis.ts: Pool de conexión Redis con lógica de reintento
+  src/services/redis.ts: Redis connection pool with retry logic
 ```
 
 ## Componentes
@@ -39,6 +39,13 @@ summaries:
 | `links` | Keys de entradas separados por punto y coma (edges del grafo) |
 | `quality` | Score de calidad 0-1 (calculado automáticamente) |
 | `confidence` | Score de confianza 0-1 (1.0=afirmado, &lt;1.0=inferido) |
+| `lastAccessed` | Marca de tiempo ISO del último acceso (para la clasificación de importancia) |
+| `priority` | Prioridad de pin 1-5 (0 = no anclado) |
+| `path_scope` | Alcance de ruta de archivo opcional (compatible con globMatch) |
+| `origin` | Origen de la entrada: `human`, `agent` o vacío (inferido) |
+| `status` | Estado de la entrada: `active`, `obsolete`, `suppressed` o vacío |
+| `supersededOn` | Fecha en que la entrada fue reemplazada (superseded) |
+| `importance` | Importancia explícita: `critical`, `high`, `medium`, `low` (vacío = automático) |
 | `summaries:` | Resúmenes de archivos opcionales |
 
 ## Campos de entrada
@@ -57,6 +64,13 @@ summaries:
 | `links` | No | Keys de entradas separados por punto y coma (edges del grafo) | `patterns/zod-schemas` |
 | `quality` | No | Score de calidad 0-1 (calculado automáticamente) | `0.80` |
 | `confidence` | No | Score de confianza 0-1 (1.0=afirmado) | `1.00` |
+| `lastAccessed` | No | Marca de tiempo ISO del último acceso (auto-actualizado) | `2026-07-10T12:00:00Z` |
+| `priority` | No | Prioridad de pin 1-5 (0 = no anclado) | `0` |
+| `path_scope` | No | Alcance de ruta de archivo para recall con glob-match | `src/` |
+| `origin` | No | Origen de la entrada: `human`, `agent`, o vacío | `agent` |
+| `status` | No | Estado de la entrada: `active`, `obsolete`, `suppressed`, vacío | `obsolete` |
+| `supersededOn` | No | Fecha en que la entrada fue reemplazada (superseded) | `2026-08-01` |
+| `importance` | No | Importancia explícita: `critical`, `high`, `medium`, `low` (vacío = automático, recencia + frecuencia) | `critical` |
 
 ## Beneficios
 

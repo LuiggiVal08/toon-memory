@@ -14,7 +14,7 @@
  * without mutating the stored `.toon` file.
  */
 
-import { normalize, isExpiredLocal, tokenize, importance, estimateTokens, parseToonLine } from "./utils"
+import { normalize, isExpiredLocal, tokenize, importance, importanceBoost, importanceRank, estimateTokens, parseToonLine } from "./utils"
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
 
@@ -42,6 +42,8 @@ export interface GraphEntry {
 	status: "active" | "obsolete" | "resolved" | "draft"
 	/** ISO date when this entry was superseded (set by memory_forget action=supersede). Empty if never superseded. */
 	supersededOn: string
+	/** Explicit importance level: "critical" | "high" | "medium" | "low". Empty = auto (recency+frequency). */
+	importance: string
 }
 
 /** Edge type labels used in typed links (`type:key`). */
@@ -128,6 +130,7 @@ export function parseEntries(data: string): GraphEntry[] {
 			origin: parts.length > 15 && parts[15] ? parts[15] as "human" | "agent" | "inferred" : "agent",
 			status: parts.length > 16 && parts[16] ? parts[16] as "active" | "obsolete" | "resolved" | "draft" : "active",
 			supersededOn: parts.length > 17 ? parts[17] || "" : "",
+			importance: parts.length > 18 ? parts[18] || "" : "",
 		})
 	}
 	return out
@@ -419,6 +422,7 @@ export function buildReason(
 		parts.push("never used")
 	}
 	parts.push(impScore >= 0.7 ? "importance HIGH" : impScore >= 0.4 ? "importance MED" : "importance LOW")
+	if (e.importance) parts.push(`explicit ${e.importance}`)
 	return parts.join(" · ")
 }
 
@@ -490,10 +494,13 @@ export function graphRecallDetailed(
 			...visibleEntries
 				.sort((a, b) => {
 					if (a.priority !== b.priority) return b.priority - a.priority
+					const ia = importanceRank(a.importance)
+					const ib = importanceRank(b.importance)
+					if (ia !== ib) return ib - ia
 					return importance(b, opts.today) - importance(a, opts.today)
 				})
 				.slice(0, opts.limit ?? 6)
-				.map((e) => ({ e, s: importance(e, opts.today) }))
+				.map((e) => ({ e, s: importance(e, opts.today) + importanceBoost(e.importance) }))
 		)
 	} else {
 		// BFS from all seeds, recording the shortest hop distance to each node.
@@ -541,6 +548,8 @@ export function graphRecallDetailed(
 					}
 					// Negative-memory boost: warnings surface first.
 					if (e.category === "warning") s += 0.2
+					// Explicit importance boost: critical/high entries surface first, low last.
+					s += importanceBoost(e.importance)
 					s *= decay
 					return { e, s, priority: e.priority }
 				})
@@ -685,7 +694,8 @@ export function renderCompact(entries: GraphEntry[], opts: RenderCompactOpts = {
 			const scopeInfo = e.path_scope ? ` · scope: ${e.path_scope}` : ""
 			const statusInfo = e.status !== "active" ? ` · status: ${e.status}` : ""
 			const supersededInfo = e.supersededOn ? ` · superseded: ${e.supersededOn}` : ""
-			block = `[${n}] ${e.category}/${e.key}${pin} (${e.id})\n  ${e.content}\n  File: ${e.file} | Tags: ${e.tags.join(";")} | Date: ${e.date}${ttlInfo}${accessInfo}${lastAccess}${originInfo}${scopeInfo}${statusInfo}${supersededInfo}${links}`
+			const impInfo = e.importance ? ` · importance: ${e.importance}` : ""
+			block = `[${n}] ${e.category}/${e.key}${pin} (${e.id})\n  ${e.content}\n  File: ${e.file} | Tags: ${e.tags.join(";")} | Date: ${e.date}${ttlInfo}${accessInfo}${lastAccess}${originInfo}${scopeInfo}${statusInfo}${supersededInfo}${impInfo}${links}`
 		} else {
 			// "normal" budget (default)
 			let body = e.content

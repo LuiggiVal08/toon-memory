@@ -2,7 +2,7 @@
 
 # toon-memory
 
-> Servidor MCP de memoria para agentes de IA — recuerda decisiones, patrones y bugs entre sesiones.
+> Dale a tu agente de IA una memoria que sobrevive a la sesión — decisiones, patrones y bugs recordados en cada sesión.
 
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -41,7 +41,7 @@
 
 ¿Alguna vez has tenido esa sensación donde tu agente de IA olvida todo de la sesión de ayer? Explicas la misma decisión de arquitectura por tercera vez, y aún así sugiere el enfoque que ya rechazaste?
 
-**toon-memory soluciona esto.** Le da a tu agente de IA una memoria persistente que sobrevive a reinicios, para que realmente aprenda de tu proyecto con el tiempo.
+**toon-memory soluciona esto.** Le da a tu agente de IA continuidad — una memoria que sobrevive a los reinicios, para que realmente aprenda de tu proyecto con el tiempo. Nunca vuelves a explicar la misma decisión dos veces.
 
 📖 **[Lee la documentación](https://luiggival08.github.io/toon-memory/)**
 
@@ -66,7 +66,7 @@ Lee [Cómo toon-memory Hace tu Agente de IA más Inteligente](https://luiggival0
 
 ## Características
 
-- **35 herramientas MCP** — Gestión completa de memoria vía Model Context Protocol, incluyendo `memory_smart_recall` (recall unificado), `memory_sessions` para coordinación multi-sesión, herramientas `context_*` para generación de contexto en una sola llamada, `memory_compress` (compresión con LLM), `memory_consolidate` (deduplicación y limpieza deterministas), `memory_primer` (contexto auto-inyectado), `memory_merge_sessions` (fusión multi-sesión), y `memory_export_gist`/`memory_import_gist` (sincronización con GitHub Gist)
+- **Un kit de memoria completo** — Gestión completa de memoria vía Model Context Protocol, incluyendo `memory_smart_recall` (recall unificado), `memory_sessions` para coordinación multi-sesión, herramientas `context_*` para generación de contexto en una sola llamada, `memory_compress` (compresión con LLM), `memory_consolidate` (deduplicación y limpieza deterministas), `memory_primer` (contexto auto-inyectado), `memory_merge_sessions` (fusión multi-sesión), y `memory_export_gist`/`memory_import_gist` (sincronización con GitHub Gist)
 - **Recursos MCP** — Lee memoria como contexto sin invocaciones de herramientas, incluyendo un System Primer (mapa de conocimiento auto-generado)
 - **15 agentes soportados** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Instalador interactivo** — Selecciona qué agentes configurar desde un menú
@@ -113,6 +113,7 @@ Lee [Cómo toon-memory Hace tu Agente de IA más Inteligente](https://luiggival0
 - **Supersession por versión** — `memory_consolidate(mode: "versions")` detecta entradas que describen el mismo tema en diferentes versiones de librería (p. ej. "Usar React 18" vs "Usar React 19") y retira las antiguas en favor de la más nueva
 - **Memorias negativas** — una categoría `warning` para hechos de "NO hagas esto"; las entradas `warning` reciben un boost en recall para que el agente vea las minas antes de repetirlas
 - **Ranking por idioma + carpeta** — el recall potencia entradas escritas en la misma familia de escritura (latin/CJK/cyrillic/…) y entradas cuyo `path_scope` coincide con el archivo actual
+- **Importancia explícita** — `memory_remember({ importance })` define `critical`, `high`, `medium` o `low`. Las decisiones críticas aparecen primero (+0.3), las notas bajas quedan fuera del camino (−0.1); vacío = automático (recencia + frecuencia). Re-guardar mantiene el nivel más alto
 
 ---
 
@@ -272,6 +273,21 @@ memory_remember({
 ```
 
 > **Consejo:** Usa TTL para contexto temporal como fe límites, información de sprint, o notas con fecha de expiración. Las entradas con TTL expirado se filtran automáticamente de los resultados de búsqueda.
+
+#### Definir importancia explícita
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "db-choice",
+  content: "Elegimos Postgres sobre MySQL — JSONB para esquemas flexibles, mejor ecosistema de extensiones",
+  importance: "critical"
+})
+// 🧠 Guardado: decision/db-choice (a1b2c3d4)
+// 🎯 Importancia: critical (+0.3 boost) — aparece por encima de entradas rutinarias
+```
+
+> **Consejo:** Marca las decisiones fundamentales como `critical` para que siempre se ubiquen cerca del top del recall. `importance` acepta `critical`, `high`, `medium` o `low`; déjalo vacío para que el sistema ordene automáticamente por recencia y frecuencia.
 
 #### Tags auto-inferidos
 

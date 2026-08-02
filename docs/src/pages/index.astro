@@ -18,7 +18,7 @@ import SiteFooter from '../components/SiteFooter.astro';
 import '../styles/home.css';
 
 const description =
-  'MCP memory server giving AI coding agents (Claude, Cursor, OpenCode, Windsurf) offline, token-efficient persistent memory. 35 tools, ~90% fewer tokens with auto-loading, 80% fewer tool calls. Remember decisions, patterns, and bugs between sessions.';
+  'Give your AI coding agent a memory that outlasts the session — decisions, patterns, and bugs remembered across sessions, offline and token-efficient, for Claude, Cursor, OpenCode, Windsurf, and 15+ agents. Reproducible recall benchmark: npm run bench:retrieval.';
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -38,7 +38,7 @@ const jsonLd = {
     "@type": "Person",
     "name": "LuiggiVal"
   },
-  "keywords": "MCP memory server, persistent memory AI agents, Claude memory, Cursor memory, OpenCode memory, Model Context Protocol, token-efficient memory, BM25 recall"
+  "keywords": "AI coding agent memory, continuity across sessions, Claude memory, Cursor memory, OpenCode memory, Model Context Protocol, token-efficient memory, reproducible recall benchmark"
 };
 ---
 
@@ -47,12 +47,12 @@ const jsonLd = {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>toon-memory — MCP Memory Server for AI Coding Agents | Persistent Memory</title>
+    <title>toon-memory — Continuity for AI Coding Agents | Memory Across Sessions</title>
     <meta name="description" content={description} />
-    <meta name="keywords" content="MCP memory server, persistent memory AI agents, Claude memory, Cursor memory, OpenCode memory, Model Context Protocol, token-efficient memory, BM25 recall, knowledge graph memory, AI coding agent, auto-loading" />
+    <meta name="keywords" content="AI coding agent memory, continuity across sessions, Claude memory, Cursor memory, OpenCode memory, Model Context Protocol, token-efficient memory, reproducible recall benchmark, knowledge graph memory, AI coding agent, auto-loading" />
     <link rel="icon" type="image/svg+xml" href={logoSrc.src} />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="toon-memory — MCP Memory Server for AI Coding Agents" />
+    <meta property="og:title" content="toon-memory — Continuity for AI Coding Agents" />
     <meta property="og:description" content={description} />
     <meta property="og:url" content="https://luiggival08.github.io/toon-memory/" />
     <meta property="og:image" content="https://luiggival08.github.io/toon-memory/og-image.svg" />
@@ -60,7 +60,7 @@ const jsonLd = {
     <meta property="og:image:height" content="630" />
     <meta property="og:site_name" content="toon-memory" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="toon-memory — MCP Memory Server for AI Coding Agents" />
+    <meta name="twitter:title" content="toon-memory — Continuity for AI Coding Agents" />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content="https://luiggival08.github.io/toon-memory/og-image.svg" />
     <link rel="canonical" href="https://luiggival08.github.io/toon-memory/" />

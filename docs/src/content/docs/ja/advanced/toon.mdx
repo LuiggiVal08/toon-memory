@@ -19,10 +19,10 @@ TOON（Token-Oriented Object Notation）はLLM向けに設計されたデータ�
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
-  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0|patterns/zod-schemas|0.80|1.00
-  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.72|1.00
-  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d|3||0.68|0.85
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority|path_scope|origin|status|supersededOn|importance}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0|patterns/zod-schemas|0.80|1.00||0||agent|||
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.72|1.00||0|||||high
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d|3||0.68|0.85||0||agent|obsolete||
 summaries:
   src/services/redis.ts: Redis connection pool with retry logic
 ```
@@ -39,6 +39,13 @@ summaries:
 | `links` | セミコロン区切りのエントリキー（グラフエッジ） |
 | `quality` | 品質スコア 0-1（自動計算） |
 | `confidence` | 信頼度スコア 0-1（1.0=自ら.asserted、1.0未満=推論） |
+| `lastAccessed` | 最終アクセスのISOタイムスタンプ — 重要度ランキング用 |
+| `priority` | ピン優先度 1-5、0 = ピンなし |
+| `path_scope` | オプションのファイルパススコープ、globMatch互換 |
+| `origin` | エントリの起源: `human`、`agent`、または空(推測) |
+| `status` | エントリの状態: `active`、`obsolete`、`suppressed`、または空 |
+| `supersededOn` | エントリが置き換えられた日付 |
+| `importance` | 明示的な重要度: `critical`、`high`、`medium`、`low`; 空 = 自動 |
 | `summaries:` | 任意のファイルサマリー |
 
 ## エントリフィールド
@@ -57,6 +64,13 @@ summaries:
 | `links` | いいえ | セミコロン区切りのエントリキー（グラフエッジ） | `patterns/zod-schemas` |
 | `quality` | いいえ | 品質スコア 0-1（自動計算） | `0.80` |
 | `confidence` | いいえ | 信頼度スコア 0-1（1.0=自ら.asserted） | `1.00` |
+| `lastAccessed` | いいえ | 最終アクセスのISOタイムスタンプ（自動更新） | `2026-07-10T12:00:00Z` |
+| `priority` | いいえ | ピン優先度 1-5（0 = ピンなし） | `0` |
+| `path_scope` | いいえ | globマッチのリコール用ファイルパススコープ | `src/` |
+| `origin` | いいえ | エントリの起源: `human`、`agent`、または空 | `agent` |
+| `status` | いいえ | エントリの状態: `active`、`obsolete`、`suppressed`、空 | `obsolete` |
+| `supersededOn` | いいえ | エントリが置き換えられた日付 | `2026-08-01` |
+| `importance` | いいえ | 明示的な重要度: `critical`、`high`、`medium`、`low`（空 = 自動、新しさ+頻度） | `critical` |
 
 ## 利点
 

@@ -16,7 +16,7 @@ toon-memory provides 35 MCP tools and 4 MCP resources for managing persistent me
 
 | Tool | Description |
 |------|-------------|
-| `memory_remember` | Save a decision, pattern, bug, knowledge, or **warning** (negative "do NOT do this" memory, recalled with a boost) (optional TTL, auto-tag inference, `links`, auto quality score, merge-dedup, confidence) |
+| `memory_remember` | Save a decision, pattern, bug, knowledge, or **warning** (negative "do NOT do this" memory, recalled with a boost) (optional TTL, auto-tag inference, `links`, auto quality score, merge-dedup, confidence, optional `importance`: `critical`/`high`/`medium`/`low`) |
 | `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. Ranking uses RRF fusion (BM25×3 + graph centrality, adaptive `k`); pass `rrf: false` for the legacy linear score. `sessionBias` boosts entries from the current git branch. `pathScope` scopes results to a file path (supports globMatch). `budget`: `"tiny"` (top 3), `"normal"` (top 10), or `"deep"` (top 20). `as_of` re-includes entries superseded after a point-in-time date. `explain: true` appends a per-entry reason line (why it was retrieved). `budget_tokens` caps the output by estimated token count (`0` = no limit) |
 | `memory_forget` | **Lifecycle ops** by key or id: `action: "soft"` (default) marks obsolete, `"hard"` permanently removes, `"restore"` brings back to active, `"supersede"` retires it with a `superseded_by` link to `new_key` |
 | `memory_stats` | View memory state (including TTL stats, quality distribution, cold memories below quality/access thresholds, and **hit-rate/duplicate/dead** metrics: % recalled at least once, % exact-content duplicates, % obsolete entries) |
@@ -143,7 +143,7 @@ memory_recall({ query: "redis", explain: true })
 //   ↳ 92% relevance · used 14× · used today · importance HIGH
 ```
 
-The `↳` reason line is deterministic (relevance %, access count, last-used, importance) — no LLM involved. Use `explain: true` when you want to know *why* the agent was shown those entries.
+The `↳` reason line is deterministic (relevance %, access count, last-used, importance) — no LLM involved. Use `explain: true` when you want to know *why* the agent was shown those entries. Entries saved with an explicit `importance` level also report it (e.g. `· explicit critical`).
 
 ### Cap output with `budget_tokens`
 
@@ -328,6 +328,7 @@ Recall is deterministic and offline (no embeddings, no LLM). Since v3.7.0 the de
 - **Session bias** — entries whose file appears in the current session get a 1.15× boost.
 - **Language family** — entries written in the same script as the query (latin/CJK/cyrillic/…) get a +0.1 boost via `languageFamily()`.
 - **Folder match** — entries whose `path_scope` folder matches the current file get a +0.05 boost.
+- **Explicit importance** — `memory_remember({ importance })` lets you set `critical` (+0.3), `high` (+0.15), `medium` (0), or `low` (−0.1); `critical` decisions surface before `low` notes, and the level shows up in `explain` reasons and `budget: "deep"` output. Empty = auto (recency + frequency).
 - **Priority** — pinned entries sort first regardless of score.
 
 Pass `rrf: false` to fall back to the legacy linear weighted score (BM25 + 0.4·centrality + 0.25·importance + seed bonus). In `graph` mode, recall seeds on keyword matches, expands the ego-subgraph up to `hops`, and returns the top `limit` (default 6) by combined score. `memory_smart_recall` combines all these signals in one call.
@@ -366,6 +367,7 @@ When you save an entry with an existing key, the system merges attributes:
 - **Confidence**: max of both scores
 - **Content**: kept as-is (no overwriting)
 - **Date**: updated to now
+- **Importance**: the higher explicit level wins (critical > high > medium > low)
 
 This means re-saving an entry enriches it rather than replacing it.
 

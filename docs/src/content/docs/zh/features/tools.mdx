@@ -16,7 +16,7 @@ toon-memory 提供 35 个 MCP 工具和 4 个 MCP 资源，用于管理持久化
 
 | 工具 | 描述 |
 |------|------|
-| `memory_remember` | 保存决策、模式、缺陷、知识或 **warning**（负面"不要这样做"记忆，召回时加成）（可选 TTL、自动标签推断、`links`、自动质量评分、合并去重、置信度） |
+| `memory_remember` | 保存决策、模式、缺陷、知识或 **warning**（负面"不要这样做"记忆，召回时加成）（可选 TTL、自动标签推断、`links`、自动质量评分、合并去重、置信度、可选 `importance`：`critical`/`high`/`medium`/`low`） |
 | `memory_recall` | 搜索记忆（应在读取文件之前使用，自动过滤过期 TTL）。`mode: "graph"` 可展开关系感知子图以获得更高精度。排名使用 RRF 融合（BM25×3 + 图中心性，自适应 k）；传入 `rrf: false` 使用旧版线性分数。`sessionBias` 提升来自当前 git 分支的条目。`pathScope` 将结果限定到文件路径（支持 globMatch）。`budget`：`"tiny"`（前 3）、`"normal"`（前 10）或 `"deep"`（前 20）。`as_of` 会重新包含在指定日期之后被 superseded 的条目。`explain: true` 为每条结果追加原因行（说明为何被检索到）。`budget_tokens` 按估计 token 数限制输出（`0` = 无限制） |
 | `memory_forget` | 按 key 或 id 移除条目 |
 | `memory_stats` | 查看记忆状态（包括 TTL 统计、质量分布、低于质量/访问阈值的冷记忆，以及**命中率/重复率/废弃率**指标：至少被召回一次的条目百分比、完全重复内容百分比、过时条目百分比） |
@@ -129,7 +129,7 @@ memory_recall({ query: "redis", explain: true })
 //   ↳ 92% relevance · used 14× · used today · importance HIGH
 ```
 
-`↳` 原因行是确定性的（相关性百分比、访问次数、最后使用时间、重要性）— 不涉及 LLM。当你想知道代理*为什么*被展示这些条目时，使用 `explain: true`。
+`↳` 原因行是确定性的（相关性百分比、访问次数、最后使用时间、重要性）— 不涉及 LLM。当你想知道代理*为什么*被展示这些条目时，使用 `explain: true`。使用显式 `importance` 级别保存的条目也会报告该级别（例如 `· explicit critical`）。
 
 ### 使用 `budget_tokens` 限制输出
 
@@ -314,6 +314,7 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 - **会话偏置** — 条目所在文件出现在当前会话中的获得 1.15× 加成。
 - **语言家族** — 与查询使用相同文字体系（latin/CJK/cyrillic/…）书写的条目通过 `languageFamily()` 获得 +0.1 加成。
 - **文件夹匹配** — `path_scope` 与当前文件匹配的条目获得 +0.05 加成。
+- **显式重要性** — `memory_remember({ importance })` 可让你设置 `critical`（+0.3）、`high`（+0.15）、`medium`（0）或 `low`（−0.1）；`critical` 决策排在 `low` 笔记之前，该级别会出现在 `explain` 原因和 `budget: "deep"` 输出中。空 = 自动（新近度 + 频率）。
 - **优先级** — 固定的条目无论分数如何都排在首位。
 
 传入 `rrf: false` 回退到旧版线性加权分数（BM25 + 0.4·centrality + 0.25·importance + 种子加分）。在 `graph` 模式下，召回以关键词匹配为种子，展开自我子图至 `hops` 层，然后按综合分数返回前 `limit`（默认 6）个结果。`memory_smart_recall` 在一次调用中组合所有这些信号。
@@ -352,6 +353,7 @@ memory_smart_recall({ intent: "redis cache configuration", hops: 2 })
 - **置信度**：两个分数的最大值
 - **内容**：保持原样（不覆盖）
 - **日期**：更新为当前时间
+- **重要性**：较高的显式级别胜出（critical > high > medium > low）
 
 这意味着重新保存条目会丰富它，而不是替换它。
 

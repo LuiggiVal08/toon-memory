@@ -2,7 +2,7 @@
 
 # toon-memory
 
-> AI 코딩 에이전트를 위한 MCP 메모리 서버 — 세션 간에 의사결정, 패턴, 버그를 기억합니다.
+> 세션을 넘어 지속되는 메모리를 AI 코딩 에이전트에 제공하세요 — 모든 세션에서 의사결정, 패턴, 버그를 기억합니다.
 
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -41,7 +41,7 @@
 
 어제 세션에서 AI 에이전트가 모든 것을 잊어버린 경험 있으신가요? 같은 아키텍처 결정을 세 번째로 설명하는데, 이미 거절한 접근법을 또 제안하나요?
 
-**toon-memory는 이 문제를 해결합니다.** 재시작 후에도 유지되는 영구 메모리를 에이전트에 제공하여, 프로젝트에서 점진적으로 학습할 수 있게 합니다.
+**toon-memory는 이 문제를 해결합니다.** AI 에이전트에 연속성을 제공합니다 — 재시작 후에도 유지되는 메모리로, 프로젝트에서 시간이 지남에 따라 실제로 학습하게 됩니다. 같은 결정을 두 번 설명할 필요가 없습니다.
 
 📖 **[문서 읽기](https://luiggival08.github.io/toon-memory/)**
 
@@ -66,7 +66,7 @@
 
 ## 기능
 
-- **MCP 도구 35개** — Model Context Protocol을 통한 전체 메모리 관리. `memory_smart_recall` (세션 바이어스가 있는 통합 리콜), `memory_sessions` 다세션 협업, `context_*` 도구를 통한 원 호출 컨텍스트 생성(브리핑, 차이점, 집중, 건강 감사, 내보내기), `memory_compress` (LLM 기반 압축), `memory_consolidate` (결정론적 중복제거/병합/정리), `memory_primer` (자동 주입 컨텍스트), `memory_merge_sessions` (세션 간 병합), `memory_pin`/`memory_unpin` (우선순위 1-5로 중요 항목 핀 고정), `memory_checkpoint` (7d TTL의 세션 스냅샷), `memory_search` (태그 필터 + 세션 바이어스가 있는 통합 검색), `memory_tag` (일괄 태그 작업), `memory_export_gist`/`memory_import_gist` (GitHub Gist 동기화), `memory_forget` (소프트/하드 삭제, 복원, 대체), `memory_reflect` (오래됨/품질 반성), `memory_promote` (저신뢰도 초안 자동 승격) 포함
+- **완전한 메모리 도구 키트** — Model Context Protocol을 통한 전체 메모리 관리. `memory_smart_recall` (세션 바이어스가 있는 통합 리콜), `memory_sessions` 다세션 협업, `context_*` 도구를 통한 원 호출 컨텍스트 생성(브리핑, 차이점, 집중, 건강 감사, 내보내기), `memory_compress` (LLM 기반 압축), `memory_consolidate` (결정론적 중복제거/병합/정리), `memory_primer` (자동 주입 컨텍스트), `memory_merge_sessions` (세션 간 병합), `memory_pin`/`memory_unpin` (우선순위 1-5로 중요 항목 핀 고정), `memory_checkpoint` (7d TTL의 세션 스냅샷), `memory_search` (태그 필터 + 세션 바이어스가 있는 통합 검색), `memory_tag` (일괄 태그 작업), `memory_export_gist`/`memory_import_gist` (GitHub Gist 동기화), `memory_forget` (소프트/하드 삭제, 복원, 대체), `memory_reflect` (오래됨/품질 반성), `memory_promote` (저신뢰도 초안 자동 승격) 포함
 - **MCP 리소스** — 도구 호출 없이 컨텍스트로 메모리 읽기. 시스템 프라이머(자동 생성 지식 맵) 포함
 - **에이전트 15개 지원** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **인터랙티브 설치기** — 메뉴에서 설정할 에이전트 선택
@@ -113,6 +113,7 @@
 - **버전 대체** — `memory_consolidate(mode: "versions")`가 다른 라이브러리 버전에서 같은 주제를 설명하는 항목(예: "React 18 사용" vs "React 19 사용")을 감지하고 이전 항목을 최신 항목 대신 은퇴시킴
 - **부정적 메모리** — "하지 마세요" 사실을 위한 `warning` 카테고리. `warning` 항목은 리콜 부스트를 받아 에이전트가 지뢰를 반복하기 전에 먼저 볼 수 있음
 - **언어 + 폴더 순위** — 리콜이 같은 문자 체계(latin/CJK/cyrillic/…)로 작성된 항목과 `path_scope`가 현재 파일과 일치하는 항목을 부스트
+- **명시적 중요도** — `memory_remember({ importance })`로 `critical`, `high`, `medium`, `low`를 설정합니다. 중요한 결정이 먼저 표시되고(+0.3), 낮은 메모는 방해하지 않습니다(−0.1). 비워 두면 자동(최신성 + 빈도). 다시 저장하면 더 높은 수준을 유지합니다
 
 ---
 
@@ -319,6 +320,21 @@ memory_remember({
 ```
 
 > **팁:** 마감일, 스프린트 정보, 시간 제한이 있는 메모와 같은 임시 컨텍스트에는 TTL을 사용하세요. 만료된 TTL 항목은 검색 결과에서 자동으로 필터링됩니다.
+
+#### 명시적 중요도 설정
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "db-choice",
+  content: "We chose Postgres over MySQL — JSONB for flexible schemas, better extension ecosystem",
+  importance: "critical"
+})
+// 🧠 저장됨: decision/db-choice (a1b2c3d4)
+// 🎯 중요도: critical (+0.3 부스트) — 일반 항목보다 먼저 표시
+```
+
+> **팁:** 기반이 되는 결정을 `critical`로 표시하여 항상 리콜 상단 부근에 순위가 매겨지도록 하세요. `importance`는 `critical`, `high`, `medium`, `low`를 허용합니다. 비워 두면 시스템이 최신성과 빈도로 자동 순위를 매깁니다.
 
 #### 자동 추론 태그
 

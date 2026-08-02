@@ -16,7 +16,7 @@ toon-memoryは永続メモリを管理するための35個のMCPツールと4つ
 
 | ツール | 説明 |
 |------|-------------|
-| `memory_remember` | 決定、パターン、バグ、ナレッジ、または**warning**（「これはやらない」否定的メモリ、リコールブースト付き）を保存（任意のTTL、自動タグ推論、`links`、自動品質スコア、マージ重複排除、信頼度） |
+| `memory_remember` | 決定、パターン、バグ、ナレッジ、または**warning**（「これはやらない」否定的メモリ、リコールブースト付き）を保存（任意のTTL、自動タグ推論、`links`、自動品質スコア、マージ重複排除、信頼度、任意の`importance`: `critical`/`high`/`medium`/`low`） |
 | `memory_recall` | メモリを検索（ファイルを読む前に使用。期限切れTTLをフィルタ）。`mode: "graph"`で関係性を考慮したサブグラフを展開し、より高い精度を実現。ランキングはRRF融合（BM25×3 + グラフ中心性、適応的k）を使用。`rrf: false`で従来の線形スコアに。`sessionBias`は現在のgitブランチのエントリをブースト。`pathScope`は結果をファイルパスにスコープ（globMatch対応）。`budget`: `"tiny"`（上位3）、`"normal"`（上位10）、`"deep"`（上位20）。`as_of`は指定日以降にsupersededされたエントリを再包含。`explain: true`は取得理由の行をエントリごとに追加。`budget_tokens`は推定トークン数による出力制限（`0`＝制限なし） |
 | `memory_forget` | **ライフサイクル操作**: `action: "soft"`（デフォルト）でobsoleteに、`"hard"`で完全削除、`"restore"`で復元、`"supersede"`で`new_key`への`superseded_by`リンク付き置き換え。正規のライフサイクルツール |
 | `memory_stats` | メモリの状態を表示（TTL統計、品質分布、品質/アクセスしきい値未満のコールドメモリ、および**ヒット率/重複/廃止**メトリクス（少なくとも1回リコールされたエントリの%、完全一致コンテンツの%、obsoleteエントリの%）を含む） |
@@ -129,7 +129,7 @@ memory_recall({ query: "redis", explain: true })
 //   ↳ 92% relevance · used 14× · used today · importance HIGH
 ```
 
-`↳`の理由行は決定論的（関連性%、アクセス回数、最終使用、重要度）— LLMは関与しません。エージェントにそのエントリが表示された*理由*を知りたい場合は`explain: true`を使用してください。
+`↳`の理由行は決定論的（関連性%、アクセス回数、最終使用、重要度）— LLMは関与しません。エージェントにそのエントリが表示された*理由*を知りたい場合は`explain: true`を使用してください。明示的な`importance`レベルで保存されたエントリもそれを報告します（例: `· explicit critical`）。
 
 ### `budget_tokens`で出力を制限する
 
@@ -309,6 +309,7 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 
 - **BM25関連性** — `id`+`category`+`key`+`content`+`file`+`tags`上の確率的語頻度スコア。
 - **グラフ中心性** — 度数正規化（0..1）。多くのエントリに接続されたハブは1に近いスコアを持ち、クエリワードがなくても表示されます。
+- **明示的な重要度** — `memory_remember({ importance })`で`critical`（+0.3）、`high`（+0.15）、`medium`（0）、`low`（−0.1）を設定できます。`critical`の決定は`low`のメモより先に表示され、レベルは`explain`の理由と`budget: "deep"`の出力に表示されます。空 = 自動（新しさ+頻度）。
 - **重要度** — 新しさ+アクセス頻度。
 - **品質ブースト** — 品質スコアが高いエントリ（タグ、リンク、詳細が多い）はランキングブーストを受けます。
 - **シードボーナス** — クエリに直接マッチしたエントリはフラットブーストを受けます。
@@ -352,6 +353,7 @@ memory_smart_recall({ intent: "redis cache configuration", hops: 2 })
 - **信頼度**: 両方のスコアの最大値
 - **コンテンツ**: そのまま保持（上書きなし）
 - **日付**: 現在の時刻に更新
+- **重要度**: 高い方の明示レベルが優先（critical > high > medium > low）
 
 つまり、エントリを再保存すると、置き換えではなく充実化されます。
 

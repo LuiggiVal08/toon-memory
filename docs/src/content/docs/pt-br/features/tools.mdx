@@ -16,7 +16,7 @@ O toon-memory fornece 35 ferramentas MCP e 4 recursos MCP para gerenciar memóri
 
 | Ferramenta | Descrição |
 |------------|-----------|
-| `memory_remember` | Salva uma decisão, padrão, bug, conhecimento ou **warning** (memória negativa "NÃO faça isso", recuperada com impulso) (TTL opcional, inferência automática de tags, `links`, pontuação de qualidade automática, merge-dedup, confiança) |
+| `memory_remember` | Salva uma decisão, padrão, bug, conhecimento ou **warning** (memória negativa "NÃO faça isso", recuperada com impulso) (TTL opcional, inferência automática de tags, `links`, pontuação de qualidade automática, merge-dedup, confiança, `importance` opcional: `critical`/`high`/`medium`/`low`) |
 | `memory_recall` | Busca na memória (use ANTES de ler arquivos, filtra TTL expirado). `mode: "graph"` expande um subgrafo consciente de relacionamentos para maior precisão. O ranking usa fusão RRF (BM25×3 + centralidade do grafo, k adaptativo); use `rrf: false` para o score linear legado. `sessionBias` impulsiona entradas do branch git atual. `pathScope` limita os resultados a um caminho de arquivo (suporta globMatch). `budget`: `"tiny"` (top 3), `"normal"` (top 10) ou `"deep"` (top 20). `as_of` re-inclui entradas superseded depois de uma data específica. `explain: true` anexa uma linha de motivo por entrada (por que foi recuperada). `budget_tokens` limita a saída por contagem de tokens estimada (`0` = sem limite) |
 | `memory_forget` | Remove uma entrada por chave ou id |
 | `memory_stats` | Visualiza o estado da memória (incluindo estatísticas de TTL, distribuição de qualidade, memórias frias abaixo dos limiares de qualidade/acesso e métricas de **hit-rate/duplicatas/obsoletas**: % de entradas recuperadas pelo menos uma vez, % de duplicatas de conteúdo exato, % de entradas obsoletas) |
@@ -129,7 +129,7 @@ memory_recall({ query: "redis", explain: true })
 //   ↳ 92% relevance · used 14× · used today · importance HIGH
 ```
 
-A linha de motivo `↳` é determinística (relevância %, contagem de acessos, último uso, importância) — sem LLM envolvido. Use `explain: true` quando quiser saber *por que* o agente viu essas entradas.
+A linha de motivo `↳` é determinística (relevância %, contagem de acessos, último uso, importância) — sem LLM envolvido. Use `explain: true` quando quiser saber *por que* o agente viu essas entradas. Entradas salvas com um nível explícito de `importance` também o reportam (ex.: `· explicit critical`).
 
 ### Limitar a saída com `budget_tokens`
 
@@ -314,6 +314,7 @@ O recall é determinístico e offline (sem embeddings, sem LLM). Desde a v3.7.0,
 - **Viés de sessão** — entradas cujo arquivo aparece na sessão atual recebem um impulso de 1.15×.
 - **Família de idioma** — entradas escritas na mesma escrita (latim/CJK/cirílico/…) que a consulta recebem +0.1 via `languageFamily()`.
 - **Correspondência de pasta** — entradas cujo `path_scope` corresponde ao arquivo atual recebem +0.05.
+- **Importância explícita** — `memory_remember({ importance })` permite definir `critical` (+0.3), `high` (+0.15), `medium` (0) ou `low` (−0.1); decisões `critical` aparecem antes de notas `low`, e o nível aparece nas linhas de `explain` e na saída de `budget: "deep"`. Vazio = automático (atualidade + frequência).
 - **Prioridade** — entradas fixadas (pinned) classificam primeiro, independentemente da pontuação.
 
 Passe `rrf: false` para voltar ao score linear ponderado legado (BM25 + 0.4·centralidade + 0.25·importância + bônus de semente). No modo `graph`, o recall inicia nas correspondências de palavras-chave, expande o ego-subgrafo até `hops`, e retorna as top `limit` (padrão 6) por pontuação combinada. O `memory_smart_recall` combina todos esses sinais em uma chamada.
@@ -352,6 +353,7 @@ Quando você salva uma entrada com uma chave existente, o sistema mescla os atri
 - **Confiança**: máximo das duas pontuações
 - **Conteúdo**: mantido como está (sem sobrescrever)
 - **Data**: atualizada para agora
+- **Importância**: o nível explícito mais alto vence (critical > high > medium > low)
 
 Isso significa que resalvar uma entrada a enriquece em vez de substituí-la.
 

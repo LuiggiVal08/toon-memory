@@ -466,10 +466,11 @@ server.registerTool(
       links: z.string().optional().default("").describe("Related entry keys, separated by space or ';' (e.g. risk-spec engine-arch). Builds graph edges."),
       path_scope: z.string().optional().default("").describe("Glob pattern to scope this entry (e.g. src/**.ts). Empty = global."),
       origin: z.enum(["human", "agent", "inferred"]).optional().default("agent").describe("Who created this entry."),
+      importance: z.enum(["critical", "high", "medium", "low"]).optional().describe("Explicit importance level — critical/high entries surface first in recall, low last. Omit for auto (recency + frequency)."),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
-  async ({ category, key, content, file, tags, ttl, links, path_scope, origin }) => {
+  async ({ category, key, content, file, tags, ttl, links, path_scope, origin, importance = "" }) => {
     const data = readMemory()
     const newId = generateId()
     const date = new Date().toISOString().split("T")[0]
@@ -504,7 +505,7 @@ server.registerTool(
     const resolvedLinks = links
       ? links.split(/[\s;]+/).filter(Boolean).join(" ")
       : existingParts[9] || ""
-    let newEntry = toToonLine([entryId, category, key, content, file || "", resolvedTags, date, resolvedTtl, "0", resolvedLinks, "", "", "", path_scope || "", origin])
+    let newEntry = toToonLine([entryId, category, key, content, file || "", resolvedTags, date, resolvedTtl, "0", resolvedLinks, "", "", "", "0", path_scope || "", origin, "", "", importance])
     let action = "Saved"
     let mergeInfo = ""
     const tagsInferred = !tags && resolvedTags ? true : false
@@ -519,7 +520,7 @@ server.registerTool(
       const lastAccessed = ""
       const quality = verbatim ? 0.5 : qualityScore(resolvedTags, resolvedLinks, content, date, accessed, lastAccessed, origin)
       const confidence = 1.0
-      newEntry = toToonLine([entryId, category, key, content, file || "", resolvedTags, date, resolvedTtl, String(accessed), resolvedLinks, quality.toFixed(2), String(confidence), lastAccessed, "0", path_scope || "", origin, "active"])
+      newEntry = toToonLine([entryId, category, key, content, file || "", resolvedTags, date, resolvedTtl, String(accessed), resolvedLinks, quality.toFixed(2), String(confidence), lastAccessed, "0", path_scope || "", origin, "active", "", importance])
       const match = lines[headerIdx].match(/\[(\d+)\|/)
       const count = match ? parseInt(match[1]) : 0
       lines.splice(headerIdx + 1, 0, newEntry)

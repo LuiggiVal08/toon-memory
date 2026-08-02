@@ -23,6 +23,30 @@ export function importance(
 	return recency * 0.6 + freq * 0.4
 }
 
+/** Explicit importance levels, highest to lowest. Empty string = auto (no boost). */
+export const IMPORTANCE_LEVELS = ["critical", "high", "medium", "low"] as const
+export type ImportanceLevel = (typeof IMPORTANCE_LEVELS)[number]
+
+/** Ranking boost for an explicit importance level. Auto (empty) = 0. */
+export const IMPORTANCE_BOOST: Record<ImportanceLevel, number> = {
+	critical: 0.3,
+	high: 0.15,
+	medium: 0,
+	low: -0.1,
+}
+
+/** Map an explicit importance level to its ranking boost (empty/unknown = 0). */
+export const importanceBoost = (level: string): number =>
+	IMPORTANCE_BOOST[level as ImportanceLevel] ?? 0
+
+/** Rank order for merging: higher value wins. Empty (auto) counts as medium. */
+export const importanceRank = (level: string): number => {
+	if (level === "critical") return 4
+	if (level === "high") return 3
+	if (level === "low") return 1
+	return 2 // medium or auto
+}
+
 export const tokenize = (s: string): string[] =>
 	s
 		.replace(/([a-z])([A-Z])/g, "$1 $2")

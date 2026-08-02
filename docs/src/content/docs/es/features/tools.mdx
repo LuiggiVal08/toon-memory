@@ -11,7 +11,7 @@ toon-memory proporciona 35 herramientas MCP y 4 recursos MCP para gestionar la m
 
 | Herramienta | Descripción |
 |------|-------------|
-| `memory_remember` | Guarda una decisión, patrón, bug, conocimiento o **warning** (memoria negativa "NO hagas esto", recuperada con boost) (con TTL opcional, inferencia automática de etiquetas, `links`, quality score automático, merge-dedup, confidence) |
+| `memory_remember` | Guarda una decisión, patrón, bug, conocimiento o **warning** (memoria negativa "NO hagas esto", recuperada con boost) (con TTL opcional, inferencia automática de etiquetas, `links`, quality score automático, merge-dedup, confidence, `importance` opcional: `critical`/`high`/`medium`/`low`) |
 | `memory_recall` | Busca en la memoria (úsalo ANTES de leer archivos, filtra entradas con TTL expirado). `mode: "graph"` expande un subgrafo con relaciones para mayor precisión. El ranking usa fusión RRF (BM25×3 + centralidad del grafo, k adaptativo); pasa `rrf: false` para el score lineal legacy. `sessionBias` potencia entradas de la rama git actual. `pathScope` limita los resultados a una ruta de archivo (con globMatch). `budget`: `"tiny"`, `"normal"` o `"deep"`. `as_of` re-incluye entradas superseded después de una fecha puntual. `explain: true` añade una línea de razón por entrada (por qué se recuperó). `budget_tokens` limita la salida por tokens estimados (`0` = sin límite) |
 | `memory_forget` | Elimina una entrada por key o id |
 | `memory_stats` | Ver el estado de la memoria (incluyendo estadísticas de TTL, distribución de calidad, memorias frías por debajo de umbrales y métricas de **hit-rate/duplicadas/obsoletas**: % recuperadas al menos una vez, % de contenido duplicado exacto, % de entradas obsoletas) |
@@ -118,7 +118,7 @@ memory_recall({ query: "redis", explain: true })
 //   ↳ 92% relevancia · usado 14× · usado hoy · importancia ALTA
 ```
 
-La línea `↳` es determinista (relevancia %, conteo de accesos, último uso, importancia) — sin LLM. Usa `explain: true` cuando quieras saber *por qué* el agente recibió esas entradas.
+La línea `↳` es determinista (relevancia %, conteo de accesos, último uso, importancia) — sin LLM. Usa `explain: true` cuando quieras saber *por qué* el agente recibió esas entradas. Las entradas guardadas con un nivel de `importance` explícito también lo reportan (ej. `· explicit critical`).
 
 ### Limitar la salida con `budget_tokens`
 
@@ -304,6 +304,7 @@ El recall es determinístico y offline (sin embeddings, sin LLM). Cada entrada c
 - **Decay por salto** — nodos a `d` hops de un seed se multiplican por `0.5^d`, manteniendo el contexto lejano por debajo del cercano.
 - **Familia de idioma** — entradas escritas en la misma escritura que la query (latín/CJK/cirílico/…) obtienen un boost +0.1 vía `languageFamily()`.
 - **Coincidencia de carpeta** — entradas cuyo `path_scope` coincide con la carpeta del archivo actual obtienen un boost +0.05.
+- **Importancia explícita** — `memory_remember({ importance })` te permite establecer `critical` (+0.3), `high` (+0.15), `medium` (0) o `low` (−0.1); las decisiones `critical` aparecen antes que las notas `low`, y el nivel se muestra en las razones de `explain` y en la salida de `budget: "deep"`. Vacío = automático (recencia + frecuencia).
 
 En modo `graph`, recall busca por palabras clave, expande el ego-subgrafo hasta `hops`, y devuelve los top `limit` (default 6) por score combinado. `memory_smart_recall` combina todas estas señales en una sola llamada.
 
@@ -341,6 +342,7 @@ Cuando guardas una entrada con una key existente, el sistema fusiona atributos:
 - **Confianza**: máximo de ambos scores
 - **Contenido**: se conserva tal cual (sin sobrescribir)
 - **Fecha**: se actualiza a ahora
+- **Importancia**: gana el nivel explícito más alto (critical > high > medium > low)
 
 Esto significa que re-guardar una entrada la enriquece en vez de reemplazarla.
 

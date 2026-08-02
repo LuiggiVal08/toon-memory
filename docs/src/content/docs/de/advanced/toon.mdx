@@ -19,10 +19,10 @@ TOON (Token-Oriented Object Notation) ist ein Datenformat, das für LLMs entworf
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
-  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0|patterns/zod-schemas|0.80|1.00
-  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.72|1.00
-  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d|3||0.68|0.85
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority|path_scope|origin|status|supersededOn|importance}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0|patterns/zod-schemas|0.80|1.00||0||agent|||
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.72|1.00||0|||||high
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20|redis.ts|redis;fix|2026-07-10|7d|3||0.68|0.85||0||agent|obsolete||
 summaries:
   src/services/redis.ts: Redis connection pool with retry logic
 ```
@@ -39,6 +39,13 @@ summaries:
 | `links` | Semikolon-getrennte Eintragsschlüssel (Graph-Kanten) |
 | `quality` | Qualitätsscore 0-1 (automatisch berechnet) |
 | `confidence` | Konfidenzscore 0-1 (1,0=behauptet, {'<'}1,0=inferiert) |
+| `lastAccessed` | ISO-Zeitstempel des letzten Zugriffs (für Wichtigkeits-Rangfolge) |
+| `priority` | Pin-Priorität 1-5 (0 = nicht angepinnt) |
+| `path_scope` | Optionaler Dateipfad-Scope (globMatch-kompatibel) |
+| `origin` | Eintragsherkunft: `human`, `agent` oder leer (inferiert) |
+| `status` | Eintragsstatus: `active`, `obsolete`, `suppressed` oder leer |
+| `supersededOn` | Datum, an dem der Eintrag superseded wurde |
+| `importance` | Explizite Wichtigkeit: `critical`, `high`, `medium`, `low` (leer = automatisch) |
 | `summaries:` | Optionale Dateizusammenfassungen |
 
 ## Eintragsfelder
@@ -57,6 +64,13 @@ summaries:
 | `links` | Nein | Semikolon-getrennte Eintragsschlüssel (Graph-Kanten) | `patterns/zod-schemas` |
 | `quality` | Nein | Qualitätsscore 0-1 (automatisch berechnet) | `0,80` |
 | `confidence` | Nein | Konfidenzscore 0-1 (1,0=behauptet) | `1,00` |
+| `lastAccessed` | Nein | ISO-Zeitstempel des letzten Zugriffs (automatisch aktualisiert) | `2026-07-10T12:00:00Z` |
+| `priority` | Nein | Pin-Priorität 1-5 (0 = nicht angepinnt) | `0` |
+| `path_scope` | Nein | Dateipfad-Scope für glob-basierten Abruf | `src/` |
+| `origin` | Nein | Eintragsherkunft: `human`, `agent` oder leer | `agent` |
+| `status` | Nein | Eintragsstatus: `active`, `obsolete`, `suppressed`, leer | `obsolete` |
+| `supersededOn` | Nein | Datum, an dem der Eintrag superseded wurde | `2026-08-01` |
+| `importance` | Nein | Explizite Wichtigkeit: `critical`, `high`, `medium`, `low` (leer = automatisch, Aktualität + Zugriffshäufigkeit) | `critical` |
 
 ## Vorteile
 

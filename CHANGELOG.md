@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.3.0] - 2026-08-02
+
+### Added
+- **Explicit importance** — `memory_remember({ importance })` accepts `critical`, `high`, `medium`, or `low`. Empty = auto (recency + frequency). Ranking boosts: critical +0.3, high +0.15, medium 0, low −0.1, applied in both the graph and unified recall pipelines (`graphRecallDetailed` and `generateSmartRecall`). `mergeEntries` keeps the higher explicit level on re-save. `buildReason()` reports `explicit {level}` and deep output shows `· importance: {level}`. Stored as the 19th TOON field (`parts[18]`).
+
+### Fixed
+- **`memory_remember` merge branch field alignment** — the upsert path wrote `path_scope` into the `priority` slot and `origin` into the `path_scope` slot (both off by one). Now aligned with `mergeEntries`: `priority, path_scope, origin, status, supersededOn, importance`.
+
+### Tests
+- Explicit importance levels: parse, ranking boost ordering, merge max-level, `buildReason` explicit reporting
+- Round-trip of the 19-field TOON line with `importance` populated and empty
+
 ## [4.2.0] - 2026-08-01
 
 ### Added

@@ -2,7 +2,7 @@
 
 # toon-memory
 
-> 面向 AI 编程助手的 MCP 记忆服务器 — 在会话之间记住决策、模式和 Bug。
+> 给你的 AI 编程代理一个比会话更持久的记忆 — 在每一次会话中记住决策、模式和 Bug。
 
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -40,7 +40,7 @@
 
 你是否有过这样的经历：AI 助手完全忘记了昨天会话中的内容？你不得不第三次解释同一个架构决策，而它仍然建议你已经否决的方案？
 
-**toon-memory 解决了这个问题。** 它为你的 AI 助手提供持久记忆，即使重启也不会丢失，让它能真正从项目中持续学习。
+**toon-memory 解决了这个问题。** 它为你的 AI 代理提供连续性 — 一种在重启后依然存在的记忆，让它能真正随着时间从你的项目中学习。你再也不必重复解释同一个决策。
 
 📖 **[阅读文档](https://luiggival08.github.io/toon-memory/)**
 
@@ -65,7 +65,7 @@
 
 ## 功能特性
 
-- **35 个 MCP 工具** — 通过 Model Context Protocol 实现完整的记忆管理，包括 `memory_smart_recall`（带会话偏置的统一召回）、`memory_sessions`（多会话协调）、`context_*` 系列工具（一键生成上下文：简报、差异、聚焦、健康审计、导出）、`memory_compress`（LLM 驱动的压缩）、`memory_consolidate`（确定性去重/合并/清理）、`memory_primer`（自动注入的上下文）、`memory_merge_sessions`（跨会话合并）、`memory_pin`/`memory_unpin`（以 1-5 优先级固定重要条目）、`memory_checkpoint`（带 7 天 TTL 的会话快照）、`memory_search`（带标签过滤 + 会话偏置的统一搜索）、`memory_tag`（批量标签操作）、`memory_export_gist`/`memory_import_gist`（GitHub Gist 同步）、`memory_forget`（软/硬删除、恢复、取代）、`memory_reflect`（陈旧性/质量反思）和 `memory_promote`（自动提升低置信度草稿）
+- **完整的记忆工具集** — 通过 Model Context Protocol 实现完整的记忆管理，包括 `memory_smart_recall`（带会话偏置的统一召回）、`memory_sessions`（多会话协调）、`context_*` 系列工具（一键生成上下文：简报、差异、聚焦、健康审计、导出）、`memory_compress`（LLM 驱动的压缩）、`memory_consolidate`（确定性去重/合并/清理）、`memory_primer`（自动注入的上下文）、`memory_merge_sessions`（跨会话合并）、`memory_pin`/`memory_unpin`（以 1-5 优先级固定重要条目）、`memory_checkpoint`（带 7 天 TTL 的会话快照）、`memory_search`（带标签过滤 + 会话偏置的统一搜索）、`memory_tag`（批量标签操作）、`memory_export_gist`/`memory_import_gist`（GitHub Gist 同步）、`memory_forget`（软/硬删除、恢复、取代）、`memory_reflect`（陈旧性/质量反思）和 `memory_promote`（自动提升低置信度草稿）
 - **MCP 资源** — 无需工具调用即可将记忆作为上下文读取，包括系统知识图谱（自动生成的知识地图）
 - **支持 15 种 Agent** — OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex CLI、Gemini CLI、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro
 - **交互式安装器** — 从菜单中选择要配置的 Agent
@@ -112,6 +112,7 @@
 - **版本取代** — `memory_consolidate(mode: "versions")` 检测描述同一主题在不同库版本的条目（如"使用 React 18" vs "使用 React 19"），并淘汰旧条目、保留最新版本
 - **负面记忆** — 提供 `warning` 分类，用于"不要这样做"的事实；`warning` 条目获得召回加成，让 Agent 在重复犯错之前看到这些"雷区"
 - **语言 + 文件夹排序** — 召回会加成与当前内容使用相同文字体系（latin/CJK/cyrillic/…）书写的条目，以及 `path_scope` 与当前文件匹配的条目
+- **显式重要性** — `memory_remember({ importance })` 设置 `critical`、`high`、`medium` 或 `low`。关键决策优先显示（+0.3），低级笔记不占位置（−0.1）；留空 = 自动（时效 + 频率）。重新保存时保留较高等级
 
 ---
 
@@ -318,6 +319,21 @@ memory_remember({
 ```
 
 > **提示：** 对临时上下文（如截止日期、冲刺信息或时效性笔记）使用 TTL。TTL 过期的条目会自动从搜索结果中过滤。
+
+#### 设置显式重要性
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "db-choice",
+  content: "We chose Postgres over MySQL — JSONB for flexible schemas, better extension ecosystem",
+  importance: "critical"
+})
+// 🧠 已保存: decision/db-choice (a1b2c3d4)
+// 🎯 重要性: critical（+0.3 加成）— 高于常规条目显示
+```
+
+> **提示：** 将基础性决策标记为 `critical`，让它们始终在召回中排名靠前。`importance` 接受 `critical`、`high`、`medium` 或 `low`；留空则让系统按时效和频率自动排序。
 
 #### 自动推断标签
 

@@ -329,7 +329,7 @@ describe("buildReason (Explain WHY)", () => {
       id: "a1", category: "decision", key: "risk-engine", content: "x",
       file: "", tags: [], date: "2026-07-30", ttl: "", accessed: 14,
       links: [], lastAccessed: "2026-08-01T10:00:00Z", priority: 0,
-      path_scope: "", origin: "agent" as const, status: "active" as const, supersededOn: "",
+      path_scope: "", origin: "agent" as const, status: "active" as const, supersededOn: "", importance: "",
     }
     const reason = buildReason(entry, 0.95, 1.0, 0.8, "2026-08-01")
     expect(reason).toContain("95% relevance")
@@ -343,7 +343,7 @@ describe("buildReason (Explain WHY)", () => {
       id: "a1", category: "knowledge", key: "fresh", content: "x",
       file: "", tags: [], date: "2026-07-30", ttl: "", accessed: 0,
       links: [], lastAccessed: "", priority: 0,
-      path_scope: "", origin: "agent" as const, status: "active" as const, supersededOn: "",
+      path_scope: "", origin: "agent" as const, status: "active" as const, supersededOn: "", importance: "",
     }
     const reason = buildReason(entry, 0, 0, 0.2, "2026-08-01")
     expect(reason).toContain("never used")
@@ -377,5 +377,56 @@ entries[2|]{id|category|key|content|file|tags|date|ttl|accessed|links}:
     const d = graphRecallDetailed(LONG, "AAA", { hops: 1 })
     const out = renderCompact(d.entries, { budget: "deep" })
     expect(out.split("\n\n").length).toBe(d.entries.length)
+  })
+})
+
+describe("explicit importance levels", () => {
+  const DATA = `version: 1
+entries[4|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority|path_scope|origin|status|supersededOn|importance}:
+  a1|decision|critical-decision|This decision is critical|src/a.ts|k|2026-07-01||0||||||||||critical
+  a2|decision|high-decision|This decision is important|src/a.ts|k|2026-07-01||0||||||||||high
+  a3|decision|medium-decision|A normal decision|src/a.ts|k|2026-07-01||0||||||||||medium
+  a4|decision|low-decision|A minor note|src/a.ts|k|2026-07-01||0||||||||||low
+`
+
+  it("parses the importance field from TOON", () => {
+    const entries = parseEntries(DATA)
+    expect(entries[0].importance).toBe("critical")
+    expect(entries[3].importance).toBe("low")
+    expect(entries[1].importance).toBe("high")
+  })
+
+  it("surfaces critical entries first when the query matches all seeds", () => {
+    const d = graphRecallDetailed(DATA, "decision", { hops: 1 })
+    const keys = d.entries.map((e) => e.key)
+    // critical (+0.3) and low (−0.1) dominate the other signals given identical recency + frequency.
+    expect(keys.indexOf("critical-decision")).toBeLessThan(keys.indexOf("low-decision"))
+    expect(keys.indexOf("critical-decision")).toBe(0)
+    expect(keys.indexOf("low-decision")).toBe(keys.length - 1)
+  })
+
+  it("sorts critical/high first in the no-query fallback", () => {
+    const d = graphRecallDetailed(DATA, "", { hops: 1 })
+    const keys = d.entries.map((e) => e.key)
+    expect(keys[0]).toBe("critical-decision")
+    expect(keys[keys.length - 1]).toBe("low-decision")
+  })
+
+  it("appends the explicit level to the explain reason", () => {
+    const entry = {
+      id: "a1", category: "decision", key: "critical-decision", content: "x",
+      file: "", tags: [], date: "2026-07-30", ttl: "", accessed: 0,
+      links: [], lastAccessed: "", priority: 0,
+      path_scope: "", origin: "agent" as const, status: "active" as const, supersededOn: "", importance: "critical",
+    }
+    const reason = buildReason(entry, 0.9, 1.0, 0.5, "2026-08-01")
+    expect(reason).toContain("explicit critical")
+  })
+
+  it("renders importance in deep budget output", () => {
+    const d = graphRecallDetailed(DATA, "decision", { hops: 1 })
+    const out = renderCompact(d.entries, { budget: "deep" })
+    expect(out).toContain("importance: critical")
+    expect(out).toContain("importance: low")
   })
 })

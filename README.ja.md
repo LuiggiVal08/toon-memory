@@ -2,7 +2,7 @@
 
 # toon-memory
 
-> AIコーディングエージェント向けのMCPメモリサーバー — セッション間で意思決定、パターン、バグを記憶します。
+> AIコーディングエージェントにセッションを超えて記憶が続くメモリを — 意思決定、パターン、バグをあらゆるセッションで記憶します。
 
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -39,7 +39,7 @@
 
 AIエージェントが昨日のセッションの内容を全て忘れてしまう経験はありますか？同じアーキテクチャの意思決定を3回目の説明しても、すでに却下したアプローチを再び提案されてしまう……
 
-**toon-memoryはこの問題を解決します。** エージェントに永続的なメモリを与え、再起動後もデータが残るため、プロジェクトについて学び続けることができます。
+**toon-memoryはこの問題を解決します。** エージェントに継続性を与えます — 再起動後も残るメモリにより、プロジェクトについて時間とともに本当に学び続けることができます。同じ意思決定を二度説明する必要はありません。
 
 📖 **[ドキュメントを読む](https://luiggival08.github.io/toon-memory/)**
 
@@ -64,7 +64,7 @@ AIエージェントが昨日のセッションの内容を全て忘れてしま
 
 ## 主な機能
 
-- **35個のMCPツール** — Model Context Protocolによる完全なメモリ管理。`memory_smart_recall`（セッションバイアス付き統一リコール）、マルチセッション連携用の`memory_sessions`、ワンコールでコンテキストを生成する`context_*`ツール（ブリーフィング、差分、フォーカス、ヘルス監査、エクスポート）、`memory_compress`（LLM駆動の圧縮）、`memory_consolidate`（決定論的な重複排除/マージ/クリーンアップ）、`memory_primer`（自動注入コンテキスト）、`memory_merge_sessions`（セッション間マージ）、`memory_pin`/`memory_unpin`（優先度1〜5で重要なエントリをピン留め）、`memory_checkpoint`（7d TTLのセッションスナップショット）、`memory_search`（タグフィルター＋セッションバイアス付きの統一検索）、`memory_tag`（一括タグ操作）、`memory_export_gist`/`memory_import_gist`（GitHub Gist同期）、`memory_forget`（ソフト/ハード削除、復元、スーパーセード）、`memory_reflect`（鮮度/品質のリフレクション）、`memory_promote`（低信頼度ドラフトの自動昇格）を含みます
+- **完全なメモリツールキット** — Model Context Protocolによる完全なメモリ管理。`memory_smart_recall`（セッションバイアス付き統一リコール）、マルチセッション連携用の`memory_sessions`、ワンコールでコンテキストを生成する`context_*`ツール（ブリーフィング、差分、フォーカス、ヘルス監査、エクスポート）、`memory_compress`（LLM駆動の圧縮）、`memory_consolidate`（決定論的な重複排除/マージ/クリーンアップ）、`memory_primer`（自動注入コンテキスト）、`memory_merge_sessions`（セッション間マージ）、`memory_pin`/`memory_unpin`（優先度1〜5で重要なエントリをピン留め）、`memory_checkpoint`（7d TTLのセッションスナップショット）、`memory_search`（タグフィルター＋セッションバイアス付きの統一検索）、`memory_tag`（一括タグ操作）、`memory_export_gist`/`memory_import_gist`（GitHub Gist同期）、`memory_forget`（ソフト/ハード削除、復元、スーパーセード）、`memory_reflect`（鮮度/品質のリフレクション）、`memory_promote`（低信頼度ドラフトの自動昇格）を含みます
 - **MCPリソース** — ツール呼び出しせずにメモリをコンテキストとして読み取れます。システムプライマー（自動生成されたナレッジマップ）を含みます
 - **15のエージェントに対応** — OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex CLI、Gemini CLI、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro
 - **インタラクティブインストーラー** — メニューから設定するエージェントを選択できます
@@ -111,6 +111,7 @@ AIエージェントが昨日のセッションの内容を全て忘れてしま
 - **バージョンスーパーセード** — `memory_consolidate(mode: "versions")`は同じ主題を異なるライブラリバージョンで説明するエントリ（例：「React 18を使う」vs「React 19を使う」）を検出し、古い方を新しい方のために退役させます
 - **否定的メモリ** — 「これはやらないこと」という事実のための`warning`カテゴリ；`warning`エントリはリコールブーストを受け、エージェントが失敗を繰り返す前に地雷を確認できます
 - **言語＋フォルダランキング** — リコールは同じ文字体系（ラテン/CJK/キリルなど）で書かれたエントリと、`path_scope`が現在のファイルと一致するエントリをブーストします
+- **明示的な重要度** — `memory_remember({ importance })`で`critical`、`high`、`medium`、`low`を設定します。重要な意思決定は最初に表示され（+0.3）、低いメモは邪魔になりません（−0.1）；空＝自動（鮮度＋頻度）。再保存すると高い方のレベルが維持されます
 
 ---
 
@@ -317,6 +318,21 @@ memory_remember({
 ```
 
 > **ヒント:** デッドライン、スプリント情報、時間依存のメモなど一時的なコンテキストにはTTLを使用してください。期限切れのTTLエントリは検索結果から自動的にフィルタリングされます。
+
+#### 明示的な重要度を設定する
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "db-choice",
+  content: "We chose Postgres over MySQL — JSONB for flexible schemas, better extension ecosystem",
+  importance: "critical"
+})
+// 🧠 保存済み: decision/db-choice (a1b2c3d4)
+// 🎯 重要度: critical (+0.3 ブースト) — 通常のエントリより上位に表示
+```
+
+> **ヒント:** 基盤となる意思決定は`critical`にマークすると、常にリコールの上位にランクインします。`importance`は`critical`、`high`、`medium`、`low`を受け付けます。空のままにすると、システムが鮮度と頻度で自動的にランク付けします。
 
 #### 自動推論タグ
 
