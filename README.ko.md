@@ -8,6 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml/badge.svg)](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-online-blue)](https://luiggival08.github.io/toon-memory/)
+[![MCP Badge](https://lobehub.com/badge/mcp/luiggival08-toon-memory)](https://lobehub.com/mcp/luiggival08-toon-memory)
 
 ---
 
@@ -21,6 +22,7 @@
 - [MCP 도구](#mcp-도구)
 - [다세션 협업](#다세션-협업)
 - [메모리 그래프 (그래프 기반 리콜)](#메모리-그래프-그래프-기반-리콜)
+- [메모리 그래프 뷰어](#메모리-그래프-뷰어)
 - [팁과 모범 사례](#팁과-모범-사례)
 - [CLI 명령어](#cli-명령어)
 - [설정](#설정)
@@ -30,6 +32,7 @@
 - [FAQ](#faq)
 - [개발](#개발)
 - [기여하기](#기여하기)
+- [보안 및 개인정보](#보안-및-개인정보)
 - [라이선스](#라이선스)
 
 ---
@@ -63,7 +66,7 @@
 
 ## 기능
 
-- **MCP 도구 35개** — Model Context Protocol을 통한 전체 메모리 관리. `memory_smart_recall` (통합 리콜), `memory_sessions` 다세션 협업, `context_*` 도구를 통한 원 호출 컨텍스트 생성(브리핑, 차이점, 집중, 건강 감사, 내보내기) 포함
+- **MCP 도구 35개** — Model Context Protocol을 통한 전체 메모리 관리. `memory_smart_recall` (세션 바이어스가 있는 통합 리콜), `memory_sessions` 다세션 협업, `context_*` 도구를 통한 원 호출 컨텍스트 생성(브리핑, 차이점, 집중, 건강 감사, 내보내기), `memory_compress` (LLM 기반 압축), `memory_consolidate` (결정론적 중복제거/병합/정리), `memory_primer` (자동 주입 컨텍스트), `memory_merge_sessions` (세션 간 병합), `memory_pin`/`memory_unpin` (우선순위 1-5로 중요 항목 핀 고정), `memory_checkpoint` (7d TTL의 세션 스냅샷), `memory_search` (태그 필터 + 세션 바이어스가 있는 통합 검색), `memory_tag` (일괄 태그 작업), `memory_export_gist`/`memory_import_gist` (GitHub Gist 동기화), `memory_forget` (소프트/하드 삭제, 복원, 대체), `memory_reflect` (오래됨/품질 반성), `memory_promote` (저신뢰도 초안 자동 승격) 포함
 - **MCP 리소스** — 도구 호출 없이 컨텍스트로 메모리 읽기. 시스템 프라이머(자동 생성 지식 맵) 포함
 - **에이전트 15개 지원** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **인터랙티브 설치기** — 메뉴에서 설정할 에이전트 선택
@@ -87,9 +90,29 @@
 - **스마트 리콜** — `memory_smart_recall`이 BM25 + 그래프 + 감쇠 + 품질을 하나의 호출로 결합. LLM이 모든 작업 시작 시 호출
 - **품질 점수** — 모든 항목에 구조(태그, 링크, 콘텐츠 구체성, 최신성)를 기반으로 0–1 품질 점수 자동 부여. 고품질 항목이 먼저 표시
 - **병합-중복제거** — 같은 `key`로 저장하면 속성을 덮어쓰지 않고 병합 (태그 합집합, 최대 신뢰도, 최신 날짜, 결합된 링크)
+- **근사 중복 감지** — 정리(consolidation)가 Jaccard 유사도(임계값 0.7)로 근사 중복을 감지하고 병합
 - **신뢰도 점수** — 각 항목이 정보의 신뢰성을 추적: 사용자 주장 = 1.0, 추론 = 0.65–0.75
+- **LLM 기반 압축** — `memory_compress`가 AI로 긴 항목을 요약. `memory_consolidate(mode: "low-quality")`는 결정론적으로 일괄 정리
+- **크로스 세션 병합** — `memory_merge_sessions`가 파일에 대한 병렬 세션 간 관찰을 병합
+- **GitHub Gist 동기화** — `memory_export_gist`와 `memory_import_gist`가 GitHub Gist를 통해 메모리 항목을 동기화 (의존성 제로)
+- **Verbatim 모드** — `config.verbatim`이 저장 시 기존 항목을 덮어쓰지 않고 보존
 - **컨텍스트 생성 도구** — `context_generate` (전체 브리핑), `context_diff` (증분), `context_focus` (집중), `context_health` (감사), `context_export` (마크다운) — 각각 5-6개의 수동 도구 호출을 대체. LLM 불필요, 순수 결정론적 집계
 - **시스템 프라이머** — MCP 리소스로 노출되는 자동 생성 지식 맵. 에이전트가 세션 시작 시 로드하여 즉시 컨텍스트 확보
+- **경로 범위 지정** — 항목을 glob 패턴으로 파일 경로에 범위 지정(`path_scope`) 가능. 리콜이 범위별로 자동 필터링
+- **예산 제어** — 세 가지 출력 수준: `budget: "tiny"` (키+한 줄, 약 50토큰), `"normal"` (태그/엣지가 있는 컴팩트), `"deep"` (origin/scope/status를 포함한 모든 필드). `compact: true`와 하위 호환
+- **원점 추적** — 각 항목이 원점(`human`, `agent`, `inferred`)을 추적. 인간의 주장은 품질 부스트를 받음
+- **소프트 삭제** — `memory_forget`이 기본적으로 소프트 삭제(`status=obsolete` 설정). `memory_forget(key, action: "restore")`로 복원, `action: "soft"`로 숨김, `action: "hard"`로 영구 제거
+- **향상된 건강 감사** — `context_health`가 이제 증거 부족(path_scope가 있는데 파일 없음)과 오래된 주장(같은 카테고리의 겹치는 콘텐츠)을 감지
+- **타입이 있는 그래프 엣지** — 엣지가 유형(`superseded_by`, `supersedes`, `relates`)을 가지며 그래프에서 `type:key`로 작성됨. 명시적 `links`는 `relates:key`가 되어 항목이 어떻게 관련되어 있는지 알 수 있음
+- **RRF 순위** — 리콜이 BM25(×3)와 그래프 중심성 순위를 Reciprocal Rank Fusion과 적응형 `k = clamp(3..60, round(sqrt(n)))`로 융합. 벤치마크(골드 쿼리 8개): nDCG 0.776, MRR 0.917 — 이전 선형 점수와 완전히 동일. 폴백하려면 `rrf: false` 전달
+- **메모리 반성** — `memory_reflect`가 오래됨, 품질, 과도한 연결로 항목을 순위 매겨 주의나 정리가 필요한 항목을 표면화. 결정론적, LLM 불필요
+- **메모리 대체** — `memory_forget(key, action: "supersede", new_key)`가 항목을 더 새 항목으로 대체된 것으로 표시(`superseded_by` 링크 + `supersededOn` 날짜). `memory_recall({ as_of })`는 대체 이전의 시점 쿼리를 위해 이전 항목을 다시 포함
+- **자동 승격** — `memory_promote`가 저신뢰도 초안을 결정론적으로 활성 항목으로 승격(임계값 0.65, Jaccard 중복제거), 기본적으로 `dryRun`
+- **Explain WHY** — `memory_recall`/`memory_smart_recall`이 `explain: true`를 받아 모든 반환 항목에 결정론적 이유 줄을 추가(`↳ 100% 관련성 · 14회 사용 · 오늘 사용됨 · 중요도 HIGH`) — 왜 가져왔는지, LLM 불필요
+- **토큰 예산** — `budget_tokens`가 예상 토큰 수로 리콜 출력을 제한. 항목이 탐욕적으로 누적되고 예산을 초과할 꼬리는 버려짐(`0` = 제한 없음)
+- **버전 대체** — `memory_consolidate(mode: "versions")`가 다른 라이브러리 버전에서 같은 주제를 설명하는 항목(예: "React 18 사용" vs "React 19 사용")을 감지하고 이전 항목을 최신 항목 대신 은퇴시킴
+- **부정적 메모리** — "하지 마세요" 사실을 위한 `warning` 카테고리. `warning` 항목은 리콜 부스트를 받아 에이전트가 지뢰를 반복하기 전에 먼저 볼 수 있음
+- **언어 + 폴더 순위** — 리콜이 같은 문자 체계(latin/CJK/cyrillic/…)로 작성된 항목과 `path_scope`가 현재 파일과 일치하는 항목을 부스트
 
 ---
 
@@ -134,6 +157,53 @@ memory_remember   # 중요한 결정 저장
 
 > **팁:** 세션 시작 시 항상 `memory_recall`을 실행하세요. 이전 세션의 컨텍스트를 즉시 확보할 수 있습니다.
 
+### MCP 클라이언트 빠른 설정
+
+#### Cursor
+
+`.cursor/mcp.json`에 추가:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+#### Claude Desktop
+
+`claude_desktop_config.json`에 추가:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+#### Windsurf
+
+`~/.codeium/windsurf/mcp_config.json`에 추가:
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
 ---
 
 ## 지원하는 에이전트
@@ -164,11 +234,11 @@ memory_remember   # 중요한 결정 저장
 
 | 도구 | 설명 |
 |------|-------------|
-| `memory_remember` | 결정, 패턴, 버그, 또는 지식 저장 (선택적 TTL, 자동 태그 추론, 메모리 그래프 구축을 위한 `links`, 같은 키에서 병합-중복제거, 자동 품질 점수 및 신뢰도) |
-| `memory_recall` | 메모리 검색 (파일 읽기 전 사용, 만료된 TTL 필터링). `mode: "graph"`는 더 정확한 관계 인식 서브그래프를 확장. `compact: true`는 토큰 효율적 숫자 인덱스 형식 반환. 품질 가중 순위. `sessionBias`로 현재 git 브랜치의 항목 부스트 |
-| `memory_smart_recall` | **통합 리콜**: BM25 + 그래프 + 감쇠 + 품질을 하나의 호출로 결합. 모든 작업 시작 시 사용. `sessionBias`로 현재 git 브랜치의 항목 부스트. 컴팩트하고 토큰 효율적인 출력 |
-| `memory_forget` | 키 또는 ID로 항목 삭제 |
-| `memory_stats` | 메모리 상태 확인 (TTL 통계 및 품질 분포 포함, 품질/액세스 임계값 미만의 콜드 메모리) |
+| `memory_remember` | 결정, 패턴, 버그, 지식, 또는 **warning** (부정적인 "하지 마세요" 메모리, 부스트와 함께 리콜됨) 저장 — 선택적 TTL, 자동 태그 추론, 메모리 그래프 구축을 위한 `links`, 같은 키에서 병합-중복제거, 자동 품질 점수 및 신뢰도 |
+| `memory_recall` | 메모리 검색 (파일 읽기 전 사용, 만료된 TTL 필터링). `mode: "graph"`는 더 높은 정확도를 위해 관계 인식 서브그래프를 확장. `budget: "tiny"|"normal"|"deep"`는 출력 상세도를 제어(`compact: true`와 하위 호환). `path_scope`는 glob 패턴으로 필터링. `sessionBias`는 현재 git 브랜치의 항목 부스트. `explain: true`는 항목별 이유 줄(왜 가져왔는지)을 추가. `budget_tokens`는 예상 토큰으로 출력 제한(`0` = 제한 없음). 품질 가중 순위 |
+| `memory_smart_recall` | **통합 리콜**: BM25 + 그래프 + 감쇠 + 품질을 하나의 호출로 결합. `sessionBias`는 현재 git 브랜치의 항목 부스트. `explain: true`는 항목별 이유를 추가하고, `budget_tokens`는 예상 토큰으로 출력 제한. 모든 작업 시작 시 사용. 컴팩트하고 토큰 효율적인 출력 |
+| `memory_forget` | 키 또는 ID로 **라이프사이클 작업**: `action: "soft"`(기본)는 폐기 표시, `"hard"`는 영구 제거, `"restore"`는 활성으로 복원, `"supersede"`는 `new_key`에 대한 `superseded_by` 링크와 함께 은퇴 |
+| `memory_stats` | 메모리 상태 확인 (TTL 통계, 품질 분포, origin/status 구분, 품질/액세스 임계값 미만의 콜드 메모리, 그리고 **적중률 / 중복 / 폐기** 지표 포함) |
 | `memory_summary` | 파일 요약 저장/조회 |
 | `memory_archive` | 오래된 항목(30일 초과) 및 만료된 TTL 항목 아카이브 |
 | `memory_diff` | 특정 날짜 이후 변경사항 표시 (24h, 7d, 또는 정확한 날짜) |
@@ -178,14 +248,14 @@ memory_remember   # 중요한 결정 저장
 | `memory_backup` | 메모리 파일의 타임스탬프 백업 생성 (최근 10개로 자동 정리) |
 | `memory_captured` | 훅에 의해 자동 캡처된 활동 목록 (선택적) 또는 로그 지우기 |
 | `memory_checkpoint` | **세션 체크포인트**: 7d TTL로 현재 메모리 상태의 스냅샷 생성. 긴 세션 중 롤백 참조에 유용 |
-| `memory_consolidate` | **정리 작업** (결정론적, LLM 불필요): `mode: "identical"`(기본) 동일 콘텐츠 항목 중복 제거, `"similar"` 거의 중복(Jaccard >50%) 병합, `"low-quality"` 저품질 항목 일괄 정리(`minQuality`, `dryRun`) |
+| `memory_consolidate` | **정리 작업**, 결정론적(LLM 불필요): `mode: "identical"`(기본) 동일 콘텐츠 항목 중복 제거, `"similar"` 근사 중복(Jaccard >50%) 병합, `"low-quality"` 저품질 항목 일괄 제거(`minQuality`, `dryRun`), `"versions"`는 이전 라이브러리 버전 항목을 최신 항목 대신 은퇴 |
 | `memory_sessions` | 활성 에이전트 세션(브랜치, 파일, 마지막 확인) 및 병렬 작업 시 소프트 충돌 표시 |
-| `memory_compress` | LLM 기반 2단계 압축: 요약 + 덮어쓰기. Anthropic/OpenAI CLI 사용 가능 시 사용 |
+| `memory_compress` | LLM 기반 2단계 압축: 요약 + 덮어쓰기. `anthropic`/`openai` CLI 사용 가능 시 사용, 없으면 수동 압축용 프롬프트 반환 |
 | `memory_primer` | 원 호출 컨텍스트 프라이머: 주요 메모리 + 카테고리 + 세션 파일 변경. 세션 시작 시 자동 주입 |
 | `memory_merge_sessions` | 파일의 병렬 세션 간 관찰 병합. 중복 제거 및 자동 승격 |
 | `memory_export_gist` | 항목을 GitHub Gist(공개/비공개)로 내보내기. GITHUB_TOKEN 또는 gh CLI 사용 |
 | `memory_import_gist` | GitHub Gist에서 항목 가져오기. 기존 항목과 병합(태그 합집합, 최대 신뢰도) |
-| `memory_graph_path` | 지식 그래프에서 두 항목 간의 BFS 최단 경로 |
+| `memory_graph_path` | 지식 그래프에서 두 항목 간의 BFS 최단 경로. 개념이 어떻게 연결되는지 보여줌 |
 | `context_brief` | **원 호출 컨텍스트 브리핑**: 컴팩트 마크다운에 메모리 + 세션 + 건강 상태. 별도의 5-6개 memory_* 호출 대신 사용. LLM 불필요, 순수 결정론적 집계 |
 | `context_generate` | **전체 프로젝트 브리핑**: 프로젝트 구조, git 상태, 메모리 항목, 활성 세션을 하나의 호출로 결합. 5-6개의 수동 도구 호출 대체 |
 | `context_diff` | **증분 브리핑**: git 커밋 + 수정된 파일 + 신규/업데이트된 메모리 + 이전 세션 이후 활성 세션 |
@@ -194,7 +264,7 @@ memory_remember   # 중요한 결정 저장
 | `context_export` | **메모리를 마크다운으로 내보내기**: 시스템 프롬프트용 주입 가능한 컨텍스트 (전체 또는 컴팩트) |
 | `memory_pin` | **우선순위 1-5로 항목 핀 고정**: 핀 고정된 항목은 키워드 일치가 없어도 항상 리콜 결과에서 우선순위별로 정렬되어 먼저 표시됨 |
 | `memory_unpin` | **항목 핀 해제**: 우선순위 플래그 제거 |
-| `memory_search` | **필터가 있는 통합 검색**: `memory_recall`과 동일한 기능에 `category`, `tags`, `from_date`, `to_date` 필터 추가. 태그 필터는 AND 논리 사용 — 지정된 모든 태그가 일치해야 함. `sessionBias`로 현재 git 브랜치의 항목 부스트 |
+| `memory_search` | **필터가 있는 통합 검색**: `memory_recall`과 동일한 기능에 `category`, `tags`, `from_date`, `to_date` 필터 추가. 태그 필터는 AND 논리 사용 — 지정된 모든 태그가 일치해야 함. `budget`은 출력 상세도 제어. `path_scope`는 glob 패턴으로 필터링. `sessionBias`는 현재 git 브랜치의 항목 부스트 |
 | `memory_tag` | **일괄 태그 작업**: 키 또는 ID로 하나 이상의 항목에 태그 추가, 제거 또는 설정 |
 
 ### MCP 리소스
@@ -204,8 +274,15 @@ memory_remember   # 중요한 결정 저장
 | 리소스 | URI | 설명 |
 |----------|-----|-------------|
 | 메모리 항목 | `toon://memory/entries` | 전체 메모리 덤프 |
+| 현재 메모리 | `toon://memory/current` | 최근 항목이 있는 현재 메모리 상태 |
 | 메모리 통계 | `toon://memory/stats` | 카테고리별 개수 및 TTL 정보 |
 | 시스템 프라이머 | `toon://memory/summaries` | 자동 생성 지식 맵 (상위 항목, 카테고리, 패턴) |
+
+### MCP 프롬프트
+
+| 프롬프트 | 설명 |
+|--------|-------------|
+| `summarize_project_context` | 현재 TOON 메모리를 분석하고 컴팩트한 프로젝트 요약을 생성. 특정 영역에 집중하기 위한 선택적 `intent` 매개변수 |
 
 ### 예시
 
@@ -343,6 +420,28 @@ memory_smart_recall({ intent: "diseño de base de datos para backend" })
 
 > **팁:** 모든 작업 시작 시 `memory_smart_recall`을 사용하세요. BM25 + 그래프 + 감쇠 + 품질을 하나의 호출로 결합 — 무엇을 검색할지 추측할 필요가 없습니다.
 
+#### 결과가 반환된 이유(WHY) 설명
+
+```typescript
+memory_recall({ query: "redis", explain: true })
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+//   ↳ 92% relevance · used 14× · used today · importance HIGH
+```
+
+`↳` 이유 줄은 결정론적입니다(관련성 %, 접근 횟수, 마지막 사용, 중요도) — LLM이 관여하지 않습니다. 에이전트에 항목이 *왜* 표시되었는지 알고 싶을 때 `explain: true`를 사용하세요.
+
+#### `budget_tokens`로 출력 제한
+
+```typescript
+memory_recall({ query: "redis", budget_tokens: 300 })
+// Entries accumulate greedily; the tail that would exceed the estimate is dropped.
+// budget_tokens: 0 (default) = no limit.
+```
+
+> **팁:** 메모리 크기와 관계없이 하드 토큰 한도 안에 머무는 컨텍스트 윈도우를 위해 `budget_tokens`를 `budget: "deep"`과 결합하세요.
+
 #### 전체 프로젝트 브리핑 (원 호출)
 
 ```typescript
@@ -389,7 +488,7 @@ context_health({})
 // - src/legacy.ts (deleted, 2 refs)
 ```
 
-> **팁:** 메모리가 지저분하다고 느낄 때 `context_health`를 실행하세요. 고아 링크, 중복, 만료된 TTL 항목, 깨진 파일 참조를 표시합니다.
+> **팁:** 메모리가 지저분하다고 느낄 때 `context_health`를 실행하세요. 고아 링크, 중복, 만료된 TTL 항목, 깨진 파일 참조, 증거 부족 항목(파일 없는 path_scope), 오래된 주장(겹치는 콘텐츠)을 표시합니다.
 
 #### 병합-중복제거 (자동)
 
@@ -430,6 +529,7 @@ memory_remember({
 | 콘텐츠 길이 | 최대 0.3 | 상세 > 모호 |
 | 최신성 | 최대 0.1 | 최근 항목이 더 높은 점수 |
 | 구체성 | 최대 0.1 | 고유 단어 대 반복 단어 |
+| 원점 | +0.1/−0.05 | 인간의 주장은 부스트, 추론은 약간 감점 |
 
 리콜 시 고품질 항목이 먼저 표시됩니다. `memory_stats`로 품질을 확인하세요:
 
@@ -609,7 +709,7 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 - 품질 가중 순위가 가장 유용한 항목이 먼저 나타나도록 합니다.
 - 저장된 `.toon` 파일은 **절대** 변경되지 않습니다 — `compact`는 응답만 재구성합니다.
 
-> **팁:** 대규모 연결된 메모리에서 리콜할 때 가장 작은 컨텍스트 윈도우를 얻으려면 `compact: true`와 `mode: "graph"`를 결합하세요. 또는 자동으로 수행하는 `memory_smart_recall`을 사용하세요.
+> **팁:** 대규모 연결된 메모리에서 리콜할 때 가장 작은 컨텍스트 윈도우를 얻으려면 `compact: true`와 `mode: "graph"`를 결합하세요. 사전/백그라운드 리콜에는 키 + 한 줄(~50토큰)만 반환하는 `budget: "tiny"`을 사용하세요. 또는 이를 자동으로 수행하는 `memory_smart_recall`을 사용하세요.
 
 ### 리콜이 결과를 순위 매기는 방식
 
@@ -641,6 +741,57 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 그런 다음 `memory_remember`가 내장 어휘 외에 이 어휘를 사용하여 새 항목과 매칭하므로, 콘텐츠에서 의존성을 언급하면 해당 태그가 자동으로 첨부됩니다. 더 많은 태그 = 더 높은 품질 점수. 지원하는 매니페스트: `package.json`, `Cargo.toml`, `requirements.txt`, `pyproject.toml`, `go.mod`.
 
 > **팁:** 주요 의존성을 추가한 후 `toon-memory init`을 다시 실행하여 어휘를 새로고치세요. `vocab` 키는 `config.json`의 `encrypted`/`capture` 플래그와 병합됩니다 (덮어쓰지 않음). 더 많은 태그 = 더 높은 품질 점수.
+
+---
+
+## 메모리 그래프 뷰어
+
+메모리를 인터랙티브한 힘-방향 그래프로 시각화하세요. 항목, 연결, 카테고리, 접근 패턴을 한눈에 볼 수 있습니다.
+
+### CLI 뷰어 (독립 HTTP 서버)
+
+```bash
+npx toon-memory viewer          # HTTP 서버 시작 + 브라우저 열기
+npx toon-memory viewer --port 3001  # 사용자 지정 포트
+npx toon-memory viewer --export     # 정적 HTML로 저장
+```
+
+연 후 터미널에서 `r`을 눌러 디스크에서 다시 로드하거나, 브라우저에서 `r` / ↻를 눌러 페이지를 새로고침하세요.
+
+### 인라인 뷰어 (MCP Apps)
+
+MCP Apps 호환 호스트에서 `memory_visualize`를 호출하면 그래프가 인라인으로 렌더링됩니다 — 서버가 필요 없습니다. 뷰어가 채팅 인터페이스 안에 인터랙티브 패널로 나타납니다.
+
+### 기능
+
+| 상호작용 | 설명 |
+|---|---|
+| **노드에 마우스 오버** | 콘텐츠 미리보기, 품질, 접근 횟수가 있는 툴팁 보기 |
+| **노드 클릭** | 선택 + 중앙 정렬 + 이웃 강조 |
+| **노드 더블 클릭** | 상세 패널 열기 |
+| **노드 드래그** | 수동으로 위치 조정 (마우스 오른쪽 클릭으로 고정 해제) |
+| **검색** | 항목 필터링. 일치하는 노드가 빛나며 맥동 |
+| **⇿ 경로 찾기** | 두 노드를 클릭하여 최단 경로 찾기 및 강조 |
+| **확대/축소/이동** | 마우스 휠 또는 +/− 버튼 |
+| **⚙ 물리** | 전하, 링크 거리, 중심 중력 조정 |
+| **테마 전환** | 다크/라이트 모드 (유지됨) |
+| **내보내기** | 그래프를 PNG 또는 SVG로 저장 |
+
+### 스크린샷
+
+| 그래프 보기 | 검색 강조 | 경로 찾기 | 상세 패널 |
+|---|---|---|---|
+| ![전체 그래프](docs/public/viewer/graph-full.png) | ![검색](docs/public/viewer/graph-search.png) | ![경로](docs/public/viewer/graph-path.png) | ![상세](docs/public/viewer/graph-detail.png) |
+
+![뷰어 데모 애니메이션](docs/public/viewer/viewer-demo.gif)
+
+### 직접 스크린샷 캡처하기
+
+```bash
+npm run capture:viewer
+```
+
+[Playwright](https://playwright.dev) (`npx playwright install chromium`)와 `ffmpeg`가 필요합니다.
 
 ---
 
@@ -678,6 +829,7 @@ memory_remember({
 | `pattern` | 관례, 프레임워크, 코딩 스타일 규칙 |
 | `bug` | 수정한 문제와 수정 방법 |
 | `knowledge` | 프로젝트 사실, 도메인 정보, 팀 컨텍스트 |
+| `warning` | "이러지 마세요" — 안티패턴, 지뢰, 피해야 할 실수 (부스트와 함께 리콜됨) |
 
 > **팁:** 너무 걱정하지 마세요. 미래의 자신(또는 에이전트)이 알고 싶어 할 것이라면 저장하세요. 구체적인 태그가 있는 상세한 항목은 품질 점수가 더 높습니다.
 
@@ -702,7 +854,7 @@ tags: "api;rest;versioning"
 
 ### 메모리를 깔끔하게 유지
 
-`memory_archive()`를 매월 실행하여 오래된 항목을 아카이브로 이동하세요. `memory_stats()`를 실행하여 크기와 품질 분포를 확인하세요. 저품질 항목(모호한 콘텐츠, 태그 없음)은 자동으로 리콜 우선순위가 낮아집니다. 중복을 병합하려면 `memory_consolidate`를 사용하세요.
+`memory_archive()`를 매월 실행하여 오래된 항목을 아카이브로 이동하세요. `memory_stats()`를 실행하여 크기와 품질 분포를 확인하세요. 저품질 항목(모호한 콘텐츠, 태그 없음)은 자동으로 리콜 우선순위가 낮아집니다. 중복을 병합하려면 `memory_consolidate`를 사용하고, 더 새로운 라이브러리 버전에 대체된 메모는 `mode: "versions"`로 은퇴시키세요.
 
 ---
 
@@ -716,6 +868,9 @@ npx toon-memory status       # 설치 상태 확인
 npx toon-memory stats        # 메모리 통계 보기
 npx toon-memory export       # 메모리를 JSON으로 내보내기
 npx toon-memory import <file> # JSON에서 메모리 가져오기
+npx toon-memory viewer       # 메모리 그래프 뷰어 열기 (HTTP 서버)
+npx toon-memory viewer --export # 뷰어를 정적 HTML로 저장
+npx toon-memory viewer --port 3001 # 사용자 지정 포트
 npx toon-memory watch [options] # 옵션과 함께 자동 백업
 npx toon-memory upgrade      # 최신 버전으로 업데이트
 npx toon-memory uninstall    # 모든 에이전트에서 제거
@@ -921,10 +1076,10 @@ args = ["-y", "toon-memory", "mcp"]
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
-  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0
-  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.55|1.0
-  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20 (see [[use-zod]])|redis.ts|redis;fix|2026-07-10|7d|0|use-zod|0.70|0.9
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority|path_scope|origin|status}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0||0||agent|active
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.55|1.0||0||agent|active
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20 (see [[use-zod]])|redis.ts|redis;fix|2026-07-10|7d|0|use-zod|0.70|0.9||0||agent|active
 summaries:
   src/services/redis.ts: Redis connection pool with retry logic
 ```
@@ -967,7 +1122,7 @@ TOON (Token-Oriented Object Notation)은 LLM을 위해 설계되었습니다:
 - **더 나은 LLM 이해도** — AI 소비를 위한 구조화
 - **품질 및 신뢰도** — 모든 항목이 구조 품질(0–1)과 신뢰성(0–1)을 자동으로 추적
 
-> **팁:** 적은 토큰 =更快 응답 + 더 낮은 API 비용. 에이전트는 매 세션 시작 시 메모리 파일을 읽으므로 효율성이 중요합니다.
+> **팁:** 적은 토큰 = 더 빠른 응답 + 더 낮은 API 비용. 에이전트는 매 세션 시작 시 메모리 파일을 읽으므로 효율성이 중요합니다.
 
 ---
 
@@ -1075,6 +1230,33 @@ context_export (주입 가능 md)      1,178     218    81.5%   3 → 1
 
 > **팁:** `memory_smart_recall`은 BM25 + 그래프 + 품질을 하나의 호출로 결합하여 토큰과 도구 호출 오버헤드를 모두 절약합니다. 모든 작업 시작 시 사용하세요.
 
+### RRF 순위 벤치마크 (측정)
+
+v3.7.0부터 리콜은 BM25(×3)와 그래프 중심성 순위를 **Reciprocal Rank Fusion**으로 순위를 매기며, 적응형 `k = clamp(3..60, round(sqrt(n)))`를 사용합니다. 손으로 라벨링된 관련성을 가진 골드 표준 쿼리 8개로 측정했습니다 (`scripts/bench-rrf.mjs`, `npm run bench:rrf` 참조):
+
+```
+Metric        linear (v3.6.x)     RRF (v3.7.0)
+────────────  ─────────────────   ────────────────
+nDCG@10       0.776               0.776   (parity)
+MRR           0.917               0.917   (parity)
+```
+
+RRF는 **순위 비용 제로**로 이전 선형 가중 점수와 일치하면서 점수 파이프라인을 단순화합니다 (BM25×3 + 중심성, 중요도/최신성 노이즈 없음). 그래프 모드의 대체가 존중됩니다: 폐기된 항목은 `as_of` 시점 쿼리를 제외하고 계속 제외됩니다.
+
+### 리콜 벤치마크 (LongMemEval 스타일, 측정)
+
+v4.1.0부터 리콜은 **실제 프로젝트 메모리의 고정 스냅샷**에 대해 벤치마크됩니다 — 손으로 작성한 골드 쿼리가 있는 LongMemEval 스타일 테스트 세트. 코퍼스: 실제 `data.toon` 항목 187개(스냅샷 `2026-08-01`), 6개 카테고리의 골드 쿼리 42개(core-fact, temporal, knowledge-updating, multi-hop, meta/session, distractor). 측정 코드는 esbuild로 인메모리 번들링된 **프로덕션 파이프라인**(`src/lib`)입니다 — 원본 복사본이 아닙니다. 결정론적 `today` 매개변수가 최신성/감쇠를 고정하여 결과가 벽시계에 따라 흔들리지 않습니다. 실행은 읽기 전용입니다(접근 추적 없음). 데이터 파일 자체를 설명하는 우선순위 메타 항목 2개는 제외됩니다. `benchmarks/retrieval-corpus.toon`, `benchmarks/gold-queries.json`(`npm run bench:retrieval`) 참조:
+
+```
+Mode            R@5     nDCG@5  MRR@5   answerable
+─────────────   ─────   ─────   ─────   ──────────
+linear         0.643   0.654   0.776   81.0%
+rrf            0.861   0.764   0.788   97.6%
+smart (unified) 0.829  0.739   0.760   92.5%
+```
+
+RRF가 최상위 모드입니다 (0.861 R@5, 쿼리의 97.6%가 상위 5개에서 답변 가능). `memory_smart_recall`은 단일 호출로 경쟁력을 유지합니다.
+
 ---
 
 ## 문제 해결
@@ -1167,7 +1349,18 @@ toon-memory/
 │   │   ├── setup.ts             # CLI 명령어
 │   │   └── toon-memory.ts       # CLI 러너
 │   ├── mcp/
-│   │   └── server.ts            # MCP 서버 (35개 도구 + 4개 리소스)
+│   │   ├── server.ts            # MCP 서버 (도구 35개 + 리소스 4개 + 프롬프트 1개)
+│   │   ├── tools.ts             # 도구 등록 (도구 35개)
+│   │   ├── resources.ts         # 리소스 등록 (리소스 4개)
+│   │   ├── prompts.ts           # 프롬프트 등록 (프롬프트 1개)
+│   │   ├── session-store.ts     # 세션 계층 (자동 승격, 정리)
+│   │   ├── memory-io.ts         # 메모리 파일 읽기/쓰기
+│   │   ├── entries.ts           # 항목 파싱 및 유틸리티
+│   │   ├── scoring.ts           # 항목 점수 및 접근 추적
+│   │   ├── archive.ts           # 아카이브 관리
+│   │   ├── consolidation.ts     # 중복 통합
+│   │   ├── config.ts            # 설정 로드 및 저장
+│   │   └── crypto.ts            # AES-256-GCM 암호화
 │   ├── lib/
 │   │   ├── lock.ts              # 조언 파일 잠금 + 원자적 쓰기
 │   │   ├── sessions.ts          # 다세션 협업
@@ -1200,6 +1393,20 @@ toon-memory/
 3. 변경사항 커밋 (`git commit -m 'feat: add amazing feature'`)
 4. 브랜치에 푸시 (`git push origin feature/amazing-feature`)
 5. 풀 리퀘스트 열기
+
+---
+
+## 보안 및 개인정보
+
+toon-memory는 보안과 개인정보 보호를 핵심 원칙으로 설계되었습니다.
+
+- **100% 로컬 저장** — 모든 메모리는 `.toon-memory/memory/`의 로컬 머신에 저장됩니다. 데이터가 외부 서버, 클라우드 서비스, 제3자에게 전송되지 않습니다.
+- **텔레메트리 없음** — 이 프로젝트는 어떤 종류의 텔레메트리, 분석, 추적도 없습니다. 사용 데이터가 수집되지 않습니다.
+- **원격 코드 실행 없음** — toon-memory는 stdio를 통한 표준 MCP 서버로 실행됩니다. 원격 코드를 다운로드, 실행, 평가하지 않습니다.
+- **저장 데이터 암호화** — 전체 메모리 파일에 대한 선택적 AES-256-GCM 암호화. `memory_encrypt`로 활성화(`TOON_MEMORY_KEY` 환경 변수 필요).
+- **암호화 키는 저장되지 않음** — 암호화 키는 환경 변수로 제공되어야 하며 toon-memory가 영구 저장하지 않습니다. 분실하면 데이터를 복구할 수 없습니다.
+- **프로젝트별 격리** — 각 프로젝트는 고유한 격리된 메모리 파일을 가집니다. 메모리는 프로젝트 간에 유출되지 않습니다.
+- **자동 `.gitignore`** — 설치기가 `.toon-memory/memory/`를 `.gitignore`에 추가하여 메모리 데이터의 우발적 커밋을 방지합니다.
 
 ---
 

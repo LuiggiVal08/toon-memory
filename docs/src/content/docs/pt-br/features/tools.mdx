@@ -16,17 +16,17 @@ O toon-memory fornece 35 ferramentas MCP e 4 recursos MCP para gerenciar memóri
 
 | Ferramenta | Descrição |
 |------------|-----------|
-| `memory_remember` | Salva uma decisão, padrão, bug ou conhecimento (TTL opcional, inferência automática de tags, `links`, pontuação de qualidade automática, merge-dedup, confiança) |
-| `memory_recall` | Busca na memória (use ANTES de ler arquivos, filtra TTL expirado). `mode: "graph"` expande um subgrafo consciente de relacionamentos para maior precisão. O ranking usa fusão RRF (BM25×3 + centralidade do grafo, k adaptativo); use `rrf: false` para o score linear legado. `as_of` re-inclui entradas superseded depois de uma data específica |
+| `memory_remember` | Salva uma decisão, padrão, bug, conhecimento ou **warning** (memória negativa "NÃO faça isso", recuperada com impulso) (TTL opcional, inferência automática de tags, `links`, pontuação de qualidade automática, merge-dedup, confiança) |
+| `memory_recall` | Busca na memória (use ANTES de ler arquivos, filtra TTL expirado). `mode: "graph"` expande um subgrafo consciente de relacionamentos para maior precisão. O ranking usa fusão RRF (BM25×3 + centralidade do grafo, k adaptativo); use `rrf: false` para o score linear legado. `sessionBias` impulsiona entradas do branch git atual. `pathScope` limita os resultados a um caminho de arquivo (suporta globMatch). `budget`: `"tiny"` (top 3), `"normal"` (top 10) ou `"deep"` (top 20). `as_of` re-inclui entradas superseded depois de uma data específica. `explain: true` anexa uma linha de motivo por entrada (por que foi recuperada). `budget_tokens` limita a saída por contagem de tokens estimada (`0` = sem limite) |
 | `memory_forget` | Remove uma entrada por chave ou id |
-| `memory_stats` | Visualiza o estado da memória (incluindo estatísticas de TTL e distribuição de qualidade) |
+| `memory_stats` | Visualiza o estado da memória (incluindo estatísticas de TTL, distribuição de qualidade, memórias frias abaixo dos limiares de qualidade/acesso e métricas de **hit-rate/duplicatas/obsoletas**: % de entradas recuperadas pelo menos uma vez, % de duplicatas de conteúdo exato, % de entradas obsoletas) |
 | `memory_summary` | Salva/recupera resumos de arquivos |
 | `memory_archive` | Arquiva entradas antigas (>30 dias) e entradas com TTL expirado |
 | `memory_diff` | Mostra mudanças desde uma data (24h, 7d ou data exata) |
 | `memory_suggest` | Encontra entradas relacionadas para um dado contexto |
 | `memory_captured` | Lista atividade capturada automaticamente por hooks (ativação opcional) ou limpa o log |
 | `memory_checkpoint` | **Ponto de verificação**: cria um snapshot do estado atual da memória com TTL de 7d. Útil para referência de rollback durante sessões longas |
-| `memory_consolidate` | Remove duplicatas com conteúdo idêntico e mescla atributos (determinístico, sem LLM) |
+| `memory_consolidate` | **Operações de limpeza**, determinísticas (sem LLM): `mode: "identical"` (padrão) deduplica entradas com conteúdo idêntico, `"similar"` mescla quase-duplicatas (Jaccard >50%), `"low-quality"` comprime em lote entradas de baixa qualidade (`minQuality`, `dryRun`), `"versions"` detecta entradas descrevendo o mesmo assunto em versões diferentes de bibliotecas e aposenta as mais antigas em favor da mais nova |
 | `memory_encrypt` | Ativa criptografia AES-256-GCM |
 | `memory_decrypt` | Desativa criptografia |
 | `memory_backup` | Cria backup com timestamp do arquivo de memória (poda automática para os 10 mais recentes) |
@@ -37,7 +37,7 @@ O toon-memory fornece 35 ferramentas MCP e 4 recursos MCP para gerenciar memóri
 | `context_focus` | **Briefing hiper-focado**: apenas memória relevante + arquivos-fonte relacionados + chamadores + arquivos de teste para uma consulta |
 | `context_health` | **Auditoria de saúde da memória**: links órfãos, duplicatas, referências quebradas a arquivos, TTL expirado, sessões obsoletas, pontuação 0–100 |
 | `context_export` | **Exporta memória como markdown**: contexto injetável para system prompts (completo ou compacto) |
-| `memory_smart_recall` | Busca unificada: BM25 + grafo + qualidade + atualidade + decaimento em uma chamada |
+| `memory_smart_recall` | Busca unificada: BM25 + grafo + qualidade + atualidade + decaimento + viés de sessão em uma chamada. `explain: true` anexa motivos por entrada; `budget_tokens` limita a saída |
 | `memory_pin` | **Pin an entry**: pinned entries always appear at the top of recall results, even without a keyword match |
 | `memory_unpin` | **Unpin an entry**: remove the pinned flag |
 | `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
@@ -118,6 +118,28 @@ memory_recall({ query: "redis" })
 ```
 
 Os resultados são ponderados por qualidade — entradas com mais detalhes, tags e links aparecem primeiro.
+
+### Explicar POR QUE um resultado foi retornado
+
+```typescript
+memory_recall({ query: "redis", explain: true })
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+//   ↳ 92% relevance · used 14× · used today · importance HIGH
+```
+
+A linha de motivo `↳` é determinística (relevância %, contagem de acessos, último uso, importância) — sem LLM envolvido. Use `explain: true` quando quiser saber *por que* o agente viu essas entradas.
+
+### Limitar a saída com `budget_tokens`
+
+```typescript
+memory_recall({ query: "redis", budget_tokens: 300 })
+// Entradas acumulam de forma gulosa; a cauda que excederia a estimativa é descartada.
+// budget_tokens: 0 (padrão) = sem limite.
+```
+
+> **Dica:** Combine `budget_tokens` com `budget: "deep"` para uma janela de contexto que permaneça dentro de um teto rígido de tokens, independentemente do tamanho da memória.
 
 ### Busca com filtro de data
 
@@ -283,16 +305,18 @@ O que `compact` muda:
 
 ### Como o recall classifica os resultados
 
-O recall é determinístico e offline (sem embeddings, sem LLM). Cada entrada candidata recebe uma pontuação combinada de:
+O recall é determinístico e offline (sem embeddings, sem LLM). Desde a v3.7.0, o ranking padrão é **RRF (Reciprocal Rank Fusion)**:
 
-- **Relevância BM25** — pontuação probabilística de frequência de termo sobre `id` + `category` + `key` + `content` + `file` + `tags`.
-- **Centralidade do grafo** — normalizada por grau (0..1); um hub conectado a muitas entradas pontua próximo de 1, então aparece mesmo sem a palavra da busca.
-- **Importância** — atualidade + frequência de acesso.
-- **Bônus de qualidade** — entradas com pontuações de qualidade mais altas (mais tags, links, detalhes) recebem um impulso no ranking.
-- **Bônus de semente** — entradas que correspondem diretamente à busca recebem um impulso fixo.
-- **Decaimento por hop** — nós a `hops` distância de uma semente são multiplicados por `0.5^d`, mantendo contexto distante abaixo do contexto próximo.
+- **Relevância BM25** — pontuação probabilística de frequência de termo sobre `id` + `category` + `key` + `content` + `file` + `tags`, fundida **três vezes** (o único recuperador real em um grafo de memória pequeno).
+- **Centralidade do grafo** — normalizada por grau (0..1), fundida uma vez: um hub conectado a muitas entradas pontua perto do topo mesmo sem a palavra da busca.
+- **`k` adaptativo** — `k = clamp(3..60, round(sqrt(n)))`, onde `n` é a contagem de candidatos. O `k=60` da literatura achata as diferenças de ranking em grafos pequenos, então ele escala com `sqrt(n)`.
+- **Decaimento por hop** — nós a `d` hops de uma semente são multiplicados por `0.5^d`, mantendo contexto distante abaixo do contexto próximo.
+- **Viés de sessão** — entradas cujo arquivo aparece na sessão atual recebem um impulso de 1.15×.
+- **Família de idioma** — entradas escritas na mesma escrita (latim/CJK/cirílico/…) que a consulta recebem +0.1 via `languageFamily()`.
+- **Correspondência de pasta** — entradas cujo `path_scope` corresponde ao arquivo atual recebem +0.05.
+- **Prioridade** — entradas fixadas (pinned) classificam primeiro, independentemente da pontuação.
 
-No modo `graph`, o recall inicia nas correspondências de palavras-chave, expande o ego-subgrafo até `hops`, e retorna as top `limit` (padrão 6) por pontuação combinada. O `memory_smart_recall` combina todos esses sinais em uma chamada.
+Passe `rrf: false` para voltar ao score linear ponderado legado (BM25 + 0.4·centralidade + 0.25·importância + bônus de semente). No modo `graph`, o recall inicia nas correspondências de palavras-chave, expande o ego-subgrafo até `hops`, e retorna as top `limit` (padrão 6) por pontuação combinada. O `memory_smart_recall` combina todos esses sinais em uma chamada.
 
 ### Smart recall (`memory_smart_recall`)
 
@@ -357,3 +381,4 @@ As entradas são organizadas por categoria:
 | `pattern` | Padrões do projeto ("Usa Zod para validação") |
 | `bug` | Correções de bug ("Esgotamento do pool Redis") |
 | `knowledge` | Conhecimento geral ("Broker usa RESP") |
+| `warning` | "NÃO faça isso" — antipadrões, armadilhas, erros a evitar (recuperado com impulso +0.2) |

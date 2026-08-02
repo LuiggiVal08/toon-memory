@@ -16,17 +16,17 @@ toon-memory는 영구 메모리를 관리하기 위한 35개의 MCP 도구와 4�
 
 | 도구 | 설명 |
 |------|------|
-| `memory_remember` | 결정, 패턴, 버그 또는 지식 저장 (선택적 TTL, 자동 태그 추론, `links`, 자동 품질 점수, 중복 병합, 신뢰도) |
-| `memory_recall` | 메모리 검색 (파일 읽기 전에 사용, 만료된 TTL 필터링). `mode: "graph"`는 더 높은 정확도를 위해 관계 인식 서브그래프를 확장합니다. 순위는 RRF 융합(BM25×3 + 그래프 중심성, 적응형 k)을 사용합니다. `rrf: false`로 기존 선형 점수를 사용할 수 있습니다. `as_of`는 특정 날짜 이후에 superseded된 항목을 다시 포함합니다 |
+| `memory_remember` | 결정, 패턴, 버그, 지식 또는 **warning**("하지 마세요" 부정적 메모리, 리콜 부스트 포함) 저장 (선택적 TTL, 자동 태그 추론, `links`, 자동 품질 점수, 중복 병합, 신뢰도) |
+| `memory_recall` | 메모리 검색 (파일 읽기 전에 사용, 만료된 TTL 필터링). `mode: "graph"`는 더 높은 정확도를 위해 관계 인식 서브그래프를 확장합니다. 순위는 RRF 융합(BM25×3 + 그래프 중심성, 적응형 k)을 사용합니다. `rrf: false`로 기존 선형 점수를 사용할 수 있습니다. `sessionBias`는 현재 git 브랜치의 항목에 부스트를 줍니다. `pathScope`는 결과를 파일 경로로 제한합니다 (globMatch 지원). `budget`: `"tiny"`(상위 3), `"normal"`(상위 10) 또는 `"deep"`(상위 20). `as_of`는 특정 시점 이후에 superseded된 항목을 다시 포함합니다. `explain: true`는 항목별 이유 줄을 추가합니다 (왜 가져왔는지). `budget_tokens`는 예상 토큰 수로 출력을 제한합니다 (`0` = 제한 없음) |
 | `memory_forget` | 키 또는 id로 항목 삭제 |
-| `memory_stats` | 메모리 상태 확인 (TTL 통계 및 품질 분포 포함) |
+| `memory_stats` | 메모리 상태 확인 (TTL 통계, 품질 분포, 품질/접근 임계값 아래의 콜드 메모리와 함께 **적중률/중복/폐기** 지표: 최소 1회 리콜된 항목 %, 완전 동일 콘텐츠 %, obsolete 항목 % 포함) |
 | `memory_summary` | 파일 요약 저장/조회 |
 | `memory_archive` | 오래된 항목 (>30일) 및 만료된 TTL 항목 아카이브 |
 | `memory_diff` | 특정 날짜 이후 변경 사항 표시 (24h, 7d 또는 정확한 날짜) |
 | `memory_suggest` | 주어진 컨텍스트와 관련된 항목 검색 |
 | `memory_captured` | 훅이 자동으로 캡처한 활동 목록 (선택 사항) 또는 로그 지우기 |
 | `memory_checkpoint` | **세션 체크포인트**: 7d TTL로 현재 메모리 상태의 스냅샷 생성. 긴 세션 중 롤백 참조에 유용 |
-| `memory_consolidate` | 동일한 내용의 항목 중복 제거 및 속성 병합 (결정론적, LLM 없음) |
+| `memory_consolidate` | **정리 작업**, 결정론적 (LLM 없음): `mode: "identical"`(기본값)은 동일한 내용의 항목 중복을 제거하고, `"similar"`는 유사한 중복(Jaccard >50%)을 병합하며, `"low-quality"`는 저품질 항목을 일괄 압축합니다(`minQuality`, `dryRun`), `"versions"`는 다른 라이브러리 버전에서 같은 주제를 설명하는 항목을 감지하고 이전 항목을 최신 항목 대신 은퇴시킵니다 |
 | `memory_encrypt` | AES-256-GCM 암호화 활성화 |
 | `memory_decrypt` | 암호화 비활성화 |
 | `memory_backup` | 메모리 파일의 타임스탬프 백업 생성 (최근 10개로 자동 정리) |
@@ -37,7 +37,7 @@ toon-memory는 영구 메모리를 관리하기 위한 35개의 MCP 도구와 4�
 | `context_focus` | **하이퍼 초점 브리핑**: 쿼리에 관련된 메모리 + 소스 파일 + 호출자 + 테스트 파일만 |
 | `context_health` | **메모리 상태 감사**: 고아 링크, 중복, 깨진 파일 참조, 만료된 TTL, 오래된 세션, 점수 0-100 |
 | `context_export` | **메모리를 마크다운으로 내보내기**: 시스템 프롬프트용 주입 가능한 컨텍스트 (전체 또는 압축) |
-| `memory_smart_recall` | 통합 검색: BM25 + 그래프 + 품질 + 신선도 + 감쇠를 하나의 호출로 결합 |
+| `memory_smart_recall` | 통합 검색: BM25 + 그래프 + 품질 + 신선도 + 감쇠 + 세션 편향을 하나의 호출로 결합. `explain: true`로 항목별 이유를 추가하고 `budget_tokens`로 출력 상한을 지정할 수 있습니다 |
 | `memory_pin` | **Pin an entry**: pinned entries always appear at the top of recall results, even without a keyword match |
 | `memory_unpin` | **Unpin an entry**: remove the pinned flag |
 | `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
@@ -118,6 +118,28 @@ memory_recall({ query: "redis" })
 ```
 
 결과는 품질 가중치가 적용됩니다 — 더 많은 상세 내용, 태그 및 링크가 있는 항목이 먼저 표시됩니다.
+
+### 결과가 반환된 이유 설명
+
+```typescript
+memory_recall({ query: "redis", explain: true })
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+//   ↳ 92% relevance · used 14× · used today · importance HIGH
+```
+
+`↳` 이유 줄은 결정론적입니다 (관련성 %, 접근 횟수, 마지막 사용 시각, 중요도) — LLM이 관여하지 않습니다. 에이전트가 해당 항목을 *왜* 보여주는지 알고 싶을 때 `explain: true`를 사용하세요.
+
+### `budget_tokens`로 출력 제한
+
+```typescript
+memory_recall({ query: "redis", budget_tokens: 300 })
+// 항목은 탐욕적으로 누적되며 예상치를 초과하는 꼬리는 버려집니다.
+// budget_tokens: 0 (기본값) = 제한 없음.
+```
+
+> **팁:** 메모리 크기와 무관하게 하드 토큰 상한 안에 들어가는 컨텍스트 창을 위해 `budget_tokens`와 `budget: "deep"`을 함께 사용하세요.
 
 ### 날짜 필터로 검색
 
@@ -291,6 +313,8 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 - **품질 부스트** — 더 높은 품질 점수를 가진 항목(더 많은 태그, 링크, 세부 사항)은 순위 부스트를 받음
 - **시드 보너스** — 쿼리와 직접 매칭되는 항목은 고정 부스트를 받음
 - **홉당 감쇠** — 시드에서 `d`홉 떨어진 노드는 `0.5^d`를 곱하여 원격 컨텍스트가 근처 컨텍스트보다 낮게 유지됨
+- **언어 패밀리** — 쿼리와 같은 문자 체계(latin/CJK/cyrillic/…)로 작성된 항목에 `languageFamily()`로 +0.1 부스트
+- **폴더 매치** — `path_scope`가 현재 파일과 일치하는 항목에 +0.05 부스트
 
 `graph` 모드에서 검색은 키워드 매칭을 시드로 하고, `hops`까지 이고 서브그래프를 확장한 다음 결합 점수 기준 상위 `limit`(기본값 6)을 반환합니다. `memory_smart_recall`은 이 모든 신호를 하나의 호출로 결합합니다.
 
@@ -357,3 +381,4 @@ memory_smart_recall({ intent: "redis cache configuration", hops: 2 })
 | `pattern` | 프로젝트 패턴 ("검증에 Zod 사용") |
 | `bug` | 버그 수정 ("Redis 풀 고갈") |
 | `knowledge` | 일반 지식 ("브로커가 RESP 사용") |
+| `warning` | "하지 마세요" — 안티패턴, 지뢰, 피해야 할 실수 (+0.2 리콜 부스트로 리콜) |

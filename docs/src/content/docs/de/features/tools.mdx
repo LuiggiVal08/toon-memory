@@ -16,17 +16,17 @@ toon-memory bietet 35 MCP-Tools und 4 MCP-Ressourcen zur Verwaltung des persiste
 
 | Tool | Beschreibung |
 |------|-------------|
-| `memory_remember` | Speichere eine Entscheidung, ein Muster, einen Bug oder Wissen (optionales TTL, automatische Tag-Inferenz, `links`, automatischer Qualitätsscore, Merge-Deduplizierung, Konfidenz) |
-| `memory_recall` | Durchsuche den Speicher (VOR dem Lesen von Dateien verwenden, filtert abgelaufene TTL). `mode: "graph"` erweitert einen beziehungsbewussten Subgraphen für höhere Präzision. Die Rangfolge nutzt RRF-Fusion (BM25×3 + Graph-Zentralität, adaptives k); mit `rrf: false` wird der alte lineare Score verwendet. `as_of` schließt Einträge wieder ein, die nach einem bestimmten Datum superseded wurden |
+| `memory_remember` | Speichere eine Entscheidung, ein Muster, einen Bug, Wissen oder **warning** (negative „Tu das NICHT"-Erinnerung, mit Recall-Boost) (optionales TTL, automatische Tag-Inferenz, `links`, automatischer Qualitätsscore, Merge-Deduplizierung, Konfidenz) |
+| `memory_recall` | Durchsuche den Speicher (VOR dem Lesen von Dateien verwenden, filtert abgelaufene TTL). `mode: "graph"` erweitert einen beziehungsbewussten Subgraphen für höhere Präzision. Die Rangfolge nutzt RRF-Fusion (BM25×3 + Graph-Zentralität, adaptives k); mit `rrf: false` wird der alte lineare Score verwendet. `sessionBias` boostet Einträge aus dem aktuellen Git-Branch. `pathScope` begrenzt die Ergebnisse auf einen Dateipfad (unterstützt globMatch). `budget`: `"tiny"` (Top 3), `"normal"` (Top 10) oder `"deep"` (Top 20). `as_of` schließt Einträge wieder ein, die nach einem bestimmten Datum superseded wurden. `explain: true` hängt jedem Eintrag eine Begründungszeile an, warum er abgerufen wurde. `budget_tokens` begrenzt die Ausgabe nach geschätzter Token-Anzahl (`0` = kein Limit) |
 | `memory_forget` | Entferne einen Eintrag per Schlüssel oder ID |
-| `memory_stats` | Zeige den Speicherzustand an (einschließlich TTL-Statistiken und Qualitätsverteilung) |
+| `memory_stats` | Zeige den Speicherzustand an (einschließlich TTL-Statistiken, Qualitätsverteilung, kalten Erinnerungen unterhalb der Qualitäts-/Zugriffsschwellen sowie **Hit-Rate-/Duplikat-/Veraltet-Metriken** (% mindestens einmal abgerufener Einträge, % exakter Inhaltsduplikate, % obsoleter Einträge)) |
 | `memory_summary` | Speichere/rufe Dateizusammenfassungen ab |
 | `memory_archive` | Archiviere alte Einträge (>30 Tage) und abgelaufene TTL-Einträge |
 | `memory_diff` | Zeige Änderungen seit einem Datum (24h, 7d oder exaktes Datum) |
 | `memory_suggest` | Finde verwandte Einträge für einen Kontext |
 | `memory_captured` | Liste automatisch erfasste Hook-Aktivitäten (Opt-in) oder lösche das Protokoll |
 | `memory_checkpoint` | **Sitzungs-Checkpoint**: erstellt eine Momentaufnahme des aktuellen Speicherzustands mit 7d TTL. Nützlich als Rollback-Referenz während langer Sitzungen |
-| `memory_consolidate` | Dedupliziere Einträge mit identischem Inhalt und merge Attribute (deterministisch, kein LLM) |
+| `memory_consolidate` | **Bereinigungsoperationen**, deterministisch (kein LLM): `mode: "identical"` (Standard) dedupliziert Einträge mit identischem Inhalt, `"similar"` merge nahe Duplikate (Jaccard >50%), `"low-quality"` komprimiert Einträge niedriger Qualität in Stapeln (`minQuality`, `dryRun`), `"versions"` erkennt Einträge, die dasselbe Thema in verschiedenen Bibliotheksversionen beschreiben und archiviert die älteren zugunsten der neuesten |
 | `memory_encrypt` | Aktiviere AES-256-GCM-Verschlüsselung |
 | `memory_decrypt` | Deaktiviere Verschlüsselung |
 | `memory_backup` | Erstelle eine zeitgestempelte Sicherungskopie der Speicherdatei (automatische Begrenzung auf 10 neueste) |
@@ -37,7 +37,7 @@ toon-memory bietet 35 MCP-Tools und 4 MCP-Ressourcen zur Verwaltung des persiste
 | `context_focus` | **Hyperfokussiertes Briefing**: Nur relevanter Speicher + zugehörige Quelldateien + Aufrufer + Testdateien für eine Anfrage |
 | `context_health` | **Speicher-Gesundheitsaudit**: Verwaiste Verweise, Duplikate, defekte Dateiverweise, abgelaufene TTL, veraltete Sitzungen, Score 0–100 |
 | `context_export` | **Speicher als Markdown exportieren**: Injizierbarer Kontext für System-Prompts (vollständig oder kompakt) |
-| `memory_smart_recall` | Einheitliche Suche: BM25 + Graph + Qualität + Aktualität + Abfall in einem Aufruf |
+| `memory_smart_recall` | Einheitliche Suche: BM25 + Graph + Qualität + Aktualität + Abfall in einem Aufruf. `explain: true` liefert Begründungen pro Eintrag; `budget_tokens` begrenzt die Ausgabe nach geschätzter Token-Anzahl (`0` = kein Limit) |
 | `memory_pin` | **Eintrag anheften**: angeheftete Einträge erscheinen immer oben in den Ergebnissen, auch ohne Keyword-Übereinstimmung |
 | `memory_unpin` | **Eintrag lösen**: entfernt die Anheft-Markierung eines Eintrags |
 | `memory_search` | **Einheitliche Suche mit Filtern**: wie `memory_recall` plus Kategorie-, Tag- und Datumsbereichs-Filter |
@@ -118,6 +118,28 @@ memory_recall({ query: "redis" })
 ```
 
 Ergebnisse sind qualitätsgewichtet — Einträge mit mehr Details, Tags und Links erscheinen zuerst.
+
+### Warum ein Ergebnis zurückgegeben wurde
+
+```typescript
+memory_recall({ query: "redis", explain: true })
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+//   ↳ 92% relevance · used 14× · used today · importance HIGH
+```
+
+Die `↳`-Begründungszeile ist deterministisch (Relevanz %, Zugriffszähler, zuletzt verwendet, Wichtigkeit) — kein LLM beteiligt. Verwende `explain: true`, wenn du wissen möchtest, *warum* dem Agenten diese Einträge gezeigt wurden.
+
+### Ausgabe mit `budget_tokens` begrenzen
+
+```typescript
+memory_recall({ query: "redis", budget_tokens: 300 })
+// Entries accumulate greedily; the tail that would exceed the estimate is dropped.
+// budget_tokens: 0 (default) = no limit.
+```
+
+> **Tipp:** Kombiniere `budget_tokens` mit `budget: "deep"` für ein Kontextfenster, das unabhängig von der Speichergröße innerhalb einer harten Token-Grenze bleibt.
 
 ### Suche mit Datumsfilter
 
@@ -291,6 +313,8 @@ Recall ist deterministisch und offline (keine Embeddings, kein LLM). Jeder Kandi
 - **Qualitäts-Boost** — Einträge mit höheren Qualitätsscores (mehr Tags, Links, Details) erhalten einen Rangboost.
 - **Samen-Bonus** — Einträge, die direkt mit der Anfrage übereinstimmen, erhalten einen festen Bonus.
 - **Per-Hop-Abfall** — Knoten, die `d` Hops vom Samen entfernt sind, werden mit `0.5^d` multipliziert, wodurch ferner Kontext unter nahem Kontext bleibt.
+- **Sprach-Familie** — Einträge, die in derselben Schrift (lateinisch/CJK/kyrillisch/…) wie die Query geschrieben sind, erhalten +0.1 Boost via `languageFamily()`.
+- **Ordner-Abgleich** — Einträge, deren `path_scope`-Ordner zur aktuellen Datei passt, erhalten +0.05 Boost.
 
 Im `graph`-Modus startet Recall mit Stichwortübereinstimmungen, erweitert den Ego-Subgraphen bis `hops` und liefert die Top-`limit` (Standard 6) nach kombiniertem Score. `memory_smart_recall` kombiniert all diese Signale in einem Aufruf.
 
@@ -357,3 +381,4 @@ Einträge sind nach Kategorie organisiert:
 | `pattern` | Projekt-Muster („Verwendet Zod für Validierung") |
 | `bug` | Bug-Fixes („Redis-Pool-Erschöpfung") |
 | `knowledge` | Allgemeines Wissen („Broker verwendet RESP") |
+| `warning` | „Tu das NICHT" — Anti-Patterns, Minen, zu vermeidende Fehler (mit +0.2 Recall-Boost) |

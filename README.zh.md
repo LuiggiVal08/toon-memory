@@ -8,6 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml/badge.svg)](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-online-blue)](https://luiggival08.github.io/toon-memory/)
+[![MCP Badge](https://lobehub.com/badge/mcp/luiggival08-toon-memory)](https://lobehub.com/mcp/luiggival08-toon-memory)
 
 ---
 
@@ -30,6 +31,7 @@
 - [常见问题](#常见问题)
 - [开发](#开发)
 - [参与贡献](#参与贡献)
+- [安全与隐私](#安全与隐私)
 - [许可证](#许可证)
 
 ---
@@ -63,7 +65,7 @@
 
 ## 功能特性
 
-- **35 个 MCP 工具** — 通过 Model Context Protocol 实现完整的记忆管理，包括 `memory_smart_recall`（统一召回）、`memory_sessions`（多会话协调）以及 `context_*` 系列工具（一键生成上下文：简报、差异、聚焦、健康审计、导出）
+- **35 个 MCP 工具** — 通过 Model Context Protocol 实现完整的记忆管理，包括 `memory_smart_recall`（带会话偏置的统一召回）、`memory_sessions`（多会话协调）、`context_*` 系列工具（一键生成上下文：简报、差异、聚焦、健康审计、导出）、`memory_compress`（LLM 驱动的压缩）、`memory_consolidate`（确定性去重/合并/清理）、`memory_primer`（自动注入的上下文）、`memory_merge_sessions`（跨会话合并）、`memory_pin`/`memory_unpin`（以 1-5 优先级固定重要条目）、`memory_checkpoint`（带 7 天 TTL 的会话快照）、`memory_search`（带标签过滤 + 会话偏置的统一搜索）、`memory_tag`（批量标签操作）、`memory_export_gist`/`memory_import_gist`（GitHub Gist 同步）、`memory_forget`（软/硬删除、恢复、取代）、`memory_reflect`（陈旧性/质量反思）和 `memory_promote`（自动提升低置信度草稿）
 - **MCP 资源** — 无需工具调用即可将记忆作为上下文读取，包括系统知识图谱（自动生成的知识地图）
 - **支持 15 种 Agent** — OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex CLI、Gemini CLI、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro
 - **交互式安装器** — 从菜单中选择要配置的 Agent
@@ -87,9 +89,29 @@
 - **智能召回** — `memory_smart_recall` 在一次调用中融合 BM25 + 图谱 + 衰减 + 质量评分；LLM 在每次任务开始时调用此工具
 - **质量评分** — 每条记录根据结构（标签、链接、内容具体性、时效性）自动获得 0–1 的质量评分；高质量条目优先显示
 - **合并去重** — 以相同 `key` 保存时合并属性（标签取并集、置信度取最大值、日期取最新、链接合并），而非覆盖
+- **近重复检测** — 合并操作通过 Jaccard 相似度（阈值 0.7）检测近重复条目并合并它们
 - **置信度评分** — 每条记录追踪信息可靠性：用户声明 = 1.0，推断 = 0.65–0.75
+- **LLM 驱动的压缩** — `memory_compress` 使用 AI 总结长条目；`memory_consolidate(mode: "low-quality")` 以确定性方式批量清理
+- **跨会话合并** — `memory_merge_sessions` 合并文件在并行会话中的观察结果
+- **GitHub Gist 同步** — `memory_export_gist` 和 `memory_import_gist` 通过 GitHub Gist 同步记忆条目（零依赖）
+- **逐字模式** — `config.verbatim` 保存时保留原始条目而非覆盖
 - **上下文生成工具** — `context_generate`（完整简报）、`context_diff`（增量简报）、`context_focus`（精准简报）、`context_health`（健康审计）、`context_export`（导出为 markdown）— 每个工具替代 5-6 次手动调用。零 LLM 开销，纯确定性聚合
 - **系统知识图谱** — 自动生成的知识地图，作为 MCP 资源暴露；Agent 在会话启动时加载即可获得即时上下文
+- **路径范围** — 条目可通过 glob 模式（`path_scope`）限定到文件路径；召回会自动按范围过滤
+- **预算控制** — 三个输出级别：`budget: "tiny"`（key + 1 行，约 50 token）、`"normal"`（紧凑格式，含标签/边）、`"deep"`（全部字段，含 origin/scope/status）。向后兼容 `compact: true`
+- **来源追踪** — 每条记录追踪其来源（`human`、`agent`、`inferred`）；人类断言获得质量加成
+- **软删除** — `memory_forget` 默认软删除（设置 `status=obsolete`）。用 `memory_forget(key, action: "restore")` 恢复，`action: "soft"` 隐藏，`action: "hard"` 永久删除
+- **增强的健康审计** — `context_health` 现在可检测缺失证据（有 path_scope 但无文件）和陈旧声明（同一分类下的重叠内容）
+- **类型化图边** — 边带有类型（`superseded_by`、`supersedes`、`relates`），以 `type:key` 形式写入图。显式 `links` 变为 `relates:key`，因此你可以分辨条目*如何*关联，而不仅仅是*是否*关联
+- **RRF 排序** — 召回使用 Reciprocal Rank Fusion 融合 BM25（×3）和图中心性排名，自适应 `k = clamp(3..60, round(sqrt(n)))`。基准测试（8 条金标准查询）：nDCG 0.776，MRR 0.917 — 与之前的线性评分完全一致。传 `rrf: false` 可回退
+- **记忆反思** — `memory_reflect` 按陈旧性、质量和过度连接对条目排名，以发现需要关注或清理的条目。确定性，零 LLM
+- **记忆取代** — `memory_forget(key, action: "supersede", new_key)` 将条目标记为已被更新条目取代（`superseded_by` 链接 + `supersededOn` 日期）。`memory_recall({ as_of })` 可在取代之前的时间点查询中重新包含旧条目
+- **自动提升** — `memory_promote` 以确定性方式将低置信度草稿提升为活跃条目（阈值 0.65，Jaccard 去重），默认 `dryRun`
+- **解释原因** — `memory_recall`/`memory_smart_recall` 接受 `explain: true`，并为每条返回的条目追加确定性的原因行（`↳ 100% relevance · used 14× · used today · importance HIGH`）— 说明*为什么*被检索到，无需 LLM
+- **Token 预算** — `budget_tokens` 按估算的 token 数限制召回输出；条目贪心累积，超出预算的尾部会被丢弃（`0` = 无限制）
+- **版本取代** — `memory_consolidate(mode: "versions")` 检测描述同一主题在不同库版本的条目（如"使用 React 18" vs "使用 React 19"），并淘汰旧条目、保留最新版本
+- **负面记忆** — 提供 `warning` 分类，用于"不要这样做"的事实；`warning` 条目获得召回加成，让 Agent 在重复犯错之前看到这些"雷区"
+- **语言 + 文件夹排序** — 召回会加成与当前内容使用相同文字体系（latin/CJK/cyrillic/…）书写的条目，以及 `path_scope` 与当前文件匹配的条目
 
 ---
 
@@ -134,6 +156,53 @@ memory_remember   # 保存重要决策
 
 > **提示：** 始终在会话开始时运行 `memory_recall`。你的 Agent 将立即获得之前会话的上下文。
 
+### MCP 客户端快速设置
+
+#### Cursor
+
+添加到 `.cursor/mcp.json`：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+#### Claude Desktop
+
+添加到 `claude_desktop_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+#### Windsurf
+
+添加到 `~/.codeium/windsurf/mcp_config.json`：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
 ---
 
 ## 支持的 Agent
@@ -164,11 +233,11 @@ memory_remember   # 保存重要决策
 
 | 工具 | 说明 |
 |------|------|
-| `memory_remember` | 保存决策、模式、Bug 或知识（可选 TTL、自动标签推断、`links` 构建记忆图谱、同 key 自动合并去重、自动质量评分和置信度） |
-| `memory_recall` | 搜索记忆（应在读取文件前使用，自动过滤已过期 TTL）。`mode: "graph"` 展开关系感知子图以提高精度。`compact: true` 返回 token 高效的数字索引格式。按质量加权排序。`sessionBias`提升当前git分支的条目 |
-| `memory_smart_recall` | **统一召回**：一次调用融合 BM25 + 图谱 + 衰减 + 质量。在每次任务开始时使用。`sessionBias`提升当前git分支的条目。返回紧凑、token 高效的输出 |
-| `memory_forget` | 按 key 或 id 删除条目 |
-| `memory_stats` | 查看记忆状态（包括 TTL 统计和质量分布、以及低于质量/访问阈值的冷记忆） |
+| `memory_remember` | 保存决策、模式、Bug、知识或 **warning**（"不要这样做"的负面记忆，召回时加权提升）— 可选 TTL、自动标签推断、`links` 构建记忆图谱、同 key 自动合并去重、自动质量评分和置信度 |
+| `memory_recall` | 搜索记忆（应在读取文件前使用，自动过滤已过期 TTL）。`mode: "graph"` 展开关系感知子图以提高精度。`budget: "tiny"|"normal"|"deep"` 控制输出详细程度（向后兼容 `compact: true`）。`path_scope` 按 glob 模式过滤。`sessionBias` 提升当前 git 分支的条目。`explain: true` 为每条结果追加原因行（为何被检索到）。`budget_tokens` 按估算 token 数限制输出（`0` = 无限制）。按质量加权排序 |
+| `memory_smart_recall` | **统一召回**：一次调用融合 BM25 + 图谱 + 衰减 + 质量。`sessionBias` 提升当前 git 分支的条目。`explain: true` 追加每条结果的原因，`budget_tokens` 按估算 token 数限制输出。在每次任务开始时使用。返回紧凑、token 高效的输出 |
+| `memory_forget` | 按 key 或 id 进行**生命周期操作**：`action: "soft"`（默认）标记为已废弃，`"hard"` 永久删除，`"restore"` 恢复为活跃，`"supersede"` 通过 `superseded_by` 链接到 `new_key` 将其取代 |
+| `memory_stats` | 查看记忆状态（包括 TTL 统计、质量分布、来源/状态细分、低于质量/访问阈值的冷记忆，以及**命中率 / 重复率 / 废弃率**指标） |
 | `memory_summary` | 保存/读取文件摘要 |
 | `memory_archive` | 归档旧条目（>30 天）和已过期 TTL 的条目 |
 | `memory_diff` | 显示自某个日期以来的变化（24 小时、7 天或精确日期） |
@@ -178,7 +247,7 @@ memory_remember   # 保存重要决策
 | `memory_backup` | 创建带时间戳的记忆文件备份（自动保留最近 10 份） |
 | `memory_captured` | 列出由钩子自动捕获的活动日志（需启用）或清除日志 |
 | `memory_checkpoint` | **会话检查点**：创建当前内存状态的快照，TTL为7天。在长时间会话中可用于回滚参考 |
-| `memory_consolidate` | **清理操作**（确定性，无需 LLM）：`mode: "identical"`（默认）去重内容完全相同的条目，`"similar"` 合并近重复条目（Jaccard >50%），`"low-quality"` 批量清理低质量条目（`minQuality`、`dryRun`） |
+| `memory_consolidate` | **清理操作**（确定性，无需 LLM）：`mode: "identical"`（默认）去重内容完全相同的条目，`"similar"` 合并近重复条目（Jaccard >50%），`"low-quality"` 批量清理低质量条目（`minQuality`、`dryRun`），`"versions"` 淘汰较旧的库版本条目、保留最新版本 |
 | `memory_sessions` | 显示活跃的 Agent 会话（分支、文件、最后活跃时间）和并行工作时的软冲突 |
 | `memory_compress` | LLM 驱动的两步压缩：摘要 + 覆盖。如果可用则使用 Anthropic/OpenAI CLI |
 | `memory_primer` | 一次调用的上下文引导：主要记忆 + 分类 + 会话文件变化。会话开始时自动注入 |
@@ -194,7 +263,7 @@ memory_remember   # 保存重要决策
 | `context_export` | **导出记忆为 markdown**：可注入系统提示词的上下文（完整或紧凑格式） |
 | `memory_pin` | **使用优先级1-5固定条目**：固定后的条目即使没有关键词匹配，也会在召回结果中按优先级排序始终优先显示 |
 | `memory_unpin` | **取消固定条目**：移除优先级标记 |
-| `memory_search` | **带过滤器的统一搜索**：与 `memory_recall` 相同，加上 `category`、`tags`、`from_date`、`to_date` 过滤器。标签过滤器使用 AND 逻辑 — 所有指定的标签必须匹配。`sessionBias`提升当前git分支的条目 |
+| `memory_search` | **带过滤器的统一搜索**：与 `memory_recall` 相同，加上 `category`、`tags`、`from_date`、`to_date` 过滤器。标签过滤器使用 AND 逻辑 — 所有指定的标签必须匹配。`budget` 控制输出详细程度。`path_scope` 按 glob 模式过滤。`sessionBias` 提升当前 git 分支的条目 |
 | `memory_tag` | **批量标签操作**：按 key 或 id 在一个或多个条目上添加、删除或设置标签 |
 
 ### MCP 资源
@@ -204,8 +273,15 @@ memory_remember   # 保存重要决策
 | 资源 | URI | 说明 |
 |------|-----|------|
 | 记忆条目 | `toon://memory/entries` | 完整记忆转储 |
+| 当前记忆 | `toon://memory/current` | 当前记忆状态，含最新条目 |
 | 记忆统计 | `toon://memory/stats` | 分类计数和 TTL 信息 |
 | 系统知识图谱 | `toon://memory/summaries` | 自动生成的知识地图（重要条目、分类、模式） |
+
+### MCP 提示词
+
+| 提示词 | 说明 |
+|--------|------|
+| `summarize_project_context` | 分析当前 TOON 记忆并生成紧凑的项目摘要。可选 `intent` 参数以聚焦特定领域 |
 
 ### 示例
 
@@ -343,6 +419,28 @@ memory_smart_recall({ intent: "diseño de base de datos para backend" })
 
 > **提示：** 在每次任务开始时使用 `memory_smart_recall`。它在一次调用中融合 BM25 + 图谱 + 衰减 + 质量 — 无需猜测该搜索什么。
 
+#### 解释为什么返回该结果
+
+```typescript
+memory_recall({ query: "redis", explain: true })
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+//   ↳ 92% relevance · used 14× · used today · importance HIGH
+```
+
+`↳` 原因行是确定性的（相关度百分比、访问次数、最后使用时间、重要性）— 不涉及 LLM。当你想知道 Agent 为何看到这些条目时，使用 `explain: true`。
+
+#### 用 `budget_tokens` 限制输出
+
+```typescript
+memory_recall({ query: "redis", budget_tokens: 300 })
+// 条目贪心累积；超出估算的尾部会被丢弃。
+// budget_tokens: 0（默认）= 无限制。
+```
+
+> **提示：** 将 `budget_tokens` 与 `budget: "deep"` 结合使用，无论记忆多大，上下文窗口都能保持在硬性 token 上限之内。
+
 #### 完整项目简报（一键调用）
 
 ```typescript
@@ -430,6 +528,7 @@ memory_remember({
 | 内容长度 | 最高 0.3 | 详细 > 模糊 |
 | 时效性 | 最高 0.1 | 辑新的条目评分越高 |
 | 具体性 | 最高 0.1 | 唯一词 vs 重复词 |
+| 来源 | +0.1/−0.05 | 人类断言加分，推断来源轻微减分 |
 
 高质量条目在召回时优先显示。使用 `memory_stats` 查看质量：
 
@@ -644,6 +743,57 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 
 ---
 
+## 记忆图谱查看器
+
+将记忆可视化为交互式力导向图。一目了然查看条目、它们的连接、分类和访问模式。
+
+### CLI 查看器（独立 HTTP 服务器）
+
+```bash
+npx toon-memory viewer          # 启动 HTTP 服务器并打开浏览器
+npx toon-memory viewer --port 3001  # 自定义端口
+npx toon-memory viewer --export     # 保存为静态 HTML
+```
+
+打开后，在终端按 `r` 从磁盘重新加载，或在浏览器中按 `r` / ↻ 刷新页面。
+
+### 内联查看器（MCP Apps）
+
+在任何兼容 MCP Apps 的主机中调用 `memory_visualize`，即可内联渲染图谱 — 无需服务器。查看器会作为交互式面板出现在聊天界面中。
+
+### 功能
+
+| 交互 | 说明 |
+|---|---|
+| **悬停**节点 | 查看包含内容预览、质量、访问次数的工具提示 |
+| **点击**节点 | 选中 + 居中 + 高亮邻居 |
+| **双击**节点 | 打开详情面板 |
+| **拖动**节点 | 手动重新定位（右键取消固定） |
+| **搜索** | 过滤条目；匹配的节点会发光脉动 |
+| **⇿ 路径查找器** | 点击两个节点，查找并高亮最短路径 |
+| **缩放/平移** | 鼠标滚轮或 +/− 按钮 |
+| **⚙ 物理** | 调整电荷、链接距离、中心引力 |
+| **主题切换** | 深色/浅色模式（持久化） |
+| **导出** | 将图谱保存为 PNG 或 SVG |
+
+### 截图
+
+| 图谱视图 | 搜索高亮 | 路径查找器 | 详情面板 |
+|---|---|---|---|
+| ![完整图谱](docs/public/viewer/graph-full.png) | ![搜索](docs/public/viewer/graph-search.png) | ![路径](docs/public/viewer/graph-path.png) | ![详情](docs/public/viewer/graph-detail.png) |
+
+![查看器演示动画](docs/public/viewer/viewer-demo.gif)
+
+### 截取自己的截图
+
+```bash
+npm run capture:viewer
+```
+
+需要 [Playwright](https://playwright.dev)（`npx playwright install chromium`）和 `ffmpeg`。
+
+---
+
 ## 技巧与最佳实践
 
 以下是与 toon-memory 配合良好的使用模式：
@@ -678,6 +828,7 @@ memory_remember({
 | `pattern` | 约定、框架、代码风格规范 |
 | `bug` | 你修复的问题及修复方式 |
 | `knowledge` | 项目事实、领域知识、团队上下文 |
+| `warning` | "不要这样做" — 反模式、雷区、要避免的错误（召回时加权提升） |
 
 > **提示：** 不要过度纠结。如果这是你未来的自己（或 Agent）想知道的事情，就保存它。带有具体标签的详细条目质量评分更高。
 
@@ -702,7 +853,7 @@ tags: "api;rest;versioning"
 
 ### 保持记忆整洁
 
-每月运行 `memory_archive()` 将旧条目移至归档。运行 `memory_stats()` 查看大小和质量分布。低质量条目（内容模糊、无标签）会自动降低召回优先级。使用 `memory_consolidate` 合并重复项。
+每月运行 `memory_archive()` 将旧条目移至归档。运行 `memory_stats()` 查看大小和质量分布。低质量条目（内容模糊、无标签）会自动降低召回优先级。使用 `memory_consolidate` 合并重复项，并使用 `mode: "versions"` 淘汰已被新库版本取代的旧笔记。
 
 ---
 
@@ -716,6 +867,9 @@ npx toon-memory status       # 检查安装状态
 npx toon-memory stats        # 查看记忆统计
 npx toon-memory export       # 导出记忆为 JSON
 npx toon-memory import <file> # 从 JSON 导入记忆
+npx toon-memory viewer       # 打开记忆图谱查看器（HTTP 服务器）
+npx toon-memory viewer --export # 将查看器保存为静态 HTML
+npx toon-memory viewer --port 3001 # 自定义端口
 npx toon-memory watch [options] # 自动备份（可配置选项）
 npx toon-memory upgrade      # 更新到最新版本
 npx toon-memory uninstall    # 从所有 Agent 中移除
@@ -921,10 +1075,10 @@ args = ["-y", "toon-memory", "mcp"]
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
-  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0
-  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.55|1.0
-  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20 (see [[use-zod]])|redis.ts|redis;fix|2026-07-10|7d|0|use-zod|0.70|0.9
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority|path_scope|origin|status}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0||0||agent|active
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.55|1.0||0||agent|active
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20 (see [[use-zod]])|redis.ts|redis;fix|2026-07-10|7d|0|use-zod|0.70|0.9||0||agent|active
 summaries:
   src/services/redis.ts: Redis connection pool with retry logic
 ```
@@ -1075,6 +1229,33 @@ context_export (可注入 markdown)    1,178     218    81.5%   3 → 1
 
 > **提示：** `memory_smart_recall` 在一次调用中融合 BM25 + 图谱 + 质量，同时节省 token 和工具调用开销。在每次任务开始时使用。
 
+### RRF 排序基准测试（实测）
+
+自 v3.7.0 起，召回使用 **Reciprocal Rank Fusion** 在 BM25（×3）和图中心性排名上进行融合排序，自适应 `k = clamp(3..60, round(sqrt(n)))`。在 8 条人工标注相关性的金标准查询上实测（参见 `scripts/bench-rrf.mjs`，`npm run bench:rrf`）：
+
+```
+指标          linear (v3.6.x)     RRF (v3.7.0)
+────────────  ─────────────────   ────────────────
+nDCG@10       0.776               0.776   （一致）
+MRR           0.917               0.917   （一致）
+```
+
+RRF 以**零排序代价**匹配了之前的线性加权评分，同时简化了评分流程（BM25×3 + 中心性，无重要性/时效性噪音）。图模式的取代被正确遵守：废弃条目保持排除，除非是 `as_of` 时间点查询。
+
+### 检索基准测试（LongMemEval 风格，实测）
+
+自 v4.1.0 起，检索在**真实项目记忆的冻结快照**上进行基准测试 — 一个 LongMemEval 风格的测试集，包含人工编写的金标准查询。语料库：187 条真实 `data.toon` 条目（快照 `2026-08-01`），42 条金标准查询，覆盖 6 个分类（core-fact、temporal、knowledge-updating、multi-hop、meta/session、distractor）。被测代码是**生产流水线**（`src/lib`），通过 esbuild 打包到内存中 — 没有忠实副本。确定性的 `today` 参数固定了时效性/衰减，因此结果不会随真实时间漂移；运行是只读的（无访问追踪）。两个描述数据文件本身的高优先级元条目被排除。参见 `benchmarks/retrieval-corpus.toon`、`benchmarks/gold-queries.json`（`npm run bench:retrieval`）：
+
+```
+模式            R@5     nDCG@5  MRR@5   可回答
+─────────────   ─────   ─────   ─────   ──────────
+linear         0.643   0.654   0.776   81.0%
+rrf            0.861   0.764   0.788   97.6%
+smart (unified) 0.829  0.739   0.760   92.5%
+```
+
+RRF 是排名最高的模式（R@5 0.861，97.6% 的查询可从前 5 条中得到答案）；`memory_smart_recall` 在一次调用中保持竞争力。
+
 ---
 
 ## 故障排除
@@ -1167,7 +1348,18 @@ toon-memory/
 │   │   ├── setup.ts             # CLI 命令
 │   │   └── toon-memory.ts       # CLI 运行器
 │   ├── mcp/
-│   │   └── server.ts            # MCP 服务器（35 个工具 + 4 个资源）
+│   │   ├── server.ts            # MCP 服务器（35 个工具 + 4 个资源 + 1 个提示词）
+│   │   ├── tools.ts             # 工具注册（35 个工具）
+│   │   ├── resources.ts         # 资源注册（4 个资源）
+│   │   ├── prompts.ts           # 提示词注册（1 个提示词）
+│   │   ├── session-store.ts     # 会话层（自动提升、清理）
+│   │   ├── memory-io.ts         # 记忆文件读写
+│   │   ├── entries.ts           # 条目解析与工具函数
+│   │   ├── scoring.ts           # 条目评分与访问追踪
+│   │   ├── archive.ts           # 归档管理
+│   │   ├── consolidation.ts     # 重复条目合并
+│   │   ├── config.ts            # 配置加载与保存
+│   │   └── crypto.ts            # AES-256-GCM 加密
 │   ├── lib/
 │   │   ├── lock.ts              # 建议性文件锁 + 原子写入
 │   │   ├── sessions.ts          # 多会话协调
@@ -1200,6 +1392,20 @@ toon-memory/
 3. 提交你的更改（`git commit -m 'feat: add amazing feature'`）
 4. 推送到分支（`git push origin feature/amazing-feature`）
 5. 创建 Pull Request
+
+---
+
+## 安全与隐私
+
+toon-memory 将安全与隐私作为核心原则进行设计。
+
+- **100% 本地存储** — 所有记忆都存储在本地机器的 `.toon-memory/memory/` 目录中。数据绝不会发送到外部服务器、云服务或第三方。
+- **无遥测** — 项目零遥测、零分析、零跟踪。不收集任何使用数据。
+- **无远程代码执行** — toon-memory 作为标准 MCP 服务器通过 stdio 运行。它不会下载、执行或评估远程代码。
+- **静态加密** — 可选的对整个记忆文件的 AES-256-GCM 加密。通过 `memory_encrypt` 启用（需要 `TOON_MEMORY_KEY` 环境变量）。
+- **加密密钥永不存储** — 加密密钥必须通过环境变量提供，toon-memory 永远不会持久化它。一旦丢失，数据无法恢复。
+- **按项目隔离** — 每个项目拥有独立的记忆文件。记忆不会在项目之间泄漏。
+- **自动 `.gitignore`** — 安装器将 `.toon-memory/memory/` 添加到 `.gitignore`，防止记忆数据被意外提交。
 
 ---
 

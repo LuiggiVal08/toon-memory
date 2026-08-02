@@ -30,6 +30,7 @@
 - [よくある質問](#よくある質問)
 - [開発](#開発)
 - [コントリビューション](#コントリビューション)
+- [セキュリティとプライバシー](#セキュリティとプライバシー)
 - [ライセンス](#ライセンス)
 
 ---
@@ -63,7 +64,7 @@ AIエージェントが昨日のセッションの内容を全て忘れてしま
 
 ## 主な機能
 
-- **35個のMCPツール** — Model Context Protocolによる完全なメモリ管理。`memory_smart_recall`（統一リコール）、マルチセッション連携用の`memory_sessions`、ワンコールでコンテキストを生成する`context_*`ツール（ブリーフィング、差分、フォーカス、ヘルス監査、エクスポート）を含みます
+- **35個のMCPツール** — Model Context Protocolによる完全なメモリ管理。`memory_smart_recall`（セッションバイアス付き統一リコール）、マルチセッション連携用の`memory_sessions`、ワンコールでコンテキストを生成する`context_*`ツール（ブリーフィング、差分、フォーカス、ヘルス監査、エクスポート）、`memory_compress`（LLM駆動の圧縮）、`memory_consolidate`（決定論的な重複排除/マージ/クリーンアップ）、`memory_primer`（自動注入コンテキスト）、`memory_merge_sessions`（セッション間マージ）、`memory_pin`/`memory_unpin`（優先度1〜5で重要なエントリをピン留め）、`memory_checkpoint`（7d TTLのセッションスナップショット）、`memory_search`（タグフィルター＋セッションバイアス付きの統一検索）、`memory_tag`（一括タグ操作）、`memory_export_gist`/`memory_import_gist`（GitHub Gist同期）、`memory_forget`（ソフト/ハード削除、復元、スーパーセード）、`memory_reflect`（鮮度/品質のリフレクション）、`memory_promote`（低信頼度ドラフトの自動昇格）を含みます
 - **MCPリソース** — ツール呼び出しせずにメモリをコンテキストとして読み取れます。システムプライマー（自動生成されたナレッジマップ）を含みます
 - **15のエージェントに対応** — OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex CLI、Gemini CLI、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro
 - **インタラクティブインストーラー** — メニューから設定するエージェントを選択できます
@@ -87,9 +88,29 @@ AIエージェントが昨日のセッションの内容を全て忘れてしま
 - **スマートリコール** — `memory_smart_recall`はBM25＋グラフ＋減衰＋品質を1回の呼び出しで組み合わせます；LLMは各タスクの開始時にこれを呼び出します
 - **品質スコア** — 各エントリに構造（タグ、リンク、コンテンツの詳細度、鮮度）に基づいて0〜1の品質スコアが自動付与されます；高品質なエントリが優先的に表示されます
 - **マージ・重複排除** — 同じ`key`で保存すると、上書きではなく属性をマージします（タグの和集合、最大信頼度、最新日付、リンクの結合）
+- **ニア重複検出** — 統合処理がJaccard類似度（しきい値0.7）でニア重複を検出し、マージします
 - **信頼度スコア** — 各エントリは信頼性を追跡します：ユーザー宣言=1.0、推論=0.65〜0.75
+- **LLM駆動の圧縮** — `memory_compress`はAIで長いエントリを要約します；`memory_consolidate(mode: "low-quality")`は決定論的に一括クリーンアップします
+- **セッション間マージ** — `memory_merge_sessions`はファイルの並列セッション間のオブザベーションをマージします
+- **GitHub Gist同期** — `memory_export_gist`と`memory_import_gist`はGitHub Gistでメモリエントリを同期します（依存関係ゼロ）
+- **Verbatimモード** — `config.verbatim`は保存時の上書きではなく元のエントリを保持します
 - **コンテキスト生成ツール** — `context_generate`（完全ブリーフィング）、`context_diff`（インクリメンタル）、`context_focus`（特定ターゲット）、`context_health`（監査）、`context_export`（マークダウン）— それぞれ5〜6回の手動ツール呼び出しに相当。LLM不使用、純粋な決定論的集約
 - **システムプライマー** — MCPリソースとして公開される自動生成ナレッジマップ；エージェントはセッション開始時に読み込み、即座にコンテキストを入手します
+- **パススコープ** — エントリをグロブパターンでファイルパスにスコープできます（`path_scope`）；リコールはスコープで自動的にフィルタリングされます
+- **バジェット制御** — 3つの出力レベル：`budget: "tiny"`（キー＋1行、約50トークン）、`"normal"`（タグ/エッジ付きコンパクト）、`"deep"`（origin/scope/status付き全フィールド）。`compact: true`と後方互換
+- **オリジン追跡** — 各エントリはオリジン（`human`、`agent`、`inferred`）を追跡します；人間の断言は品質ブーストを受けます
+- **ソフト削除** — `memory_forget`はデフォルトでソフト削除します（`status=obsolete`を設定）。`memory_forget(key, action: "restore")`で復元、`action: "soft"`で非表示、`action: "hard"`で完全削除
+- **拡張ヘルス監査** — `context_health`は不足エビデンス（ファイルのないpath_scope）と陳腐な主張（同一カテゴリ内の重複コンテンツ）を検出します
+- **型付きグラフエッジ** — エッジは型（`superseded_by`、`supersedes`、`relates`）を持ち、グラフ内では`type:key`として記述されます。明示的な`links`は`relates:key`になるため、エントリが*どのように*関連しているかが分かります
+- **RRFランキング** — リコールはBM25（×3）とグラフ中心性のランクをReciprocal Rank Fusionと適応的`k = clamp(3..60, round(sqrt(n)))`で融合します。ベンチマーク（ゴールドクエリ8件）：nDCG 0.776、MRR 0.917 — 従来の線形スコアリングと完全に同等。`rrf: false`で従来方式にフォールバック
+- **メモリリフレクト** — `memory_reflect`は鮮度、品質、過度な接続でエントリをランク付けし、注意やクリーンアップが必要なものを浮き彫りにします。決定論的、LLM不使用
+- **メモリスーパーセード** — `memory_forget(key, action: "supersede", new_key)`でエントリをより新しいエントリに置き換えられたものとしてマーク（`superseded_by`リンク＋`supersededOn`日付）。`memory_recall({ as_of })`は置き換え前の時点のクエリのために古いエントリを再び含めます
+- **自動昇格** — `memory_promote`は低信頼度ドラフトを決定論的にアクティブエントリへ昇格します（しきい値0.65、Jaccard重複排除）。デフォルトは`dryRun`
+- **WHYを説明** — `memory_recall`/`memory_smart_recall`は`explain: true`を受け付け、返される各エントリに決定論的な理由行を追加します（`↳ 100% relevance · used 14× · used today · importance HIGH`）— なぜ取得されたか、LLM不使用
+- **トークンバジェット** — `budget_tokens`は推定トークン数でリコール出力を制限します；エントリは貪欲に蓄積され、バジェットを超える末尾は切り捨てられます（`0`＝制限なし）
+- **バージョンスーパーセード** — `memory_consolidate(mode: "versions")`は同じ主題を異なるライブラリバージョンで説明するエントリ（例：「React 18を使う」vs「React 19を使う」）を検出し、古い方を新しい方のために退役させます
+- **否定的メモリ** — 「これはやらないこと」という事実のための`warning`カテゴリ；`warning`エントリはリコールブーストを受け、エージェントが失敗を繰り返す前に地雷を確認できます
+- **言語＋フォルダランキング** — リコールは同じ文字体系（ラテン/CJK/キリルなど）で書かれたエントリと、`path_scope`が現在のファイルと一致するエントリをブーストします
 
 ---
 
@@ -134,6 +155,53 @@ memory_remember   # 重要な意思決定を保存
 
 > **ヒント:** セッションの開始時に必ず`memory_recall`を実行してください。エージェントは直前のセッションのコンテキストを即座に入手できます。
 
+### MCPクライアントのクイックセットアップ
+
+#### Cursor
+
+`.cursor/mcp.json`に追加：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+#### Claude Desktop
+
+`claude_desktop_config.json`に追加：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+#### Windsurf
+
+`~/.codeium/windsurf/mcp_config.json`に追加：
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
 ---
 
 ## 対応エージェント一覧
@@ -164,11 +232,11 @@ memory_remember   # 重要な意思決定を保存
 
 | ツール | 説明 |
 |------|-------------|
-| `memory_remember` | 意思決定、パターン、バグ、ナレッジを保存（TTL任意、自動タグ推論、`links`でメモリグラフを構築、同一キーのマージ・重複排除、品質スコアと信頼度の自動付与） |
-| `memory_recall` | メモリを検索（ファイルを読む前に使用。期限切れTTLをフィルタリング）。`mode: "graph"`で関係を考慮したサブグラフを展開し精度向上。`compact: true`でトークン効率の高い数値インデックス形式を返却。品質重み付きランキング。`sessionBias`で現在のgitブランチのエントリをブースト |
-| `memory_smart_recall` | **統一リコール**：BM25＋グラフ＋減衰＋品質を1回の呼び出しで実行。各タスクの開始時に使用。`sessionBias`で現在のgitブランチのエントリをブースト。コンパクトでトークン効率の高い出力 |
-| `memory_forget` | キーまたはIDでエントリを削除 |
-| `memory_stats` | メモリの状態を確認（TTL統計と品質分布を含む、品質/アクセスしきい値を下回るコールドメモリ） |
+| `memory_remember` | 意思決定、パターン、バグ、ナレッジ、または**warning**（「やってはいけない」という否定的メモリ。ブースト付きでリコールされる）を保存 — TTL任意、自動タグ推論、`links`でメモリグラフを構築、同一キーのマージ・重複排除、品質スコアと信頼度の自動付与 |
+| `memory_recall` | メモリを検索（ファイルを読む前に使用。期限切れTTLをフィルタリング）。`mode: "graph"`で関係を考慮したサブグラフを展開し精度向上。`budget: "tiny"|"normal"|"deep"`で出力の詳細度を制御（`compact: true`と後方互換）。`path_scope`でグロブパターンによるフィルタリング。`sessionBias`で現在のgitブランチのエントリをブースト。`explain: true`で取得理由の行をエントリごとに追加。`budget_tokens`で推定トークン数による出力制限（`0`＝制限なし）。品質重み付きランキング |
+| `memory_smart_recall` | **統一リコール**：BM25＋グラフ＋減衰＋品質を1回の呼び出しで実行。`sessionBias`で現在のgitブランチのエントリをブースト。`explain: true`でエントリごとの理由を追加、`budget_tokens`で推定トークン数による出力制限。各タスクの開始時に使用。コンパクトでトークン効率の高い出力 |
+| `memory_forget` | **ライフサイクル操作** キーまたはIDで指定：`action: "soft"`（既定）は廃止としてマーク、`"hard"`は完全削除、`"restore"`はアクティブに復元、`"supersede"`は`new_key`への`superseded_by`リンク付きで退役 |
+| `memory_stats` | メモリの状態を確認（TTL統計、品質分布、オリジン/ステータスの内訳、品質/アクセスしきい値を下回るコールドメモリ、および**ヒット率 / 重複率 / 廃止率**の指標を含む） |
 | `memory_summary` | ファイルのサマリを保存/取得 |
 | `memory_archive` | 古いエントリ（30日以上）と期限切れTTLエントリをアーカイブ |
 | `memory_diff` | 指定日以降の変更を表示（24h、7d、または正確な日付） |
@@ -178,11 +246,11 @@ memory_remember   # 重要な意思決定を保存
 | `memory_backup` | メモリファイルのタイムスタンプ付きバックアップを作成（最新10件に自動整理） |
 | `memory_captured` | フックで自動キャプチャされたアクティビティを表示（オプトイン）またはログをクリア |
 | `memory_checkpoint` | **セッションチェックポイント**: 現在のメモリ状態のスナップショットを7d TTLで作成。長時間セッション中のロールバック参照に便利 |
-| `memory_consolidate` | **クリーンアップ操作**（決定論的、LLM不使用）：`mode: "identical"`（既定）同一コンテンツのエントリを重複排除、`"similar"` 類似エントリ（Jaccard >50%）をマージ、`"low-quality"` 低品質エントリを一括クリーンアップ（`minQuality`、`dryRun`） |
+| `memory_consolidate` | **クリーンアップ操作**（決定論的、LLM不使用）：`mode: "identical"`（既定）同一コンテンツのエントリを重複排除、`"similar"` 類似エントリ（Jaccard >50%）をマージ、`"low-quality"` 低品質エントリを一括クリーンアップ（`minQuality`、`dryRun`）、`"versions"` 古いライブラリバージョンのエントリを新しいもののために退役 |
 | `memory_sessions` | アクティブなエージェントセッションを表示（ブランチ、ファイル、最終確認時刻）並列作業時のソフトコンフリクトを検出 |
 | `memory_compress` | LLM 駆動の2段階圧縮：要約 + 上書き。Anthropic/OpenAI CLI が利用可能な場合は使用 |
 | `memory_primer` | 1 回呼び出しのコンテキストプライマー：主要メモリ + カテゴリ + セッションファイル変更。セッション開始時に自動注入 |
-| `memory_merge_sessions` | ファイルの並列セッション間でオブザベーションをマージ。重複排除し、自動昇格 |
+| `memory_merge_sessions` | ファイルの並列セッション間でオブザベーションをマージ。重複排除し、オプションでメモリへ自動昇格 |
 | `memory_export_gist` | エントリを GitHub Gist（公開/非公開）にエクスポート。GITHUB_TOKEN または gh CLI を使用 |
 | `memory_import_gist` | GitHub Gist からエントリをインポート。既存エントリとマージ（タグ联合、最大信頼度） |
 | `memory_graph_path` | ナレッジグラフ内の2つのエントリ間のBFS最短経路 |
@@ -204,8 +272,15 @@ memory_remember   # 重要な意思決定を保存
 | リソース | URI | 説明 |
 |----------|-----|-------------|
 | メモリエントリ | `toon://memory/entries` | メモリの完全ダンプ |
+| 現在のメモリ | `toon://memory/current` | 最近のエントリを含む現在のメモリ状態 |
 | メモリ統計 | `toon://memory/stats` | カテゴリ件数とTTL情報 |
 | システムプライマー | `toon://memory/summaries` | 自動生成されたナレッジマップ（トップエントリ、カテゴリ、パターン） |
+
+### MCPプロンプト
+
+| プロンプト | 説明 |
+|--------|-------------|
+| `summarize_project_context` | 現在のTOONメモリを分析し、コンパクトなプロジェクト要約を生成します。特定の領域にフォーカスするオプションの`intent`パラメータ |
 
 ### 使用例
 
@@ -343,6 +418,28 @@ memory_smart_recall({ intent: "diseño de base de datos para backend" })
 
 > **ヒント:** 各タスクの開始時に`memory_smart_recall`を使用してください。BM25＋グラフ＋減衰＋品質を1回の呼び出しで組み合わせます — 何を検索すべきか考える必要がありません。
 
+#### 結果が返されたWHY（理由）を説明する
+
+```typescript
+memory_recall({ query: "redis", explain: true })
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+//   ↳ 92% relevance · used 14× · used today · importance HIGH
+```
+
+`↳`理由行は決定論的です（関連度%、アクセス回数、最終使用日、重要度）— LLMは関与しません。エージェントが*なぜ*これらのエントリを表示したのか知りたい場合は`explain: true`を使用してください。
+
+#### `budget_tokens`で出力を制限する
+
+```typescript
+memory_recall({ query: "redis", budget_tokens: 300 })
+// エントリは貪欲に蓄積され、推定値を超える末尾は切り捨てられます。
+// budget_tokens: 0 (既定) = 制限なし。
+```
+
+> **ヒント:** `budget_tokens`と`budget: "deep"`を組み合わせると、メモリのサイズに関係なくハードなトークン上限内に収まるコンテキストウィンドウになります。
+
 #### 完全プロジェクトブリーフィング（ワンコール）
 
 ```typescript
@@ -389,7 +486,7 @@ context_health({})
 // - src/legacy.ts (deleted, 2 refs)
 ```
 
-> **ヒント:** メモリが散らかってきた時に`context_health`を実行してください。孤立リンク、重複、期限切れTTLエントリ、壊れたファイル参照を表示します。
+> **ヒント:** メモリが散らかってきた時に`context_health`を実行してください。孤立リンク、重複、期限切れTTLエントリ、壊れたファイル参照、不足エビデンスエントリ（ファイルのないpath_scope）、陳腐な主張（重複するコンテンツ）を表示します。
 
 #### マージ・重複排除（自動）
 
@@ -430,6 +527,7 @@ memory_remember({
 | コンテンツ長さ | 最大0.3 | 詳細な内容 ＞ 曖昧な内容 |
 | 鮮度 | 最大0.1 | 新しいエントリほどスコアが高い |
 | 特異性 | 最大0.1 | ユニークな単語の割合 |
+| オリジン | +0.1/−0.05 | 人間の断言はブースト、推論はわずかにペナルティ |
 
 高品質なエントリはリコール時に優先的に表示されます。`memory_stats`で品質を確認できます：
 
@@ -609,7 +707,7 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 - 品質重み付きランキングにより、最も有用なエントリが優先的に表示されます。
 - 保存された`.toon`ファイルは**決して**変更されません — `compact`はレスポンスの再整形のみを行います。
 
-> **ヒント:** 大規模で相互接続されたメモリからリコールする際に、`compact: true`を`mode: "graph"`と組み合わせると最もコンパクトなコンテキストウィンドウになります。自動的にこれを実行する`memory_smart_recall`もあります。
+> **ヒント:** 大規模で相互接続されたメモリからリコールする際に、`compact: true`を`mode: "graph"`と組み合わせると最もコンパクトなコンテキストウィンドウになります。プロアクティブ/バックグラウンドでのリコールには`budget: "tiny"`を使用すると、キー＋1行（約50トークン）だけを返します。自動的にこれを実行する`memory_smart_recall`もあります。
 
 ### リコールのランキング方法
 
@@ -641,6 +739,57 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 `memory_remember`は新規エントリをこの語彙と内蔵語彙の両方で照合するため、コンテンツに依存関係を記述すると自動的にタグが付与されます。タグが多いほど品質スコアが高くなります。対応マニフェスト：`package.json`、`Cargo.toml`、`requirements.txt`、`pyproject.toml`、`go.mod`。
 
 > **ヒント:** 主要な依存関係を追加した後、`toon-memory init`を再実行して語彙を更新してください。`vocab`キーは`config.json`の`encrypted`/`capture`フラグとマージされます（上書きされません）。タグが多いほど品質スコアが高くなります。
+
+---
+
+## メモリグラフビューアー
+
+メモリをインタラクティブな力指向グラフとして可視化します。エントリ、その接続、カテゴリ、アクセスパターンを一目で確認できます。
+
+### CLIビューアー（スタンドアロンHTTPサーバー）
+
+```bash
+npx toon-memory viewer          # HTTPサーバーを起動＋ブラウザを開く
+npx toon-memory viewer --port 3001  # カスタムポート
+npx toon-memory viewer --export     # 静的HTMLとして保存
+```
+
+起動したら、ターミナルで`r`を押すとディスクから再読み込み、ブラウザでは`r`/↻でページを更新できます。
+
+### インラインビューアー（MCP Apps）
+
+MCP Apps互換ホストで`memory_visualize`を呼び出すと、グラフがインラインで描画されます — サーバー不要。ビューアーはチャットインターフェース内にインタラクティブパネルとして表示されます。
+
+### 機能
+
+| 操作 | 説明 |
+|---|---|
+| **ノードにホバー** | コンテンツプレビュー、品質、アクセス回数を表示するツールチップ |
+| **ノードをクリック** | 選択＋中央に配置＋近隣ノードをハイライト |
+| **ノードをダブルクリック** | 詳細パネルを開く |
+| **ノードをドラッグ** | 手動で再配置（右クリックで固定解除） |
+| **検索** | エントリをフィルタリング；一致ノードがグローで点滅 |
+| **⇿ パスファインダー** | 2つのノードをクリックして最短パスを検出・ハイライト |
+| **ズーム/パン** | マウスホイールまたは+/−ボタン |
+| **⚙ 物理演算** | 斥力、リンク距離、中心重力を調整 |
+| **テーマ切り替え** | ダーク/ライトモード（保持されます） |
+| **エクスポート** | グラフをPNGまたはSVGとして保存 |
+
+### スクリーンショット
+
+| グラフビュー | 検索ハイライト | パスファインダー | 詳細パネル |
+|---|---|---|---|
+| ![Full graph](docs/public/viewer/graph-full.png) | ![Search](docs/public/viewer/graph-search.png) | ![Path](docs/public/viewer/graph-path.png) | ![Detail](docs/public/viewer/graph-detail.png) |
+
+![Viewer demo animation](docs/public/viewer/viewer-demo.gif)
+
+### 自分のスクリーンショットを撮る
+
+```bash
+npm run capture:viewer
+```
+
+[Playwright](https://playwright.dev)（`npx playwright install chromium`）と`ffmpeg`が必要です。
 
 ---
 
@@ -678,6 +827,7 @@ memory_remember({
 | `pattern` | 約束事、フレームワーク、コードスタイルルール |
 | `bug` | 修正した問題とその修正方法 |
 | `knowledge` | プロジェクトの事実、ドメイン情報、チーム情報 |
+| `warning` | 「これはやらないこと」 — アンチパターン、地雷、避けるべき失敗（ブースト付きでリコールされる） |
 
 > **ヒント:** 深く考えすぎないでください。将来の自分（またはエージェント）が知りたいと思えば保存してください。具体的なタグを持つ詳細なエントリは品質スコアが高くなります。
 
@@ -702,7 +852,7 @@ tags: "api;rest;versioning"
 
 ### メモリを清潔に保つ
 
-毎月`memory_archive()`を実行して古いエントリをアーカイブに移動してください。`memory_stats()`でサイズと品質分布を確認できます。低品質なエントリ（曖昧な内容、タグなし）はリコール優先度が自動的に下がります。`memory_consolidate`で重複をマージしてください。
+毎月`memory_archive()`を実行して古いエントリをアーカイブに移動してください。`memory_stats()`でサイズと品質分布を確認できます。低品質なエントリ（曖昧な内容、タグなし）はリコール優先度が自動的に下がります。`memory_consolidate`で重複をマージし、`mode: "versions"`で新しいライブラリバージョンに置き換えられたメモを退役させてください。
 
 ---
 
@@ -716,6 +866,9 @@ npx toon-memory status       # インストール状態を確認
 npx toon-memory stats        # メモリ統計を表示
 npx toon-memory export       # メモリをJSONにエクスポート
 npx toon-memory import <file> # JSONからメモリをインポート
+npx toon-memory viewer       # メモリグラフビューアーを開く（HTTPサーバー）
+npx toon-memory viewer --export # ビューアーを静的HTMLとして保存
+npx toon-memory viewer --port 3001 # カスタムポート
 npx toon-memory watch [options] # オプション付き自動バックアップ
 npx toon-memory upgrade      # 最新バージョンに更新
 npx toon-memory uninstall    # 全エージェントから削除
@@ -921,10 +1074,10 @@ args = ["-y", "toon-memory", "mcp"]
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
-  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0
-  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.55|1.0
-  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20 (see [[use-zod]])|redis.ts|redis;fix|2026-07-10|7d|0|use-zod|0.70|0.9
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority|path_scope|origin|status}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0||0||agent|active
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.55|1.0||0||agent|active
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20 (see [[use-zod]])|redis.ts|redis;fix|2026-07-10|7d|0|use-zod|0.70|0.9||0||agent|active
 summaries:
   src/services/redis.ts: Redis connection pool with retry logic
 ```
@@ -1075,6 +1228,33 @@ Phase 5: まとめ                          1,214 t /  5 c        68 t /  2 c   
 
 > **ヒント:** `memory_smart_recall`はBM25＋グラフ＋品質を1回の呼び出しで組み合わせ、トークンとツール呼び出しオーバーヘッドの両方を節約します。各タスクの開始時に使用してください。
 
+### RRFランキングベンチマーク（実測値）
+
+v3.7.0以降、リコールはBM25（×3）とグラフ中心性のランクに対して**Reciprocal Rank Fusion**で結果をランク付けし、適応的`k = clamp(3..60, round(sqrt(n)))`を使用します。手動ラベル付き関連度で8件のゴールドスタンダードクエリを使用して実測（`scripts/bench-rrf.mjs`、`npm run bench:rrf`を参照）：
+
+```
+Metric        linear (v3.6.x)     RRF (v3.7.0)
+────────────  ─────────────────   ────────────────
+nDCG@10       0.776               0.776   (parity)
+MRR           0.917               0.917   (parity)
+```
+
+RRFは従来の線形重み付けスコアと**ランキングコストゼロ**で同等でありながら、スコアリングパイプラインを簡素化します（BM25×3＋中心性、重要度/鮮度のノイズなし）。グラフモードのスーパーセードも尊重されます：廃止されたエントリは`as_of`時点クエリ以外では除外されたままになります。
+
+### 検索ベンチマーク（LongMemEvalスタイル、実測値）
+
+v4.1.0以降、検索は**実プロジェクトメモリの凍結スナップショット**に対してベンチマークされます — 手書きのゴールドクエリによるLongMemEvalスタイルのテストセットです。コーパス：実データの`data.toon`エントリ187件（スナップショット`2026-08-01`）、6カテゴリにわたるゴールドクエリ42件（core-fact、temporal、knowledge-updating、multi-hop、meta/session、distractor）。測定対象のコードは**本番パイプライン**（`src/lib`）で、esbuildでメモリ内にバンドルされています — 忠実なコピーではありません。決定論的な`today`パラメータが鮮度/減衰を固定するため、結果が実時間でずれることはありません；実行は読み取り専用です（アクセストラッキングなし）。データファイル自体を説明する2つの優先メタエントリは除外されます。`benchmarks/retrieval-corpus.toon`、`benchmarks/gold-queries.json`（`npm run bench:retrieval`）を参照：
+
+```
+Mode            R@5     nDCG@5  MRR@5   answerable
+─────────────   ─────   ─────   ─────   ──────────
+linear         0.643   0.654   0.776   81.0%
+rrf            0.861   0.764   0.788   97.6%
+smart (unified) 0.829  0.739   0.760   92.5%
+```
+
+RRFがトップランクのモードです（R@5 0.861、クエリの97.6%が上位5件から回答可能）；`memory_smart_recall`も1回の呼び出しで競争力があります。
+
 ---
 
 ## トラブルシューティング
@@ -1167,7 +1347,18 @@ toon-memory/
 │   │   ├── setup.ts             # CLIコマンド
 │   │   └── toon-memory.ts       # CLIランナー
 │   ├── mcp/
-│   │   └── server.ts            # MCPサーバー（35ツール＋4リソース）
+│   │   ├── server.ts            # MCPサーバー（35ツール＋4リソース＋1プロンプト）
+│   │   ├── tools.ts             # ツール登録（35ツール）
+│   │   ├── resources.ts         # リソース登録（4リソース）
+│   │   ├── prompts.ts           # プロンプト登録（1プロンプト）
+│   │   ├── session-store.ts     # セッションレイヤー（自動昇格、クリーンアップ）
+│   │   ├── memory-io.ts         # メモリファイルの読み書き
+│   │   ├── entries.ts           # エントリのパースとユーティリティ
+│   │   ├── scoring.ts           # エントリスコアリングとアクセストラッキング
+│   │   ├── archive.ts           # アーカイブ管理
+│   │   ├── consolidation.ts     # 重複統合
+│   │   ├── config.ts            # 設定の読み込みと保存
+│   │   └── crypto.ts            # AES-256-GCM暗号化
 │   ├── lib/
 │   │   ├── lock.ts              # アドバイザリファイルロック＋アトミックライト
 │   │   ├── sessions.ts          # マルチセッション連携
@@ -1200,6 +1391,20 @@ toon-memory/
 3. 変更をコミット（`git commit -m 'feat: add amazing-feature'`）
 4. ブランチにプッシュ（`git push origin feature/amazing-feature`）
 5. プルリクエストを作成
+
+---
+
+## セキュリティとプライバシー
+
+toon-memoryはセキュリティとプライバシーを中核原則として設計されています。
+
+- **100%ローカルストレージ** — すべてのメモリは`.toon-memory/memory/`内のローカルマシンに保存されます。外部サーバー、クラウドサービス、第三者にデータが送信されることは一切ありません。
+- **テレメトリなし** — このプロジェクトにはテレメトリ、アナリティクス、トラッキングが一切ありません。利用データは収集されません。
+- **リモートコード実行なし** — toon-memoryはstdio経由で標準的なMCPサーバーとして動作します。リモートコードのダウンロード、実行、評価は行いません。
+- **保存時の暗号化** — メモリファイル全体のオプションのAES-256-GCM暗号化。`memory_encrypt`で有効化（`TOON_MEMORY_KEY`環境変数が必要）。
+- **暗号化キーは決して保存されない** — 暗号化キーは環境変数で提供する必要があり、toon-memoryが永続化することはありません。紛失した場合、データは復元できません。
+- **プロジェクトごとの分離** — 各プロジェクトに専用のメモリファイルがあります。プロジェクト間でメモリが漏れることはありません。
+- **自動`.gitignore`** — インストーラーは`.toon-memory/memory/`を`.gitignore`に追加し、メモリデータの誤コミットを防止します。
 
 ---
 

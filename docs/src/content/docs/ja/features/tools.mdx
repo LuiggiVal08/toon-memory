@@ -16,17 +16,17 @@ toon-memoryは永続メモリを管理するための35個のMCPツールと4つ
 
 | ツール | 説明 |
 |------|-------------|
-| `memory_remember` | 決定、パターン、バグ、ナレッジを保存（任意のTTL、自動タグ推論、`links`、自動品質スコア、マージ重複排除、信頼度） |
-| `memory_recall` | メモリを検索（ファイルを読む前に使用。期限切れTTLをフィルタ）。`mode: "graph"`で関係性を考慮したサブグラフを展開し、より高い精度を実現。ランキングはRRF融合（BM25×3 + グラフ中心性、適応的k）を使用。`rrf: false`で従来の線形スコアに。`as_of`は指定日以降にsupersededされたエントリを再包含します |
+| `memory_remember` | 決定、パターン、バグ、ナレッジ、または**warning**（「これはやらない」否定的メモリ、リコールブースト付き）を保存（任意のTTL、自動タグ推論、`links`、自動品質スコア、マージ重複排除、信頼度） |
+| `memory_recall` | メモリを検索（ファイルを読む前に使用。期限切れTTLをフィルタ）。`mode: "graph"`で関係性を考慮したサブグラフを展開し、より高い精度を実現。ランキングはRRF融合（BM25×3 + グラフ中心性、適応的k）を使用。`rrf: false`で従来の線形スコアに。`sessionBias`は現在のgitブランチのエントリをブースト。`pathScope`は結果をファイルパスにスコープ（globMatch対応）。`budget`: `"tiny"`（上位3）、`"normal"`（上位10）、`"deep"`（上位20）。`as_of`は指定日以降にsupersededされたエントリを再包含。`explain: true`は取得理由の行をエントリごとに追加。`budget_tokens`は推定トークン数による出力制限（`0`＝制限なし） |
 | `memory_forget` | **ライフサイクル操作**: `action: "soft"`（デフォルト）でobsoleteに、`"hard"`で完全削除、`"restore"`で復元、`"supersede"`で`new_key`への`superseded_by`リンク付き置き換え。正規のライフサイクルツール |
-| `memory_stats` | メモリの状態を表示（TTL統計と品質分布を含む） |
+| `memory_stats` | メモリの状態を表示（TTL統計、品質分布、品質/アクセスしきい値未満のコールドメモリ、および**ヒット率/重複/廃止**メトリクス（少なくとも1回リコールされたエントリの%、完全一致コンテンツの%、obsoleteエントリの%）を含む） |
 | `memory_summary` | ファイルサマリーの保存/取得 |
 | `memory_archive` | 古いエントリ（30日以上）と期限切れTTLエントリをアーカイブ |
 | `memory_diff` | 指定日以降の変更を表示（24h、7d、または正確な日付） |
 | `memory_suggest` | 特定のコンテキストに関連するエントリを検索 |
 | `memory_captured` | フックによって自動キャプチャされたアクティビティを一覧表示（オプトイン）またはログをクリア |
 | `memory_checkpoint` | **セッションチェックポイント**: 現在のメモリ状態のスナップショットを7d TTLで作成。長時間セッション中のロールバック参照に便利 |
-| `memory_consolidate` | **クリーンアップ操作**、決定論的（LLM不使用）: `mode: "identical"`（デフォルト）で同一内容を重複排除、`"similar"`で近似重複をマージ（Jaccard >50%）、`"low-quality"`で低品質エントリを一括圧縮 |
+| `memory_consolidate` | **クリーンアップ操作**、決定論的（LLM不使用）: `mode: "identical"`（デフォルト）で同一内容を重複排除、`"similar"`で近似重複をマージ（Jaccard >50%）、`"low-quality"`で低品質エントリを一括圧縮（`minQuality`、`dryRun`）、`"versions"`は同じ主題を異なるライブラリバージョンで説明するエントリを検出し、古い方を新しい方のために退役させます |
 | `memory_encrypt` | AES-256-GCM暗号化を有効化 |
 | `memory_decrypt` | 暗号化を無効化 |
 | `memory_backup` | メモリファイルのタイムスタンプ付きバックアップを作成（最新10件に自動プルーン） |
@@ -37,7 +37,7 @@ toon-memoryは永続メモリを管理するための35個のMCPツールと4つ
 | `context_focus` | **ハイパーコンテキストブリーフィング**: クエリにのみ関連するメモリ+関連ソースファイル+呼び出し元+テストファイル |
 | `context_health` | **メモリヘルス監査**: 孤立リンク、重複、壊れたファイル参照、期限切れTTL、古いセッション、スコア0-100 |
 | `context_export` | **メモリをMarkdownとしてエクスポート**: システムプロンプト用のインジェクタブルコンテキスト（完全版またはコンパクト版） |
-| `memory_smart_recall` | 統合検索: BM25+グラフ+品質+新鮮度+減衰を1回の呼び出しで |
+| `memory_smart_recall` | 統合検索: BM25+グラフ+品質+新鮮度+減衰+セッションバイアスを1回の呼び出しで。`explain: true`（エントリごとの理由）と`budget_tokens`（出力上限）をサポート |
 | `memory_pin` | **Pin an entry**: pinned entries always appear at the top of recall results, even without a keyword match |
 | `memory_unpin` | **Unpin an entry**: remove the pinned flag |
 | `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
@@ -118,6 +118,28 @@ memory_recall({ query: "redis" })
 ```
 
 結果は品質重み付き — 詳細、タグ、リンクが多いエントリが優先的に表示されます。
+
+### 結果が返された理由を説明する
+
+```typescript
+memory_recall({ query: "redis", explain: true })
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+//   ↳ 92% relevance · used 14× · used today · importance HIGH
+```
+
+`↳`の理由行は決定論的（関連性%、アクセス回数、最終使用、重要度）— LLMは関与しません。エージェントにそのエントリが表示された*理由*を知りたい場合は`explain: true`を使用してください。
+
+### `budget_tokens`で出力を制限する
+
+```typescript
+memory_recall({ query: "redis", budget_tokens: 300 })
+// エントリは貪欲に累積され、見積もりを超える末尾は破棄されます。
+// budget_tokens: 0（デフォルト）= 制限なし。
+```
+
+> **ヒント:** `budget_tokens`を`budget: "deep"`と組み合わせると、メモリサイズに関係なくハードなトークン上限内に収まるコンテキストウィンドウになります。
 
 ### 日付フィルタ付きで検索する
 
@@ -291,6 +313,8 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 - **品質ブースト** — 品質スコアが高いエントリ（タグ、リンク、詳細が多い）はランキングブーストを受けます。
 - **シードボーナス** — クエリに直接マッチしたエントリはフラットブーストを受けます。
 - **ホップごとの減衰** — シードから`d`ホップ離れたノードは`0.5^d`が乗算され、遠いコンテキストは近隣のコンテキストより下に配置されます。
+- **言語ファミリー** — クエリと同じ文字体系（ラテン/CJK/キリルなど）で書かれたエントリは`languageFamily()`経由で+0.1ブーストされます。
+- **フォルダ一致** — `path_scope`フォルダが現在のファイルと一致するエントリは+0.05ブーストされます。
 
 `graph`モードでは、キーワードマッチをシードとして、`hops`までエゴサブグラフを展開し、組み合わせスコアの上位`limit`（デフォルト6）を返します。`memory_smart_recall`はこれらのすべてのシグナルを1回の呼び出しで結合します。
 
@@ -357,3 +381,4 @@ memory_smart_recall({ intent: "redis cache configuration", hops: 2 })
 | `pattern` | プロジェクトパターン（「バリデーションにZodを使用」） |
 | `bug` | バグ修正（「Redisプール枯渇」） |
 | `knowledge` | 一般的なナレッジ（「ブローカはRESPを使用」） |
+| `warning` | 「これはやらない」— アンチパターン、地雷、避けるべき失敗（+0.2リコールブースト付きでリコール） |

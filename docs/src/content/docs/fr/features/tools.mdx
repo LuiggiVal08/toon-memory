@@ -16,17 +16,17 @@ toon-memory fournit 35 outils MCP et 4 ressources MCP pour gérer la mémoire pe
 
 | Outil | Description |
 |-------|-------------|
-| `memory_remember` | Enregistrer une décision, un pattern, un bug ou une connaissance (TTL optionnel, inférence automatique des tags, `links`, score de qualité automatique, fusion-dédup, confiance) |
-| `memory_recall` | Rechercher en mémoire (à utiliser AVANT de lire les fichiers, filtre les TTL expirés). `mode: "graph"` étend un sous-graphe conscient des relations pour plus de précision. Le classement utilise la fusion RRF (BM25×3 + centralité du graphe, k adaptatif) ; passez `rrf: false` pour le score linéaire hérité. `as_of` réinclut les entrées superseded après une date ponctuelle |
+| `memory_remember` | Enregistrer une décision, un pattern, un bug, une connaissance ou un **warning** (mémoire négative « ne PAS faire ceci », rappelée avec un boost) (TTL optionnel, inférence automatique des tags, `links`, score de qualité automatique, fusion-dédup, confiance) |
+| `memory_recall` | Rechercher en mémoire (à utiliser AVANT de lire les fichiers, filtre les TTL expirés). `mode: "graph"` étend un sous-graphe conscient des relations pour plus de précision. Le classement utilise la fusion RRF (BM25×3 + centralité du graphe, k adaptatif) ; passez `rrf: false` pour le score linéaire hérité. `sessionBias` booste les entrées de la branche git courante. `pathScope` limite les résultats à un chemin de fichier (supporte globMatch). `budget` : `"tiny"` (top 3), `"normal"` (top 10) ou `"deep"` (top 20). `as_of` réinclut les entrées superseded après une date ponctuelle. `explain: true` ajoute une ligne de raison par entrée (pourquoi elle a été récupérée). `budget_tokens` plafonne la sortie par estimation des tokens (`0` = pas de limite) |
 | `memory_forget` | **Cycle de vie** par clé ou id : `action: "soft"` (défaut) marque obsolète, `"hard"` supprime définitivement, `"restore"` réactive, `"supersede"` remplace avec un lien `superseded_by` vers `new_key`. Outil canonique |
-| `memory_stats` | Voir l'état de la mémoire (y compris les stats TTL et la distribution de qualité) |
+| `memory_stats` | Voir l'état de la mémoire (y compris les stats TTL et la distribution de qualité, ainsi que les métriques **taux d'accès/doublons/obsolètes** (% d'entrées rappelées au moins une fois, % de doublons de contenu exact, % d'entrées obsolètes)) |
 | `memory_summary` | Enregistrer/récupérer des résumés de fichiers |
 | `memory_archive` | Archiver les vieilles entrées (>30 jours) et les TTL expirés |
 | `memory_diff` | Afficher les changements depuis une date (24h, 7d ou date précise) |
 | `memory_suggest` | Trouver des entrées liées pour un contexte donné |
 | `memory_captured` | Lister l'activité capturée automatiquement par les hooks (opt-in) ou vider le journal |
 | `memory_checkpoint` | **Point de contrôle** : crée un instantané de l'état actuel de la mémoire avec TTL de 7j. Utile pour référence de restauration pendant les longues sessions |
-| `memory_consolidate` | **Nettoyage**, déterministe (sans LLM) : `mode: "identical"` (défaut) déduplique les entrées identiques, `"similar"` fusionne les quasi-doublons (Jaccard >50%), `"low-quality"` compresse en lot les entrées de faible qualité |
+| `memory_consolidate` | **Nettoyage**, déterministe (sans LLM) : `mode: "identical"` (défaut) déduplique les entrées identiques, `"similar"` fusionne les quasi-doublons (Jaccard >50%), `"low-quality"` compresse en lot les entrées de faible qualité (`minQuality`, `dryRun`), `"versions"` détecte les entrées décrivant le même sujet à différentes versions de bibliothèque et retire les plus anciennes en faveur de la plus récente |
 | `memory_encrypt` | Activer le chiffrement AES-256-GCM |
 | `memory_decrypt` | Désactiver le chiffrement |
 | `memory_backup` | Créer une sauvegarde horodatée du fichier mémoire (auto-nettoyage à 10 sauvegardes récentes) |
@@ -37,7 +37,7 @@ toon-memory fournit 35 outils MCP et 4 ressources MCP pour gérer la mémoire pe
 | `context_focus` | **Briefing ciblé** : uniquement la mémoire pertinente + fichiers sources associés + appelants + fichiers de test pour une requête |
 | `context_health` | **Audit santé mémoire** : liens orphelins, doublons, références fichiers cassées, TTL expirés, sessions obsolètes, score 0–100 |
 | `context_export` | **Exporter la mémoire en markdown** : contexte injectable pour les prompts système (complet ou compact) |
-| `memory_smart_recall` | Recherche unifiée : BM25 + graphe + qualité + fraîcheur + décroissance en un seul appel |
+| `memory_smart_recall` | Recherche unifiée : BM25 + graphe + qualité + fraîcheur + décroissance en un seul appel. `explain: true` ajoute une ligne de raison par entrée (pourquoi elle a été récupérée), `budget_tokens` plafonne la sortie par estimation des tokens (`0` = pas de limite) |
 | `memory_pin` | **Épingler une entrée**: les entrées épinglées apparaissent toujours en haut des résultats, même sans correspondance de mot-clé |
 | `memory_unpin` | **Détacher une entrée**: supprime le marqueur d'épingle d'une entrée |
 | `memory_search` | **Recherche unifiée avec filtres**: comme `memory_recall` plus filtres par catégorie, tags et plage de dates |
@@ -118,6 +118,28 @@ memory_recall({ query: "redis" })
 ```
 
 Les résultats sont pondérés par la qualité — les entrées avec plus de détail, tags et liens apparaissent en premier.
+
+### Expliquer POURQUOI un résultat a été renvoyé
+
+```typescript
+memory_recall({ query: "redis", explain: true })
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+//   ↳ 92% relevance · used 14× · used today · importance HIGH
+```
+
+La ligne de raison `↳` est déterministe (pourcentage de pertinence, nombre d'accès, dernière utilisation, importance) — aucun LLM impliqué. Utilisez `explain: true` lorsque vous voulez savoir *pourquoi* l'agent a reçu ces entrées.
+
+### Plafonner la sortie avec `budget_tokens`
+
+```typescript
+memory_recall({ query: "redis", budget_tokens: 300 })
+// Les entrées s'accumulent de manière gourmande ; la queue qui dépasserait l'estimation est abandonnée.
+// budget_tokens: 0 (défaut) = pas de limite.
+```
+
+> **Astuce :** Combinez `budget_tokens` avec `budget: "deep"` pour une fenêtre de contexte qui reste sous un plafond de tokens fixe quelle que soit la taille de la mémoire.
 
 ### Recherche avec filtre de date
 
@@ -291,6 +313,8 @@ Le rappel est déterministe et hors ligne (pas d'embeddings, pas de LLM). Chaque
 - **Boost de qualité** — les entrées avec des scores de qualité plus élevés (plus de tags, liens, détails) reçoivent un boost de classement.
 - **Bonus de graine** — les entrées qui correspondent directement à la requête reçoivent un boost fixe.
 - **Décroissance par hop** — les nœuds à `hops` d'une graine sont multipliés par `0.5^d`, maintenant le contexte distant en dessous du contexte proche.
+- **Famille de langue** — les entrées écrites dans la même écriture (latin/CJK/cyrillique/…) que la requête reçoivent un boost +0.1 via `languageFamily()`.
+- **Correspondance de dossier** — les entrées dont le `path_scope` correspond au fichier courant reçoivent un boost +0.05.
 
 En mode `graph`, le rappel part des correspondances par mots-clés, étend le sous-graphe égo jusqu'à `hops`, et retourne les `limit` meilleurs (par défaut 6) par score combiné. `memory_smart_recall` combine tous ces signaux en un seul appel.
 
@@ -357,3 +381,4 @@ Les entrées sont organisées par catégorie :
 | `pattern` | Patterns du projet ("Utilise Zod pour la validation") |
 | `bug` | Correctifs de bugs ("Épuisement du pool Redis") |
 | `knowledge` | Connaissances générales ("Le broker utilise RESP") |
+| `warning` | « ne PAS faire ceci » — anti-modèles, pièges, erreurs à éviter (rappelé avec un boost +0.2) |

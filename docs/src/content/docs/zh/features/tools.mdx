@@ -16,17 +16,17 @@ toon-memory 提供 35 个 MCP 工具和 4 个 MCP 资源，用于管理持久化
 
 | 工具 | 描述 |
 |------|------|
-| `memory_remember` | 保存决策、模式、缺陷或知识（可选 TTL、自动标签推断、`links`、自动质量评分、合并去重、置信度） |
-| `memory_recall` | 搜索记忆（应在读取文件之前使用，自动过滤过期 TTL）。`mode: "graph"` 可展开关系感知子图以获得更高精度。排名使用 RRF 融合（BM25×3 + 图中心性，自适应 k）；传入 `rrf: false` 使用旧版线性分数。`as_of` 会重新包含在指定日期之后被 superseded 的条目 |
+| `memory_remember` | 保存决策、模式、缺陷、知识或 **warning**（负面"不要这样做"记忆，召回时加成）（可选 TTL、自动标签推断、`links`、自动质量评分、合并去重、置信度） |
+| `memory_recall` | 搜索记忆（应在读取文件之前使用，自动过滤过期 TTL）。`mode: "graph"` 可展开关系感知子图以获得更高精度。排名使用 RRF 融合（BM25×3 + 图中心性，自适应 k）；传入 `rrf: false` 使用旧版线性分数。`sessionBias` 提升来自当前 git 分支的条目。`pathScope` 将结果限定到文件路径（支持 globMatch）。`budget`：`"tiny"`（前 3）、`"normal"`（前 10）或 `"deep"`（前 20）。`as_of` 会重新包含在指定日期之后被 superseded 的条目。`explain: true` 为每条结果追加原因行（说明为何被检索到）。`budget_tokens` 按估计 token 数限制输出（`0` = 无限制） |
 | `memory_forget` | 按 key 或 id 移除条目 |
-| `memory_stats` | 查看记忆状态（包括 TTL 统计和质量分布） |
+| `memory_stats` | 查看记忆状态（包括 TTL 统计、质量分布、低于质量/访问阈值的冷记忆，以及**命中率/重复率/废弃率**指标：至少被召回一次的条目百分比、完全重复内容百分比、过时条目百分比） |
 | `memory_summary` | 保存/获取文件摘要 |
 | `memory_archive` | 归档旧条目（>30 天）和过期 TTL 条目 |
 | `memory_diff` | 显示自某日期以来的更改（24h、7d 或具体日期） |
 | `memory_suggest` | 为给定上下文查找相关条目 |
 | `memory_captured` | 列出钩子自动捕获的活动（需启用）或清除日志 |
 | `memory_checkpoint` | **会话检查点**：创建当前内存状态的快照，TTL为7天。在长时间会话中可用于回滚参考 |
-| `memory_consolidate` | 合并去重相同内容的条目并合并属性（确定性，无 LLM） |
+| `memory_consolidate` | 清理操作，确定性（无 LLM）：`mode: "identical"`（默认）去重内容完全相同的条目，`"similar"` 合并近重复条目（Jaccard >50%），`"low-quality"` 批量压缩低质量条目（`minQuality`、`dryRun`），`"versions"` 检测描述同一主题在不同库版本的条目，并淘汰旧条目、保留最新版本 |
 | `memory_encrypt` | 启用 AES-256-GCM 加密 |
 | `memory_decrypt` | 禁用加密 |
 | `memory_backup` | 创建带时间戳的记忆文件备份（自动保留最近 10 个） |
@@ -37,7 +37,7 @@ toon-memory 提供 35 个 MCP 工具和 4 个 MCP 资源，用于管理持久化
 | `context_focus` | **超聚焦简报**：仅返回与查询相关的记忆 + 相关源文件 + 调用者 + 测试文件 |
 | `context_health` | **记忆健康审计**：孤儿链接、重复项、损坏的文件引用、过期 TTL、过期会话，评分 0-100 |
 | `context_export` | **导出记忆为 markdown**：可用于系统提示词的注入式上下文（完整或紧凑格式） |
-| `memory_smart_recall` | 统一搜索：BM25 + 图 + 质量 + 新鲜度 + 衰减，一次调用完成 |
+| `memory_smart_recall` | 统一搜索：BM25 + 图 + 质量 + 新鲜度 + 衰减，一次调用完成。`explain: true` 为每条结果附加原因行，`budget_tokens` 按估计 token 数限制输出上限 |
 | `memory_pin` | **Pin an entry**: pinned entries always appear at the top of recall results, even without a keyword match |
 | `memory_unpin` | **Unpin an entry**: remove the pinned flag |
 | `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
@@ -118,6 +118,28 @@ memory_recall({ query: "redis" })
 ```
 
 结果按质量加权 — 包含更多详情、标签和链接的条目会排在前面。
+
+### 解释为什么返回该结果
+
+```typescript
+memory_recall({ query: "redis", explain: true })
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+//   ↳ 92% relevance · used 14× · used today · importance HIGH
+```
+
+`↳` 原因行是确定性的（相关性百分比、访问次数、最后使用时间、重要性）— 不涉及 LLM。当你想知道代理*为什么*被展示这些条目时，使用 `explain: true`。
+
+### 使用 `budget_tokens` 限制输出
+
+```typescript
+memory_recall({ query: "redis", budget_tokens: 300 })
+// 条目贪心累积；超出预估的尾部会被丢弃。
+// budget_tokens: 0（默认）= 无限制。
+```
+
+> **提示：** 将 `budget_tokens` 与 `budget: "deep"` 结合使用，无论记忆多大，都能让上下文窗口保持在硬 token 上限之内。
 
 ### 带日期过滤的搜索
 
@@ -283,16 +305,18 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 
 ### 召回如何排序结果
 
-召回是确定性和离线的（无嵌入、无 LLM）。每个候选项条目获得以下综合分数：
+召回是确定性和离线的（无嵌入、无 LLM）。自 v3.7.0 起默认排名为 **RRF（Reciprocal Rank Fusion）**：
 
-- **BM25 相关性** — 对 `id` + `category` + `key` + `content` + `file` + `tags` 的概率性词频评分。
-- **图中心性** — 度归一化（0..1）；连接多个条目的枢纽接近 1 分，因此即使没有搜索词也会浮现。
-- **重要性** — 新近度 + 访问频率。
-- **质量加成** — 质量评分更高的条目（更多标签、链接、详情）获得排序加成。
-- **种子加分** — 直接匹配查询的条目获得固定加分。
+- **BM25 相关性** — 对 `id` + `category` + `key` + `content` + `file` + `tags` 的概率性词频评分，融合**三次**（在小型记忆图上唯一的真实检索器）。
+- **图中心性** — 度归一化（0..1），融合一次；连接多个条目的枢纽即使没有搜索词也排在前列。
+- **自适应 `k`** — `k = clamp(3..60, round(sqrt(n)))`，其中 `n` 是候选项数量。教科书式 `k=60` 会压平小型图上的排名差异，因此它随 `sqrt(n)` 缩放。
 - **每跳衰减** — 距种子 `d` 跳的节点乘以 `0.5^d`，使远距离上下文低于近距离上下文。
+- **会话偏置** — 条目所在文件出现在当前会话中的获得 1.15× 加成。
+- **语言家族** — 与查询使用相同文字体系（latin/CJK/cyrillic/…）书写的条目通过 `languageFamily()` 获得 +0.1 加成。
+- **文件夹匹配** — `path_scope` 与当前文件匹配的条目获得 +0.05 加成。
+- **优先级** — 固定的条目无论分数如何都排在首位。
 
-在 `graph` 模式下，召回以关键词匹配为种子，展开自我子图至 `hops` 层，然后按综合分数返回前 `limit`（默认 6）个结果。`memory_smart_recall` 在一次调用中组合所有这些信号。
+传入 `rrf: false` 回退到旧版线性加权分数（BM25 + 0.4·centrality + 0.25·importance + 种子加分）。在 `graph` 模式下，召回以关键词匹配为种子，展开自我子图至 `hops` 层，然后按综合分数返回前 `limit`（默认 6）个结果。`memory_smart_recall` 在一次调用中组合所有这些信号。
 
 ### 智能召回（`memory_smart_recall`）
 
@@ -357,3 +381,4 @@ memory_smart_recall({ intent: "redis cache configuration", hops: 2 })
 | `pattern` | 项目模式（"使用 Zod 做校验"） |
 | `bug` | 缺陷修复（"Redis 连接池耗尽"） |
 | `knowledge` | 通用知识（"Broker 使用 RESP"） |
+| `warning` | "不要这样做" — 反模式、雷区、要避免的错误（召回时 +0.2 加成） |

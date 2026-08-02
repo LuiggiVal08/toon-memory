@@ -8,6 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml/badge.svg)](https://github.com/LuiggiVal08/toon-memory/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-online-blue)](https://luiggival08.github.io/toon-memory/)
+[![MCP Badge](https://lobehub.com/badge/mcp/luiggival08-toon-memory)](https://lobehub.com/mcp/luiggival08-toon-memory)
 
 ---
 
@@ -30,6 +31,7 @@
 - [FAQ](#faq)
 - [Développement](#développement)
 - [Contribuer](#contribuer)
+- [Sécurité et confidentialité](#sécurité-et-confidentialité)
 - [Licence](#licence)
 
 ---
@@ -63,7 +65,7 @@ Lisez [Comment toon-memory rend votre agent IA plus intelligent](https://luiggiv
 
 ## Fonctionnalités
 
-- **35 outils MCP** — Gestion complète de la mémoire via le Model Context Protocol, incluant `memory_smart_recall` (rappel unifié), `memory_sessions` pour la coordination multi-session, et les outils `context_*` pour la génération de contexte en un seul appel (briefing, diff, focus, audit de santé, export)
+- **35 outils MCP** — Gestion complète de la mémoire via le Model Context Protocol, incluant `memory_smart_recall` (rappel unifié avec biais de session), `memory_sessions` pour la coordination multi-session, les outils `context_*` pour la génération de contexte en un seul appel (briefing, diff, focus, audit de santé, export), `memory_compress` (compression propulsée par LLM), `memory_consolidate` (dédoublonnage/fusion/nettoyage déterministes), `memory_primer` (contexte auto-injecté), `memory_merge_sessions` (fusion inter-sessions), `memory_pin`/`memory_unpin` (épingler les entrées importantes avec priorité 1-5), `memory_checkpoint` (instantané de session avec TTL de 7j), `memory_search` (recherche unifiée avec filtres de tags + biais de session), `memory_tag` (opérations de tags par lot), `memory_export_gist`/`memory_import_gist` (synchronisation GitHub Gist), `memory_forget` (suppression douce/dure, restauration, remplacement), `memory_reflect` (réflexion sur l'obsolescence/qualité), et `memory_promote` (promotion automatique des brouillons à faible confiance)
 - **Ressources MCP** — Lire la mémoire comme contexte sans invoquer d'outils, incluant un System Primer (carte de connaissances auto-générée)
 - **15 agents supportés** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
 - **Installateur interactif** — Sélectionnez les agents à configurer depuis un menu
@@ -87,9 +89,29 @@ Lisez [Comment toon-memory rend votre agent IA plus intelligent](https://luiggiv
 - **Smart Recall** — `memory_smart_recall` combine BM25 + graphe + décroissance + qualité en un seul appel ; le LLM l'appelle au début de chaque tâche
 - **Score de qualité** — Chaque entrée reçoit un score de qualité de 0 à 1 basé sur la structure (tags, liens, spécificité du contenu, récence) ; les entrées de haute qualité remontent en premier
 - **Fusion-dédoublonnage** — Sauvegarder avec le même `key` fusionne les attributs (union des tags, confiance maximale, date la plus récente, liens combinés) au lieu d'écraser
+- **Détection de quasi-doublons** — La consolidation détecte les quasi-doublons via la similarité de Jaccard (seuil 0.7) et les fusionne
 - **Score de confiance** — Chaque entrée suit la fiabilité : affirmation utilisateur = 1.0, inféré = 0.65–0.75
+- **Compression propulsée par LLM** — `memory_compress` utilise l'IA pour résumer les longues entrées ; `memory_consolidate(mode: "low-quality")` fait un nettoyage par lot déterministe
+- **Fusion inter-sessions** — `memory_merge_sessions` fusionne les observations des sessions parallèles pour un fichier
+- **Synchronisation GitHub Gist** — `memory_export_gist` et `memory_import_gist` synchronisent les entrées mémoire via GitHub Gist (zéro dépendance)
+- **Mode verbatim** — `config.verbatim` préserve les entrées originales au lieu de les écraser lors de la sauvegarde
 - **Outils de génération de contexte** — `context_generate` (briefing complet), `context_diff` (incrémental), `context_focus` (ciblé), `context_health` (audit), `context_export` (markdown) — chacun remplace 5 à 6 appels d'outils manuels. Zéro LLM, pure agrégation déterministe
 - **System Primer** — Carte de connaissances auto-générée exposée en tant que ressource MCP ; les agents la chargent au démarrage de la session pour un contexte instantané
+- **Portée de chemin (Path Scoping)** — Les entrées peuvent être limitées à des chemins de fichiers via des motifs glob (`path_scope`) ; le rappel filtre par portée automatiquement
+- **Contrôle du budget** — Trois niveaux de sortie : `budget: "tiny"` (clé+1 ligne, ~50 tokens), `"normal"` (compact avec tags/arêtes), `"deep"` (tous les champs avec origine/portée/statut). Compatible en arrière avec `compact: true`
+- **Suivi de l'origine** — Chaque entrée suit son origine (`human`, `agent`, `inferred`) ; les affirmations humaines reçoivent un boost de qualité
+- **Suppression douce** — `memory_forget` supprime en douceur par défaut (définit `status=obsolete`). Restauration avec `memory_forget(key, action: "restore")`, masquage avec `action: "soft"`, suppression définitive via `action: "hard"`
+- **Audit de santé renforcé** — `context_health` détecte désormais les preuves manquantes (path_scope sans fichier) et les affirmations obsolètes (contenu se chevauchant dans la même catégorie)
+- **Arêtes de graphe typées** — Les arêtes portent des types (`superseded_by`, `supersedes`, `relates`), écrits sous forme `type:key` dans le graphe. Les `links` explicites deviennent `relates:key`, pour distinguer *comment* les entrées sont liées, pas seulement qu'elles le sont
+- **Classement RRF** — Le rappel fusionne les rangs BM25 (×3) et de centralité du graphe avec la fusion de rangs réciproques (Reciprocal Rank Fusion) et un `k` adaptatif `= clamp(3..60, round(sqrt(n)))`. Benchmark (8 requêtes de référence) : nDCG 0.776, MRR 0.917 — parité exacte avec le scoring linéaire précédent. Passez `rrf: false` pour revenir en arrière
+- **Réflexion mémoire** — `memory_reflect` classe les entrées par obsolescence, qualité et sur-connexion pour mettre en évidence ce qui nécessite de l'attention ou un nettoyage. Déterministe, zéro LLM
+- **Remplacement de mémoire** — `memory_forget(key, action: "supersede", new_key)` marque une entrée comme remplacée par une plus récente (lien `superseded_by` + date `supersededOn`). `memory_recall({ as_of })` ré-inclut les anciennes entrées pour les requêtes à une date précise avant leur remplacement
+- **Promotion automatique** — `memory_promote` promeut les brouillons à faible confiance en entrées actives de manière déterministe (seuil 0.65, dédoublonnage Jaccard), avec `dryRun` par défaut
+- **Expliquer POURQUOI** — `memory_recall`/`memory_smart_recall` acceptent `explain: true` et ajoutent une ligne de raison déterministe à chaque entrée retournée (`↳ 100% pertinence · utilisé 14× · utilisé aujourd'hui · importance HAUTE`) — *pourquoi* elle a été récupérée, sans LLM
+- **Budgets de tokens** — `budget_tokens` plafonne la sortie du rappel par estimation du nombre de tokens ; les entrées s'accumulent de manière gourmande et la queue qui dépasserait le budget est abandonnée (`0` = pas de limite)
+- **Remplacement par version** — `memory_consolidate(mode: "versions")` détecte les entrées décrivant le même sujet à différentes versions de bibliothèque (par ex. « Utilisez React 18 » vs « Utilisez React 19 ») et retire les plus anciennes en faveur de la plus récente
+- **Mémoires négatives** — une catégorie `warning` pour les faits « ne PAS faire ceci » ; les entrées `warning` reçoivent un boost de rappel pour que l'agent voie les pièges avant de les répéter
+- **Classement langue + dossier** — le rappel booste les entrées écrites dans la même famille d'écriture (latin/CJK/cyrillique/…) et les entrées dont le `path_scope` correspond au fichier courant
 
 ---
 
@@ -134,6 +156,53 @@ memory_remember   # Sauvegarder les décisions importantes
 
 > **Astuce :** Exécutez toujours `memory_recall` au début d'une session. Votre agent aura instantanément le contexte des sessions précédentes.
 
+### Configuration rapide du client MCP
+
+#### Cursor
+
+Ajoutez à `.cursor/mcp.json` :
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+#### Claude Desktop
+
+Ajoutez à `claude_desktop_config.json` :
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
+#### Windsurf
+
+Ajoutez à `~/.codeium/windsurf/mcp_config.json` :
+
+```json
+{
+  "mcpServers": {
+    "toon-memory": {
+      "command": "npx",
+      "args": ["-y", "toon-memory", "mcp"]
+    }
+  }
+}
+```
+
 ---
 
 ## Agents supportés
@@ -164,11 +233,11 @@ memory_remember   # Sauvegarder les décisions importantes
 
 | Outil | Description |
 |------|-------------|
-| `memory_remember` | Sauvegarde une décision, un motif, un bogue ou une connaissance (TTL optionnel, inférence automatique de tags, `links` pour construire le graphe mémoire, fusion-dédoublonnage sur même clé, score de qualité et confiance automatiques) |
-| `memory_recall` | Recherche dans la mémoire (utilisez AVANT de lire les fichiers, filtre les TTL expirés). `mode: "graph"` étend un sous-graphe relationnel pour plus de précision. `compact: true` retourne un format économe en tokens, indexé numériquement. `sessionBias` booste les entrées de la branche git actuelle. Classement pondéré par la qualité |
-| `memory_smart_recall` | **Rappel unifié** : BM25 + graphe + décroissance + qualité en un seul appel. `sessionBias` booste les entrées de la branche git actuelle. Utilisez au DÉBUT de chaque tâche. Retourne une sortie compacte et économe en tokens |
-| `memory_forget` | Supprime une entrée par clé ou id |
-| `memory_stats` | Affiche l'état de la mémoire (y compris les stats TTL et la distribution de qualité) et les mémoire froides en dessous des seuils de qualité/accès |
+| `memory_remember` | Sauvegarde une décision, un motif, un bogue, une connaissance ou une **alerte** (`warning` — mémoire négative « ne PAS faire ceci », rappelée avec un boost) — TTL optionnel, inférence automatique de tags, `links` pour construire le graphe mémoire, fusion-dédoublonnage sur même clé, score de qualité et confiance automatiques |
+| `memory_recall` | Recherche dans la mémoire (utilisez AVANT de lire les fichiers, filtre les TTL expirés). `mode: "graph"` étend un sous-graphe relationnel pour plus de précision. `budget: "tiny"|"normal"|"deep"` contrôle la verbosité de la sortie (compatible en arrière avec `compact: true`). `path_scope` filtre par motif glob. `sessionBias` booste les entrées de la branche git actuelle. `explain: true` ajoute une ligne de raison par entrée (pourquoi elle a été récupérée). `budget_tokens` plafonne la sortie par estimation des tokens (`0` = pas de limite). Classement pondéré par la qualité |
+| `memory_smart_recall` | **Rappel unifié** : BM25 + graphe + décroissance + qualité en un seul appel. `sessionBias` booste les entrées de la branche git actuelle. `explain: true` ajoute des raisons par entrée, `budget_tokens` plafonne la sortie par estimation des tokens. Utilisez au DÉBUT de chaque tâche. Retourne une sortie compacte et économe en tokens |
+| `memory_forget` | **Opérations de cycle de vie** par clé ou id : `action: "soft"` (défaut) marque comme obsolète, `"hard"` supprime définitivement, `"restore"` ramène à actif, `"supersede"` le retire avec un lien `superseded_by` vers `new_key` |
+| `memory_stats` | Affiche l'état de la mémoire (y compris les stats TTL, la distribution de qualité, la répartition origine/statut, les mémoires froides sous les seuils de qualité/accès, et les métriques de **taux de réussite / doublons / obsolètes**) |
 | `memory_summary` | Sauvegarde/récupère les résumés de fichiers |
 | `memory_archive` | Archive les anciennes entrées (>30 jours) et les entrées TTL expirées |
 | `memory_diff` | Affiche les changements depuis une date (24h, 7j, ou date précise) |
@@ -178,7 +247,7 @@ memory_remember   # Sauvegarder les décisions importantes
 | `memory_backup` | Crée une sauvegarde horodatée du fichier mémoire (auto-nettoyage aux 10 plus récentes) |
 | `memory_captured` | Liste les activités capturées automatiquement par les hooks (opt-in) ou vide le journal |
 | `memory_checkpoint` | **Point de contrôle** : crée un instantané de l'état actuel de la mémoire avec TTL de 7j. Utile pour référence de restauration pendant les longues sessions |
-| `memory_consolidate` | **Opérations de nettoyage** déterministes (sans LLM) : `mode: "identical"` (défaut) dédoublonne les entrées de contenu identique, `"similar"` fusionne les quasi-doublons (Jaccard >50%), `"low-quality"` nettoie en lot les entrées de basse qualité (`minQuality`, `dryRun`) |
+| `memory_consolidate` | **Opérations de nettoyage** déterministes (sans LLM) : `mode: "identical"` (défaut) dédoublonne les entrées de contenu identique, `"similar"` fusionne les quasi-doublons (Jaccard >50%), `"low-quality"` nettoie en lot les entrées de basse qualité (`minQuality`, `dryRun`), `"versions"` retire les entrées de versions de bibliothèque plus anciennes en faveur de la plus récente |
 | `memory_sessions` | Affiche les sessions d'agents actives (branche, fichiers, dernière présence) et les conflits doux pour le travail en parallèle |
 | `memory_compress` | Compression LLM en deux étapes : résumer + écraser. Utilise Anthropic/OpenAI CLI si disponible |
 | `memory_primer` | Primer de contexte en un appel : mémoire principale + catégories + changements de fichiers. Injecté automatiquement au démarrage de session |
@@ -204,8 +273,15 @@ La mémoire est également exposée en tant que ressources MCP pour une lecture 
 | Ressource | URI | Description |
 |----------|-----|-------------|
 | Entrées mémoire | `toon://memory/entries` | Dump complet de la mémoire |
+| Mémoire actuelle | `toon://memory/current` | État actuel de la mémoire avec les entrées récentes |
 | Stats mémoire | `toon://memory/stats` | Compteurs par catégorie et infos TTL |
 | System Primer | `toon://memory/summaries` | Carte de connaissances auto-générée (entrées principales, catégories, motifs) |
+
+### Prompts MCP
+
+| Prompt | Description |
+|--------|-------------|
+| `summarize_project_context` | Analyse la mémoire TOON actuelle et génère un résumé compact du projet. Paramètre optionnel `intent` pour se concentrer sur un domaine spécifique |
 
 ### Exemples
 
@@ -343,6 +419,28 @@ memory_smart_recall({ intent: "diseño de base de datos para backend" })
 
 > **Astuce :** Utilisez `memory_smart_recall` au DÉBUT de chaque tâche. Il combine BM25 + graphe + décroissance + qualité en un seul appel — pas besoin de deviner quoi chercher.
 
+#### Expliquer POURQUOI un résultat a été retourné
+
+```typescript
+memory_recall({ query: "redis", explain: true })
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+//   ↳ 92% relevance · used 14× · used today · importance HIGH
+```
+
+La ligne de raison `↳` est déterministe (pourcentage de pertinence, nombre d'accès, dernière utilisation, importance) — aucun LLM impliqué. Utilisez `explain: true` quand vous voulez savoir *pourquoi* ces entrées ont été montrées à l'agent.
+
+#### Plafonner la sortie avec `budget_tokens`
+
+```typescript
+memory_recall({ query: "redis", budget_tokens: 300 })
+// Entries accumulate greedily; the tail that would exceed the estimate is dropped.
+// budget_tokens: 0 (default) = no limit.
+```
+
+> **Astuce :** Combinez `budget_tokens` avec `budget: "deep"` pour une fenêtre de contexte qui reste sous un plafond de tokens strict quelle que soit la taille de la mémoire.
+
 #### Briefing projet complet (un seul appel)
 
 ```typescript
@@ -430,6 +528,7 @@ Chaque entrée reçoit automatiquement un score de qualité (0–1) basé sur la
 | Longueur du contenu | 0.3 max | Détaillé > vague |
 | Récence | 0.1 max | Entrées récentes = meilleur score |
 | Spécificité | 0.1 max | Mots uniques vs mots répétés |
+| Origine | +0.1/−0.05 | Les affirmations humaines sont boostées, les inférées légèrement pénalisées |
 
 Les entrées de haute qualité remontent en premier lors du rappel. Vérifiez la qualité avec `memory_stats` :
 
@@ -644,6 +743,57 @@ Lors de `toon-memory init`, l'analyseur CLI examine vos fichiers de dépendances
 
 ---
 
+## Visualiseur du graphe mémoire
+
+Visualisez votre mémoire sous forme de graphe interactif à force dirigée. Voyez les entrées, leurs connexions, les catégories et les schémas d'accès d'un coup d'œil.
+
+### Visualiseur CLI (serveur HTTP autonome)
+
+```bash
+npx toon-memory viewer          # Start HTTP server + open browser
+npx toon-memory viewer --port 3001  # Custom port
+npx toon-memory viewer --export     # Save as static HTML
+```
+
+Une fois ouvert, appuyez sur `r` dans le terminal pour recharger depuis le disque, ou `r` / ↻ dans le navigateur pour rafraîchir la page.
+
+### Visualiseur intégré (MCP Apps)
+
+Appelez `memory_visualize` dans tout hôte compatible MCP Apps pour afficher le graphe directement — aucun serveur nécessaire. Le visualiseur apparaît comme un panneau interactif dans l'interface de chat.
+
+### Fonctionnalités
+
+| Interaction | Description |
+|---|---|
+| **Survoler** un nœud | Affiche une infobulle avec l'aperçu du contenu, la qualité, le nombre d'accès |
+| **Cliquer** sur un nœud | Sélectionner + centrer + mettre en évidence les voisins |
+| **Double-cliquer** sur un nœud | Ouvrir le panneau de détails |
+| **Faire glisser** un nœud | Repositionner manuellement (clic droit pour libérer) |
+| **Recherche** | Filtrer les entrées ; les nœuds correspondants pulsent avec une lueur |
+| **⇿ Recherche de chemin** | Cliquez sur deux nœuds pour trouver et mettre en évidence le plus court chemin |
+| **Zoom/pan** | Molette de la souris ou boutons +/− |
+| **⚙ Physique** | Ajuster la charge, la distance des liens, la gravité centrale |
+| **Bascule de thème** | Mode sombre/clair (persistant) |
+| **Export** | Sauvegarder le graphe en PNG ou SVG |
+
+### Captures d'écran
+
+| Vue du graphe | Recherche mise en évidence | Recherche de chemin | Panneau de détails |
+|---|---|---|---|
+| ![Graphe complet](docs/public/viewer/graph-full.png) | ![Recherche](docs/public/viewer/graph-search.png) | ![Chemin](docs/public/viewer/graph-path.png) | ![Détail](docs/public/viewer/graph-detail.png) |
+
+![Animation de démo du visualiseur](docs/public/viewer/viewer-demo.gif)
+
+### Capturer vos propres captures d'écran
+
+```bash
+npm run capture:viewer
+```
+
+Nécessite [Playwright](https://playwright.dev) (`npx playwright install chromium`) et `ffmpeg`.
+
+---
+
 ## Conseils et bonnes pratiques
 
 Voici des schémas qui fonctionnent bien avec toon-memory :
@@ -678,6 +828,7 @@ L'entrée reçoit automatiquement un score de qualité basé sur sa structure (t
 | `pattern` | Conventions, frameworks, règles de style de code |
 | `bug` | Problèmes que vous avez corrigés et comment |
 | `knowledge` | Faits du projet, informations du domaine, contexte d'équipe |
+| `warning` | « Ne PAS faire ceci » — anti-motifs, pièges, erreurs à éviter (rappelés avec un boost) |
 
 > **Astuce :** N'y réfléchissez pas trop. Si c'est quelque chose que votre futur vous (ou agent) voudrait savoir, sauvegardez-le. Les entrées détaillées avec des tags spécifiques obtiennent des scores de qualité plus élevés.
 
@@ -702,7 +853,7 @@ tags: "api;rest;versioning"
 
 ### Gardez la mémoire propre
 
-Exécutez `memory_archive()` mensuellement pour déplacer les anciennes entrées dans les archives. Exécutez `memory_stats()` pour vérifier la taille et la distribution de qualité. Les entrées de faible qualité (contenu vague, pas de tags) ont automatiquement une priorité de rappel réduite. Utilisez `memory_consolidate` pour fusionner les doublons.
+Exécutez `memory_archive()` mensuellement pour déplacer les anciennes entrées dans les archives. Exécutez `memory_stats()` pour vérifier la taille et la distribution de qualité. Les entrées de faible qualité (contenu vague, pas de tags) ont automatiquement une priorité de rappel réduite. Utilisez `memory_consolidate` pour fusionner les doublons et `mode: "versions"` pour retirer les notes remplacées par des versions de bibliothèque plus récentes.
 
 ---
 
@@ -716,6 +867,9 @@ npx toon-memory status       # Vérifier l'état de l'installation
 npx toon-memory stats        # Voir les statistiques de la mémoire
 npx toon-memory export       # Exporter la mémoire en JSON
 npx toon-memory import <file> # Importer la mémoire depuis JSON
+npx toon-memory viewer       # Ouvrir le visualiseur du graphe mémoire (serveur http)
+npx toon-memory viewer --export # Sauvegarder le visualiseur en HTML statique
+npx toon-memory viewer --port 3001 # Port personnalisé
 npx toon-memory watch [options] # Sauvegarde automatique avec options
 npx toon-memory upgrade      # Mettre à jour vers la dernière version
 npx toon-memory uninstall    # Supprimer de tous les agents
@@ -921,10 +1075,10 @@ Ajoutez à `~/.config/zed/settings.json` :
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
-  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0
-  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.55|1.0
-  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20 (see [[use-zod]])|redis.ts|redis;fix|2026-07-10|7d|0|use-zod|0.70|0.9
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority|path_scope|origin|status}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0||0||agent|active
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.55|1.0||0||agent|active
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20 (see [[use-zod]])|redis.ts|redis;fix|2026-07-10|7d|0|use-zod|0.70|0.9||0||agent|active
 summaries:
   src/services/redis.ts: Redis connection pool with retry logic
 ```
@@ -1075,6 +1229,33 @@ Mesuré avec `gpt-tokenizer` (cl100k_base) — voir `scripts/bench-full-impact.m
 
 > **Astuce :** `memory_smart_recall` combine BM25 + graphe + qualité en un seul appel, économisant des tokens et la surcharge d'appels d'outils. Utilisez-le au début de chaque tâche.
 
+### Benchmark du classement RRF (mesuré)
+
+Depuis la v3.7.0, le rappel classe les résultats avec la **fusion de rangs réciproques (Reciprocal Rank Fusion)** sur les rangs BM25 (×3) et de centralité du graphe, avec un `k` adaptatif `= clamp(3..60, round(sqrt(n)))`. Mesuré sur 8 requêtes de référence (gold-standard) avec pertinence étiquetée à la main (voir `scripts/bench-rrf.mjs`, `npm run bench:rrf`) :
+
+```
+Metric        linear (v3.6.x)     RRF (v3.7.0)
+────────────  ─────────────────   ────────────────
+nDCG@10       0.776               0.776   (parity)
+MRR           0.917               0.917   (parity)
+```
+
+Le RRF correspond au score linéaire pondéré précédent à **coût de classement nul**, tout en simplifiant le pipeline de scoring (BM25×3 + centralité, sans bruit d'importance/récence). Le remplacement en mode graphe est respecté : les entrées obsolètes restent exclues sauf pour les requêtes ponctuelles `as_of`.
+
+### Benchmark de récupération (style LongMemEval, mesuré)
+
+Depuis la v4.1.0, la récupération est évaluée contre un **instantané figé d'une vraie mémoire de projet** — un ensemble de test de style LongMemEval avec des requêtes en or rédigées à la main. Corpus : 187 entrées `data.toon` réelles (instantané `2026-08-01`), 42 requêtes en or réparties sur 6 catégories (core-fact, temporal, knowledge-updating, multi-hop, meta/session, distractor). Le code mesuré est le **pipeline de production** (`src/lib`), empaqueté en mémoire avec esbuild — aucune copie approximative. Un paramètre déterministe `today` fige la récence/décroissance pour que les résultats ne dérivent pas avec l'horloge ; les exécutions sont en lecture seule (pas de suivi des accès). Deux méta-entrées prioritaires qui décrivent le fichier de données lui-même sont exclues. Voir `benchmarks/retrieval-corpus.toon`, `benchmarks/gold-queries.json` (`npm run bench:retrieval`) :
+
+```
+Mode            R@5     nDCG@5  MRR@5   answerable
+─────────────   ─────   ─────   ─────   ──────────
+linear         0.643   0.654   0.776   81.0%
+rrf            0.861   0.764   0.788   97.6%
+smart (unified) 0.829  0.739   0.760   92.5%
+```
+
+Le RRF est le mode le mieux classé (0.861 R@5, 97.6% des requêtes répondables depuis le top-5) ; `memory_smart_recall` reste compétitif en un seul appel.
+
 ---
 
 ## Dépannage
@@ -1167,7 +1348,18 @@ toon-memory/
 │   │   ├── setup.ts             # Commandes CLI
 │   │   └── toon-memory.ts       # Exécuteur CLI
 │   ├── mcp/
-│   │   └── server.ts            # Serveur MCP (35 outils + 4 ressources)
+│   │   ├── server.ts            # Serveur MCP (35 outils + 4 ressources + 1 prompt)
+│   │   ├── tools.ts             # Enregistrement des outils (35 outils)
+│   │   ├── resources.ts         # Enregistrement des ressources (4 ressources)
+│   │   ├── prompts.ts           # Enregistrement des prompts (1 prompt)
+│   │   ├── session-store.ts     # Couche de session (auto-promotion, nettoyage)
+│   │   ├── memory-io.ts         # Lecture/écriture du fichier mémoire
+│   │   ├── entries.ts           # Analyse et utilitaires des entrées
+│   │   ├── scoring.ts           # Scoring des entrées et suivi des accès
+│   │   ├── archive.ts           # Gestion des archives
+│   │   ├── consolidation.ts     # Consolidation des doublons
+│   │   ├── config.ts            # Chargement et sauvegarde de la config
+│   │   └── crypto.ts            # Chiffrement AES-256-GCM
 │   ├── lib/
 │   │   ├── lock.ts              # Verrou de fichier consultatif + écriture atomique
 │   │   ├── sessions.ts          # Coordination multi-session
@@ -1200,6 +1392,20 @@ Les contributions sont les bienvenues ! Veuillez d'abord lire notre [Code de con
 3. Commitez vos changements (`git commit -m 'feat: add amazing feature'`)
 4. Poussez vers la branche (`git push origin feature/amazing-feature`)
 5. Ouvrez une Pull Request
+
+---
+
+## Sécurité et confidentialité
+
+toon-memory est conçu avec la sécurité et la confidentialité comme principe fondamental.
+
+- **Stockage 100% local** — Toute la mémoire est stockée localement sur votre machine dans `.toon-memory/memory/`. Aucune donnée n'est jamais envoyée à des serveurs externes, services cloud ou tiers.
+- **Aucune télémétrie** — Le projet a zéro télémétrie, analyse ou suivi de quelque nature que ce soit. Aucune donnée d'utilisation n'est collectée.
+- **Aucune exécution de code distant** — toon-memory s'exécute comme un serveur MCP standard via stdio. Il ne télécharge, n'exécute ni n'évalue de code distant.
+- **Chiffrement au repos** — Chiffrement AES-256-GCM optionnel pour l'ensemble du fichier mémoire. Activez-le avec `memory_encrypt` (nécessite la variable d'environnement `TOON_MEMORY_KEY`).
+- **La clé de chiffrement n'est jamais stockée** — La clé de chiffrement doit être fournie via une variable d'environnement et n'est jamais persistée par toon-memory. Si elle est perdue, les données ne peuvent pas être récupérées.
+- **Isolation par projet** — Chaque projet possède son propre fichier mémoire isolé. La mémoire ne fuit pas entre les projets.
+- **`.gitignore` automatique** — L'installateur ajoute `.toon-memory/memory/` au `.gitignore` pour empêcher les commits accidentels des données mémoire.
 
 ---
 

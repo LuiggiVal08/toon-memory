@@ -16,17 +16,17 @@ toon-memory provides 35 MCP tools and 4 MCP resources for managing persistent me
 
 | Tool | Description |
 |------|-------------|
-| `memory_remember` | Save a decision, pattern, bug, or knowledge (optional TTL, auto-tag inference, `links`, auto quality score, merge-dedup, confidence) |
-| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. Ranking uses RRF fusion (BM25×3 + graph centrality, adaptive `k`); pass `rrf: false` for the legacy linear score. `sessionBias` boosts entries from the current git branch. `pathScope` scopes results to a file path (supports globMatch). `budget`: `"tiny"` (top 3), `"normal"` (top 10), or `"deep"` (top 20). `as_of` re-includes entries superseded after a point-in-time date |
+| `memory_remember` | Save a decision, pattern, bug, knowledge, or **warning** (negative "do NOT do this" memory, recalled with a boost) (optional TTL, auto-tag inference, `links`, auto quality score, merge-dedup, confidence) |
+| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. Ranking uses RRF fusion (BM25×3 + graph centrality, adaptive `k`); pass `rrf: false` for the legacy linear score. `sessionBias` boosts entries from the current git branch. `pathScope` scopes results to a file path (supports globMatch). `budget`: `"tiny"` (top 3), `"normal"` (top 10), or `"deep"` (top 20). `as_of` re-includes entries superseded after a point-in-time date. `explain: true` appends a per-entry reason line (why it was retrieved). `budget_tokens` caps the output by estimated token count (`0` = no limit) |
 | `memory_forget` | **Lifecycle ops** by key or id: `action: "soft"` (default) marks obsolete, `"hard"` permanently removes, `"restore"` brings back to active, `"supersede"` retires it with a `superseded_by` link to `new_key` |
-| `memory_stats` | View memory state (including TTL stats, quality distribution, and cold memories below quality/access thresholds) |
+| `memory_stats` | View memory state (including TTL stats, quality distribution, cold memories below quality/access thresholds, and **hit-rate/duplicate/dead** metrics: % recalled at least once, % exact-content duplicates, % obsolete entries) |
 | `memory_summary` | Save/retrieve file summaries |
 | `memory_archive` | Archive old entries (>30 days) and expired TTL entries |
 | `memory_diff` | Show changes since a date (24h, 7d, or exact date) |
 | `memory_suggest` | Find related entries for a given context |
 | `memory_captured` | List activity auto-captured by hooks (opt-in) or clear the log |
 | `memory_checkpoint` | **Session checkpoint**: creates a snapshot of current memory state with 7d TTL. Useful for rollback reference during long sessions |
-| `memory_consolidate` | **Cleanup ops**, deterministic (no LLM): `mode: "identical"` (default) de-duplicates entries with identical content, `"similar"` merges near-duplicates (Jaccard >50%), `"low-quality"` batch-compresses low-quality entries (`minQuality`, `dryRun`) |
+| `memory_consolidate` | **Cleanup ops**, deterministic (no LLM): `mode: "identical"` (default) de-duplicates entries with identical content, `"similar"` merges near-duplicates (Jaccard >50%), `"low-quality"` batch-compresses low-quality entries (`minQuality`, `dryRun`), `"versions"` detects entries describing the same subject at different library versions and retires the older ones in favor of the newest |
 | `memory_encrypt` | Enable AES-256-GCM encryption |
 | `memory_decrypt` | Disable encryption |
 | `memory_backup` | Create timestamped backup of memory file (auto-prunes to 10 most recent) |
@@ -132,6 +132,28 @@ memory_recall({ query: "redis" })
 ```
 
 Results are quality-weighted — entries with more detail, tags, and links surface first.
+
+### Explain WHY a result was returned
+
+```typescript
+memory_recall({ query: "redis", explain: true })
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+//   ↳ 92% relevance · used 14× · used today · importance HIGH
+```
+
+The `↳` reason line is deterministic (relevance %, access count, last-used, importance) — no LLM involved. Use `explain: true` when you want to know *why* the agent was shown those entries.
+
+### Cap output with `budget_tokens`
+
+```typescript
+memory_recall({ query: "redis", budget_tokens: 300 })
+// Entries accumulate greedily; the tail that would exceed the estimate is dropped.
+// budget_tokens: 0 (default) = no limit.
+```
+
+> **Tip:** Combine `budget_tokens` with `budget: "deep"` for a context window that stays inside a hard token ceiling regardless of memory size.
 
 ### Search with date filter
 
@@ -304,6 +326,8 @@ Recall is deterministic and offline (no embeddings, no LLM). Since v3.7.0 the de
 - **Adaptive `k`** — `k = clamp(3..60, round(sqrt(n)))`, where `n` is the candidate count. The textbook `k=60` flattens rank differences on small graphs, so it scales with `sqrt(n)`.
 - **Per-hop decay** — nodes `d` hops from a seed are multiplied by `0.5^d`, keeping distant context below nearby context.
 - **Session bias** — entries whose file appears in the current session get a 1.15× boost.
+- **Language family** — entries written in the same script as the query (latin/CJK/cyrillic/…) get a +0.1 boost via `languageFamily()`.
+- **Folder match** — entries whose `path_scope` folder matches the current file get a +0.05 boost.
 - **Priority** — pinned entries sort first regardless of score.
 
 Pass `rrf: false` to fall back to the legacy linear weighted score (BM25 + 0.4·centrality + 0.25·importance + seed bonus). In `graph` mode, recall seeds on keyword matches, expands the ego-subgraph up to `hops`, and returns the top `limit` (default 6) by combined score. `memory_smart_recall` combines all these signals in one call.
@@ -371,3 +395,4 @@ Entries are organized by category:
 | `pattern` | Project patterns ("Uses Zod for validation") |
 | `bug` | Bug fixes ("Redis pool exhaustion") |
 | `knowledge` | General knowledge ("Broker uses RESP") |
+| `warning` | "Do NOT do this" — anti-patterns, landmines, mistakes to avoid (recalled with a +0.2 boost) |

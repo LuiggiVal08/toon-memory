@@ -107,6 +107,11 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 - **Memory reflect** — `memory_reflect` ranks entries by staleness, quality, and over-connection to surface what needs attention or cleanup. Deterministic, zero LLM
 - **Memory supersede** — `memory_forget(key, action: "supersede", new_key)` marks an entry as replaced by a newer one (`superseded_by` link + `supersededOn` date). `memory_recall({ as_of })` re-includes old entries for point-in-time queries before their supersession
 - **Auto-promote** — `memory_promote` promotes low-confidence drafts to active entries deterministically (threshold 0.65, Jaccard dedup), with `dryRun` by default
+- **Explain WHY** — `memory_recall`/`memory_smart_recall` accept `explain: true` and append a deterministic reason line to every returned entry (`↳ 100% relevance · used 14× · used today · importance HIGH`) — *why* it was retrieved, no LLM
+- **Token budgets** — `budget_tokens` caps the recall output by estimated token count; entries accumulate greedily and the tail that would exceed the budget is dropped (`0` = no limit)
+- **Version supersession** — `memory_consolidate(mode: "versions")` detects entries describing the same subject at different library versions (e.g. "Use React 18" vs "Use React 19") and retires the older ones in favor of the newest
+- **Negative memories** — a `warning` category for "do NOT do this" facts; `warning` entries get a recall boost so the agent sees the landmines before repeating them
+- **Language + folder ranking** — recall boosts entries written in the same script family (latin/CJK/cyrillic/…) and entries whose `path_scope` matches the current file
 
 ---
 
@@ -228,11 +233,11 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 | Tool | Description |
 |------|-------------|
-| `memory_remember` | Save a decision, pattern, bug, or knowledge (optional TTL, auto-tag inference, `links` to build the memory graph, merge-dedup on same key, auto quality score and confidence) |
-| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. `budget: "tiny"|"normal"|"deep"` controls output verbosity (backward compat with `compact: true`). `path_scope` filters by glob pattern. `sessionBias` boosts entries from the current git branch. Quality-weighted ranking |
-| `memory_smart_recall` | **Unified recall**: BM25 + graph + decay + quality in one call. `sessionBias` boosts entries from the current git branch. Use at the START of every task. Returns compact, token-efficient output |
+| `memory_remember` | Save a decision, pattern, bug, knowledge, or **warning** (negative "do NOT do this" memory, recalled with a boost) — optional TTL, auto-tag inference, `links` to build the memory graph, merge-dedup on same key, auto quality score and confidence |
+| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. `budget: "tiny"|"normal"|"deep"` controls output verbosity (backward compat with `compact: true`). `path_scope` filters by glob pattern. `sessionBias` boosts entries from the current git branch. `explain: true` appends a per-entry reason line (why it was retrieved). `budget_tokens` caps output by estimated tokens (`0` = no limit). Quality-weighted ranking |
+| `memory_smart_recall` | **Unified recall**: BM25 + graph + decay + quality in one call. `sessionBias` boosts entries from the current git branch. `explain: true` appends per-entry reasons, `budget_tokens` caps output by estimated tokens. Use at the START of every task. Returns compact, token-efficient output |
 | `memory_forget` | **Lifecycle ops** by key or id: `action: "soft"` (default) marks obsolete, `"hard"` permanently removes, `"restore"` brings back to active, `"supersede"` retires it with a `superseded_by` link to `new_key` |
-| `memory_stats` | View memory state (including TTL stats, quality distribution, origin/status breakdown, and cold memories below quality/access thresholds) |
+| `memory_stats` | View memory state (including TTL stats, quality distribution, origin/status breakdown, cold memories below quality/access thresholds, and **hit rate / duplicate / obsolete** metrics) |
 | `memory_summary` | Save/retrieve file summaries |
 | `memory_archive` | Archive old entries (>30 days) and expired TTL entries |
 | `memory_diff` | Show changes since a date (24h, 7d, or exact date) |
@@ -242,7 +247,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 | `memory_backup` | Create timestamped backup of memory file (auto-prunes to 10 most recent) |
 | `memory_captured` | List activity auto-captured by hooks (opt-in) or clear the log |
 | `memory_checkpoint` | **Session checkpoint**: creates a snapshot of current memory state with 7d TTL. Useful for rollback reference during long sessions |
-| `memory_consolidate` | **Cleanup ops**, deterministic (no LLM): `mode: "identical"` (default) dedupes identical-content entries, `"similar"` merges near-duplicates (Jaccard >50%), `"low-quality"` batch-removes low-quality entries (`minQuality`, `dryRun`) |
+| `memory_consolidate` | **Cleanup ops**, deterministic (no LLM): `mode: "identical"` (default) dedupes identical-content entries, `"similar"` merges near-duplicates (Jaccard >50%), `"low-quality"` batch-removes low-quality entries (`minQuality`, `dryRun`), `"versions"` retires older library-version entries in favor of the newest |
 | `memory_sessions` | Show active agent sessions (branch, files, last-seen) and soft conflicts for parallel work |
 | `memory_compress` | LLM-powered two-step compression: summarize + overwrite. Uses `anthropic`/`openai` CLI if available, otherwise returns prompt for manual compression |
 | `memory_primer` | One-call context primer: top memories + categories + session file changes. Auto-injected at session start |
@@ -413,6 +418,28 @@ memory_smart_recall({ intent: "diseño de base de datos para backend" })
 ```
 
 > **Tip:** Use `memory_smart_recall` at the START of every task. It combines BM25 + graph + decay + quality in one call — no need to guess what to search for.
+
+#### Explain WHY a result was returned
+
+```typescript
+memory_recall({ query: "redis", explain: true })
+// [decision] redis-cache-config (a1b2c3d4)
+//   Redis cache layer for session storage
+//   File: src/cache.ts | Tags: redis;cache | Date: 2026-07-10
+//   ↳ 92% relevance · used 14× · used today · importance HIGH
+```
+
+The `↳` reason line is deterministic (relevance %, access count, last-used, importance) — no LLM involved. Use `explain: true` when you want to know *why* the agent was shown those entries.
+
+#### Cap output with `budget_tokens`
+
+```typescript
+memory_recall({ query: "redis", budget_tokens: 300 })
+// Entries accumulate greedily; the tail that would exceed the estimate is dropped.
+// budget_tokens: 0 (default) = no limit.
+```
+
+> **Tip:** Combine `budget_tokens` with `budget: "deep"` for a context window that stays inside a hard token ceiling regardless of memory size.
 
 #### Full project briefing (one call)
 
@@ -801,6 +828,7 @@ The entry automatically gets a quality score based on its structure (tags, conte
 | `pattern` | Conventions, frameworks, code style rules |
 | `bug` | Issues you fixed and how |
 | `knowledge` | Project facts, domain info, team context |
+| `warning` | "Do NOT do this" — anti-patterns, landmines, mistakes to avoid (recalled with a boost) |
 
 > **Tip:** Don't overthink it. If it's something your future self (or agent) would want to know, save it. Detailed entries with specific tags score higher in quality.
 
@@ -825,7 +853,7 @@ tags: "api;rest;versioning"
 
 ### Keep memory clean
 
-Run `memory_archive()` monthly to move old entries to the archive. Run `memory_stats()` to check the size and quality distribution. Low-quality entries (vague content, no tags) get lower recall priority automatically. Use `memory_consolidate` to merge duplicates.
+Run `memory_archive()` monthly to move old entries to the archive. Run `memory_stats()` to check the size and quality distribution. Low-quality entries (vague content, no tags) get lower recall priority automatically. Use `memory_consolidate` to merge duplicates and `mode: "versions"` to retire notes superseded by newer library versions.
 
 ---
 
