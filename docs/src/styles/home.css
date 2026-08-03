@@ -383,7 +383,7 @@ a:hover { text-decoration: underline; }
   height: 34px;
   border: 1px solid var(--border);
   border-radius: 50%;
-  background: var(--bg-card);
+  background: var(--color-surface-primary);
   margin-left: -6px;
   transition: border-color 0.2s, transform 0.2s, z-index 0s;
   z-index: 0;
