@@ -9,13 +9,15 @@ export const content = {
 		},
 		hero: {
 			tagline: 'The Continuity Layer for AI Agents',
-			subtitle: "AI agents shouldn't have to relearn your project every session. toon-memory preserves your project's knowledge, decisions, and conventions across sessions — locally and privately, through MCP.",
+			subtitle: "Your agent's knowledge survives every session — offline, private, zero LLM.",
 			poweredBy: 'Powered by TOON',
 			getStarted: 'Get Started',
 			viewGithub: 'View on GitHub',
 			copy: 'Copy',
 			copied: 'Copied!',
 			installCmd: 'npm install -g toon-memory',
+			worksWith: 'Works with',
+			agentsMore: '+10 more',
 		},
 		problem: {
 			title: 'Why do agents lose context between sessions?',
@@ -631,14 +633,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		hero: {
 			tagline: 'La capa de continuidad para agentes de IA',
-			subtitle:
-				'Los agentes de IA no deberían tener que reaprender tu proyecto en cada sesión. toon-memory conserva el conocimiento, las decisiones y las convenciones de tu proyecto entre sesiones — de forma local y privada, mediante MCP.',
+			subtitle: 'El conocimiento de tu agente sobrevive a cada sesión — offline, privado, sin LLM.',
 			poweredBy: 'Impulsado por TOON',
 			getStarted: 'Empezar',
 			viewGithub: 'Ver en GitHub',
 			copy: 'Copiar',
 			copied: '¡Copiado!',
 			installCmd: 'npm install -g toon-memory',
+			worksWith: 'Funciona con',
+			agentsMore: '+10 más',
 		},
 		problem: {
 			title: '¿Por qué los agentes pierden contexto entre sesiones?',
@@ -1244,14 +1247,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	hero: {
 		tagline: '面向 AI 代理的连续性层',
-		subtitle:
-			'AI 代理不应该在每个会话中重新学习你的项目。toon-memory 跨会话保留项目的知识、决策和约定——本地化、私密化，通过 MCP 实现。',
+		subtitle: '你的代理的知识会跨会话延续 —— 离线、私密、零 LLM。',
 		poweredBy: '由 TOON 驱动',
 		getStarted: '快速开始',
 		viewGithub: '在 GitHub 上查看',
 		copy: '复制',
 		copied: '已复制！',
 		installCmd: 'npm install -g toon-memory',
+		worksWith: '兼容',
+		agentsMore: '+10 更多',
 	},
 	problem: {
 		title: '为什么代理会在会话之间丢失上下文？',
@@ -1534,10 +1538,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	nav: { docs: 'ドキュメント', faq: 'FAQ', releaseNotes: 'リリースノート', npm: 'npm', github: 'GitHub' },
 	hero: {
 		tagline: 'AIエージェントのための継続性レイヤー',
-		subtitle:
-			'AIエージェントは毎セッションでプロジェクトを学び直すべきではありません。toon-memory はプロジェクトの知識、決定、規約をセッションを超えて保存します — MCP 経由で、ローカルかつプライベートに。',
+		subtitle: 'エージェントの知識はセッションを超えて生き続けます — オフライン、プライベート、LLM不要。',
 		poweredBy: 'TOON を採用',
-		getStarted: 'はじめに', viewGithub: 'GitHub で見る', copy: 'コピー', copied: 'コピーしました！', installCmd: 'npm install -g toon-memory',
+		getStarted: 'はじめに', viewGithub: 'GitHub で見る', copy: 'コピー', copied: 'コピーしました！', installCmd: 'npm install -g toon-memory', worksWith: '対応', agentsMore: '+10 以上',
 	},
 	problem: {
 		title: 'なぜエージェントはセッション間でコンテキストを失うのか？', subtitle: 'AI コーディングエージェントは毎セッション記憶喪失から始める',
@@ -1816,10 +1819,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	nav: { docs: '문서', faq: 'FAQ', releaseNotes: '릴리스 노트', npm: 'npm', github: 'GitHub' },
 	hero: {
 		tagline: 'AI 에이전트를 위한 연속성 레이어',
-		subtitle:
-			'AI 에이전트는 매 세션마다 프로젝트를 다시 배우지 않아야 합니다. toon-memory는 세션을 넘어 프로젝트의 지식, 결정, 관례를 보존합니다 — MCP를 통해, 로컬에서 안전하게.',
+		subtitle: '에이전트의 지식은 세션을 넘어 살아남습니다 — 오프라인, 비공개, LLM 불필요.',
 		poweredBy: 'TOON 기반',
-		getStarted: '시작하기', viewGithub: 'GitHub에서 보기', copy: '복사', copied: '복사됨!', installCmd: 'npm install -g toon-memory',
+		getStarted: '시작하기', viewGithub: 'GitHub에서 보기', copy: '복사', copied: '복사됨!', installCmd: 'npm install -g toon-memory', worksWith: '호환', agentsMore: '+10 이상',
 	},
 	problem: {
 		title: '왜 에이전트가 세션 간에 컨텍스트를 잃는가?', subtitle: 'AI 코딩 에이전트는 매 세션 기억 상실로 시작합니다',
@@ -2104,13 +2106,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	hero: {
 		tagline: 'A camada de continuidade para agentes de IA',
-		subtitle:
-			'Agentes de IA não deveriam ter que reaprender seu projeto a cada sessão. O toon-memory preserva o conhecimento, as decisões e as convenções do seu projeto entre sessões — localmente e de forma privada, via MCP.',
+		subtitle: 'O conhecimento do seu agente sobrevive a cada sessão — offline, privado, sem LLM.',
 		poweredBy: 'Desenvolvido com TOON',
 		getStarted: 'Começar',
 		viewGithub: 'Ver no GitHub',
 		copy: 'Copiar',
 		copied: 'Copiado!',
+		worksWith: 'Funciona com',
+		agentsMore: '+10 mais',
 		installCmd: 'npm install -g toon-memory',
 	},
 	problem: {
@@ -2621,13 +2624,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	hero: {
 		tagline: 'Die Kontinuitätsschicht für KI-Agenten',
-		subtitle:
-			'KI-Agenten sollten dein Projekt nicht in jeder Sitzung neu lernen müssen. toon-memory bewahrt das Wissen, die Entscheidungen und die Konventionen deines Projekts über Sitzungen hinweg — lokal und privat, über MCP.',
+		subtitle: 'Das Wissen deines Agents überlebt jede Sitzung — offline, privat, ohne LLM.',
 		poweredBy: 'Bereitgestellt von TOON',
 		getStarted: 'Loslegen',
 		viewGithub: 'Auf GitHub ansehen',
 		copy: 'Kopieren',
 		copied: 'Kopiert!',
+		worksWith: 'Funktioniert mit',
+		agentsMore: '+10 weitere',
 		installCmd: 'npm install -g toon-memory',
 	},
 	problem: {
@@ -3138,13 +3142,14 @@ cta: {
 	},
 	hero: {
 		tagline: 'La couche de continuité pour les agents IA',
-		subtitle:
-			"Les agents IA ne devraient pas avoir à réapprendre votre projet à chaque session. toon-memory préserve le savoir, les décisions et les conventions de votre projet entre les sessions — localement et en privé, via MCP.",
+		subtitle: 'Le savoir de votre agent survit à chaque session — hors ligne, privé, zéro LLM.',
 		poweredBy: 'Propulsé par TOON',
 		getStarted: 'Commencer',
 		viewGithub: 'Voir sur GitHub',
 		copy: 'Copier',
 		copied: 'Copié !',
+		worksWith: 'Fonctionne avec',
+		agentsMore: '+10 autres',
 		installCmd: 'npm install -g toon-memory',
 	},
 	problem: {

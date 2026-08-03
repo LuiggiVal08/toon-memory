@@ -1,6 +1,11 @@
 ---
 import logoSrc from '../assets/logo.svg';
 import { getContent } from '../i18n';
+import opencode from '../assets/agents/opencode.svg';
+import claude from '../assets/agents/claude.svg';
+import cursor from '../assets/agents/cursor.svg';
+import codex from '../assets/agents/codex.svg';
+import vscode from '../assets/agents/vscode.svg';
 
 interface Props {
 	lang?: string;
@@ -8,6 +13,14 @@ interface Props {
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 const docsHref = lang === 'es' ? '/toon-memory/es/getting-started/quickstart' : '/toon-memory/getting-started/quickstart';
+const agentsHref = '#agents';
+const heroAgents = [
+	{ name: 'OpenCode', logo: opencode },
+	{ name: 'Claude', logo: claude },
+	{ name: 'Cursor', logo: cursor },
+	{ name: 'Codex', logo: codex },
+	{ name: 'VS Code', logo: vscode },
+];
 
 const toonRow = (id: string, cat: string, key: string, content: string, tags: string, date: string) =>
 	`  ${id}|${cat}|${key}|${content}||${tags}|${date}||0||0.7|1|${date}T09:12:00.000Z|0`;
@@ -77,6 +90,17 @@ const wallB = [
   <div class="hero-split">
     <div class="hero-inner">
       <p class="hero-subtitle">{c.hero.subtitle}</p>
+      <div class="hero-supports">
+        <span class="hero-supports-label">{c.hero.worksWith}</span>
+        <div class="hero-supports-logos">
+          {heroAgents.map((a) => (
+            <a class="hero-agent" href={agentsHref} title={a.name}>
+              <img src={a.logo.src} alt={a.name} width="20" height="20" />
+            </a>
+          ))}
+        </div>
+        <a class="hero-agents-more" href={agentsHref}>{c.hero.agentsMore}</a>
+      </div>
       <div class="hero-actions">
         <a href={docsHref} class="btn btn-primary">
           <svg class="icon" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.75.75 0 0 1 1.06-1.06l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0z"/></svg>
