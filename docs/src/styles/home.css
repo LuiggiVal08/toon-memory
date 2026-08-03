@@ -74,7 +74,7 @@ a:hover { text-decoration: underline; }
 .site-nav a { color: var(--text-muted); font-size: 0.95rem; }
 .site-nav a:hover { color: var(--text); text-decoration: none; }
 .nav-links { display: flex; align-items: center; gap: 1.5rem; }
-.npm-link { display: inline-flex; align-items: center; gap: 0.35rem; }
+.npm-link, .github-link { display: inline-flex; align-items: center; gap: 0.35rem; }
 .nav-toggle {
   display: none;
   align-items: center;
@@ -431,13 +431,14 @@ a:hover { text-decoration: underline; }
 .term-copy {
   margin-left: auto;
   flex-shrink: 0;
-  padding: 0.3rem 0.9rem;
+  padding: 0.35rem 0.45rem;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--color-surface-overlay);
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: 0.78rem;
+  line-height: 1;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -445,10 +446,10 @@ a:hover { text-decoration: underline; }
   border-color: var(--brand);
   color: var(--brand-light);
 }
-.install-copy, .install-done { font-family: inherit; }
+.install-copy, .install-done { display: block; }
 .install-done { display: none; color: var(--color-success); }
 .term-copy.copied .install-copy { display: none; }
-.term-copy.copied .install-done { display: inline; }
+.term-copy.copied .install-done { display: block; }
 
 /* Terminal mockup */
 .hero-terminal {
