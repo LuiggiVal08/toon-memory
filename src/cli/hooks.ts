@@ -3,6 +3,21 @@ import { dirname, join } from "path"
 import type { Agent } from "./types"
 import { projectRoot, CAPTURE_JS, SESSION_START_JS, CAPTURE_CONFIG, ANTIGRAVITY_HOOK_NAME } from "./constants"
 
+/**
+ * Read an existing JSON config file.
+ * Returns {} when the file is missing, or null when it exists but cannot be
+ * parsed — callers MUST skip (never overwrite) on null to avoid wiping the
+ * user's other settings.
+ */
+function readJSON(file: string): Record<string, any> | null {
+  if (!existsSync(file)) return {}
+  try {
+    return JSON.parse(readFileSync(file, "utf-8"))
+  } catch {
+    return null
+  }
+}
+
 /** Hook script content for SessionStart reminder */
 export function sessionStartHookContent(agentName: string): string {
   return `#!/bin/bash
@@ -76,13 +91,10 @@ export function registerCaptureHookJSON(agent: Agent, scriptPath: string): void 
   const configDir = dirname(configPath)
   if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
 
-  let config: Record<string, any> = {}
-  if (existsSync(configPath)) {
-    try {
-      config = JSON.parse(readFileSync(configPath, "utf-8"))
-    } catch {
-      config = {}
-    }
+  const config = readJSON(configPath)
+  if (config === null) {
+    console.log(`  ⚠️ Skipping ${configPath}: existing file is not valid JSON — fix it manually, then re-run.`)
+    return
   }
 
   if (!config.hooks) config.hooks = {}
@@ -136,7 +148,7 @@ export function registerHookJSON(agent: Agent, hookPath: string): void {
   const configDir = dirname(configPath)
   if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
 
-  let config: Record<string, any> = {}
+  let config: Record<string, any> | null = {}
   if (existsSync(configPath)) {
     try {
       if (agent.format === "jsonc") {
@@ -147,8 +159,13 @@ export function registerHookJSON(agent: Agent, hookPath: string): void {
         config = JSON.parse(readFileSync(configPath, "utf-8"))
       }
     } catch {
-      config = {}
+      config = null
     }
+  }
+
+  if (config === null) {
+    console.log(`  ⚠️ Skipping ${configPath}: existing file is not valid JSON — fix it manually, then re-run.`)
+    return
   }
 
   if (agent.name === "claude" || agent.name === "gemini") {
@@ -186,13 +203,18 @@ export function registerAntigravityHooks(agent: Agent): void {
   const hooksFile = join(base, "hooks.json")
   mkdirSync(base, { recursive: true })
 
-  let cfg: Record<string, any> = {}
+  let cfg: Record<string, any> | null = {}
   if (existsSync(hooksFile)) {
     try {
       cfg = JSON.parse(readFileSync(hooksFile, "utf-8"))
     } catch {
-      cfg = {}
+      cfg = null
     }
+  }
+
+  if (cfg === null) {
+    console.log(`  ⚠️ Skipping ${hooksFile}: existing file is not valid JSON — fix it manually, then re-run.`)
+    return
   }
 
   cfg[ANTIGRAVITY_HOOK_NAME] = {

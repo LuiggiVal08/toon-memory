@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.3.1] - 2026-08-03
+
+### Fixed
+- **Windows crash `ERR_UNSUPPORTED_ESM_URL_SCHEME`** — the CLI/MCP entry points called `import()` with a raw absolute path (`C:\...`), which Node's ESM loader parses as a URL with scheme `c:` and rejects. Every published version since 2026-07-12 was broken on Windows (both `toon-memory <cmd>` and `toon-memory mcp`). Entry points now convert paths via `pathToFileURL` (new shared helper `src/cli/entry.ts`), and `build:bin` bundles so the helper ships inside `bin/toon-memory.js`.
+- **`install.ps1` pinned an ancient release** — the Windows installer hard-coded `toon-memory@1.0.9` (current: 4.3.0) with a placeholder SHA-256 checksum, so it installed a version whose `init` wrote the legacy OpenCode MCP format (`{"command","args"}` without `type`/`enabled`), which OpenCode 1.17+ rejects and blocks the whole config from loading. It now resolves the latest version + `dist.integrity` from the npm registry at runtime (mirrors `install.sh`) and verifies the tarball with SHA-512.
+- **OpenCode config migration** — `toon-memory init` already writes the current format (`{ type: "local", command: [...], enabled: true }`); re-running it repairs a legacy entry while preserving every other key (other MCP servers, `$schema`).
+- **No silent config wipe** — if an existing agent config is not valid JSON, `installJSONConfig`, the Zed/Continue/OpenClaw writers, and the JSON hook writers now skip with a warning instead of resetting the file to `{}` and overwriting the user's other settings.
+
+### Tests
+- `fileImportURL` converts Windows-style and POSIX absolute paths to `file://` URLs (never a drive-letter scheme) — regression guard for the Windows ESM crash
+- `installJSONConfig` preserves `$schema` + other MCP servers while migrating a legacy toon-memory entry, and does not overwrite an existing non-JSON config
+
 ## [4.3.0] - 2026-08-02
 
 ### Added

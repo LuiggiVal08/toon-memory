@@ -1,18 +1,24 @@
 # toon-memory installer for Windows (PowerShell)
 # Usage: irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 | iex
 
-$TOON_VERSION = "1.0.9"
-# SHA-256 checksum of the tarball. Update on each release.
-# Generate with: certutil -hashfile toon-memory-$TOON_VERSION.tgz SHA256
-$TOON_CHECKSUM = "d5b2a8cbe0f3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9"
-
 Write-Host "🧠 toon-memory installer" -ForegroundColor Cyan
 Write-Host ""
 
+# Resolve the latest version + integrity from the npm registry (mirrors install.sh)
+try {
+    $meta = Invoke-RestMethod -Uri "https://registry.npmjs.org/toon-memory/latest" -ErrorAction Stop
+    $TOON_VERSION = $meta.version
+    $integrity = $meta.dist.integrity
+} catch {
+    Write-Host "Error: Could not determine latest toon-memory version." -ForegroundColor Red
+    Write-Host "You can install manually: npm install -g toon-memory"
+    exit 1
+}
+
 # Check if npm is available
 if (Get-Command npm -ErrorAction SilentlyContinue) {
-    Write-Host "Installing toon-memory via npm..."
-    npm install -g toon-memory@$TOON_VERSION
+    Write-Host "Installing toon-memory v$TOON_VERSION via npm..."
+    npm install -g "toon-memory@$TOON_VERSION"
     Write-Host ""
     Write-Host "✅ toon-memory installed!" -ForegroundColor Green
     Write-Host ""
@@ -35,15 +41,19 @@ if (Get-Command npm -ErrorAction SilentlyContinue) {
     $tgzPath = "$INSTALL_DIR\toon-memory.tgz"
     Invoke-WebRequest -Uri $url -OutFile $tgzPath
     
-    # Verify integrity
-    $actualHash = (Get-FileHash -Path $tgzPath -Algorithm SHA256).Hash.ToLower()
-    if ($actualHash -ne $TOON_CHECKSUM) {
-        Write-Host "❌ Checksum mismatch! Expected $TOON_CHECKSUM, got $actualHash" -ForegroundColor Red
-        Write-Host "The downloaded file may be corrupted or tampered with." -ForegroundColor Red
-        Remove-Item -Path $tgzPath -Force
-        exit 1
+    # Verify integrity (npm dist.integrity is "sha512-<base64>"; compare against SHA512 hex)
+    if ($integrity -and $integrity.StartsWith("sha512-")) {
+        $expectedHex = -join ([Convert]::FromBase64String($integrity.Substring(7)) | ForEach-Object { $_.ToString("x2") })
+        $actualHash = (Get-FileHash -Path $tgzPath -Algorithm SHA512).Hash.ToLower()
+        if ($actualHash -ne $expectedHex.ToLower()) {
+            Write-Host "❌ Integrity check failed! The downloaded file may be corrupted or tampered with." -ForegroundColor Red
+            Remove-Item -Path $tgzPath -Force
+            exit 1
+        }
+        Write-Host "✅ Integrity verified" -ForegroundColor Green
+    } else {
+        Write-Host "⚠️  No sha512 integrity available from the registry; skipping verification" -ForegroundColor Yellow
     }
-    Write-Host "✅ Integrity verified" -ForegroundColor Green
     
     # Extract
     cd $INSTALL_DIR

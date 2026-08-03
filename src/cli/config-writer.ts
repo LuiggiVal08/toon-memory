@@ -4,6 +4,21 @@ import type { Agent } from "./types"
 import { MEMORY_DIR, CAPTURE_CONFIG } from "./constants"
 
 /**
+ * Read an existing JSON config file.
+ * Returns {} when the file is missing, or null when it exists but cannot be
+ * parsed — callers MUST skip (never overwrite) on null to avoid wiping the
+ * user's other settings.
+ */
+function loadJSON(file: string): Record<string, any> | null {
+  if (!existsSync(file)) return {}
+  try {
+    return JSON.parse(readFileSync(file, "utf-8"))
+  } catch {
+    return null
+  }
+}
+
+/**
  * Install MCP server configuration for a JSON-format agent.
  */
 export function installJSONConfig(agent: Agent, scope: string): void {
@@ -17,13 +32,10 @@ export function installJSONConfig(agent: Agent, scope: string): void {
   const configDir = dirname(configPath)
   if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
 
-  let config: Record<string, any> = {}
-  if (existsSync(configPath)) {
-    try {
-      config = JSON.parse(readFileSync(configPath, "utf-8"))
-    } catch {
-      config = {}
-    }
+  const config = loadJSON(configPath)
+  if (config === null) {
+    console.log(`  ⚠️ Skipping ${configPath}: existing file is not valid JSON — fix it manually, then re-run.`)
+    return
   }
 
   const mcpKey = agent.mcpKey || "mcpServers"
@@ -80,15 +92,20 @@ export function installZedConfig(agent: Agent): void {
   const configDir = dirname(configPath)
   if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
 
-  let config: Record<string, any> = {}
+  let config: Record<string, any> | null = {}
   if (existsSync(configPath)) {
     try {
       const raw = readFileSync(configPath, "utf-8")
       const stripped = raw.replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "")
       config = JSON.parse(stripped)
     } catch {
-      config = {}
+      config = null
     }
+  }
+
+  if (config === null) {
+    console.log(`  ⚠️ Skipping ${configPath}: existing file is not valid JSON — fix it manually, then re-run.`)
+    return
   }
 
   if (!config.context_servers) config.context_servers = {}
@@ -114,13 +131,10 @@ export function installContinueConfig(agent: Agent): void {
   const configDir = dirname(configPath)
   if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
 
-  let config: Record<string, any> = {}
-  if (existsSync(configPath)) {
-    try {
-      config = JSON.parse(readFileSync(configPath, "utf-8"))
-    } catch {
-      config = {}
-    }
+  const config = loadJSON(configPath)
+  if (config === null) {
+    console.log(`  ⚠️ Skipping ${configPath}: existing file is not valid JSON — fix it manually, then re-run.`)
+    return
   }
 
   if (!config.experimental) config.experimental = {}
@@ -158,13 +172,10 @@ export function installOpenClawConfig(agent: Agent): void {
   const configDir = dirname(configPath)
   if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
 
-  let config: Record<string, any> = {}
-  if (existsSync(configPath)) {
-    try {
-      config = JSON.parse(readFileSync(configPath, "utf-8"))
-    } catch {
-      config = {}
-    }
+  const config = loadJSON(configPath)
+  if (config === null) {
+    console.log(`  ⚠️ Skipping ${configPath}: existing file is not valid JSON — fix it manually, then re-run.`)
+    return
   }
 
   if (!config.mcp) config.mcp = {}
