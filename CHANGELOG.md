@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.3.2] - 2026-08-03
+
+### Fixed
+- **`memory_archive` no-oped on CLI-initialized projects** — `archiveOldEntries` and `pruneExpiredEntries` only recognized the `entries[N|]` header written by the MCP config writer, but `toon-memory init` creates `data.toon` with a `[N|]` header. On those files both functions returned `0` silently, so `memory_archive`, the MAX_ENTRIES auto-trim, and TTL pruning never ran. They now accept both header conventions, and the count bump preserves the `entries`/`archived` prefix (the archive writer also used to strip `archived` from `archive.toon`, breaking subsequent runs).
+- **Hook scripts referenced `capture.js`/`session-start.js` relative to the hook CWD** — `constants.ts` derived the CLI directory from `process.argv[1]`, which the entry points overwrite with `"toon-memory"`, so generated hooks ran `node "capture.js" ...` resolved against whatever directory the agent executed the hook from. Script paths are now derived from `import.meta.url` and are absolute.
+- **`toon-memory import` left the entry count stale** — the header regex required a literal `]` right after the count (`entries[\d+\|]`), which no real header has, so the count never updated after importing. It now matches both `entries[N|]` and `[N|]` headers and preserves the prefix.
+
+### Tests
+- `archiveOldEntries` works on `[N|]`, `entries[N|]`, and mixed files, and preserves the `archived[` prefix across repeated runs
+- `toon-memory init` writes hook scripts with absolute paths; `toon-memory import` bumps the header count on a CLI-style `[N|]` file
+
 ## [4.3.1] - 2026-08-03
 
 ### Fixed

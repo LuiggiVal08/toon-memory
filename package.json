@@ -1,7 +1,7 @@
 {
   "name": "toon-memory",
   "mcpName": "io.github.LuiggiVal08/toon-memory",
-  "version": "4.3.1",
+  "version": "4.3.2",
   "description": "The Continuity Layer for AI Agents — an MCP memory server that preserves project knowledge, decisions, and conventions across sessions so every session starts where the last one ended. Offline, token-efficient, no LLM, no server; works with 15+ agents.",
   "type": "module",
   "bin": {

@@ -469,13 +469,15 @@ export function importMemory(): void {
     const existing = readFileSync(memoryFile, "utf-8")
     const existingCount = existing.split("\n")
       .filter((l: string) => l.startsWith("  ") && l.includes("|")).length
+    const newCount = existingCount + newEntries.length
+    // Match either `entries[N|]` (MCP writers) or `[N|]` (CLI init) and keep the prefix.
     const updated = existing.replace(
-      /entries\[\d+\|]/,
-      `entries[${existingCount + newEntries.length}|]`
+      /^(version: 1\n)?(entries)?\[(\d+)\|/,
+      (m, _v: string, prefix: string) => `${m.startsWith("version: 1\n") ? "version: 1\n" : ""}${prefix || ""}[${newCount}|`
     ) + "\n" + newLines
     writeFileSync(memoryFile, updated)
   } else {
-    writeFileSync(memoryFile, `version: 1\nentries[${newEntries.length}|]{id|category|key|content|file|tags|date}:\n${newLines}\n`)
+    writeFileSync(memoryFile, `version: 1\n[${newEntries.length}|]{id|category|key|content|file|tags|date}:\n${newLines}\n`)
   }
 
   console.log(`Imported ${newEntries.length} new entries`)

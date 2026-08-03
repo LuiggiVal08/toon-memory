@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from "fs"
 import { dirname, join } from "path"
+import { fileURLToPath } from "url"
 
 export const projectRoot = process.cwd()
 export const HOME = process.env.HOME || process.env.USERPROFILE || "~"
@@ -8,11 +9,13 @@ export const HOME = process.env.HOME || process.env.USERPROFILE || "~"
 export const MEMORY_DIR = join(projectRoot, ".toon-memory", "memory")
 
 /**
- * Directory containing the running CLI script.
- * Derived from process.argv[1] — avoids __dirname / import.meta.url issues
- * in ESM bundles with top-level await.
+ * Directory containing the running CLI bundle.
+ * Derived from import.meta.url (NOT process.argv[1], which the entry points
+ * overwrite with "toon-memory" — that made the paths resolve relative to the
+ * hook's CWD). Every CLI bundle lives in dist/cli/, so this resolves to an
+ * absolute path in the installed package.
  */
-const scriptDir = dirname(process.argv[1] || process.cwd())
+const scriptDir = dirname(fileURLToPath(import.meta.url))
 
 /** Path to the compiled capture script (dist/cli/capture.js) */
 export const CAPTURE_JS = join(scriptDir, "capture.js")

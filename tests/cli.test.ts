@@ -186,6 +186,60 @@ describe("CLI Commands", () => {
     expect(gitignore).toContain(".toon-memory/memory/")
   })
 
+  it("should write hooks with absolute script paths (not relative to hook CWD)", () => {
+    execSync(`node ${cliPath} init local`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const hookDir = join(testDir, ".toon-memory", "hooks")
+    const hooks = existsSync(hookDir) ? readFileSync(join(hookDir, "session-start-codex.sh"), "utf-8") : ""
+    const cap = existsSync(hookDir) ? readFileSync(join(hookDir, "capture-codex.sh"), "utf-8") : ""
+    const content = hooks + "\n" + cap
+
+    // Regression: constants.ts derived scriptDir from process.argv[1], which the
+    // entry points overwrite with "toon-memory" → paths were relative ("capture.js"),
+    // resolved against whatever CWD the agent ran the hook from.
+    expect(content).toMatch(/node "[^"]*(session-start|capture)\.js"/)
+    expect(content).not.toMatch(/node "(session-start|capture)\.js"/)
+    expect(content).toMatch(/node "\/(?:\/|[^"\s])*(session-start|capture)\.js"/)
+  })
+
+  it("should import into a CLI-style [N|] file and update the header count", () => {
+    // Set up a memory file as the CLI init would write it (`[N|]` header).
+    const memoryDir = join(testDir, ".toon-memory", "memory")
+    mkdirSync(memoryDir, { recursive: true })
+    writeFileSync(
+      join(memoryDir, "data.toon"),
+      "version: 1\n[1|]{id|category|key|content|file|tags|date}:\n  00000001|knowledge|existing|Existing entry|a.ts|tag|2026-07-01\n"
+    )
+    const importFile = join(testDir, "import.json")
+    writeFileSync(
+      importFile,
+      JSON.stringify({
+        project: "test",
+        entries: [
+          { id: "00000002", category: "knowledge", key: "new-one", content: "New entry", file: "b.ts", tags: ["tag"], date: "2026-07-02" },
+        ],
+        summaries: {},
+      })
+    )
+
+    execSync(`node ${cliPath} import ${importFile}`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const data = readFileSync(join(memoryDir, "data.toon"), "utf-8")
+    const lines = data.split("\n")
+    // Regression: the header-count regex required a literal `]` after the count,
+    // which no real header has → count stayed stale (1) after importing.
+    expect(lines[1]).toMatch(/^\[2\|]/)
+    expect(data).toContain("new-one")
+  })
+
   it("should init OpenCode with correct format", () => {
     execSync(`node ${cliPath} init local`, {
       cwd: testDir,

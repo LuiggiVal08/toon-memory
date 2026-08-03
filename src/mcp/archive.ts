@@ -6,6 +6,16 @@ import { isExpired } from "./entries"
 import { entryScoreForLine } from "./scoring"
 import { parseToonLine } from "../lib/utils"
 
+/** Match both header conventions: `entries[N|]` (MCP writers) and `[N|]` (CLI init). */
+function findHeaderIdx(lines: string[]): number {
+  return lines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+}
+
+/** Bump the entry count in a header line, preserving its `entries`/`archived` prefix if present. */
+function bumpHeaderCount(line: string, count: number): string {
+  return line.replace(/^([a-z]+)?\[(\d+)\|/, (_m, pre: string) => `${pre || ""}[${count}|`)
+}
+
 /**
  * Archive entries older than ARCHIVE_DAYS or with expired TTL.
  * When `trimToMax` is set, also archive the lowest-importance entries
@@ -14,7 +24,7 @@ import { parseToonLine } from "../lib/utils"
 export function archiveOldEntries(opts: { trimToMax?: boolean } = {}): { archived: number; kept: number } {
   const data = readMemory()
   const lines = data.split("\n")
-  const headerIdx = lines.findIndex((l) => l.startsWith("entries["))
+  const headerIdx = findHeaderIdx(lines)
 
   if (headerIdx === -1) return { archived: 0, kept: 0 }
 
@@ -67,18 +77,18 @@ export function archiveOldEntries(opts: { trimToMax?: boolean } = {}): { archive
     archiveHeaderIdx = archiveLines.length - 1
   }
 
-  const archiveMatch = archiveLines[archiveHeaderIdx].match(/archived\[(\d+)\|/)
+  const archiveMatch = archiveLines[archiveHeaderIdx].match(/\[(\d+)\|/)
   const archiveCount = archiveMatch ? parseInt(archiveMatch[1]) : 0
 
   for (const entry of toArchiveLines) {
     archiveLines.splice(archiveHeaderIdx + 1, 0, `  ${entry}`)
   }
-  archiveLines[archiveHeaderIdx] = archiveLines[archiveHeaderIdx].replace(/archived\[\d+\|/, `[${archiveCount + toArchiveLines.length}|`)
+  archiveLines[archiveHeaderIdx] = bumpHeaderCount(archiveLines[archiveHeaderIdx], archiveCount + toArchiveLines.length)
 
   safeWrite(ARCHIVE_FILE, archiveLines.join("\n"))
 
   // Update main file
-  lines[headerIdx] = lines[headerIdx].replace(/entries\[\d+\|/, `[${toKeepLines.length}|`)
+  lines[headerIdx] = bumpHeaderCount(lines[headerIdx], toKeepLines.length)
   const keepSet = new Set(toKeepLines)
   const allEntryLines = lines.slice(headerIdx + 1)
   const newEntryLines = allEntryLines.filter((l) => {
@@ -104,7 +114,7 @@ export function pruneExpiredEntries(): number {
   withLockSync(MEMORY_FILE, () => {
     const data = readMemory()
     const lines = data.split("\n")
-    const headerIdx = lines.findIndex((l) => l.startsWith("entries["))
+    const headerIdx = findHeaderIdx(lines)
     if (headerIdx === -1) return
 
     const entryLines = lines.slice(headerIdx + 1).filter((l) => l.trim().length > 0 && !l.startsWith("  summaries:"))
@@ -120,7 +130,7 @@ export function pruneExpiredEntries(): number {
     })
     if (pruned === 0) return
 
-    lines[headerIdx] = lines[headerIdx].replace(/entries\[\d+\|/, `[${kept.length}|`)
+    lines[headerIdx] = bumpHeaderCount(lines[headerIdx], kept.length)
     const keepSet = new Set(kept.map((l) => l.trim()))
     const allEntryLines = lines.slice(headerIdx + 1)
     const newLines = allEntryLines.filter((l) => l.trim().length === 0 || keepSet.has(l.trim()))
