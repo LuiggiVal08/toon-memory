@@ -17,6 +17,7 @@
 import { normalize, isExpiredLocal, tokenize, importance, importanceBoost, importanceRank, estimateTokens, parseToonLine } from "./utils"
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
+import { evidenceBoost } from "./evidence"
 
 export interface GraphEntry {
 	id: string
@@ -44,6 +45,8 @@ export interface GraphEntry {
 	supersededOn: string
 	/** Explicit importance level: "critical" | "high" | "medium" | "low". Empty = auto (recency+frequency). */
 	importance: string
+	/** Evidence annotation: "" | "verified" | "unverified" | "conflict" (write-path intelligence). Empty = legacy entry. */
+	evidence: string
 }
 
 /** Edge type labels used in typed links (`type:key`). */
@@ -131,6 +134,7 @@ export function parseEntries(data: string): GraphEntry[] {
 			status: parts.length > 16 && parts[16] ? parts[16] as "active" | "obsolete" | "resolved" | "draft" : "active",
 			supersededOn: parts.length > 17 ? parts[17] || "" : "",
 			importance: parts.length > 18 ? parts[18] || "" : "",
+			evidence: parts.length > 19 ? parts[19] || "" : "",
 		})
 	}
 	return out
@@ -423,6 +427,7 @@ export function buildReason(
 	}
 	parts.push(impScore >= 0.7 ? "importance HIGH" : impScore >= 0.4 ? "importance MED" : "importance LOW")
 	if (e.importance) parts.push(`explicit ${e.importance}`)
+	if (e.evidence) parts.push(`evidence ${e.evidence}`)
 	return parts.join(" · ")
 }
 
@@ -550,6 +555,8 @@ export function graphRecallDetailed(
 					if (e.category === "warning") s += 0.2
 					// Explicit importance boost: critical/high entries surface first, low last.
 					s += importanceBoost(e.importance)
+					// Evidence bias: conflicts surface for review, verified is grounded, unverified sinks.
+					s += evidenceBoost(e.evidence)
 					s *= decay
 					return { e, s, priority: e.priority }
 				})
@@ -731,7 +738,8 @@ export function renderCompact(entries: GraphEntry[], opts: RenderCompactOpts = {
 			const statusInfo = e.status !== "active" ? ` · status: ${e.status}` : ""
 			const supersededInfo = e.supersededOn ? ` · superseded: ${e.supersededOn}` : ""
 			const impInfo = e.importance ? ` · importance: ${e.importance}` : ""
-			block = `[${n}] ${e.category}/${e.key}${pin} (${e.id})\n  ${e.content}\n  File: ${e.file} | Tags: ${e.tags.join(";")} | Date: ${e.date}${ttlInfo}${accessInfo}${lastAccess}${originInfo}${scopeInfo}${statusInfo}${supersededInfo}${impInfo}${links}`
+			const evInfo = e.evidence ? ` · evidence: ${e.evidence}` : ""
+			block = `[${n}] ${e.category}/${e.key}${pin} (${e.id})\n  ${e.content}\n  File: ${e.file} | Tags: ${e.tags.join(";")} | Date: ${e.date}${ttlInfo}${accessInfo}${lastAccess}${originInfo}${scopeInfo}${statusInfo}${supersededInfo}${impInfo}${evInfo}${links}`
 		} else {
 			// "normal" budget (default)
 			let body = e.content

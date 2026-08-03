@@ -23,6 +23,7 @@ import {
 import { normalize, isExpiredLocal, tokenize, importance, importanceBoost, importanceRank, isPrivate, estimateTokens, languageFamily, parseToonLine, toToonLine } from "./utils"
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
+import { evidenceBoost } from "./evidence"
 
 /**
  * Quality score for an entry (0..1). Pure heuristics, no LLM.
@@ -185,7 +186,14 @@ export function mergeEntries(existingLine: string, newLine: string): string {
 	const newImportance = np.length > 18 ? np[18] || "" : ""
 	const importance = importanceRank(newImportance) >= importanceRank(existingImportance) ? newImportance : existingImportance
 
-	return toToonLine([id, category, key, content, file, mergedTags, date, ttl, String(accessed), mergedLinks, quality.toFixed(2), String(confidence), lastAccessed, String(priority), path_scope, origin, status, existingSupersededOn, importance])
+	// Merge evidence (field 19): "conflict" wins, then any new non-empty value.
+	const existingEvidence = ep.length > 19 ? ep[19] || "" : ""
+	const newEvidence = np.length > 19 ? np[19] || "" : ""
+	const evidence = existingEvidence === "conflict" || newEvidence === "conflict"
+		? "conflict"
+		: newEvidence || existingEvidence
+
+	return toToonLine([id, category, key, content, file, mergedTags, date, ttl, String(accessed), mergedLinks, quality.toFixed(2), String(confidence), lastAccessed, String(priority), path_scope, origin, status, existingSupersededOn, importance, evidence])
 }
 
 /**
@@ -279,12 +287,14 @@ export function generateSmartRecall(
 			const warningBoost = e.category === "warning" ? 0.2 : 0
 			// Explicit importance boost: critical/high entries surface first, low last.
 			const impBoost = importanceBoost(e.importance)
+			// Evidence bias: conflicts surface for review, verified is grounded, unverified sinks.
+			const evBoost = evidenceBoost(e.evidence)
 			let combined: number
 			if (opts.rrf) {
-				combined = (fused?.get(e.key) ?? 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost
+				combined = (fused?.get(e.key) ?? 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost + evBoost
 			} else {
 				combined =
-					bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost
+					bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost + evBoost
 			}
 			return { entry: e, score: combined, matchesQuery, priority: e.priority, bm25Score }
 		})

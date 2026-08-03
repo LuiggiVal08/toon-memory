@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs"
 import { join } from "path"
+import { homedir } from "os"
 
 /** Base directory for memory storage */
 export const MEMORY_DIR = join(process.cwd(), ".toon-memory", "memory")
@@ -12,6 +13,15 @@ export const ARCHIVE_FILE = join(MEMORY_DIR, "archive.toon")
 
 /** Observations log written by capture hooks (opt-in, separate from memory) */
 export const OBSERVATIONS_FILE = join(MEMORY_DIR, "observations.toon")
+
+/** Encrypted sidecar vault for secrets. Whole-file AES-256-GCM when TOON_MEMORY_KEY is set.
+ *  Kept separate from data.toon so the main memory stays a readable, open format. */
+export const SECRETS_FILE = join(MEMORY_DIR, "secrets.toon")
+
+/** Optional global memory (cross-project conventions), merged on demand via memory_import_global.
+ *  Overridable with TOON_MEMORY_GLOBAL_FILE for tests or custom locations. */
+export const GLOBAL_FILE =
+  process.env.TOON_MEMORY_GLOBAL_FILE || join(homedir(), ".toon-memory", "memory", "global.toon")
 
 /** Configuration file for encryption settings */
 export const CONFIG_FILE = join(MEMORY_DIR, "config.json")

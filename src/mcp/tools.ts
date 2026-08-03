@@ -2,22 +2,24 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { registerAppTool } from "@modelcontextprotocol/ext-apps/server"
 import { z } from "zod"
 import { readFileSync, writeFileSync, existsSync, copyFileSync, mkdirSync, readdirSync } from "fs"
-import { join, basename } from "path"
+import { join, basename, dirname } from "path"
 import { readMemory, writeMemory, safeWrite } from "./memory-io"
-import { loadConfig, saveConfig, getKey, MEMORY_FILE, OBSERVATIONS_FILE, MEMORY_DIR, MAX_ENTRIES, getMaxEntries, ARCHIVE_FILE } from "./config"
+import { loadConfig, saveConfig, getKey, MEMORY_FILE, OBSERVATIONS_FILE, MEMORY_DIR, MAX_ENTRIES, getMaxEntries, ARCHIVE_FILE, GLOBAL_FILE, ensureMemoryDir } from "./config"
 import { generateId, parseTTL, isExpired, inferTags, parseRelativeDate } from "./entries"
 import { findRelatedEntries, bumpAccessed } from "./scoring"
 import { readObservations } from "./observations"
 import { archiveOldEntries } from "./archive"
-import { consolidateEntries, consolidateVersions } from "./consolidation"
+import { consolidateEntries, consolidateVersions, mergeMemoryFiles } from "./consolidation"
 import { readUnderLock } from "../lib/lock"
 import { encrypt, decrypt } from "./crypto"
+import { storeSecret, getSecret, listSecrets, forgetSecret } from "./vault"
 import { graphRecallDetailed, renderCompact, renderIndex, fetchEntriesByIds, parseEntries, buildGraph, parseLinkToken, formatLink, typedLinks } from "../lib/graph"
 import { qualityScore, mergeEntries, generateSmartRecall } from "../lib/quality"
 import { generateContextBrief, generateContextGenerate, generateContextDiff, generateContextFocus, generateContextHealth, generateContextExport } from "../lib/context"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS, getCurrentSessionFiles } from "../lib/sessions"
 import { fileMtimes } from "../lib/git"
 import { normalize, isExpiredLocal, tokenize, importance, estimateTokens, parseToonLine, toToonLine, escField, unescField } from "../lib/utils"
+import { evidenceFor, detectContradictions } from "../lib/evidence"
 import { expandSynonyms } from "../lib/synonyms"
 
 /**
@@ -505,7 +507,21 @@ server.registerTool(
     const resolvedLinks = links
       ? links.split(/[\s;]+/).filter(Boolean).join(" ")
       : existingParts[9] || ""
-    let newEntry = toToonLine([entryId, category, key, content, file || "", resolvedTags, date, resolvedTtl, "0", resolvedLinks, "", "", "", "0", path_scope || "", origin, "", "", importance])
+
+    // Write-path intelligence (deterministic, no LLM): detect contradictions
+    // against warnings / critical decisions and annotate the entry with its
+    // evidence level (verified when the referenced file exists on disk).
+    const tagList = resolvedTags.split(";").map((t) => t.trim()).filter(Boolean)
+    const candidate = { key, content, category, tags: tagList }
+    const existingEntries = parseEntries(data)
+    const conflicts = detectContradictions(existingEntries, candidate)
+    const evidence = evidenceFor(
+      existingEntries,
+      candidate,
+      file || ""
+    )
+
+    let newEntry = toToonLine([entryId, category, key, content, file || "", resolvedTags, date, resolvedTtl, "0", resolvedLinks, "", "", "", "0", path_scope || "", origin, "", "", importance, evidence])
     let action = "Saved"
     let mergeInfo = ""
     const tagsInferred = !tags && resolvedTags ? true : false
@@ -520,7 +536,7 @@ server.registerTool(
       const lastAccessed = ""
       const quality = verbatim ? 0.5 : qualityScore(resolvedTags, resolvedLinks, content, date, accessed, lastAccessed, origin)
       const confidence = 1.0
-      newEntry = toToonLine([entryId, category, key, content, file || "", resolvedTags, date, resolvedTtl, String(accessed), resolvedLinks, quality.toFixed(2), String(confidence), lastAccessed, "0", path_scope || "", origin, "active", "", importance])
+      newEntry = toToonLine([entryId, category, key, content, file || "", resolvedTags, date, resolvedTtl, String(accessed), resolvedLinks, quality.toFixed(2), String(confidence), lastAccessed, "0", path_scope || "", origin, "active", "", importance, evidence])
       const match = lines[headerIdx].match(/\[(\d+)\|/)
       const count = match ? parseInt(match[1]) : 0
       lines.splice(headerIdx + 1, 0, newEntry)
@@ -541,6 +557,12 @@ server.registerTool(
 
     const ttlMsg = resolvedTtl ? `\n⏰ TTL: ${resolvedTtl}` : ""
     const inferredMsg = tagsInferred ? `\n🏷️ Inferred tags: ${resolvedTags}` : ""
+    const evidenceMsg = evidence ? `\n🔎 Evidence: ${evidence}` : ""
+    let conflictMsg = ""
+    if (conflicts.length > 0) {
+      const items = conflicts.map((c) => `  ⚠️ [${c.category}] ${c.key} (${c.similarity}% overlap) — ${c.note}`).join("\n")
+      conflictMsg = `\n\n⚠️ Potential CONTRADICTION with existing memory:\n${items}\n  → The new claim was saved but flagged (evidence: conflict). Re-check before trusting it over the existing entry.`
+    }
 
     const related = findRelatedEntries(`${key} ${content} ${resolvedTags}`, key, 3)
     let relatedMsg = ""
@@ -550,7 +572,7 @@ server.registerTool(
     }
 
     return {
-      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${entryId})\n${content}${ttlMsg}${inferredMsg}${archiveMsg}${mergeInfo}${relatedMsg}` }],
+      content: [{ type: "text" as const, text: `🧠 ${action}: ${category}/${key} (${entryId})\n${content}${ttlMsg}${inferredMsg}${archiveMsg}${mergeInfo}${evidenceMsg}${conflictMsg}${relatedMsg}` }],
     }
   }
 )
@@ -1126,6 +1148,76 @@ server.registerTool(
       }
     } catch {
       return { content: [{ type: "text" as const, text: "❌ Wrong key or corrupted data" }] }
+    }
+  }
+)
+
+// ── memory_secret ────────────────────────────────────────────────────────────
+
+server.registerTool(
+  "memory_secret",
+  {
+    title: "Encrypted Secrets Vault",
+    description: "Store/retrieve secrets in the encrypted sidecar vault (secrets.toon, AES-256-GCM). Keeps data.toon readable and open while sensitive values stay encrypted at rest. Requires TOON_MEMORY_KEY. 'store' encrypts, 'get' decrypts, 'list' shows metadata only (no values), 'forget' removes.",
+    inputSchema: {
+      action: z.enum(["store", "get", "list", "forget"]).describe("store = encrypt + save; get = decrypt + return; list = metadata only; forget = remove."),
+      key: z.string().optional().describe("Secret identifier (kebab-case). Required for store/get/forget."),
+      value: z.string().optional().describe("The secret value to encrypt (store only)."),
+      file: z.string().optional().default("").describe("Optional related file/line (e.g. .env, src/api.ts:40)."),
+      tags: z.string().optional().default("").describe("Semicolon-separated metadata tags (e.g. api;token)."),
+      ttl: z.string().optional().default("").describe("Time to live (e.g. 7d, 2026-07-17). Empty = no expiration."),
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  },
+  async ({ action, key, value, file, tags, ttl }) => {
+    try {
+      if (action === "store") {
+        if (!key || !value) {
+          return { content: [{ type: "text" as const, text: "❌ 'store' needs both key and value." }] }
+        }
+        const { id, date } = storeSecret(key, value, { file: file || "", tags: tags || "", ttl: ttl || "" })
+        const ref = `  Reference it from memory with: memory_remember(category: "knowledge", key: "${key}", content: "Stored in secrets vault", file: "${file || "secrets.toon"}", tags: "secret;vault")`
+        return {
+          content: [{ type: "text" as const, text: `🔐 Stored secret "${key}" (${id}) on ${date}\n  Value is AES-256-GCM encrypted at rest in secrets.toon.\n${ref}` }],
+        }
+      }
+
+      if (action === "get") {
+        if (!key) return { content: [{ type: "text" as const, text: "❌ 'get' needs a key." }] }
+        const hit = getSecret(key)
+        if (!hit) {
+          return { content: [{ type: "text" as const, text: `❌ No secret "${key}" in the vault. Run memory_secret(action: "list") to see stored keys.` }] }
+        }
+        const meta = `Secret: ${key} · file: ${hit.file || "—"} · tags: ${hit.tags.join(";") || "—"} · date: ${hit.date}${hit.ttl ? ` · ttl: ${hit.ttl}` : ""}`
+        return {
+          content: [{ type: "text" as const, text: `${meta}\n\n${hit.value}` }],
+        }
+      }
+
+      if (action === "list") {
+        const list = listSecrets()
+        if (list.length === 0) {
+          return { content: [{ type: "text" as const, text: "🔐 Vault is empty." }] }
+        }
+        const rows = list
+          .map((s) => `  · ${s.key}${s.file ? ` (${s.file})` : ""} — saved ${s.date}${s.ttl ? ` · ttl ${s.ttl}` : ""} [${s.id}]`)
+          .join("\n")
+        return {
+          content: [{ type: "text" as const, text: `🔐 ${list.length} secret(s) in vault (values stay encrypted):\n${rows}\n\nGet a value with memory_secret(action: "get", key: "<key>")` }],
+        }
+      }
+
+      if (action === "forget") {
+        if (!key) return { content: [{ type: "text" as const, text: "❌ 'forget' needs a key." }] }
+        const removed = forgetSecret(key)
+        return {
+          content: [{ type: "text" as const, text: removed ? `🗑️ Removed secret "${key}" from the vault.` : `❌ No secret "${key}" in the vault.` }],
+        }
+      }
+
+      return { content: [{ type: "text" as const, text: "❌ Unknown action." }] }
+    } catch (err) {
+      return { content: [{ type: "text" as const, text: `❌ ${err instanceof Error ? err.message : String(err)}` }] }
     }
   }
 )
@@ -1728,6 +1820,71 @@ server.registerTool(
       }
     } catch (err) {
       return { content: [{ type: "text" as const, text: `❌ Failed to import: ${err}` }] }
+    }
+  }
+)
+
+// ── memory_export_global / memory_import_global ──────────────────────────
+// Cross-project conventions live in ~/.toon-memory/memory/global.toon. They
+// are pulled into a project with a one-shot merge (offline, deterministic) —
+// never a live dual-source recall, so the ranking pipeline stays untouched.
+
+server.registerTool(
+  "memory_export_global",
+  {
+    title: "Export to Global Memory",
+    description: "Write the current project memory to the global memory file (~/.toon-memory/memory/global.toon, or TOON_MEMORY_GLOBAL_FILE). One-shot: the global file is a plain TOON document you curate and import into other projects with memory_import_global.",
+    inputSchema: {
+      target: z.string().optional().describe("Override the global file path (defaults to TOON_MEMORY_GLOBAL_FILE or ~/.toon-memory/memory/global.toon)."),
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  },
+  async ({ target }) => {
+    const dest = target || GLOBAL_FILE
+    const data = readMemory()
+    mkdirSync(dirname(dest), { recursive: true })
+    safeWrite(dest, data)
+    const count = parseEntries(data).length
+    return {
+      content: [{ type: "text" as const, text: `📤 Exported ${count} entries to global memory:\n  ${dest}\n\nImport them elsewhere with memory_import_global.` }],
+    }
+  }
+)
+
+server.registerTool(
+  "memory_import_global",
+  {
+    title: "Import Global Memory",
+    description: "Merge cross-project conventions from the global memory file (~/.toon-memory/memory/global.toon, or TOON_MEMORY_GLOBAL_FILE) into this project. One-shot merge by key: keeps newer dates, unions tags/links, preserves all fields. Deterministic and offline.",
+    inputSchema: {
+      merge: z.boolean().optional().default(true).describe("If true, merge with existing memory (default). If false, replace entirely."),
+      source: z.string().optional().describe("Override the global file path (defaults to TOON_MEMORY_GLOBAL_FILE or ~/.toon-memory/memory/global.toon)."),
+    },
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+  },
+  async ({ merge, source }) => {
+    const src = source || GLOBAL_FILE
+    if (!existsSync(src)) {
+      return {
+        content: [{ type: "text" as const, text: `❌ No global memory at:\n  ${src}\n\nExport from another project with memory_export_global, or create the file with a few memory entries first.` }],
+      }
+    }
+    const globalData = readFileSync(src, "utf-8")
+
+    if (!merge) {
+      safeWrite(MEMORY_FILE, globalData)
+      const count = parseEntries(globalData).length
+      return {
+        content: [{ type: "text" as const, text: `📥 Memory replaced from global (${count} entries).` }],
+      }
+    }
+
+    const localData = readMemory()
+    const { data, added, updated } = mergeMemoryFiles(localData, globalData)
+    writeMemory(data)
+    const total = parseEntries(data).length
+    return {
+      content: [{ type: "text" as const, text: `📥 Global memory merged\n  Added: ${added} new entries\n  Updated: ${updated} existing entries\n  Total: ${total} entries` }],
     }
   }
 )

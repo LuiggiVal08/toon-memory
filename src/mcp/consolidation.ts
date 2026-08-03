@@ -116,6 +116,67 @@ export function consolidateEntries(): { removed: number; kept: number; duplicate
 }
 
 /**
+ * Merge two TOON memory documents by key, preserving every field.
+ *
+ * Pure (no file I/O): local wins on ids; incoming entries merge into existing
+ * ones via mergeEntries (tags/links union, max confidence/priority, newest
+ * date/content). Used by memory_import_global — a one-shot, offline pull of
+ * cross-project conventions. Never a live dual-source recall, so the ranking
+ * pipeline is untouched.
+ */
+export function mergeMemoryFiles(
+  localData: string,
+  incomingData: string
+): { data: string; added: number; updated: number } {
+  const isEntry = (l: string): boolean =>
+    l.startsWith("  ") && l.includes("|") && !l.startsWith("  summaries:")
+
+  const localLines = localData.split("\n")
+  const headerIdx = localLines.findIndex((l) => l.startsWith("entries[") || /^\[\d+\|]/.test(l))
+
+  let prefix: string[]
+  let summaries: string[]
+  let localEntryLines: string[]
+
+  if (headerIdx === -1) {
+    prefix = ["version: 1"]
+    summaries = []
+    localEntryLines = []
+  } else {
+    prefix = localLines.slice(0, headerIdx)
+    const body = localLines.slice(headerIdx + 1)
+    localEntryLines = body.filter(isEntry)
+    summaries = body.filter((l) => !isEntry(l))
+  }
+
+  const merged = new Map<string, string>()
+  for (const line of localEntryLines) {
+    const parts = parseToonLine(line)
+    if (parts.length >= 3) merged.set(parts[2], line.trim())
+  }
+
+  let added = 0
+  let updated = 0
+  for (const line of incomingData.split("\n").filter(isEntry)) {
+    const parts = parseToonLine(line)
+    if (parts.length < 7) continue
+    const key = parts[2]
+    const existing = merged.get(key)
+    if (existing === undefined) {
+      merged.set(key, line.trim())
+      added++
+    } else {
+      merged.set(key, mergeEntries(existing, line.trim()))
+      updated++
+    }
+  }
+
+  const header = `[${merged.size}|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed}:`
+  const data = [...prefix, header, ...[...merged.values()], ...summaries].join("\n")
+  return { data, added, updated }
+}
+
+/**
  * Extract a (base, version) pair from a versioned key or content line.
  * Matches "Use React 18", "React 18.2", "next 13.5.1", "vite ^5.0.0", etc.
  * Returns null when no version number is present.
