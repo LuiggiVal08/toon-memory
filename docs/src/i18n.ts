@@ -2,10 +2,8 @@ export const content = {
 	en: {
 		nav: {
 			docs: 'Docs',
-			features: 'Features',
-			viewer: 'Viewer',
-			benchmarks: 'Benchmarks',
 			faq: 'FAQ',
+			releaseNotes: 'Release Notes',
 			npm: 'npm',
 			github: 'GitHub',
 		},
@@ -76,18 +74,9 @@ export const content = {
 
 		benefits: {
 			kicker: 'Why developers choose toon-memory',
-			title: 'Built around the real problems',
-			subtitle: 'Not a list of tools — a set of outcomes.',
+			title: 'Private, lightweight, universal',
+			subtitle: 'The guarantees that make project memory safe to keep.',
 			groups: [
-				{
-					icon: '🧭',
-					title: 'Persistent project knowledge',
-					items: [
-						'Remembers decisions and the reasons behind them',
-						'Remembers architecture and conventions',
-						'Accumulates between sessions — never re-explained',
-					],
-				},
 				{
 					icon: '🔒',
 					title: 'Privacy-first',
@@ -376,7 +365,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{
 						feature: 'Auto-loading',
 						num: '~90%',
-						cap: 'fewer tokens',
+						cap: 'fewer tokens per step',
 						from: 'Dumping all memory at every step',
 						to: 'Only the task-relevant entries',
 						more: '80% fewer tool calls (25 → 5)',
@@ -384,7 +373,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{
 						feature: 'Compact recall',
 						num: '68%',
-						cap: 'fewer tokens',
+						cap: 'fewer tokens per recall',
 						from: 'Reading whole files',
 						to: 'One compact recall',
 						more: '58% fewer tokens (system primer)',
@@ -392,7 +381,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{
 						feature: 'Batch compress',
 						num: '14%',
-						cap: 'fewer tokens',
+						cap: 'fewer tokens on disk',
 						from: 'Scattered low-quality entries',
 						to: 'One consolidated summary',
 					},
@@ -410,9 +399,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 		},
 		tools: {
-			title: 'A complete memory toolkit',
+			title: 'A memory toolkit',
 			subtitle: 'Everything your agent needs to remember, recall, and reason',
 			resourcesLabel: 'Resources:',
+			seeAll: 'Explore all {n} tools',
 			groups: {
 				core: 'Core Memory',
 				search: 'Search & Intelligence',
@@ -634,10 +624,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	es: {
 		nav: {
 			docs: 'Documentación',
-			features: 'Funciones',
-			viewer: 'Visor',
-			benchmarks: 'Métricas',
 			faq: 'FAQ',
+			releaseNotes: 'Notas de versión',
 			npm: 'npm',
 			github: 'GitHub',
 		},
@@ -709,18 +697,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 
 		benefits: {
 			kicker: 'Por qué los desarrolladores eligen toon-memory',
-			title: 'Construido alrededor de los problemas reales',
-			subtitle: 'No una lista de herramientas — un conjunto de resultados.',
+			title: 'Privado, ligero, universal',
+			subtitle: 'Las garantías que hacen seguro conservar la memoria del proyecto.',
 			groups: [
-				{
-					icon: '🧭',
-					title: 'Conocimiento persistente del proyecto',
-					items: [
-						'Recuerda decisiones y las razones detrás de ellas',
-						'Recuerda arquitectura y convenciones',
-						'Se acumula entre sesiones — nunca re-explicado',
-					],
-				},
 				{
 					icon: '🔒',
 					title: 'Privacidad primero',
@@ -999,7 +978,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{
 						feature: 'Auto-carga',
 						num: '~90%',
-						cap: 'menos tokens',
+						cap: 'menos tokens por paso',
 						from: 'Volcar toda la memoria a cada paso',
 						to: 'Solo lo relevante a la tarea',
 						more: '80% menos tool calls (25 → 5)',
@@ -1007,7 +986,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{
 						feature: 'Recall compacto',
 						num: '68%',
-						cap: 'menos tokens',
+						cap: 'menos tokens por recall',
 						from: 'Releer los archivos enteros',
 						to: 'Un recall compacto',
 						more: '58% menos tokens (system primer)',
@@ -1015,7 +994,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{
 						feature: 'Compresión por lotes',
 						num: '14%',
-						cap: 'menos tokens',
+						cap: 'menos tokens en disco',
 						from: 'Entradas dispersas de baja calidad',
 						to: '1 resumen consolidado',
 					},
@@ -1033,9 +1012,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 		},
 	tools: {
-		title: 'Un kit de memoria completo',
+		title: 'Un kit de memoria',
 		subtitle: 'Todo lo que tu agente necesita para recordar, recuperar y razonar',
 		resourcesLabel: 'Recursos:',
+		seeAll: 'Explora los {n} tools',
 		groups: {
 			core: 'Memoria Principal',
 			search: 'Búsqueda e Inteligencia',
@@ -1257,10 +1237,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	zh: {
 	nav: {
 		docs: '文档',
-		features: '功能',
-		viewer: '图谱查看器',
-		benchmarks: '基准测试',
 		faq: '常见问题',
+		releaseNotes: '发行说明',
 		npm: 'npm',
 		github: 'GitHub',
 	},
@@ -1301,10 +1279,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 
 	benefits: {
 		kicker: '为什么开发者选择 toon-memory',
-		title: '围绕你真正遇到的问题构建',
-		subtitle: '不是工具列表 — 而是结果集。',
+		title: '私有、轻量、通用',
+		subtitle: '让项目记忆可以放心保留的保障。',
 		groups: [
-			{ icon: '🧭', title: '持久的项目知识', items: ['记住决策及其背后的原因', '记住架构和约定', '在会话间积累 — 永不重新解释'] },
 			{ icon: '🔒', title: '隐私优先', items: ['100% 本地 — 无云、无服务器、无遥测', '可选 AES-256-GCM 加密', '你拥有记忆文件，就像任何源文件'] },
 			{ icon: '⚡', title: '轻量', items: ['原生 TOON 格式 — 比 JSON 少 22% 的 token', '零依赖，任何 Node.js 18+ 都可运行', '确定性逻辑 — 无 LLM 调用、无 API 密钥'] },
 			{ icon: '🛰️', title: '通用', items: ['适用于 15+ 个代理：Claude Code、Codex、Gemini CLI、Cursor、OpenCode 等', '标准 MCP — 更换代理而不丢失上下文', '每个团队成员共享的项目记忆'] },
@@ -1408,7 +1385,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '完整的记忆工具集', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：',
+		title: '记忆工具集', subtitle: '你的代理记忆、召回和推理所需的一切', resourcesLabel: '资源：', seeAll: '查看全部 {n} 个工具',
 		groups: {
 			core: '核心记忆',
 			search: '搜索与智能',
@@ -1554,7 +1531,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	footer: { text: 'MIT 许可证 — ', odalx: 'ODALX 的开源项目', odalxTag: '为 AI 原生时代构建基础设施。' },
 },
 	ja: {
-	nav: { docs: 'ドキュメント', features: '機能', viewer: 'ビューアー', benchmarks: 'ベンチマーク', faq: 'FAQ', npm: 'npm', github: 'GitHub' },
+	nav: { docs: 'ドキュメント', faq: 'FAQ', releaseNotes: 'リリースノート', npm: 'npm', github: 'GitHub' },
 	hero: {
 		tagline: 'AIエージェントのための継続性レイヤー',
 		subtitle:
@@ -1587,10 +1564,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 
 	benefits: {
 		kicker: '開発者が toon-memory を選ぶ理由',
-		title: '実際にある問題を中心に設計',
-		subtitle: 'ツールのリストではなく、成果のセット。',
+		title: 'プライベート、軽量、ユニバーサル',
+		subtitle: 'プロジェクトの記憶を安全に保つための保証。',
 		groups: [
-			{ icon: '🧭', title: '持続的なプロジェクト知識', items: ['決定とその理由を記憶', 'アーキテクチャと規約を記憶', 'セッションをまたいで蓄積 — 再説明不要'] },
 			{ icon: '🔒', title: 'プライバシー優先', items: ['100% ローカル — クラウドなし、サーバーなし、テレメトリなし', 'オプションの AES-256-GCM 暗号化', '記憶ファイルはソースファイル同様、あなたのもの'] },
 			{ icon: '⚡', title: '軽量', items: ['ネイティブ TOON 形式 — JSON より 22% 少ないトークン', '依存関係ゼロ、Node.js 18+ で動作', '決定論的ロジック — LLM 呼び出しなし、API キー不要'] },
 			{ icon: '🛰️', title: 'ユニバーサル', items: ['15+ のエージェントに対応: Claude Code、Codex、Gemini CLI、Cursor、OpenCode など', '標準 MCP — コンテキストを失わずにエージェントを変更', 'チーム全員が共有するプロジェクト別メモリ'] },
@@ -1693,7 +1669,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '完全なメモリツールキット', subtitle: 'エージェントが記憶、リコール、推論するために必要なすべて', resourcesLabel: 'リソース：',
+		title: 'メモリツールキット', subtitle: 'エージェントが記憶、リコール、推論するために必要なすべて', resourcesLabel: 'リソース：', seeAll: '全 {n} 個のツールを見る',
 		groups: {
 			core: 'コアメモリ',
 			search: '検索＆インテリジェンス',
@@ -1837,7 +1813,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	footer: { text: 'MIT ライセンス — ', odalx: 'ODALX によるオープンソースプロジェクト', odalxTag: 'AI ネイティブ時代のインフラストラクチャを構築。' },
 },
 	ko: {
-	nav: { docs: '문서', features: '기능', viewer: '뷰어', benchmarks: '벤치마크', faq: 'FAQ', npm: 'npm', github: 'GitHub' },
+	nav: { docs: '문서', faq: 'FAQ', releaseNotes: '릴리스 노트', npm: 'npm', github: 'GitHub' },
 	hero: {
 		tagline: 'AI 에이전트를 위한 연속성 레이어',
 		subtitle:
@@ -1870,10 +1846,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 
 	benefits: {
 		kicker: '개발자가 toon-memory를 선택하는 이유',
-		title: '실제로 겪는 문제를 중심으로 설계',
-		subtitle: '도구 목록이 아니라 결과의 집합입니다.',
+		title: '프라이빗, 가볍고, 범용적',
+		subtitle: '프로젝트 메모리를 안전하게 유지하는 보장.',
 		groups: [
-			{ icon: '🧭', title: '지속적인 프로젝트 지식', items: ['결정과 그 이유를 기억', '아키텍처와 관례를 기억', '세션 간에 축적 — 다시 설명할 필요 없음'] },
 			{ icon: '🔒', title: '프라이버시 우선', items: ['100% 로컬 — 클라우드, 서버, 텔레메트리 없음', '선택적 AES-256-GCM 암호화', '메모리 파일은 소스 파일처럼 당신의 것입니다'] },
 			{ icon: '⚡', title: '가벼움', items: ['네이티브 TOON 형식 — JSON보다 22% 적은 토큰', '의존성 제로, Node.js 18+에서 동작', '결정적 로직 — LLM 호출 없음, API 키 불필요'] },
 			{ icon: '🛰️', title: '유니버설', items: ['15+ 에이전트 지원: Claude Code, Codex, Gemini CLI, Cursor, OpenCode 등', '표준 MCP — 컨텍스트를 잃지 않고 에이전트 변경', '팀 전체가 공유하는 프로젝트별 메모리'] },
@@ -1976,7 +1951,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: '완전한 메모리 도구 키트', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:',
+		title: '메모리 도구 키트', subtitle: '에이전트의 기억, 리콜, 추론에 필요한 모든 것', resourcesLabel: '리소스:', seeAll: '전체 {n}개 도구 보기',
 		groups: {
 			core: '핵심 메모리',
 			search: '검색 및 인텔리전스',
@@ -2122,10 +2097,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	'pt-br': {
 	nav: {
 		docs: 'Documentação',
-		features: 'Recursos',
-		viewer: 'Visualizador',
-		benchmarks: 'Métricas',
 		faq: 'FAQ',
+		releaseNotes: 'Notas de versão',
 		npm: 'npm',
 		github: 'GitHub',
 	},
@@ -2181,10 +2154,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 
 	benefits: {
 		kicker: 'Por que os desenvolvedores escolhem o toon-memory',
-		title: 'Construído em torno dos problemas reais',
-		subtitle: 'Não é uma lista de ferramentas — é um conjunto de resultados.',
+		title: 'Privado, leve, universal',
+		subtitle: 'As garantias que tornam seguro manter a memória do projeto.',
 		groups: [
-			{ icon: '🧭', title: 'Conhecimento persistente do projeto', items: ['Lembra decisões e as razões por trás delas', 'Lembra arquitetura e convenções', 'Acumula entre sessões — nunca reexplicado'] },
 			{ icon: '🔒', title: 'Privacidade em primeiro lugar', items: ['100% local — sem nuvem, sem servidor, sem telemetria', 'Criptografia opcional AES-256-GCM', 'Você é dono do arquivo de memória, como qualquer fonte'] },
 			{ icon: '⚡', title: 'Leve', items: ['Formato TOON nativo — 22% menos tokens que JSON', 'Zero dependências, roda em qualquer Node.js 18+', 'Lógica determinística — sem chamadas LLM, sem chaves de API'] },
 			{ icon: '🛰️', title: 'Universal', items: ['Funciona com 15+ agentes: Claude Code, Codex, Gemini CLI, Cursor, OpenCode e mais', 'MCP padrão — troque de agente sem perder contexto', 'Memória por projeto compartilhada por todo o time'] },
@@ -2420,9 +2392,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: 'Um kit de memória completo',
+		title: 'Um kit de memória',
 		subtitle: 'Tudo que seu agente precisa para lembrar, recuperar e raciocinar',
 		resourcesLabel: 'Recursos:',
+		seeAll: 'Ver todos os {n} tools',
 		groups: {
 			core: 'Memória Principal',
 			search: 'Busca & Inteligência',
@@ -2641,10 +2614,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	de: {
 	nav: {
 		docs: 'Dokumentation',
-		features: 'Funktionen',
-		viewer: 'Viewer',
-		benchmarks: 'Benchmarks',
 		faq: 'FAQ',
+		releaseNotes: 'Versionshinweise',
 		npm: 'npm',
 		github: 'GitHub',
 	},
@@ -2700,10 +2671,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 
 	benefits: {
 		kicker: 'Warum Entwickler toon-memory wählen',
-		title: 'Gebaut um die Probleme, die du wirklich hast',
-		subtitle: 'Keine Liste von Werkzeugen — ein Satz von Ergebnissen.',
+		title: 'Privat, leichtgewichtig, universell',
+		subtitle: 'Die Garantien, die Projekterinnerung sicher machen.',
 		groups: [
-			{ icon: '🧭', title: 'Persistentes Projektwissen', items: ['Erinnert Entscheidungen und die Gründe dahinter', 'Erinnert Architektur und Konventionen', 'Sammelt sich zwischen Sitzungen an — nie wieder erklärt'] },
 			{ icon: '🔒', title: 'Datenschutz zuerst', items: ['100% lokal — kein Cloud, kein Server, keine Telemetrie', 'Optionale AES-256-GCM-Verschlüsselung', 'Du besitzt die Speicherdatei wie jede Quelldatei'] },
 			{ icon: '⚡', title: 'Leichtgewichtig', items: ['Natives TOON-Format — 22% weniger Tokens als JSON', 'Keine Abhängigkeiten, läuft auf jedem Node.js 18+', 'Deterministische Logik — keine LLM-Aufrufe, keine API-Schlüssel'] },
 			{ icon: '🛰️', title: 'Universell', items: ['Funktioniert mit 15+ Agenten: Claude Code, Codex, Gemini CLI, Cursor, OpenCode und mehr', 'Standard-MCP — Agenten wechseln, ohne Kontext zu verlieren', 'Projektweiter Speicher, den jedes Teammitglied teilt'] },
@@ -2939,9 +2909,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: 'Ein vollständiges Speicher-Toolkit',
+		title: 'Ein Speicher-Toolkit',
 		subtitle: 'Alles, was dein Agent zum Merken, Abrufen und Denken braucht',
 		resourcesLabel: 'Ressourcen:',
+		seeAll: 'Alle {n} Tools ansehen',
 		groups: {
 			core: 'Kernspeicher',
 			search: 'Suche & Intelligenz',
@@ -3160,10 +3131,8 @@ cta: {
 	fr: {
 	nav: {
 		docs: 'Documentation',
-		features: 'Fonctionnalités',
-		viewer: 'Visualiseur',
-		benchmarks: 'Benchmarks',
 		faq: 'FAQ',
+		releaseNotes: 'Notes de version',
 		npm: 'npm',
 		github: 'GitHub',
 	},
@@ -3215,10 +3184,9 @@ cta: {
 	},
 	benefits: {
 		kicker: 'Pourquoi les développeurs choisissent toon-memory',
-		title: 'Construit autour des vrais problèmes',
-			subtitle: 'Pas une liste d\'outils — un ensemble de résultats.',
+		title: 'Privé, léger, universel',
+			subtitle: 'Les garanties qui rendent la mémoire du projet sûre à conserver.',
 		groups: [
-				{ icon: '🧭', title: 'Connaissance persistante du projet', items: ['Retient les décisions et les raisons qui les motivent', 'Retient l\'architecture et les conventions', 'S\'accumule entre les sessions — jamais réexpliqué'] },
 				{ icon: '🔒', title: 'Confidentialité d\'abord', items: ['100% local — aucun cloud, aucun serveur, aucune télémétrie', 'Chiffrement AES-256-GCM optionnel', 'Vous possédez le fichier mémoire, comme n\'importe quel fichier source'] },
 			{ icon: '⚡', title: 'Léger', items: ['Format TOON natif — 22% de tokens en moins que JSON', 'Zéro dépendance, fonctionne sur tout Node.js 18+', 'Logique déterministe — aucun appel LLM, aucune clé API'] },
 				{ icon: '🛰️', title: 'Universel', items: ['Fonctionne avec 15+ agents : Claude Code, Codex, Gemini CLI, Cursor, OpenCode et plus', 'MCP standard — changez d\'agent sans perdre le contexte', 'Mémoire par projet partagée par toute l\'équipe'] },
@@ -3453,9 +3421,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 	},
 	tools: {
-		title: 'Un kit mémoire complet',
+		title: 'Un kit mémoire',
 		subtitle: 'Tout ce dont votre agent a besoin pour mémoriser, rappeler et raisonner',
 		resourcesLabel: 'Ressources :',
+		seeAll: 'Voir les {n} outils',
 		groups: {
 			core: 'Mémoire Principale',
 			search: 'Recherche & Intelligence',

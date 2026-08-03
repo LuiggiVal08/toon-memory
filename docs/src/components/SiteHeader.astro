@@ -1,6 +1,10 @@
 ---
 import logoSrc from '../assets/logo.svg';
+import logoIsologoSrc from '../assets/logo-isologo.svg';
 import { getContent } from '../i18n';
+import pkg from '../../../package.json';
+
+const version = pkg.version;
 
 interface Props {
 	lang?: string;
@@ -28,19 +32,32 @@ const docsHref = getLocalePath(lang) + 'getting-started/quickstart';
 ---
 
 <header class="site-header">
-  <a href={getLocalePath(lang)} class="site-logo">
-    <img src={logoSrc.src} alt="toon-memory" class="logo-icon" />
-    <span class="logo-text">toon-memory</span>
+  <a href={getLocalePath(lang)} class="site-logo" aria-label="toon-memory">
+    <img src={logoSrc.src} alt="" class="logo-icon" />
+    <img src={logoIsologoSrc.src} alt="toon-memory" class="logo-isologo" />
   </a>
   <nav class="site-nav">
     <a href={docsHref}>{c.nav.docs}</a>
     <div class="nav-links" id="navLinks">
-      <a href="#features" class="nav-anchor">{c.nav.features}</a>
-      <a href="#viewer" class="nav-anchor">{c.nav.viewer}</a>
-      <a href="#benchmarks" class="nav-anchor">{c.nav.benchmarks}</a>
       <a href="#faq" class="nav-anchor">{c.nav.faq}</a>
+      <div class="lang-dropdown version-dropdown">
+        <button class="lang-switch version-switch" type="button" aria-haspopup="true" aria-expanded="false">
+          <span>v{version}</span>
+          <svg class="switch-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="lang-dropdown-menu version-dropdown-menu">
+          <a
+            class="lang-option"
+            href="https://github.com/LuiggiVal08/toon-memory/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+          >{c.nav.releaseNotes}</a>
+        </div>
+      </div>
       <div class="lang-dropdown">
-        <button class="lang-switch" type="button">{currentLocale.label}</button>
+        <button class="lang-switch" type="button" aria-haspopup="true" aria-expanded="false">{currentLocale.label}
+          <svg class="switch-chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
         <div class="lang-dropdown-menu">
           {locales.map(l => (
             <a
@@ -69,14 +86,22 @@ const docsHref = getLocalePath(lang) + 'getting-started/quickstart';
   (function () {
     var toggle = document.querySelector('.nav-toggle');
     var links = document.querySelector('#navLinks');
-    var btn = document.querySelector('.lang-switch');
-    var menu = document.querySelector('.lang-dropdown-menu');
+    var dropdowns = Array.prototype.slice.call(document.querySelectorAll('.lang-dropdown'));
 
     function closeNav() {
       if (!toggle || !links) return;
       links.classList.remove('open');
       toggle.classList.remove('open');
       toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    function closeMenus() {
+      dropdowns.forEach(function (d) {
+        var menu = d.querySelector('.lang-dropdown-menu');
+        var btn = d.querySelector('.lang-switch');
+        if (menu) menu.classList.remove('open');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      });
     }
 
     if (toggle && links) {
@@ -102,15 +127,25 @@ const docsHref = getLocalePath(lang) + 'getting-started/quickstart';
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
-    if (btn && menu) {
+    dropdowns.forEach(function (d) {
+      var btn = d.querySelector('.lang-switch');
+      var menu = d.querySelector('.lang-dropdown-menu');
+      if (!btn || !menu) return;
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
-        menu.classList.toggle('open');
+        var wasOpen = menu.classList.contains('open');
+        closeMenus();
+        if (wasOpen) {
+          btn.setAttribute('aria-expanded', 'false');
+        } else {
+          menu.classList.add('open');
+          btn.setAttribute('aria-expanded', 'true');
+        }
       });
-    }
+    });
     document.addEventListener('click', function () {
       closeNav();
-      if (menu) menu.classList.remove('open');
+      closeMenus();
     });
   })();
 </script>

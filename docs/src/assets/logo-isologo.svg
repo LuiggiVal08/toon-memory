@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 52" role="img" aria-label="toon-memory">
+  <defs>
+    <linearGradient id="toon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#toon-grad)">
+  <polygon points="6,0 12,0 12,34 6,40 0,40 0,6"/><polygon points="-4,22 2,16 24,16 24,22 18,28 -4,28"/>
+  <path fill-rule="evenodd" d="M32,12 54,12 54,34 48,40 26,40 26,18 Z M34,20 46,20 46,32 34,32 Z"/>
+  <path fill-rule="evenodd" d="M64,12 86,12 86,34 80,40 58,40 58,18 Z M66,20 78,20 78,32 66,32 Z"/>
+  <polygon points="96,12 102,12 102,34 96,40 90,40 90,18"/><polygon points="90,18 96,12 122,12 122,18 116,24 90,24"/><polygon points="116,12 122,12 122,34 116,40 110,40 110,18"/>
+  </g>
+  <text x="130" y="40" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="34" font-weight="700" letter-spacing="1" fill="oklch(56% 0.02 270)">memory</text>
+</svg>

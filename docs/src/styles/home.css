@@ -55,14 +55,21 @@ a:hover { text-decoration: underline; }
   scroll-margin-top: 5rem;
 }
 .site-logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 1.2rem;
+  gap: 5px;
   color: var(--text);
 }
-.logo-icon { width: 28px; height: 28px; }
+.logo-icon {
+  height: 30px;
+  width: auto;
+  display: block;
+}
+.logo-isologo {
+  height: 26px;
+  width: auto;
+  display: block;
+}
 .site-nav { display: flex; align-items: center; gap: 1.5rem; position: relative; }
 .site-nav a { color: var(--text-muted); font-size: 0.95rem; }
 .site-nav a:hover { color: var(--text); text-decoration: none; }
@@ -92,20 +99,31 @@ a:hover { text-decoration: underline; }
   position: relative;
 }
 .lang-switch {
-  border: 1px solid var(--border);
-  border-radius: 9999px;
-  padding: 0.15rem 0.7rem;
-  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  font-size: 0.95rem;
   background: transparent;
-  color: var(--text);
+  border: none;
+  color: var(--text-muted);
   cursor: pointer;
   font-family: inherit;
 }
 .lang-switch:hover,
 .lang-switch:focus {
-  border-color: var(--brand);
+  color: var(--text);
   text-decoration: none;
   outline: none;
+}
+.version-switch {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.switch-chevron {
+  transition: transform 0.2s ease;
+}
+.lang-dropdown:has(.lang-dropdown-menu.open) .switch-chevron {
+  transform: rotate(180deg);
 }
 .lang-dropdown-menu {
   display: none;
@@ -158,6 +176,75 @@ a:hover { text-decoration: underline; }
   background: radial-gradient(ellipse 55% 45% at 50% 0%, var(--color-accent-brand-ghost) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
+}
+
+/* Memory wall — dense .toon texture (typographic hero, MiMo-style) */
+.hero-wall {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 84%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 84%, transparent 100%);
+}
+.wall-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.85;
+  white-space: pre;
+  overflow: hidden;
+  animation: wallDrift var(--dur, 120s) linear infinite;
+  will-change: transform;
+}
+.wall-layer pre {
+  margin: 0;
+  font: inherit;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  overflow: hidden;
+  text-overflow: clip;
+}
+.wall-layer-a pre {
+  color: var(--color-brand-light);
+  opacity: 0.06;
+}
+.wall-layer-b {
+  top: var(--top, 30%);
+}
+.wall-layer-b pre {
+  color: var(--text-muted);
+  opacity: 0.045;
+}
+/* Bright copy of the wall, revealed under the cursor by the mask canvas below.
+   Larger type + structured "## " blocks so revealed fragments read as memory,
+   not scattered pipe-format rows. */
+.wall-layer-reveal pre {
+  color: var(--color-brand-light);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  opacity: 0.5;
+}
+.hero-wall-mask {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+@media (hover: none) {
+  .hero-wall-mask,
+  .wall-layer-reveal {
+    display: none;
+  }
+}
+@keyframes wallDrift {
+  to { transform: translateY(-50%); }
 }
 
 /* Ambient particles */
@@ -402,6 +489,15 @@ a:hover { text-decoration: underline; }
   color: var(--text);
 }
 .term-prompt { color: var(--text-muted); }
+.term-cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--brand);
+  animation: cursorBlink 1s steps(1) infinite;
+}
 .chat-cursor {
   display: inline-block;
   width: 0.55em;
@@ -1644,6 +1740,27 @@ body.modal-open {
   padding: 0.2em 0.5em;
   border-radius: 4px;
 }
+.tools-footer {
+  margin-top: 1.25rem;
+  text-align: center;
+}
+.tools-link {
+  display: inline-block;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--brand-light);
+  text-decoration: none;
+  transition: border-color 0.25s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s;
+}
+.tools-link:hover {
+  border-color: var(--brand);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px -6px var(--brand-glow);
+}
 
 /* Tool group headers */
 .tool-group-header {
@@ -1661,70 +1778,9 @@ body.modal-open {
   padding-top: 0;
 }
 
-/* What's New section */
-.what-new-section {
-  position: relative;
-}
-.what-new-section .new-badge {
-  display: inline-block;
-  background: var(--gradient);
-  color: var(--color-text-on-brand);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  padding: 0.25em 0.7em;
-  border-radius: 9999px;
-  margin-bottom: 0.5rem;
-}
-.what-new-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-}
-.what-new-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1.5rem;
-  transition: border-color 0.25s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s;
-}
-.what-new-card:hover {
-  border-color: var(--brand);
-  transform: translateY(-4px);
-  box-shadow: 0 6px 24px -6px var(--brand-glow);
-}
-.what-new-icon {
-  margin-bottom: 0.75rem;
-}
-.what-new-icon .icon-svg :global(svg) { width: 36px; height: 36px; }
-.what-new-card h3 {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-  font-weight: 700;
-}
-.what-new-card p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
-.what-new-stats {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.75rem;
-}
-.what-new-stats .stat {
-  font-size: 0.75rem;
-  padding: 0.2em 0.5em;
-  border-radius: 4px;
-  background: var(--color-accent-success-mist);
-  color: var(--color-success);
-  font-family: var(--font-mono);
-  font-weight: 500;
-}
+/* What's New section removed from landing — keep styles reserved for a future changelog page */
 
 @media (max-width: 768px) {
-  .what-new-grid { grid-template-columns: 1fr; }
   .problem-grid { grid-template-columns: 1fr; }
   .steps { grid-template-columns: 1fr; }
   .agents-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1739,6 +1795,8 @@ body.modal-open {
   .hero-title { font-size: 2.5rem; }
   .hero { padding: 2.5rem 1rem 2rem; }
   .site-header { padding: 0.75rem 1rem; }
+  .logo-icon,
+  .logo-isologo { height: 22px; }
   .site-nav { gap: 0.75rem; position: static; }
   .nav-toggle { display: flex; }
   .nav-links {
@@ -1795,4 +1853,10 @@ body.modal-open {
   .bar-toon.is-animated { animation: none; }
   .tool-card.pre-reveal { opacity: 1; transform: none; transition: none; }
   .code-block::after { animation: none; display: none; }
+  .wall-layer { animation: none; }
+  .term-cursor { animation: none; }
+  .hero-wall-mask,
+  .wall-layer-reveal {
+    display: none;
+  }
 }

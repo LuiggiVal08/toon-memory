@@ -8,22 +8,60 @@ interface Props {
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 const docsHref = lang === 'es' ? '/toon-memory/es/getting-started/quickstart' : '/toon-memory/getting-started/quickstart';
-const particles = Array.from({ length: 16 }, (_, i) => ({
-	left: (i * 61 + 7) % 100,
-	delay: (i * 1.7) % 14,
-	duration: 20 + ((i * 3.3) % 14),
-	size: 2.5 + ((i * 0.7) % 2.5),
-}));
+
+const toonRow = (id: string, cat: string, key: string, content: string, tags: string, date: string) =>
+	`  ${id}|${cat}|${key}|${content}||${tags}|${date}||0||0.7|1|${date}T09:12:00.000Z|0`;
+const repeat = (s: string) => (s + ' '.repeat(4)).repeat(Math.max(2, Math.ceil(260 / Math.max(s.length, 1))));
+const wallA = [
+	'version: 1',
+	'[200|]{id|category|key|content|file|tags|date|ttl|accessed|links}:',
+	toonRow('6f9fa0c7', 'decision', 'stack:nextjs', 'Payments: Stripe. UI: Next.js + Tailwind. Auth: JWT.', 'stack;decision', '2026-08-03'),
+	toonRow('7a3a4867', 'bug', 'redis-pool', 'Redis pool: cap at 10 connections to avoid socket timeouts on saturation.', 'redis;bug', '2026-08-03'),
+	toonRow('ce358636', 'pattern', 'commit-style', 'Conventional Commits (feat/fix/chore). Short imperative subject, scope in parens.', 'git;pattern', '2026-08-03'),
+	'version: 1',
+	'[200|]{id|category|key|content|file|tags|date|ttl|accessed|links}:',
+	toonRow('2d299473', 'decision', 'graph-single-component', 'All graph APIs must render a single connected component.', 'graph;api', '2026-07-31'),
+	toonRow('e4b00a8c', 'warning', 'ttl-default', 'Entries expire after 7 days by default. Set ttl per entry.', 'ttl;default', '2026-07-30'),
+	toonRow('8a7e25e7', 'knowledge', 'storage-format', 'Memory lives in .toon-memory/memory/data.toon as pipe-delimited rows.', 'storage;format', '2026-07-29'),
+	'version: 1',
+	'[200|]{id|category|key|content|file|tags|date|ttl|accessed|links}:',
+	toonRow('6f9fa0c7', 'decision', 'stack:nextjs', 'Payments: Stripe. UI: Next.js + Tailwind. Auth: JWT.', 'stack;decision', '2026-08-03'),
+	toonRow('7a3a4867', 'bug', 'redis-pool', 'Redis pool: cap at 10 connections to avoid socket timeouts on saturation.', 'redis;bug', '2026-08-03'),
+	toonRow('ce358636', 'pattern', 'commit-style', 'Conventional Commits (feat/fix/chore). Short imperative subject, scope in parens.', 'git;pattern', '2026-08-03'),
+	toonRow('8a7e25e7', 'knowledge', 'storage-format', 'Memory lives in .toon-memory/memory/data.toon as pipe-delimited rows.', 'storage;format', '2026-07-29'),
+].map(repeat).join('\n');
+const wallB = [
+	'# toon-memory (auto-loaded)',
+	'',
+	'## pattern: commit-style',
+	'Conventional Commits (feat/fix/chore). Short imperative subject, scope in parens.',
+	'- tags: git, pattern · date: 2026-08-03',
+	'',
+	'## bug: redis-pool',
+	'Redis pool: cap at 10 connections to avoid socket timeouts on saturation.',
+	'- tags: redis, bug · date: 2026-08-03',
+	'',
+	'## decision: stack:nextjs',
+	'Payments: Stripe. UI: Next.js + Tailwind. Auth: JWT.',
+	'- tags: stack, decision · date: 2026-08-03',
+	'',
+	'# toon-memory (auto-loaded)',
+	'',
+].map(repeat).join('\n');
 ---
 
 <section class="hero">
-  <div class="particles" aria-hidden="true">
-    {particles.map((p) => (
-      <span
-        class="particle"
-        style={`left:${p.left.toFixed(1)}%; animation-delay:${p.delay.toFixed(2)}s; animation-duration:${p.duration.toFixed(1)}s; width:${p.size.toFixed(1)}px; height:${p.size.toFixed(1)}px;`}
-      ></span>
-    ))}
+  <div class="hero-wall" aria-hidden="true">
+    <div class="wall-layer wall-layer-reveal" style="--dur: 60s">
+      <pre>{wallB}{'\n'}{wallB}</pre>
+    </div>
+    <canvas class="hero-wall-mask" id="wallMask" aria-hidden="true"></canvas>
+    <div class="wall-layer wall-layer-a" style="--dur: 80s">
+      <pre>{wallA}{'\n'}{wallA}</pre>
+    </div>
+    <div class="wall-layer wall-layer-b" style="--dur: 150s; --top: 30%">
+      <pre>{wallB}{'\n'}{wallB}</pre>
+    </div>
   </div>
 
   <div class="hero-header">
@@ -63,6 +101,7 @@ const particles = Array.from({ length: 16 }, (_, i) => ({
         <p class="term-install">
           <span class="term-prompt">$</span>
           <span class="term-cmd">{c.hero.installCmd}</span>
+          <span class="term-cursor" aria-hidden="true"></span>
           <button id="installBtn" class="term-copy" type="button">
             <span class="install-copy">{c.hero.copy}</span>
             <span class="install-done">{c.hero.copied}</span>
@@ -74,10 +113,167 @@ const particles = Array.from({ length: 16 }, (_, i) => ({
 </section>
 
 <script>
-  document.getElementById('installBtn')?.addEventListener('click', function () {
-    navigator.clipboard.writeText('npm install -g toon-memory').then(() => {
-      this.classList.add('copied');
-      setTimeout(() => this.classList.remove('copied'), 1500);
+  (function () {
+    document.getElementById('installBtn')?.addEventListener('click', function () {
+      navigator.clipboard.writeText('npm install -g toon-memory').then(() => {
+        this.classList.add('copied');
+        setTimeout(() => this.classList.remove('copied'), 1500);
+      });
     });
-  });
+  })();
+
+  (function () {
+    // MiMo-style reveal: the memory wall emerges under the cursor through
+    // expanding ink blots carved into a mask canvas (destination-out).
+    const hero = document.querySelector('.hero');
+    const canvas = document.getElementById('wallMask');
+    if (!hero || !canvas) return;
+    if (window.matchMedia('(hover: none)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const R_START = 6;
+    const R_END = 120;
+    const R_VARY = 0.45;
+    const LIFETIME = 520;
+    const STAMP_STEP = 12;
+    const MAX_STAMPS = 160;
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+    let w = 0;
+    let h = 0;
+    const stamps = [];
+    let lastX = null;
+    let lastY = null;
+
+    function bgColor() {
+      const c = getComputedStyle(document.body).backgroundColor;
+      const tmp = document.createElement('canvas');
+      tmp.width = tmp.height = 1;
+      const tctx = tmp.getContext('2d', { willReadFrequently: true });
+      tctx.fillStyle = c;
+      tctx.fillRect(0, 0, 1, 1);
+      const d = tctx.getImageData(0, 0, 1, 1).data;
+      return d[0] + ',' + d[1] + ',' + d[2];
+    }
+    const MASK = bgColor();
+
+    function resize() {
+      const rect = hero.getBoundingClientRect();
+      w = rect.width;
+      h = rect.height;
+      canvas.width = Math.round(w * DPR);
+      canvas.height = Math.round(h * DPR);
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = 'rgb(' + MASK + ')';
+      ctx.fillRect(0, 0, w, h);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function addStamp(x, y) {
+      if (stamps.length >= MAX_STAMPS) stamps.shift();
+      stamps.push({
+        x: x,
+        y: y,
+        born: performance.now(),
+        seed: Math.random() * Math.PI * 2,
+        rmax: R_END * (1 - R_VARY + Math.random() * R_VARY),
+      });
+    }
+
+    function stampAlong(x, y) {
+      if (lastX === null) {
+        addStamp(x, y);
+      } else {
+        const dx = x - lastX;
+        const dy = y - lastY;
+        const dist = Math.hypot(dx, dy);
+        const steps = Math.max(1, Math.ceil(dist / STAMP_STEP));
+        for (let i = 1; i <= steps; i++) {
+          addStamp(lastX + (dx * i) / steps, lastY + (dy * i) / steps);
+        }
+      }
+      lastX = x;
+      lastY = y;
+      start();
+    }
+
+    function carveInk(x, y, r, alpha, seed) {
+      const g = ctx.createRadialGradient(x, y, r * 0.25, x, y, r);
+      g.addColorStop(0, 'rgba(0, 0, 0, ' + 0.95 * alpha + ')');
+      g.addColorStop(0.55, 'rgba(0, 0, 0, ' + 0.88 * alpha + ')');
+      g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      const segs = 32;
+      for (let i = 0; i <= segs; i++) {
+        const a = (i / segs) * Math.PI * 2;
+        const wob =
+          0.78 +
+          0.14 * Math.sin(a * 3 + seed) +
+          0.08 * Math.sin(a * 7 + seed * 2.1) +
+          0.05 * Math.sin(a * 13 + seed * 0.7);
+        const rr = r * wob;
+        const px = x + Math.cos(a) * rr;
+        const py = y + Math.sin(a) * rr;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    let running = false;
+    function loop() {
+      const now = performance.now();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = 'rgb(' + MASK + ')';
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'destination-out';
+      for (let i = stamps.length - 1; i >= 0; i--) {
+        const t = (now - stamps[i].born) / LIFETIME;
+        if (t >= 1) {
+          stamps.splice(i, 1);
+          continue;
+        }
+        const ease = 1 - Math.pow(1 - t, 3);
+        const r = R_START + (stamps[i].rmax - R_START) * ease;
+        const alpha = 1 - t * t;
+        carveInk(stamps[i].x, stamps[i].y, r, alpha, stamps[i].seed);
+      }
+      if (stamps.length) {
+        requestAnimationFrame(loop);
+      } else {
+        running = false;
+      }
+    }
+
+    function start() {
+      if (!running) {
+        running = true;
+        requestAnimationFrame(loop);
+      }
+    }
+
+    hero.addEventListener('mouseenter', function (e) {
+      const rect = hero.getBoundingClientRect();
+      lastX = e.clientX - rect.left;
+      lastY = e.clientY - rect.top;
+      stampAlong(lastX, lastY);
+    });
+    hero.addEventListener('mousemove', function (e) {
+      const rect = hero.getBoundingClientRect();
+      stampAlong(e.clientX - rect.left, e.clientY - rect.top);
+    });
+    hero.addEventListener('mouseleave', function () {
+      lastX = null;
+      lastY = null;
+    });
+  })();
 </script>

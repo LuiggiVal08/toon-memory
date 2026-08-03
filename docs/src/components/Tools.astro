@@ -7,16 +7,41 @@ interface Props {
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 
+const featured = [
+	'memory_remember',
+	'memory_recall',
+	'memory_visualize',
+	'memory_stats',
+	'memory_smart_recall',
+	'memory_consolidate',
+	'context_generate',
+	'context_health',
+	'memory_compress',
+	'memory_primer',
+	'memory_sessions',
+	'memory_merge_sessions',
+	'memory_encrypt',
+	'memory_backup',
+];
+
 const resources = ['memory-entries', 'memory-stats', 'memory-summaries', 'memory-viewer (ui://viewer)'];
 
 const groupOrder = ['core', 'search', 'context', 'compress', 'sessions', 'sync'];
 const groups = c.tools.groups;
+const featuredSet = new Set(featured);
 const cardsByGroup = new Map<string, typeof c.tools.cards>();
 for (const card of c.tools.cards) {
-  const g = card.group || 'core';
-  if (!cardsByGroup.has(g)) cardsByGroup.set(g, []);
-  cardsByGroup.get(g)!.push(card);
+	if (!featuredSet.has(card.name)) continue;
+	const g = card.group || 'core';
+	if (!cardsByGroup.has(g)) cardsByGroup.set(g, []);
+	cardsByGroup.get(g)!.push(card);
 }
+
+const base = lang === 'en' ? '/toon-memory/' : `/toon-memory/${lang}/`;
+const allToolsHref = base + 'features/tools';
+const total = c.tools.cards.length;
+const t = c.tools as unknown as { seeAll?: string };
+const seeAllLabel = (t.seeAll ?? 'Explore all {n} tools').replace('{n}', String(total));
 ---
 
 <section class="content-section tools-section">
@@ -51,6 +76,10 @@ for (const card of c.tools.cards) {
     {
       resources.map((r) => <code class="resource-pill">{r}</code>)
     }
+  </div>
+
+  <div class="tools-footer">
+    <a class="tools-link" href={allToolsHref}>{seeAllLabel} →</a>
   </div>
 </section>
 
