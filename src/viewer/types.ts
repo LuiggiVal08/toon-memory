@@ -21,9 +21,9 @@ export interface ViewerData {
 }
 
 export const COLORS: Record<string, string> = {
-  decision: "#a78bfa",
-  bug: "#ef4444",
-  pattern: "#22c55e",
-  knowledge: "#06b6d4",
-  architecture: "#f59e0b",
+  decision: "oklch(55% 0.25 280)",
+  bug: "oklch(65% 0.24 25)",
+  pattern: "oklch(78% 0.2 155)",
+  knowledge: "oklch(65% 0.25 310)",
+  architecture: "oklch(85% 0.18 85)",
 }

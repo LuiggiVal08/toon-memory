@@ -5,6 +5,8 @@ import { fileURLToPath } from "url"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_TOON = join(__dirname, "..", ".toon-memory", "memory", "data.toon")
 const OUT = join(__dirname, "..", "docs", "public", "viewer", "embed.html")
+const LOGO = readFileSync(join(__dirname, "..", "docs", "src", "assets", "logo.svg"), "utf-8")
+const ISOLOGO = readFileSync(join(__dirname, "..", "docs", "src", "assets", "logo-isologo.svg"), "utf-8")
 
 function parseToon(path) {
   const text = readFileSync(path, "utf-8")
@@ -222,7 +224,17 @@ const html = `<!DOCTYPE html>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:oklch(8% 0.02 270);--bg2:oklch(12% 0.02 270);--bg3:oklch(15% 0.02 270);--border:oklch(21% 0.02 270);--text:oklch(91% 0.01 270);--muted:oklch(56% 0.02 270);--brand:oklch(55% 0.25 280);--brand-light:oklch(68% 0.22 280);--brand2:oklch(59% 0.25 300);--lavender:oklch(65% 0.25 310);--pink:oklch(65% 0.26 340);--green:oklch(78% 0.2 155);--red:oklch(65% 0.24 25);--amber:oklch(85% 0.18 85);--brand-wash:oklch(55% 0.25 280 / 0.12);--brand-wash-soft:oklch(55% 0.25 280 / 0.06);--gradient:linear-gradient(135deg,var(--brand),var(--brand2),var(--lavender));--ease-out:cubic-bezier(0.16,1,0.3,1);--font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--font-mono:'JetBrains Mono','Fira Code','Consolas',monospace}
 html,body{height:100%;font-family:var(--font-body);background:var(--bg);color:var(--text);overflow:hidden}
-.app{display:grid;grid-template-rows:1fr;height:100vh}
+.app{display:grid;grid-template-rows:auto 1fr;height:100vh}
+header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0.55rem 1.25rem;border-bottom:1px solid var(--border);background:oklch(8% 0.02 270 / 0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:0.6rem}
+.brand-logo{display:flex;line-height:0}
+.brand-logo svg{width:24px;height:24px}
+.brand-word{display:flex;line-height:0}
+.brand-word svg{height:18px;width:auto}
+.meta{display:flex;gap:0.6rem;font-size:0.75rem;color:var(--muted);align-items:center}
+.meta span{display:flex;align-items:center;gap:0.3rem}
+.theme-toggle{background:oklch(12% 0.02 270 / 0.5);border:1px solid var(--border);border-radius:9999px;padding:0.35rem 0.7rem;color:var(--text);cursor:pointer;font-size:0.8rem;line-height:1;transition:all 0.15s}
+.theme-toggle:hover{border-color:var(--brand);color:var(--brand)}
 .main{display:grid;grid-template-columns:var(--sidebar-w,320px) 1fr;overflow:hidden;position:relative}
 .sidebar{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden}
 .sidebar-header{padding:0.75rem 1rem;border-bottom:1px solid var(--border);background:oklch(8% 0.02 270 / 0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
@@ -327,7 +339,7 @@ html,body{height:100%;font-family:var(--font-body);background:var(--bg);color:va
 @keyframes pathNodePulse{0%,100%{filter:drop-shadow(0 0 6px var(--brand))}50%{filter:drop-shadow(0 0 14px var(--brand))}}
 .link.path-edge{stroke:var(--brand);stroke-opacity:0.9;stroke-width:3}
 .light{--bg:oklch(96% 0.005 270);--bg2:oklch(100% 0 0);--bg3:oklch(93% 0.005 270);--border:oklch(88% 0.01 270);--text:oklch(22% 0.02 270);--muted:oklch(45% 0.01 260);--brand:oklch(50% 0.22 280);--brand-light:oklch(55% 0.22 280)}
-.light .sidebar-header,.light .tabs{background:rgba(255,255,255,0.85)}
+.light .sidebar-header,.light .tabs,.light header{background:rgba(255,255,255,0.85)}
 .light .tooltip{background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:var(--border);box-shadow:0 8px 32px rgba(0,0,0,0.1)}
 .light .timeline-entry{background:var(--bg2)}.light .graph-btn{background:var(--bg2)}
 @media(max-width:768px){.main{grid-template-columns:1fr}.sidebar{display:none}}
@@ -335,6 +347,18 @@ html,body{height:100%;font-family:var(--font-body);background:var(--bg);color:va
 </head>
 <body>
 <div class="app">
+  <header>
+    <div class="brand">
+      <span class="brand-logo">${LOGO}</span>
+      <span class="brand-word">${ISOLOGO}</span>
+    </div>
+    <div class="meta">
+      <span id="totalCount"></span>
+      <span id="edgeCount"></span>
+      <span id="categoryCount"></span>
+      <button class="theme-toggle" id="themeToggle" title="Toggle theme">☀</button>
+    </div>
+  </header>
   <div class="main">
     <div class="sidebar">
       <div class="sidebar-header">
@@ -400,8 +424,20 @@ let activeFilter = null;
 let searchQuery = '';
 
 // Init theme from localStorage
+const themeToggle = document.getElementById('themeToggle');
 const savedTheme = localStorage.getItem('toon-viewer-theme') || 'dark';
-if (savedTheme === 'light') document.documentElement.classList.add('light');
+if (savedTheme === 'light') { document.documentElement.classList.add('light'); themeToggle.textContent = '☾'; }
+themeToggle.addEventListener('click', () => {
+  document.documentElement.classList.toggle('light');
+  const isLight = document.documentElement.classList.contains('light');
+  themeToggle.textContent = isLight ? '☾' : '☀';
+  localStorage.setItem('toon-viewer-theme', isLight ? 'light' : 'dark');
+});
+
+// Header counts
+document.getElementById('totalCount').textContent = DATA.totalEntries + ' entries';
+document.getElementById('edgeCount').textContent = DATA.edges.length + ' edges';
+document.getElementById('categoryCount').textContent = Object.keys(DATA.categories).length + ' categories';
 
 // Tooltip
 const tooltip = document.getElementById('tooltip');
