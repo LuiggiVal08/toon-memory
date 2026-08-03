@@ -26,6 +26,26 @@ export default defineConfig({
 					tag: 'meta',
 					attrs: { name: 'keywords', content: 'AI memory, continuity layer, AI agents, persistent memory, AI coding agent memory, project knowledge, Model Context Protocol, Claude memory, Cursor memory, OpenCode memory, agent session continuity, token-efficient memory, BM25 recall, knowledge graph memory' },
 				},
+				{
+					tag: 'meta',
+					attrs: { property: 'og:image', content: 'https://luiggival08.github.io/toon-memory/og-image.png' },
+				},
+				{
+					tag: 'meta',
+					attrs: { property: 'og:image:width', content: '1200' },
+				},
+				{
+					tag: 'meta',
+					attrs: { property: 'og:image:height', content: '630' },
+				},
+				{
+					tag: 'meta',
+					attrs: { property: 'og:image:alt', content: 'toon-memory — The Continuity Layer for AI Agents' },
+				},
+				{
+					tag: 'meta',
+					attrs: { name: 'twitter:image', content: 'https://luiggival08.github.io/toon-memory/og-image.png' },
+				},
 			],
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/LuiggiVal08/toon-memory' },

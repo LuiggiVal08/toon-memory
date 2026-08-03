@@ -8,6 +8,11 @@
       <stop offset="0%" style="stop-color:#6366f1"/>
       <stop offset="100%" style="stop-color:#8b5cf6"/>
     </linearGradient>
+    <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
   </defs>
   <rect width="1200" height="630" fill="url(#bg)"/>
   <!-- Grid dots pattern -->
@@ -27,7 +32,7 @@
   <text x="110" y="350" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#94a3b8">Persistent memory for Claude, Cursor, OpenCode &amp; 15+ agents</text>
   <!-- Stats badges -->
   <rect x="110" y="410" width="160" height="44" rx="22" fill="#1e1e3a" stroke="#6366f1" stroke-width="1.5"/>
-  <text x="190" y="438" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#a5b4fc" text-anchor="middle">20 MCP Tools</text>
+  <text x="190" y="438" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#a5b4fc" text-anchor="middle">34 MCP Tools</text>
   <rect x="290" y="410" width="180" height="44" rx="22" fill="#1e1e3a" stroke="#6366f1" stroke-width="1.5"/>
   <text x="380" y="438" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#a5b4fc" text-anchor="middle">15+ Agents</text>
   <rect x="490" y="410" width="200" height="44" rx="22" fill="#1e1e3a" stroke="#6366f1" stroke-width="1.5"/>
@@ -36,7 +41,32 @@
   <text x="810" y="438" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#a5b4fc" text-anchor="middle">22% Fewer Tokens</text>
   <!-- Bottom URL -->
   <text x="110" y="560" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#475569">luiggival08.github.io/toon-memory</text>
-  <!-- Logo placeholder circle -->
-  <circle cx="1050" cy="250" r="80" fill="#6366f1" opacity="0.15"/>
-  <text x="1050" y="260" font-family="system-ui, -apple-system, sans-serif" font-size="48" fill="#818cf8" text-anchor="middle" font-weight="700">TM</text>
+  <!-- Logo -->
+  <g transform="translate(965 165) scale(0.85)">
+    <polygon points="100,10 183,55 183,145 100,190 17,145 17,55" fill="none" stroke="url(#logo-grad)" stroke-width="1.5" opacity="0.12"/>
+    <g stroke="url(#logo-grad)" stroke-linecap="round" fill="none" opacity="0.35">
+      <line x1="100" y1="100" x2="100" y2="30" stroke-width="2.5"/>
+      <line x1="100" y1="100" x2="160.6" y2="65" stroke-width="2.5"/>
+      <line x1="100" y1="100" x2="160.6" y2="135" stroke-width="2.5"/>
+      <line x1="100" y1="100" x2="100" y2="170" stroke-width="2.5"/>
+      <line x1="100" y1="100" x2="39.4" y2="135" stroke-width="2.5"/>
+      <line x1="100" y1="100" x2="39.4" y2="65" stroke-width="2.5"/>
+    </g>
+    <g stroke="url(#logo-grad)" stroke-width="3.5" stroke-linecap="round" fill="none">
+      <line x1="100" y1="30" x2="160.6" y2="65"/>
+      <line x1="160.6" y1="65" x2="160.6" y2="135"/>
+      <line x1="160.6" y1="135" x2="100" y2="170"/>
+      <line x1="100" y1="170" x2="39.4" y2="135"/>
+      <line x1="39.4" y1="135" x2="39.4" y2="65"/>
+      <line x1="39.4" y1="65" x2="100" y2="30"/>
+    </g>
+    <circle cx="100" cy="30" r="11" fill="url(#logo-grad)" stroke="#1e1b4b" stroke-width="2.5"/>
+    <circle cx="160.6" cy="65" r="11" fill="url(#logo-grad)" stroke="#1e1b4b" stroke-width="2.5"/>
+    <circle cx="160.6" cy="135" r="11" fill="url(#logo-grad)" stroke="#1e1b4b" stroke-width="2.5"/>
+    <circle cx="100" cy="170" r="11" fill="url(#logo-grad)" stroke="#1e1b4b" stroke-width="2.5"/>
+    <circle cx="39.4" cy="135" r="11" fill="url(#logo-grad)" stroke="#1e1b4b" stroke-width="2.5"/>
+    <circle cx="39.4" cy="65" r="11" fill="url(#logo-grad)" stroke="#1e1b4b" stroke-width="2.5"/>
+    <circle cx="100" cy="100" r="17" fill="url(#logo-grad)" stroke="#1e1b4b" stroke-width="3"/>
+    <circle cx="100" cy="100" r="5.5" fill="#fff"/>
+  </g>
 </svg>
