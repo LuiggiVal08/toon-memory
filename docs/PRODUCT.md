@@ -14,15 +14,15 @@ Secondary: small teams (2-10 developers) who need shared project context across 
 
 ## Product Purpose
 
-toon-memory gives AI coding agents persistent, offline, token-efficient memory that survives session restarts. It exists because developers waste time re-explaining the same architecture decisions, bug fixes, and conventions to their AI agents in every new session.
+toon-memory is the **Continuity Layer for AI Agents** — a lightweight system that preserves a project's knowledge, decisions, and conventions across sessions, so every session starts where the last one ended. It exists because developers waste time re-explaining the same architecture decisions, bug fixes, and conventions to their AI agents in every new session.
 
 Success means the agent remembers everything from previous sessions — what was decided, why it was decided, what was rejected, and what was learned — without any cloud service, API key, or configuration beyond installation.
 
 ## Positioning
 
-toon-memory is the only persistent memory layer for AI coding agents that requires zero configuration, works 100% offline with no server or API dependency, and is always free (MIT license). Competitors require cloud accounts, API keys, or server infrastructure. toon-memory installs once, runs locally, and the agent has full memory from the first session.
+toon-memory is the Continuity Layer: AI agents shouldn't have to relearn your project every session. It is the only persistent memory layer for AI agents that requires zero configuration, works 100% offline with no server or API dependency, and is always free (MIT license). Competitors require cloud accounts, API keys, or server infrastructure. toon-memory installs once, runs locally, and the agent has full continuity from the first session.
 
-The meaningful differentiator is token savings: the native TOON format uses 22% fewer tokens than JSON, and the context generation tools (`context_*`) reduce tool calls by 80% compared to manual recall patterns — saving real money per session.
+Unlike LLM, RAG, or vector-database memory, toon-memory is a deterministic project-knowledge layer: it preserves the "why" behind decisions, the conventions your team follows, and the bugs you've already fixed — not just facts, but the working knowledge of the project itself. The native TOON format uses 22% fewer tokens than JSON, and the context generation tools (`context_*`) reduce tool calls by 80% compared to manual recall patterns — saving real money per session.
 
 ## Operating Context
 

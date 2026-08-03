@@ -17,7 +17,7 @@ toon-memory 提供 35 个 MCP 工具和 4 个 MCP 资源，用于管理持久化
 | 工具 | 描述 |
 |------|------|
 | `memory_remember` | 保存决策、模式、缺陷、知识或 **warning**（负面"不要这样做"记忆，召回时加成）（可选 TTL、自动标签推断、`links`、自动质量评分、合并去重、置信度、可选 `importance`：`critical`/`high`/`medium`/`low`） |
-| `memory_recall` | 搜索记忆（应在读取文件之前使用，自动过滤过期 TTL）。`mode: "graph"` 可展开关系感知子图以获得更高精度。排名使用 RRF 融合（BM25×3 + 图中心性，自适应 k）；传入 `rrf: false` 使用旧版线性分数。`sessionBias` 提升来自当前 git 分支的条目。`pathScope` 将结果限定到文件路径（支持 globMatch）。`budget`：`"tiny"`（前 3）、`"normal"`（前 10）或 `"deep"`（前 20）。`as_of` 会重新包含在指定日期之后被 superseded 的条目。`explain: true` 为每条结果追加原因行（说明为何被检索到）。`budget_tokens` 按估计 token 数限制输出（`0` = 无限制） |
+| `memory_recall` | 搜索记忆（应在读取文件之前使用，自动过滤过期 TTL）。`mode: "graph"` 可展开关系感知子图以获得更高精度。排名使用 RRF 融合（BM25×3 + 图中心性，自适应 k）；传入 `rrf: false` 使用旧版线性分数。`sessionBias` 提升来自当前 git 分支的条目。`pathScope` 将结果限定到文件路径（支持 globMatch）。`budget`：`"tiny"`（前 3）、`"normal"`（前 10）或 `"deep"`（前 20）。`as_of` 会重新包含在指定日期之后被 superseded 的条目。`explain: true` 为每条结果追加原因行（说明为何被检索到）。`budget_tokens` 按估计 token 数限制输出（`0` = 无限制）。`mode: "index"` 每行只列一条（key、id、分类、日期、相关度 %）不含内容；`ids` 按 id/key 批量获取条目并保持顺序 |
 | `memory_forget` | 按 key 或 id 移除条目 |
 | `memory_stats` | 查看记忆状态（包括 TTL 统计、质量分布、低于质量/访问阈值的冷记忆，以及**命中率/重复率/废弃率**指标：至少被召回一次的条目百分比、完全重复内容百分比、过时条目百分比） |
 | `memory_summary` | 保存/获取文件摘要 |
@@ -140,6 +140,44 @@ memory_recall({ query: "redis", budget_tokens: 300 })
 ```
 
 > **提示：** 将 `budget_tokens` 与 `budget: "deep"` 结合使用，无论记忆多大，都能让上下文窗口保持在硬 token 上限之内。
+
+### 浏览记忆索引（渐进式披露）
+
+```typescript
+memory_recall({ mode: "index" }) // 或 { query, mode: "index" } 查看过滤结果
+// 📇 记忆索引（15 条）:
+//
+// [1] use-zod (a1b2c3d4) · decision · 2026-07-10 · 100%
+// [2] redis-cache-config (e5f6g7h8) · decision · 2026-07-09 · 82%
+// ...
+```
+
+`mode: "index"` 每行只列一条——key、id、分类、日期、相关度 %——不含内容，因此即使记忆量很大，浏览成本也几乎为零。挑选你需要的 id，然后批量获取完整条目：
+
+```typescript
+memory_recall({ ids: "a1b2c3d4,e5f6g7h8" })
+// Fetched 2 entries:
+// [decision] use-zod (a1b2c3d4)
+//   Use Zod for validation
+//   File: src/types.ts | Tags: validation;types | Date: 2026-07-10
+```
+
+`ids` 接受用逗号/空格/`;` 分隔的条目 id 或 key，并保持你的顺序（未知条目会被跳过）。三层渐进：浏览索引 → 按 id 获取 → 用 `mode: "flat"` 获取完整排序结果。
+
+### 被否决的决策
+
+记录你决定 *不* 采纳的方案，这样 agent 就不会反复重提。这是一个轻量约定——一条带 `rejected` 标签的 `decision` 条目，无需额外 schema：
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "rejected-graphql",
+  content: "Rejected GraphQL: REST + generated types wins on codegen and schema drift risk.",
+  tags: "rejected;api;graphql"
+})
+```
+
+给条目打上 `rejected` 标签，并用 `rejected-<主题>` 作为 key，便于关键词召回。如有必要可链接到胜出的方案（`links: "rest-api"`）。下次对该想法的 `memory_recall` 会带着理由浮出这个否决——你的「不」成为项目记忆的一部分，而不是每个会话都被重新争论。
 
 ### 带日期过滤的搜索
 

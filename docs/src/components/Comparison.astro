@@ -6,26 +6,261 @@ interface Props {
 }
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
+
+type Line = { session?: string; user?: string; assistant?: string; note?: string; cmd?: string; thinking?: string; tokens?: string; tone?: 'warn' | 'error' };
+function renderLine(line: Line): string {
+	const tk = line.tokens ? `<span class="chat-tokens">${line.tokens}</span>` : '';
+	if (line.session) {
+		return `<div class="chat-session">${line.session}</div>`;
+	}
+	if (line.user) {
+		return `<div class="chat-line user"><span class="chat-text">${line.user}</span></div>`;
+	}
+	if (line.assistant) {
+		return `<div class="chat-line assistant"><span class="chat-text">${line.assistant}</span>${tk}</div>`;
+	}
+	if (line.cmd) {
+		return `<div class="chat-line cmd"><span class="chat-text">${line.cmd}</span>${tk}</div>`;
+	}
+	if (line.note) {
+		const cls = line.tone === 'error' ? 'note trace' : line.tone === 'warn' ? 'note warn' : 'note';
+		return `<div class="chat-line ${cls}"><span class="chat-text">${line.note}</span>${tk}</div>`;
+	}
+	return '';
+}
+const beforeHtml = c.comparison.before.map((line: Line) => renderLine(line)).join('');
+const afterHtml = c.comparison.after.map((line: Line) => renderLine(line)).join('');
+const linesJson = JSON.stringify({
+	before: c.comparison.before,
+	after: c.comparison.after,
+	thinkingBefore: c.comparison.thinkingBefore ?? 'Thinking…',
+	thinkingAfter: c.comparison.thinkingAfter ?? 'Recalling…',
+});
 ---
 
-<section class="content-section">
+<section class="content-section comparison-section">
   <div class="section-header">
     <h2>{c.comparison.title}</h2>
     <p>{c.comparison.subtitle}</p>
   </div>
 
   <div class="comparison">
-    <div class="compare-box before">
-      <h3>{c.comparison.beforeTitle}</h3>
-      <ul>
-        {c.comparison.before.map((item) => <li>{item}</li>)}
-      </ul>
+    <div class="term-shell term-shell-before">
+      <div class="terminal-bar">
+        <span class="terminal-dot" aria-hidden="true"></span>
+        <span class="terminal-dot" aria-hidden="true"></span>
+        <span class="terminal-dot" aria-hidden="true"></span>
+        <span class="terminal-title">{c.comparison.beforeTitle}</span>
+      </div>
+      <div class="terminal-body" set:html={beforeHtml}></div>
+      <div class="chat-input">
+        <div class="chat-input-field" role="textbox" aria-label="Message"><span class="chat-cursor" aria-hidden="true"></span></div>
+        <button class="chat-send" type="button" aria-label="Send">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a.993.993 0 0 0-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.61c0 .71.73 1.2 1.39.91z"/></svg>
+        </button>
+      </div>
     </div>
-    <div class="compare-box after">
-      <h3>{c.comparison.afterTitle}</h3>
-      <ul>
-        {c.comparison.after.map((item) => <li>{item}</li>)}
-      </ul>
+
+    <div class="term-shell term-shell-after">
+      <div class="terminal-bar">
+        <span class="terminal-dot" aria-hidden="true"></span>
+        <span class="terminal-dot" aria-hidden="true"></span>
+        <span class="terminal-dot" aria-hidden="true"></span>
+        <span class="terminal-title">{c.comparison.afterTitle}</span>
+      </div>
+      <div class="terminal-body" set:html={afterHtml}></div>
+      <div class="chat-input">
+        <div class="chat-input-field" role="textbox" aria-label="Message"><span class="chat-cursor" aria-hidden="true"></span></div>
+        <button class="chat-send" type="button" aria-label="Send">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M3.4 20.4l17.45-7.48a1 1 0 0 0 0-1.84L3.4 3.6a.993.993 0 0 0-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.61c0 .71.73 1.2 1.39.91z"/></svg>
+        </button>
+      </div>
     </div>
   </div>
 </section>
+
+<script type="application/json" id="compare-lines" set:html={linesJson}></script>
+
+<script>
+  (() => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (reduce.matches) return;
+
+    const root = document.getElementById('compare-lines');
+    if (!root) return;
+    const data = JSON.parse(root.textContent || '{}');
+    const shells = Array.from(document.querySelectorAll('.term-shell'));
+    if (shells.length < 2) return;
+
+    let active = false;
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) active = true;
+          else active = false;
+        });
+      },
+      { threshold: 0.15 }
+    );
+    shells.forEach((s) => {
+      const body = s.querySelector('.terminal-body');
+      if (body) {
+        body.innerHTML = '';
+        body.style.opacity = '0';
+      }
+      io.observe(s);
+    });
+
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+    function cursor() {
+      const c = document.createElement('span');
+      c.className = 'chat-cursor';
+      c.setAttribute('aria-hidden', 'true');
+      return c;
+    }
+
+    async function typeInto(el, content, speed) {
+      for (let i = 0; i < content.length; i++) {
+        while (!active) await wait(150);
+        el.textContent = content.slice(0, i + 1);
+        await wait(speed + Math.random() * 30);
+      }
+    }
+
+    async function typeIntoField(field, content) {
+      for (let i = 0; i < content.length; i++) {
+        while (!active) await wait(150);
+        field.textContent = content.slice(0, i + 1);
+        field.appendChild(cursor());
+        await wait(48 + Math.random() * 25);
+      }
+    }
+
+    function makeLine(klass, content, tokens) {
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'chat-line ' + klass;
+      const t = document.createElement('span');
+      t.className = 'chat-text';
+      lineDiv.appendChild(t);
+      lineDiv.appendChild(cursor());
+      if (tokens) {
+        const tk = document.createElement('span');
+        tk.className = 'chat-tokens';
+        tk.textContent = tokens;
+        lineDiv.appendChild(tk);
+      }
+      return { lineDiv, t, cursorEl: lineDiv.childNodes[1] };
+    }
+
+    async function appendTyped(body, klass, content, speed, waitAfter, tokens) {
+      if (klass === 'session') {
+        const d = document.createElement('div');
+        d.className = 'chat-session';
+        const t = document.createElement('span');
+        t.className = 'chat-text';
+        d.append(t, cursor());
+        body.appendChild(d);
+        await typeInto(t, content, speed);
+        d.lastChild.remove();
+        await wait(waitAfter);
+        return;
+      }
+      const { lineDiv, t, cursorEl } = makeLine(klass, content, tokens);
+      body.appendChild(lineDiv);
+      await typeInto(t, content, speed);
+      cursorEl.remove();
+      await wait(waitAfter);
+    }
+
+    function appendUserBubble(body, content) {
+      const { lineDiv, t, cursorEl } = makeLine('user', content);
+      t.textContent = content;
+      cursorEl.remove();
+      body.appendChild(lineDiv);
+    }
+
+    function makeThinking(label) {
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'chat-line thinking';
+      const lbl = document.createElement('span');
+      lbl.className = 'chat-thinking-label';
+      lbl.textContent = label;
+      const dots = document.createElement('span');
+      dots.className = 'chat-dots';
+      dots.innerHTML = '<i></i><i></i><i></i>';
+      lineDiv.append(lbl, dots);
+      return lineDiv;
+    }
+
+    async function showThinking(body, steps, stepDelay, finalDelay) {
+      for (let i = 0; i < steps.length; i++) {
+        const t = makeThinking(steps[i]);
+        body.appendChild(t);
+        await wait(i === steps.length - 1 ? finalDelay : stepDelay);
+        t.remove();
+        await wait(180);
+      }
+    }
+
+    function appendNote(body, text, tone) {
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'chat-line note ' + (tone === 'error' ? 'trace' : tone === 'warn' ? 'warn' : '');
+      const t = document.createElement('span');
+      t.className = 'chat-text';
+      t.textContent = text;
+      lineDiv.appendChild(t);
+      body.appendChild(lineDiv);
+    }
+
+    async function runShell(shell, lines, cfg) {
+      const body = shell.querySelector('.terminal-body');
+      const field = shell.querySelector('.chat-input-field');
+      body.style.opacity = '1';
+      body.innerHTML = '';
+      for (const line of lines) {
+        if (line.user) {
+          await typeIntoField(field, line.user);
+          await wait(480);
+          field.textContent = '';
+          field.appendChild(cursor());
+          appendUserBubble(body, line.user);
+          await wait(250);
+          await showThinking(body, [line.thinking || cfg.thinkingLabel], 0, cfg.thinkingDelay);
+          await wait(200);
+        } else if (line.session) {
+          await appendTyped(body, 'session', line.session, 28, 550);
+        } else if (line.assistant) {
+          await appendTyped(body, 'assistant', line.assistant, 36, 780, line.tokens);
+        } else if (line.cmd) {
+          await appendTyped(body, 'cmd', line.cmd, 14, 650, line.tokens);
+        } else if (line.note) {
+          if (line.tone) {
+            appendNote(body, line.note, line.tone);
+            await wait(700);
+          } else {
+            await appendTyped(body, 'note', line.note, 28, 950, line.tokens);
+          }
+        }
+      }
+      await wait(3400);
+      body.innerHTML = '';
+    }
+
+    (async function loop() {
+      while (!active) await wait(200);
+      for (;;) {
+        await Promise.all([
+          runShell(shells[0], data.before || [], {
+            thinkingLabel: data.thinkingBefore || 'Thinking…',
+            thinkingDelay: 1300,
+          }),
+          runShell(shells[1], data.after || [], {
+            thinkingLabel: data.thinkingAfter || 'Recalling…',
+            thinkingDelay: 1000,
+          }),
+        ]);
+      }
+    })();
+  })();
+</script>

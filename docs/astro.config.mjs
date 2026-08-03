@@ -10,8 +10,8 @@ export default defineConfig({
 	integrations: [
 		sitemap(),
 		starlight({
-			title: 'toon-memory — MCP Memory Server for AI Coding Agents',
-			description: 'MCP memory server giving AI coding agents (Claude, Cursor, OpenCode) offline, token-efficient persistent memory. 20 tools, 80% fewer tool calls per session.',
+			title: 'toon-memory — The Continuity Layer for AI Agents',
+			description: 'The Continuity Layer for AI Agents: AI agents shouldn\'t have to relearn your project every session. toon-memory preserves project knowledge, decisions, and conventions across sessions — offline, token-efficient, over MCP.',
 			logo: {
 				src: './src/assets/logo.svg',
 				alt: 'toon-memory logo',
@@ -24,7 +24,7 @@ export default defineConfig({
 				},
 				{
 					tag: 'meta',
-					attrs: { name: 'keywords', content: 'MCP memory server, persistent memory AI agents, AI coding agent memory, Model Context Protocol, Claude memory, Cursor memory, OpenCode memory, token-efficient memory, BM25 recall, knowledge graph memory' },
+					attrs: { name: 'keywords', content: 'AI memory, continuity layer, AI agents, persistent memory, AI coding agent memory, project knowledge, Model Context Protocol, Claude memory, Cursor memory, OpenCode memory, agent session continuity, token-efficient memory, BM25 recall, knowledge graph memory' },
 				},
 			],
 			social: [

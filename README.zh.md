@@ -2,7 +2,7 @@
 
 # toon-memory
 
-> 给你的 AI 编程代理一个比会话更持久的记忆 — 在每一次会话中记住决策、模式和 Bug。
+> AI 代理的连续性层 — AI 代理不应在每个会话中重新学习你的项目。
 
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -40,7 +40,7 @@
 
 你是否有过这样的经历：AI 助手完全忘记了昨天会话中的内容？你不得不第三次解释同一个架构决策，而它仍然建议你已经否决的方案？
 
-**toon-memory 解决了这个问题。** 它为你的 AI 代理提供连续性 — 一种在重启后依然存在的记忆，让它能真正随着时间从你的项目中学习。你再也不必重复解释同一个决策。
+**toon-memory 解决了这个问题。** 它是 AI 代理的连续性层 — 一个轻量系统，在会话之间保存你项目的知识、决策和约定，让每个会话都从上次结束的地方开始。100% 本地且私密，通过 MCP — 无需云、无需服务器。
 
 📖 **[阅读文档](https://luiggival08.github.io/toon-memory/)**
 

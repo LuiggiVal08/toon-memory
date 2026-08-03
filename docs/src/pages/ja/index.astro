@@ -3,9 +3,10 @@ import logoSrc from '../../assets/logo.svg';
 import SiteHeader from '../../components/SiteHeader.astro';
 import Hero from '../../components/Hero.astro';
 import Problem from '../../components/Problem.astro';
+import Continuity from '../../components/Continuity.astro';
+import Benefits from '../../components/Benefits.astro';
 import FeatureGrid from '../../components/FeatureGrid.astro';
 import MemoryGraphShowcase from '../../components/MemoryGraphShowcase.astro';
-import SmartRecallShowcase from '../../components/SmartRecallShowcase.astro';
 import Tools from '../../components/Tools.astro';
 import Benchmarks from '../../components/Benchmarks.astro';
 import HowItWorks from '../../components/HowItWorks.astro';
@@ -18,7 +19,7 @@ import WhatNew from '../../components/WhatNew.astro';
 import '../../styles/home.css';
 
 const description =
-  'AIコーディングエージェントにセッションを超えて残るメモリを与えます — 意思決定、パターン、バグをセッション間で記憶。オフラインかつトークン効率に優れ、Claude、Cursor、OpenCode、Windsurf、そして15以上のエージェントに対応。再現可能なリコールベンチマーク: npm run bench:retrieval。';
+  'AIエージェントのための継続性レイヤー。AIエージェントは毎セッションでプロジェクトを学び直すべきではありません — toon-memory はプロジェクトの知識・決定・規約をセッションを超えて保存します。ローカルかつプライベートに、Claude、Codex、Cursor、OpenCode、そして15以上のエージェントに対応。';
 ---
 
 <!doctype html>
@@ -26,7 +27,7 @@ const description =
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>toon-memory — AIコーディングエージェントの継続性 | セッションを超えたメモリ</title>
+    <title>toon-memory — AIエージェントのための継続性レイヤー</title>
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href={logoSrc.src} />
     <meta property="og:type" content="website" />
@@ -45,15 +46,16 @@ const description =
     <main>
       <Hero lang="ja" />
       <Problem lang="ja" />
-      <MemoryGraphShowcase lang="ja" />
-      <Benchmarks lang="ja" />
-      <FeatureGrid lang="ja" />
-      <SmartRecallShowcase lang="ja" />
-      <Tools lang="ja" />
-      <WhatNew lang="ja" />
-      <HowItWorks lang="ja" />
-      <Agents lang="ja" />
+      <Continuity lang="ja" />
+      <Benefits lang="ja" />
       <Comparison lang="ja" />
+      <Benchmarks lang="ja" />
+      <HowItWorks lang="ja" />
+      <FeatureGrid lang="ja" />
+      <MemoryGraphShowcase lang="ja" />
+      <Tools lang="ja" />
+      <Agents lang="ja" />
+      <WhatNew lang="ja" />
       <FAQ lang="ja" />
       <CTA lang="ja" />
     </main>

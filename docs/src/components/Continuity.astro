@@ -1,0 +1,97 @@
+---
+import { getContent } from '../i18n';
+import Icon from './Icon.astro';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
+---
+
+<section class="content-section continuity-section">
+  <div class="section-header">
+    <p class="section-kicker">{c.continuity.kicker}</p>
+    <h2>{c.continuity.title}</h2>
+    <p>{c.continuity.subtitle}</p>
+  </div>
+
+  <div class="continuity-grid">
+    {
+      c.continuity.items.map((item) => (
+        <div class="continuity-card">
+          <div class="continuity-icon"><Icon emoji={item.icon} /></div>
+          <h3>{item.title}</h3>
+          <p>{item.body}</p>
+        </div>
+      ))
+    }
+  </div>
+
+  <p class="continuity-closing">{c.continuity.closing}</p>
+</section>
+
+<style>
+	.continuity-section {
+		margin-bottom: 4rem;
+	}
+	.section-kicker {
+		margin: 0 0 0.5rem;
+		font-size: 0.78rem;
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--color-lavender);
+	}
+	.continuity-grid {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 1rem;
+		margin: 1.75rem 0 1.5rem;
+	}
+	.continuity-card {
+		padding: 1.5rem 1.35rem;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 14px;
+		transition: border-color 0.25s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s;
+	}
+	.continuity-card:hover {
+		border-color: var(--brand);
+		transform: translateY(-3px);
+		box-shadow: 0 6px 24px -6px var(--brand-glow);
+	}
+	.continuity-icon {
+		font-size: 1.5rem;
+		margin-bottom: 0.75rem;
+	}
+	.continuity-card h3 {
+		font-size: 1.05rem;
+		margin-bottom: 0.4rem;
+		font-weight: 700;
+	}
+	.continuity-card p {
+		color: var(--text-muted);
+		font-size: 0.85rem;
+		line-height: 1.65;
+	}
+	.continuity-closing {
+		margin: 0;
+		padding: 1rem 1.25rem;
+		border-radius: 12px;
+		background: linear-gradient(135deg, var(--color-accent-brand-ghost-wash), var(--color-accent-lavender-ghost));
+		border: 1px solid var(--color-accent-lavender-dim);
+		font-size: 0.9rem;
+		line-height: 1.6;
+	}
+	@media (max-width: 900px) {
+		.continuity-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+	@media (max-width: 560px) {
+		.continuity-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

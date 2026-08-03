@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { parseEntries, buildGraph, graphRecall, graphRecallDetailed, bm25Scores, centrality, renderCompact, parseLinkToken, linkKey, formatLink, typedLinks, buildReason } from "../src/lib/graph"
+import { parseEntries, buildGraph, graphRecall, graphRecallDetailed, bm25Scores, centrality, renderCompact, renderIndex, fetchEntriesByIds, parseLinkToken, linkKey, formatLink, typedLinks, buildReason } from "../src/lib/graph"
 
 const SAMPLE = `version: 1
 entries[5|]{id|category|key|content|file|tags|date|ttl|accessed|links}:
@@ -428,5 +428,66 @@ entries[4|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|co
     const out = renderCompact(d.entries, { budget: "deep" })
     expect(out).toContain("importance: critical")
     expect(out).toContain("importance: low")
+  })
+})
+
+describe("renderIndex", () => {
+  it("emits one line per entry with key, id, category and date, no content", () => {
+    const entries = parseEntries(SAMPLE)
+    const out = renderIndex(entries)
+    const lines = out.split("\n")
+    expect(lines).toHaveLength(5)
+    expect(lines[0]).toBe("[1] risk-engine (a1) · decision · 2026-07-01")
+    expect(out).not.toContain("El motor prioriza")
+  })
+
+  it("renders a relative relevance % from the score map", () => {
+    const d = graphRecallDetailed(BM25_SAMPLE, "redis cache", { hops: 1 })
+    expect(d.entries.length).toBeGreaterThan(0)
+    const out = renderIndex(d.entries, { scores: d.scores })
+    expect(out.split("\n")).toHaveLength(d.entries.length)
+    expect(out).toMatch(/\d+%/)
+  })
+
+  it("marks pinned entries with the pin indicator", () => {
+    const pinned = `version: 1
+entries[1|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority}:
+  p1|decision|pinned-key|Algo|f.ts|k|2026-07-01||0|||||2
+`
+    const out = renderIndex(parseEntries(pinned))
+    expect(out).toContain("📌2")
+  })
+})
+
+describe("fetchEntriesByIds", () => {
+  it("resolves ids or keys in input order and skips unknown tokens", () => {
+    const out = fetchEntriesByIds(SAMPLE, ["a2", "unknown", "a5", "a1"])
+    expect(out.map((e) => e.key)).toEqual(["risk-spec", "deep-node", "risk-engine"])
+  })
+
+  it("dedupes repeated tokens", () => {
+    const out = fetchEntriesByIds(SAMPLE, ["a1", "a1", "risk-engine"])
+    expect(out).toHaveLength(1)
+    expect(out[0].key).toBe("risk-engine")
+  })
+
+  it("skips obsolete entries unless they were valid under asOf", () => {
+    const withObsolete = `version: 1
+entries[2|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority|path_scope|origin|status|supersededOn}:
+  o1|knowledge|dead-entry|Viejo|f.ts|k|2026-06-01||0||||||||obsolete|2026-07-10
+  o2|knowledge|live-entry|Activo|f.ts|k|2026-07-20||0||||||||active|
+`
+    expect(fetchEntriesByIds(withObsolete, ["o1"])).toHaveLength(0)
+    expect(fetchEntriesByIds(withObsolete, ["o1"], { asOf: "2026-07-05" })).toHaveLength(1)
+    expect(fetchEntriesByIds(withObsolete, ["o2"])).toHaveLength(1)
+  })
+
+  it("skips entries whose TTL has expired", () => {
+    const ttl = `version: 1
+entries[1|]{id|category|key|content|file|tags|date|ttl|accessed|links}:
+  t1|knowledge|ttl-entry|Temporal|f.ts|k|2026-07-01|2026-07-15|0|
+`
+    expect(fetchEntriesByIds(ttl, ["t1"], { today: "2026-07-20" })).toHaveLength(0)
+    expect(fetchEntriesByIds(ttl, ["t1"], { today: "2026-07-10" })).toHaveLength(1)
   })
 })

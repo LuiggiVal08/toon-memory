@@ -1,7 +1,7 @@
 {
   "identifier": "luiggival08-toon-memory",
   "name": "toon-memory",
-  "description": "MCP server giving AI coding agents offline, token-efficient persistent memory — 35 tools, 80% fewer tool calls, recall decisions, patterns, and bugs across sessions. No LLM, no server; works with 15+ agents.",
+  "description": "The Continuity Layer for AI Agents — an MCP memory server that preserves project knowledge, decisions, and conventions across sessions so every session starts where the last one ended. Offline, token-efficient, no LLM, no server; works with 15+ agents.",
   "version": "3.5.0",
   "author": "LuiggiVal08",
   "authorUrl": "https://github.com/LuiggiVal08",

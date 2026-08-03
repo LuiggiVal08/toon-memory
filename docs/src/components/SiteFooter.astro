@@ -11,4 +11,22 @@ const c = getContent(lang);
 
 <footer class="site-footer">
   <p>{c.footer.text}<a href="https://github.com/LuiggiVal08/toon-memory">toon-memory</a></p>
+  <p class="footer-odalx">
+    {c.footer.odalx}<span class="footer-odalx-tag">{c.footer.odalxTag}</span>
+  </p>
 </footer>
+
+<style>
+	.footer-odalx {
+		margin: 0.75rem 0 0;
+		font-size: 0.82rem;
+		color: var(--text-muted);
+		opacity: 0.85;
+	}
+	.footer-odalx-tag {
+		display: block;
+		margin-top: 0.2rem;
+		font-size: 0.72rem;
+		opacity: 0.7;
+	}
+</style>

@@ -10,8 +10,9 @@ export const content = {
 			github: 'GitHub',
 		},
 		hero: {
-			tagline: 'Your AI coding agent keeps the context it needs — across every session',
-			subtitle: 'Decisions, patterns, and bugs survive restarts, so you never re-explain the same thing twice.',
+			tagline: 'The Continuity Layer for AI Agents',
+			subtitle: "AI agents shouldn't have to relearn your project every session. toon-memory preserves your project's knowledge, decisions, and conventions across sessions — locally and privately, through MCP.",
+			poweredBy: 'Powered by TOON',
 			getStarted: 'Get Started',
 			viewGithub: 'View on GitHub',
 			copy: 'Copy',
@@ -40,6 +41,81 @@ export const content = {
 			],
 			resolution:
 				'toon-memory gives your agent a persistent, queryable memory — so context survives every session, automatically.',
+		},
+
+		continuity: {
+			kicker: 'Get to know toon-memory',
+			title: 'The Continuity Layer for your coding workflow',
+			subtitle:
+				'A memory stores facts; a continuity layer preserves how your project works — so every session starts where the last one ended.',
+			items: [
+				{
+					icon: '🧭',
+					title: 'Decisions',
+					body: 'The "why" behind every choice — frameworks, libraries, trade-offs. Recalled when it counts, never re-debated.',
+				},
+				{
+					icon: '📏',
+					title: 'Conventions',
+					body: 'Naming, structure, and style rules your team has agreed on. Followed without being re-explained.',
+				},
+				{
+					icon: '🧠',
+					title: 'Context',
+					body: 'Architecture, environment, and operational knowledge that doesn\'t live in any single file.',
+				},
+				{
+					icon: '🤝',
+					title: 'Shared understanding',
+					body: 'Project knowledge and team decisions available to every agent and every session.',
+				},
+			],
+			closing:
+				'toon-memory introduces the concept of a continuity layer: a lightweight system that preserves project knowledge, decisions, and context between AI sessions — no cloud services or heavy infrastructure.',
+		},
+
+		benefits: {
+			kicker: 'Why developers choose toon-memory',
+			title: 'Built around the real problems',
+			subtitle: 'Not a list of tools — a set of outcomes.',
+			groups: [
+				{
+					icon: '🧭',
+					title: 'Persistent project knowledge',
+					items: [
+						'Remembers decisions and the reasons behind them',
+						'Remembers architecture and conventions',
+						'Accumulates between sessions — never re-explained',
+					],
+				},
+				{
+					icon: '🔒',
+					title: 'Privacy-first',
+					items: [
+						'100% local — no cloud, no server, no telemetry',
+						'Optional AES-256-GCM encryption',
+						'You own the memory file, like any source file',
+					],
+				},
+				{
+					icon: '⚡',
+					title: 'Lightweight',
+					items: [
+						'Native TOON format — 22% fewer tokens than JSON',
+						'Zero dependencies, runs on any Node.js 18+',
+						'Deterministic logic — no LLM calls, no API keys',
+					],
+				},
+				{
+					icon: '🛰️',
+					title: 'Universal',
+					items: [
+						'Works with 15+ agents: Claude Code, Codex, Gemini CLI, Cursor, OpenCode and more',
+						'Standard MCP — switch agents without losing context',
+						'Project memory shared by every team member',
+					],
+				},
+			],
 		},
 		features: {
 			cards: [
@@ -200,21 +276,32 @@ toon-memory:
 			],
 		},
 		comparison: {
-			title: 'Before vs After',
-			subtitle: 'See how toon-memory changes your workflow',
-			beforeTitle: 'Before',
-			afterTitle: 'After',
+			title: 'Same project. Two sessions.',
+			subtitle: 'What your agent remembers changes the outcome.',
+			beforeTitle: 'Without toon-memory',
+			afterTitle: 'With toon-memory',
+			thinkingBefore: 'Thinking…',
+			thinkingAfter: 'Recalling…',
 			before: [
-				'Repeat explanations every session',
-				'Forget why a decision was made',
-				'Hunt through git history for context',
-				'Copy-paste notes between chats',
+				{ session: 'Session 1' },
+				{ user: 'Use Sequelize.' },
+				{ assistant: 'OK.' },
+				{ note: 'Held in session context — tokens accumulate.', tone: 'warn' },
+				{ session: 'Session 2' },
+				{ user: "What's our ORM?" },
+				{ note: 'No memory between sessions.', tone: 'error' },
+				{ assistant: "I don't know." },
 			],
 			after: [
-				'Agent remembers everything',
-				'One call gives full project context',
-				'80% fewer tool calls per session',
-				'Zero context loss between sessions',
+				{ session: 'Session 1' },
+				{ user: 'Use Sequelize.' },
+				{ cmd: '$ memory_remember({ category: "decision", key: "orm:sequelize", content: "Use Sequelize as ORM" })' },
+				{ assistant: 'OK.' },
+				{ note: 'Saved to memory.' },
+				{ session: 'Session 2' },
+				{ user: "What's our ORM?" },
+				{ note: 'Recalled from memory.' },
+				{ assistant: "You're using Sequelize." },
 			],
 		},
 		codeExamples: {
@@ -379,9 +466,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			points: [
 				'Link entries with `links` or `[[key]]` refs — no embeddings, no LLM',
 				'`memory_recall({ mode: "graph" })` expands a relationship-aware subgraph',
-				'Fewer tokens, higher precision, fully offline and deterministic',
 			],
-			caption: 'A decision ripples to its spec and architecture — the agent sees the whole picture.',
+			launchLabel: 'Launch interactive viewer',
 		},
 		viewerSection: {
 			title: 'Memory Graph Viewer',
@@ -534,13 +620,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			],
 		},
 		cta: {
-			title: 'Ready to give your agent a memory?',
-			subtitle: 'Install in seconds and never re-explain context to your agent again.',
+			title: 'Ready to give your agent continuity?',
+			subtitle: 'Install in seconds and never re-explain your project again.',
 			getStarted: 'Get Started',
 			viewGithub: 'View on GitHub',
 		},
 		footer: {
 			text: 'MIT License — ',
+			odalx: 'An open source project by ODALX',
+			odalxTag: 'Building infrastructure for the AI-native era.',
 		},
 	},
 	es: {
@@ -554,8 +642,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			github: 'GitHub',
 		},
 		hero: {
-			tagline: 'Tu agente de IA conserva el contexto que necesita — en cada sesión',
-			subtitle: 'Las decisiones, patrones y bugs sobreviven a los reinicios, así no repites lo mismo dos veces.',
+			tagline: 'La capa de continuidad para agentes de IA',
+			subtitle:
+				'Los agentes de IA no deberían tener que reaprender tu proyecto en cada sesión. toon-memory conserva el conocimiento, las decisiones y las convenciones de tu proyecto entre sesiones — de forma local y privada, mediante MCP.',
+			poweredBy: 'Impulsado por TOON',
 			getStarted: 'Empezar',
 			viewGithub: 'Ver en GitHub',
 			copy: 'Copiar',
@@ -585,6 +675,82 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			resolution:
 				'toon-memory le da a tu agente una memoria persistente y consultable — para que el contexto sobreviva a cada sesión, automáticamente.',
 		},
+
+		continuity: {
+			kicker: 'Conoce a toon-memory',
+			title: 'La capa de continuidad para tu flujo de trabajo',
+			subtitle:
+				'Mientras una memoria almacena hechos, una capa de continuidad preserva cómo funciona tu proyecto — para que cada sesión empiece donde terminó la anterior.',
+			items: [
+				{
+					icon: '🧭',
+					title: 'Decisiones',
+					body: 'El "por qué" detrás de cada elección: frameworks, librerías, compensaciones. Recordado cuando importa, nunca re-litigado.',
+				},
+				{
+					icon: '📏',
+					title: 'Convenciones',
+					body: 'Reglas de nomenclatura, estructura y estilo que tu equipo acordó. Seguidas sin que te lo digan otra vez.',
+				},
+				{
+					icon: '🧠',
+					title: 'Contexto',
+					body: 'Arquitectura, entorno y conocimiento operativo que no vive en ningún archivo único.',
+				},
+				{
+					icon: '🤝',
+					title: 'Entendimiento compartido',
+					body: 'Conocimiento del proyecto y decisiones del equipo disponibles para cada agente y cada sesión.',
+				},
+			],
+			closing:
+				'toon-memory introduce el concepto de capa de continuidad: un sistema ligero que preserva el conocimiento, las decisiones y el contexto del proyecto entre sesiones de IA — sin servicios en la nube ni infraestructura pesada.',
+		},
+
+		benefits: {
+			kicker: 'Por qué los desarrolladores eligen toon-memory',
+			title: 'Construido alrededor de los problemas reales',
+			subtitle: 'No una lista de herramientas — un conjunto de resultados.',
+			groups: [
+				{
+					icon: '🧭',
+					title: 'Conocimiento persistente del proyecto',
+					items: [
+						'Recuerda decisiones y las razones detrás de ellas',
+						'Recuerda arquitectura y convenciones',
+						'Se acumula entre sesiones — nunca re-explicado',
+					],
+				},
+				{
+					icon: '🔒',
+					title: 'Privacidad primero',
+					items: [
+						'100% local — sin nube, sin servidor, sin telemetría',
+						'Cifrado opcional AES-256-GCM',
+						'Tu archivo de memoria te pertenece, como cualquier archivo fuente',
+					],
+				},
+				{
+					icon: '⚡',
+					title: 'Ligero',
+					items: [
+						'Formato TOON nativo — 22% menos tokens que JSON',
+						'Cero dependencias, funciona en cualquier Node.js 18+',
+						'Lógica determinista — sin llamadas LLM, sin claves API',
+					],
+				},
+				{
+					icon: '🛰️',
+					title: 'Universal',
+					items: [
+						'Funciona con 15+ agentes: Claude Code, Codex, Gemini CLI, Cursor, OpenCode y más',
+						'MCP estándar — cambia de agente sin perder contexto',
+						'Memoria por proyecto que comparte todo el equipo',
+					],
+				},
+			],
+		},
+
 		features: {
 			cards: [
 			{
@@ -733,21 +899,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			],
 		},
 		comparison: {
-			title: 'Antes vs Después',
-			subtitle: 'Mira cómo toon-memory cambia tu flujo de trabajo',
-			beforeTitle: 'Antes',
-			afterTitle: 'Después',
+			title: 'Mismo proyecto. Dos sesiones.',
+			subtitle: 'Lo que tu agente recuerda cambia el resultado.',
+			beforeTitle: 'Sin toon-memory',
+			afterTitle: 'Con toon-memory',
+			thinkingBefore: 'Pensando…',
+			thinkingAfter: 'Recordando…',
 			before: [
-				'Repites explicaciones en cada sesión',
-				'Olividas por qué se tomó una decisión',
-				'Rebuscas en el historial de git el contexto',
-				'Copias y pegas notas entre chats',
+				{ session: 'Sesión 1' },
+				{ user: 'Refactoriza el módulo de pagos para Stripe' },
+				{ assistant: 'OK.', tokens: '2 tokens' },
+				{ session: 'Sesión 2' },
+				{ user: '¿Qué proveedor usa el módulo de pagos?' },
+				{ cmd: '$ cat src/payments/payments.py', tokens: '2.312 tokens' },
+				{ cmd: '$ grep -r "provider" src/payments/', tokens: '343 tokens' },
+				{ assistant: 'Stripe.', tokens: '2 tokens' },
 			],
 			after: [
-				'El agente recuerda todo',
-				'Una llamada da el contexto completo del proyecto',
-				'80% menos tool calls por sesión',
-				'Cero pérdida de contexto entre sesiones',
+				{ session: 'Sesión 1' },
+				{ user: 'Refactoriza el módulo de pagos para Stripe', thinking: 'Pensando…' },
+				{ cmd: '$ memory_remember({ category: "decision", key: "payments:stripe", content: "Proveedor de pagos: Stripe" })', tokens: '38 tokens' },
+				{ assistant: 'OK. Guardado.', tokens: '5 tokens' },
+				{ session: 'Sesión 2' },
+				{ user: '¿Qué proveedor usa el módulo de pagos?' },
+				{ cmd: '$ memory_recall({ query: "payments" })', tokens: '89 tokens' },
+				{ note: 'payments:stripe · 1 entrada' },
+				{ assistant: 'Stripe.', tokens: '2 tokens' },
 			],
 		},
 		codeExamples: {
@@ -912,9 +1089,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			points: [
 				'Enlaza entries con `links` o referencias `[[key]]` — sin embeddings, sin LLM',
 				'`memory_recall({ mode: "graph" })` expande un subgrafo consciente de las relaciones',
-				'Menos tokens, más precisión, 100% offline y determinista',
 			],
-			caption: 'Una decisión se propaga a su spec y arquitectura — el agente ve el cuadro completo.',
+			launchLabel: 'Abrir visor interactivo',
 		},
 		viewerSection: {
 			title: 'Visor del grafo de memoria',
@@ -1067,13 +1243,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	cta: {
-		title: '¿Listo para darle memoria a tu agente?',
-		subtitle: 'Instálalo en segundos y nunca más repitas contexto a tu agente.',
+		title: '¿Listo para darle continuidad a tu agente?',
+		subtitle: 'Instálalo en segundos y nunca vuelvas a explicar tu proyecto.',
 		getStarted: 'Empezar',
 		viewGithub: 'Ver en GitHub',
 	},
 		footer: {
 			text: 'Licencia MIT — ',
+			odalx: 'Un proyecto de código abierto de ODALX',
+			odalxTag: 'Construyendo infraestructura para la era nativa de IA.',
 		},
 	},
 	zh: {
@@ -1087,8 +1265,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		github: 'GitHub',
 	},
 	hero: {
-		tagline: '你的 AI 编程代理保留所需的上下文 — 跨越每一次会话',
-		subtitle: '决策、模式和 bug 在重启后依然存在，因此你永远不必重复解释同一件事。',
+		tagline: '面向 AI 代理的连续性层',
+		subtitle:
+			'AI 代理不应该在每个会话中重新学习你的项目。toon-memory 跨会话保留项目的知识、决策和约定——本地化、私密化，通过 MCP 实现。',
+		poweredBy: '由 TOON 驱动',
 		getStarted: '快速开始',
 		viewGithub: '在 GitHub 上查看',
 		copy: '复制',
@@ -1105,6 +1285,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 		resolution: 'toon-memory 为你的代理提供持久的、可查询的记忆 — 让上下文在每个会话中自动存活。',
 	},
+
+	continuity: {
+		kicker: '认识 toon-memory',
+		title: '你编码工作流的连续性层',
+		subtitle: '记忆存储事实，而连续性层保存你项目的工作方式 — 让每个会话都从上次结束的地方开始。',
+		items: [
+			{ icon: '🧭', title: '决策', body: '每个选择背后的"为什么" — 框架、库、权衡。在重要时刻被召回，不再重新争论。' },
+			{ icon: '📏', title: '约定', body: '你的团队认可的命名、结构和风格规则。无需再次告知即可遵守。' },
+			{ icon: '🧠', title: '上下文', body: '不存于任何单一文件中的架构、环境和运维知识。' },
+			{ icon: '🤝', title: '共享理解', body: '项目知识和团队决策可供每个代理和每次会话使用。' },
+		],
+		closing: 'toon-memory 引入了连续性层的概念：一个轻量系统，在 AI 会话之间保存项目知识、决策和上下文 — 无需云服务或重型基础设施。',
+	},
+
+	benefits: {
+		kicker: '为什么开发者选择 toon-memory',
+		title: '围绕你真正遇到的问题构建',
+		subtitle: '不是工具列表 — 而是结果集。',
+		groups: [
+			{ icon: '🧭', title: '持久的项目知识', items: ['记住决策及其背后的原因', '记住架构和约定', '在会话间积累 — 永不重新解释'] },
+			{ icon: '🔒', title: '隐私优先', items: ['100% 本地 — 无云、无服务器、无遥测', '可选 AES-256-GCM 加密', '你拥有记忆文件，就像任何源文件'] },
+			{ icon: '⚡', title: '轻量', items: ['原生 TOON 格式 — 比 JSON 少 22% 的 token', '零依赖，任何 Node.js 18+ 都可运行', '确定性逻辑 — 无 LLM 调用、无 API 密钥'] },
+			{ icon: '🛰️', title: '通用', items: ['适用于 15+ 个代理：Claude Code、Codex、Gemini CLI、Cursor、OpenCode 等', '标准 MCP — 更换代理而不丢失上下文', '每个团队成员共享的项目记忆'] },
+		],
+	},
+
 	features: {
 		cards: [
 			{
@@ -1150,9 +1356,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	comparison: {
-		title: '之前 vs 之后', subtitle: '看看 toon-memory 如何改变你的工作流程', beforeTitle: '之前', afterTitle: '之后',
-		before: ['每次会话都要重复解释', '忘记为什么做了某个决策', '在 git 历史中搜寻上下文', '在聊天之间复制粘贴笔记'],
-		after: ['代理记住一切', '一次调用获得完整项目上下文', '每次会话减少 80% 的工具调用', '会话之间零上下文丢失'],
+		title: '同一个项目。两次会话。', subtitle: '你的代理记住什么会改变结果。', beforeTitle: '没有 toon-memory', afterTitle: '使用 toon-memory', thinkingBefore: '思考中…', thinkingAfter: '回忆中…',
+		before: [
+			{ session: '会话 1' }, { user: '使用 Sequelize。' }, { assistant: '好的。' }, { note: '保留在会话上下文中 — 会累积 token。', tone: 'warn' },
+			{ session: '会话 2' }, { user: '我们的 ORM 是什么？' }, { note: '会话之间没有记忆。', tone: 'error' }, { assistant: '我不知道。' },
+		],
+			after: [
+				{ session: '会话 1' }, { user: '使用 Sequelize。' }, { cmd: '$ memory_remember({ category: "decision", key: "orm:sequelize", content: "使用 Sequelize 作为 ORM" })' }, { assistant: '好的。' }, { note: '已保存到记忆。' },
+			{ session: '会话 2' }, { user: '我们的 ORM 是什么？' }, { note: '从记忆回想。' }, { assistant: '你在使用 Sequelize。' },
+		],
 	},
 	codeExamples: {
 		quickExample: '快速示例', quickInstall: '快速安装',
@@ -1244,8 +1456,23 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	graphSection: {
 		title: '你的记忆，以图谱形式',
 		subtitle: '将决策与规格、bug 和架构连接起来。召回返回正确的上下文 — 不仅仅是关键词匹配。',
-		points: ['使用 `links` 或 `[[key]]` 引用连接条目 — 无需嵌入，无需 LLM', '`memory_recall({ mode: "graph" })` 展开关系感知的子图', '更少的 token，更高的精度，完全离线且确定性'],
-		caption: '一个决策传播到其规格和架构 — 代理看到全貌。',
+		points: ['使用 `links` 或 `[[key]]` 引用连接条目 — 无需嵌入，无需 LLM', '`memory_recall({ mode: "graph" })` 展开关系感知的子图'],
+		launchLabel: '打开交互式查看器',
+	},
+	viewerSection: {
+		title: '记忆图谱查看器',
+		subtitle: '将你的记忆可视化成一个交互式力导向图。一目了然看到条目、连接、类别和访问模式。',
+		capsLabel: '查看器内：',
+		caps: ['搜索', '路径查找', '导出 PNG / SVG', '深色与浅色主题'],
+		features: [
+			'<strong>CLI 查看器：</strong><code>npx toon-memory viewer</code> 启动 HTTP 服务器',
+			'<strong>内联 MCP Apps 查看器：</strong>调用 <code>memory_visualize()</code> 直接在兼容 MCP Apps 的主机中渲染图 — 无需服务器',
+			'悬停节点查看包含内容预览和质量分数的 tooltips',
+			'点击选择并居中；双击打开详情',
+			'搜索过滤条目并以脉动光晕高亮匹配节点',
+			'路径查找器查找并高亮两个条目之间的最短连接',
+			'可调物理、深色/浅色主题、PNG/SVG 导出',
+		],
 	},
 	smartRecallSection: {
 		title: '智能、高 token 效率的召回',
@@ -1323,14 +1550,16 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 		],
 	},
-	cta: { title: '准备好为你的代理提供记忆了吗？', subtitle: '几秒钟内安装，再也不用向代理重复解释上下文。', getStarted: '快速开始', viewGithub: '在 GitHub 上查看' },
-	footer: { text: 'MIT 许可证 — ' },
+	cta: { title: '准备好为你的代理带来连续性了吗？', subtitle: '几秒内完成安装，再也不必重新解释你的项目。', getStarted: '快速开始', viewGithub: '在 GitHub 上查看' },
+	footer: { text: 'MIT 许可证 — ', odalx: 'ODALX 的开源项目', odalxTag: '为 AI 原生时代构建基础设施。' },
 },
 	ja: {
 	nav: { docs: 'ドキュメント', features: '機能', viewer: 'ビューアー', benchmarks: 'ベンチマーク', faq: 'FAQ', npm: 'npm', github: 'GitHub' },
 	hero: {
-		tagline: 'AI コーディングエージェントは必要なコンテキストを保持します — あらゆるセッションを超えて',
-		subtitle: '意思決定、パターン、バグは再起動後も残るので、同じことを二度説明する必要はありません。',
+		tagline: 'AIエージェントのための継続性レイヤー',
+		subtitle:
+			'AIエージェントは毎セッションでプロジェクトを学び直すべきではありません。toon-memory はプロジェクトの知識、決定、規約をセッションを超えて保存します — MCP 経由で、ローカルかつプライベートに。',
+		poweredBy: 'TOON を採用',
 		getStarted: 'はじめに', viewGithub: 'GitHub で見る', copy: 'コピー', copied: 'コピーしました！', installCmd: 'npm install -g toon-memory',
 	},
 	problem: {
@@ -1342,6 +1571,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 		resolution: 'toon-memory はエージェントに永続的でクエリ可能なメモリを提供します — コンテキストが自動的にすべてのセッションで生存します。',
 	},
+
+	continuity: {
+		kicker: 'toon-memory を知る',
+		title: 'コーディングワークフローのための継続性レイヤー',
+		subtitle: 'メモリは事実を保存しますが、継続性レイヤーはプロジェクトの働き方を保存します — 各セッションが前回の終わりから始まるように。',
+		items: [
+			{ icon: '🧭', title: '決定', body: 'すべての選択の「理由」— フレームワーク、ライブラリ、トレードオフ。必要な時に想起され、再議論されることはありません。' },
+			{ icon: '📏', title: '規約', body: 'チームが合意した命名、構造、スタイルのルール。言われなくても守られます。' },
+			{ icon: '🧠', title: 'コンテキスト', body: '単一のファイルには存在しない、アーキテクチャ・環境・運用の知識。' },
+			{ icon: '🤝', title: '共有された理解', body: 'プロジェクト知識とチームの決定が、すべてのエージェントとセッションで利用可能。' },
+		],
+		closing: 'toon-memory は継続性レイヤーの概念を導入します：AI セッション間でプロジェクトの知識・決定・コンテキストを保存する軽量システム — クラウドサービスも重いインフラも不要。',
+	},
+
+	benefits: {
+		kicker: '開発者が toon-memory を選ぶ理由',
+		title: '実際にある問題を中心に設計',
+		subtitle: 'ツールのリストではなく、成果のセット。',
+		groups: [
+			{ icon: '🧭', title: '持続的なプロジェクト知識', items: ['決定とその理由を記憶', 'アーキテクチャと規約を記憶', 'セッションをまたいで蓄積 — 再説明不要'] },
+			{ icon: '🔒', title: 'プライバシー優先', items: ['100% ローカル — クラウドなし、サーバーなし、テレメトリなし', 'オプションの AES-256-GCM 暗号化', '記憶ファイルはソースファイル同様、あなたのもの'] },
+			{ icon: '⚡', title: '軽量', items: ['ネイティブ TOON 形式 — JSON より 22% 少ないトークン', '依存関係ゼロ、Node.js 18+ で動作', '決定論的ロジック — LLM 呼び出しなし、API キー不要'] },
+			{ icon: '🛰️', title: 'ユニバーサル', items: ['15+ のエージェントに対応: Claude Code、Codex、Gemini CLI、Cursor、OpenCode など', '標準 MCP — コンテキストを失わずにエージェントを変更', 'チーム全員が共有するプロジェクト別メモリ'] },
+		],
+	},
+
 	features: {
 		cards: [
 			{
@@ -1386,9 +1641,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	comparison: {
-		title: 'Before vs After', subtitle: 'toon-memory がワークフローをどう変えるか', beforeTitle: 'Before', afterTitle: 'After',
-		before: ['毎セッション説明を繰り返す', '意思決定の理由を忘れる', 'git 履歴からコンテキストを探す', 'チャット間でメモをコピー＆ペースト'],
-		after: ['エージェントがすべてを記憶', '1 回の呼び出しで完全なプロジェクトコンテキスト', 'セッションあたり 80% ツール呼び出し削減', 'セッション間でコンテキスト損失ゼロ'],
+		title: '同じプロジェクト。2つのセッション。', subtitle: 'エージェントが覚えていることが結果を変えます。', beforeTitle: 'toon-memory なし', afterTitle: 'toon-memory あり', thinkingBefore: '考えています…', thinkingAfter: '思い出しています…',
+		before: [
+			{ session: 'セッション 1' }, { user: 'Sequelize を使う。' }, { assistant: 'OK。' }, { note: 'セッションのコンテキストに保持 — トークンが蓄積されます。', tone: 'warn' },
+			{ session: 'セッション 2' }, { user: 'ORM は何ですか？' }, { note: 'セッション間の記憶がありません。', tone: 'error' }, { assistant: '分かりません。' },
+		],
+			after: [
+				{ session: 'セッション 1' }, { user: 'Sequelize を使う。' }, { cmd: '$ memory_remember({ category: "decision", key: "orm:sequelize", content: "Sequelize を ORM として使用" })' }, { assistant: 'OK。' }, { note: 'メモリに保存されました。' },
+			{ session: 'セッション 2' }, { user: 'ORM は何ですか？' }, { note: 'メモリから思い出しました。' }, { assistant: 'Sequelize を使っています。' },
+		],
 	},
 	codeExamples: {
 		quickExample: 'クイック例', quickInstall: 'クイックインストール',
@@ -1478,8 +1739,23 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	graphSection: {
 		title: 'メモリをグラフで', subtitle: '意思決定を仕様、バグ、アーキテクチャに接続。リコールは正しいコンテキストを返す — 単なるキーワード一致ではない。',
-		points: ['`links` または `[[key]]` 参照でエントリを接続 — 埋め込み不要、LLM 不要', '`memory_recall({ mode: "graph" })` がリレーションシップを考慮したサブグラフを展開', 'トークン削減、精度向上、完全オフラインで決定的'],
-		caption: '意思決定が仕様とアーキテクチャに波及 — エージェントが全体像を把握。',
+		points: ['`links` または `[[key]]` 参照でエントリを接続 — 埋め込み不要、LLM 不要', '`memory_recall({ mode: "graph" })` がリレーションシップを考慮したサブグラフを展開'],
+		launchLabel: 'インタラクティブビューアを開く',
+	},
+	viewerSection: {
+		title: 'メモリグラフビューア',
+		subtitle: 'メモリをインタラクティブな力指向グラフとして可視化。エントリ、接続、カテゴリ、アクセスパターンを一目で。',
+		capsLabel: 'ビューア内：',
+		caps: ['検索', 'パスファインダー', 'PNG / SVG エクスポート', 'ダーク＆ライトテーマ'],
+		features: [
+			'<strong>CLI ビューア：</strong><code>npx toon-memory viewer</code> が HTTP サーバーを起動',
+			'<strong>インライン MCP Apps ビューア：</strong><code>memory_visualize()</code> を呼び出すと MCP Apps 互換ホストにグラフを直接レンダリング — サーバー不要',
+			'ノードにホバーするとコンテンツプレビューと品質スコア付きのツールチップ表示',
+			'クリックで選択・中央表示、ダブルクリックで詳細を開く',
+			'検索はエントリをフィルタし、一致ノードを脈動グローでハイライト',
+			'パスファインダーが2つのエントリ間の最短接続を発見・ハイライト',
+			'物理調整、ダーク/ライトテーマ、PNG/SVGエクスポート',
+		],
 	},
 	smartRecallSection: {
 		title: 'スマートでトークン効率の高いリコール',
@@ -1557,14 +1833,16 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 		],
 	},
-	cta: { title: 'エージェントにメモリを与える準備はできましたか？', subtitle: '数秒でインストールし、二度とエージェントにコンテキストを再説明することはありません。', getStarted: 'はじめに', viewGithub: 'GitHub で見る' },
-	footer: { text: 'MIT ライセンス — ' },
+	cta: { title: 'エージェントに継続性を持たせませんか？', subtitle: '数秒でインストール。プロジェクトを再説明する必要はもうありません。', getStarted: 'はじめに', viewGithub: 'GitHub で見る' },
+	footer: { text: 'MIT ライセンス — ', odalx: 'ODALX によるオープンソースプロジェクト', odalxTag: 'AI ネイティブ時代のインフラストラクチャを構築。' },
 },
 	ko: {
 	nav: { docs: '문서', features: '기능', viewer: '뷰어', benchmarks: '벤치마크', faq: 'FAQ', npm: 'npm', github: 'GitHub' },
 	hero: {
-		tagline: 'AI 코딩 에이전트가 필요한 컨텍스트를 유지합니다 — 모든 세션에서',
-		subtitle: '결정, 패턴, 버그가 재시작 후에도 살아남으므로 같은 것을 두 번 설명할 필요가 없습니다.',
+		tagline: 'AI 에이전트를 위한 연속성 레이어',
+		subtitle:
+			'AI 에이전트는 매 세션마다 프로젝트를 다시 배우지 않아야 합니다. toon-memory는 세션을 넘어 프로젝트의 지식, 결정, 관례를 보존합니다 — MCP를 통해, 로컬에서 안전하게.',
+		poweredBy: 'TOON 기반',
 		getStarted: '시작하기', viewGithub: 'GitHub에서 보기', copy: '복사', copied: '복사됨!', installCmd: 'npm install -g toon-memory',
 	},
 	problem: {
@@ -1576,6 +1854,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 		resolution: 'toon-memory는 에이전트에 지속적이고 쿼리 가능한 메모리를 제공합니다 — 컨텍스트가 자동으로 모든 세션에서 살아남습니다.',
 	},
+
+	continuity: {
+		kicker: 'toon-memory 소개',
+		title: '코딩 워크플로우를 위한 연속성 레이어',
+		subtitle: '메모리는 사실을 저장하지만, 연속성 레이어는 프로젝트가 작동하는 방식을 보존합니다 — 모든 세션이 이전 세션이 끝난 곳에서 시작되도록.',
+		items: [
+			{ icon: '🧭', title: '결정', body: '모든 선택의 "이유" — 프레임워크, 라이브러리, 트레이드오프. 중요할 때 회상되고, 다시 논쟁되지 않습니다.' },
+			{ icon: '📏', title: '관례', body: '팀이 합의한 명명, 구조, 스타일 규칙. 다시 말하지 않아도 지켜집니다.' },
+			{ icon: '🧠', title: '컨텍스트', body: '단일 파일에 존재하지 않는 아키텍처, 환경, 운영 지식.' },
+			{ icon: '🤝', title: '공유된 이해', body: '모든 에이전트와 세션에서 사용할 수 있는 프로젝트 지식과 팀 결정.' },
+		],
+		closing: 'toon-memory는 연속성 레이어의 개념을 소개합니다: AI 세션 간에 프로젝트 지식, 결정, 컨텍스트를 보존하는 가벼운 시스템 — 클라우드 서비스도 무거운 인프라도 필요 없습니다.',
+	},
+
+	benefits: {
+		kicker: '개발자가 toon-memory를 선택하는 이유',
+		title: '실제로 겪는 문제를 중심으로 설계',
+		subtitle: '도구 목록이 아니라 결과의 집합입니다.',
+		groups: [
+			{ icon: '🧭', title: '지속적인 프로젝트 지식', items: ['결정과 그 이유를 기억', '아키텍처와 관례를 기억', '세션 간에 축적 — 다시 설명할 필요 없음'] },
+			{ icon: '🔒', title: '프라이버시 우선', items: ['100% 로컬 — 클라우드, 서버, 텔레메트리 없음', '선택적 AES-256-GCM 암호화', '메모리 파일은 소스 파일처럼 당신의 것입니다'] },
+			{ icon: '⚡', title: '가벼움', items: ['네이티브 TOON 형식 — JSON보다 22% 적은 토큰', '의존성 제로, Node.js 18+에서 동작', '결정적 로직 — LLM 호출 없음, API 키 불필요'] },
+			{ icon: '🛰️', title: '유니버설', items: ['15+ 에이전트 지원: Claude Code, Codex, Gemini CLI, Cursor, OpenCode 등', '표준 MCP — 컨텍스트를 잃지 않고 에이전트 변경', '팀 전체가 공유하는 프로젝트별 메모리'] },
+		],
+	},
+
 	features: {
 		cards: [
 			{
@@ -1620,9 +1924,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	comparison: {
-		title: 'Before vs After', subtitle: 'toon-memory가 워크플로우를 어떻게 바꾸는지 확인', beforeTitle: 'Before', afterTitle: 'After',
-		before: ['매 세션 설명을 반복', '결정 이유를 잊음', 'git 기록에서 컨텍스트 검색', '채팅 간에 메모를 복사-붙여넣기'],
-		after: ['에이전트가 모든 것을 기억', '한 번의 호출로 전체 프로젝트 컨텍스트', '세션당 80% 도구 호출 절감', '세션 간 컨텍스트 손실 제로'],
+		title: '같은 프로젝트. 두 세션.', subtitle: '에이전트가 기억하는 것이 결과를 바꿉니다.', beforeTitle: 'toon-memory 없이', afterTitle: 'toon-memory 사용', thinkingBefore: '생각 중…', thinkingAfter: '기억 중…',
+		before: [
+			{ session: '세션 1' }, { user: 'Sequelize를 사용하세요.' }, { assistant: '알겠습니다.' }, { note: '세션 컨텍스트에 보관 — 토큰이 축적됩니다.', tone: 'warn' },
+			{ session: '세션 2' }, { user: '우리 ORM은 무엇인가요?' }, { note: '세션 간 메모리가 없습니다.', tone: 'error' }, { assistant: '모르겠습니다.' },
+		],
+			after: [
+				{ session: '세션 1' }, { user: 'Sequelize를 사용하세요.' }, { cmd: '$ memory_remember({ category: "decision", key: "orm:sequelize", content: "ORM으로 Sequelize를 사용" })' }, { assistant: '알겠습니다.' }, { note: '메모리에 저장되었습니다.' },
+			{ session: '세션 2' }, { user: '우리 ORM은 무엇인가요?' }, { note: '메모리에서 기억해냈습니다.' }, { assistant: 'Sequelize를 사용 중입니다.' },
+		],
 	},
 	codeExamples: {
 		quickExample: '빠른 예제', quickInstall: '빠른 설치',
@@ -1712,8 +2022,23 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	graphSection: {
 		title: '메모리를 그래프로', subtitle: '결정을 사양, 버그, 아키텍처에 연결. 리콜은 올바른 컨텍스트를 반환 — 단순한 키워드 일치가 아님.',
-		points: ['`links` 또는 `[[key]]` 참조로 항목 연결 — 임베딩 불필요, LLM 불필요', '`memory_recall({ mode: "graph" })`가 관계 인식 서브그래프를 확장', '토큰 절감, 정확도 향상, 완전 오프라인이고 결정적'],
-		caption: '결정이 사양과 아키텍처로 파급 — 에이전트가 전체 그림을 파악.',
+		points: ['`links` 또는 `[[key]]` 참조로 항목 연결 — 임베딩 불필요, LLM 불필요', '`memory_recall({ mode: "graph" })`가 관계 인식 서브그래프를 확장'],
+		launchLabel: '대화형 뷰어 열기',
+	},
+	viewerSection: {
+		title: '메모리 그래프 뷰어',
+		subtitle: '메모리를 대화형 힘-방향 그래프로 시각화. 항목, 연결, 카테고리, 접근 패턴을 한눈에.',
+		capsLabel: '뷰어 내부:',
+		caps: ['검색', '경로 찾기', 'PNG / SVG 내보내기', '다크 & 라이트 테마'],
+		features: [
+			'<strong>CLI 뷰어:</strong> <code>npx toon-memory viewer</code>가 HTTP 서버를 시작합니다',
+			'<strong>인라인 MCP Apps 뷰어:</strong> <code>memory_visualize()</code>를 호출하면 MCP Apps 호환 호스트에서 그래프를 직접 렌더링 — 서버 불필요',
+			'노드에 호버하면 콘텐츠 미리보기와 품질 점수가 있는 툴팁 표시',
+			'클릭으로 선택·중앙 정렬, 더블 클릭으로 세부정보 열기',
+			'검색은 항목을 필터링하고 일치 노드를 맥동하는 글로우로 강조',
+			'경로 찾기는 두 항목 사이의 최단 연결을 찾아 강조',
+			'물리 조정, 다크/라이트 테마, PNG/SVG 내보내기',
+		],
 	},
 	smartRecallSection: {
 		title: '스마트하고 토큰 효율적인 리콜',
@@ -1791,8 +2116,8 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 		],
 	},
-	cta: { title: '에이전트에 메모리를 부여할 준비가 되셨나요?', subtitle: '몇 초 만에 설치하고 에이전트에 컨텍스트를 재설명하지 마세요.', getStarted: '시작하기', viewGithub: 'GitHub에서 보기' },
-	footer: { text: 'MIT 라이선스 — ' },
+	cta: { title: '에이전트에 연속성을 부여할 준비가 되셨나요?', subtitle: '몇 초 만에 설치하고 프로젝트를 다시 설명할 일이 없습니다.', getStarted: '시작하기', viewGithub: 'GitHub에서 보기' },
+	footer: { text: 'MIT 라이선스 — ', odalx: 'ODALX의 오픈소스 프로젝트', odalxTag: 'AI 네이티브 시대의 인프라를 구축합니다.' },
 },
 	'pt-br': {
 	nav: {
@@ -1805,8 +2130,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		github: 'GitHub',
 	},
 	hero: {
-		tagline: 'Seu agente de IA mantém o contexto de que precisa — em todas as sessões',
-		subtitle: 'Decisões, padrões e bugs sobrevivem a reinícios, para que você nunca reexplique a mesma coisa duas vezes.',
+		tagline: 'A camada de continuidade para agentes de IA',
+		subtitle:
+			'Agentes de IA não deveriam ter que reaprender seu projeto a cada sessão. O toon-memory preserva o conhecimento, as decisões e as convenções do seu projeto entre sessões — localmente e de forma privada, via MCP.',
+		poweredBy: 'Desenvolvido com TOON',
 		getStarted: 'Começar',
 		viewGithub: 'Ver no GitHub',
 		copy: 'Copiar',
@@ -1836,6 +2163,34 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		resolution:
 			'toon-memory dá ao seu agente uma memória persistente e consultável — para que o contexto sobreviva a cada sessão, automaticamente.',
 	},
+
+	continuity: {
+		kicker: 'Conheça o toon-memory',
+		title: 'A camada de continuidade para seu fluxo de trabalho',
+		subtitle:
+			'Enquanto uma memória armazena fatos, uma camada de continuidade preserva como seu projeto funciona — para que cada sessão comece onde a anterior terminou.',
+		items: [
+			{ icon: '🧭', title: 'Decisões', body: 'O "porquê" por trás de cada escolha — frameworks, bibliotecas, trade-offs. Lembrado quando importa, nunca re-litigado.' },
+			{ icon: '📏', title: 'Convenções', body: 'Regras de nomenclatura, estrutura e estilo que seu time acordou. Seguidas sem precisar ser ditas de novo.' },
+			{ icon: '🧠', title: 'Contexto', body: 'Conhecimento de arquitetura, ambiente e operação que não vive em nenhum arquivo isolado.' },
+			{ icon: '🤝', title: 'Entendimento compartilhado', body: 'Conhecimento do projeto e decisões do time disponíveis para cada agente e cada sessão.' },
+		],
+		closing:
+			'toon-memory introduz o conceito de camada de continuidade: um sistema leve que preserva conhecimento, decisões e contexto do projeto entre sessões de IA — sem serviços em nuvem nem infraestrutura pesada.',
+	},
+
+	benefits: {
+		kicker: 'Por que os desenvolvedores escolhem o toon-memory',
+		title: 'Construído em torno dos problemas reais',
+		subtitle: 'Não é uma lista de ferramentas — é um conjunto de resultados.',
+		groups: [
+			{ icon: '🧭', title: 'Conhecimento persistente do projeto', items: ['Lembra decisões e as razões por trás delas', 'Lembra arquitetura e convenções', 'Acumula entre sessões — nunca reexplicado'] },
+			{ icon: '🔒', title: 'Privacidade em primeiro lugar', items: ['100% local — sem nuvem, sem servidor, sem telemetria', 'Criptografia opcional AES-256-GCM', 'Você é dono do arquivo de memória, como qualquer fonte'] },
+			{ icon: '⚡', title: 'Leve', items: ['Formato TOON nativo — 22% menos tokens que JSON', 'Zero dependências, roda em qualquer Node.js 18+', 'Lógica determinística — sem chamadas LLM, sem chaves de API'] },
+			{ icon: '🛰️', title: 'Universal', items: ['Funciona com 15+ agentes: Claude Code, Codex, Gemini CLI, Cursor, OpenCode e mais', 'MCP padrão — troque de agente sem perder contexto', 'Memória por projeto compartilhada por todo o time'] },
+		],
+	},
+
 	features: {
 		cards: [
 			{
@@ -1960,21 +2315,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	comparison: {
-		title: 'Antes vs Depois',
-		subtitle: 'Veja como o toon-memory muda seu fluxo de trabalho',
-		beforeTitle: 'Antes',
-		afterTitle: 'Depois',
+		title: 'Mesmo projeto. Duas sessões.',
+		subtitle: 'O que seu agente lembra muda o resultado.',
+		beforeTitle: 'Sem toon-memory',
+		afterTitle: 'Com toon-memory',
+		thinkingBefore: 'Pensando…',
+		thinkingAfter: 'Lembrando…',
 		before: [
-			'Repetir explicações a cada sessão',
-			'Esquecer por que uma decisão foi tomada',
-			'Procurar no histórico do git por contexto',
-			'Copiar e colar notas entre chats',
+			{ session: 'Sessão 1' },
+			{ user: 'Use Sequelize.' },
+			{ assistant: 'OK.' },
+			{ note: 'Mantido no contexto da sessão — acumula tokens.', tone: 'warn' },
+			{ session: 'Sessão 2' },
+			{ user: 'Qual é o nosso ORM?' },
+			{ note: 'Sem memória entre sessões.', tone: 'error' },
+			{ assistant: 'Não sei.' },
 		],
-		after: [
-			'Agente lembra tudo',
-			'Uma chamada dá o contexto completo do projeto',
-			'80% menos chamadas de ferramenta por sessão',
-			'Zero perda de contexto entre sessões',
+			after: [
+				{ session: 'Sessão 1' },
+				{ user: 'Use Sequelize.' },
+				{ cmd: '$ memory_remember({ category: "decision", key: "orm:sequelize", content: "Usar Sequelize como ORM" })' },
+				{ assistant: 'OK.' },
+				{ note: 'Salvo na memória.' },
+			{ session: 'Sessão 2' },
+			{ user: 'Qual é o nosso ORM?' },
+			{ note: 'Recuperado da memória.' },
+			{ assistant: 'Você está usando Sequelize.' },
 		],
 	},
 	codeExamples: {
@@ -2107,9 +2473,23 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		points: [
 			'Vincule entradas com `links` ou referências `[[key]]` — sem embeddings, sem LLM',
 			'`memory_recall({ mode: "graph" })` expande um subgrafo consciente de relações',
-			'Menos tokens, mais precisão, totalmente offline e determinístico',
 		],
-		caption: 'Uma decisão se propaga para sua spec e arquitetura — o agente vê o quadro completo.',
+		launchLabel: 'Abrir visualizador interativo',
+	},
+	viewerSection: {
+		title: 'Visualizador do grafo de memória',
+		subtitle: 'Visualize sua memória como um grafo interativo de força dirigida. Veja entradas, conexões, categorias e padrões de acesso de relance.',
+		capsLabel: 'Dentro do visualizador:',
+		caps: ['Busca', 'Localizador de caminhos', 'Exportar PNG / SVG', 'Temas claro e escuro'],
+		features: [
+			'<strong>Visualizador CLI:</strong> <code>npx toon-memory viewer</code> inicia um servidor HTTP',
+			'<strong>Visualizador inline MCP Apps:</strong> chame <code>memory_visualize()</code> para renderizar o grafo diretamente em hosts compatíveis com MCP Apps — sem servidor',
+			'Passe o mouse sobre nós para tooltips com pré-visualização e pontuação de qualidade',
+			'Clique para selecionar e centralizar; duplo clique para abrir detalhes',
+			'A busca filtra entradas e destaca nós correspondentes com um brilho pulsante',
+			'O localizador de caminhos encontra e destaca a conexão mais curta entre duas entradas',
+			'Física ajustável, tema escuro/claro, exportação PNG/SVG',
+		],
 	},
 	smartRecallSection: {
 		title: 'Recall inteligente e eficiente em tokens',
@@ -2247,13 +2627,15 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	cta: {
-		title: 'Pronto para dar memória ao seu agente?',
-		subtitle: 'Instale em segundos e nunca mais reexplique contexto ao seu agente.',
+		title: 'Pronto para dar continuidade ao seu agente?',
+		subtitle: 'Instale em segundos e nunca mais reexplique seu projeto.',
 		getStarted: 'Começar',
 		viewGithub: 'Ver no GitHub',
 	},
 	footer: {
 		text: 'Licença MIT — ',
+		odalx: 'Um projeto de código aberto da ODALX',
+		odalxTag: 'Construindo infraestrutura para a era nativa de IA.',
 	},
 },
 	de: {
@@ -2267,8 +2649,10 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		github: 'GitHub',
 	},
 	hero: {
-		tagline: 'Dein KI-Coding-Agent behält den Kontext, den er braucht — in jeder Sitzung',
-		subtitle: 'Entscheidungen, Muster und Bugs überleben Neustarts, sodass du nie wieder dasselbe zweimal erklären musst.',
+		tagline: 'Die Kontinuitätsschicht für KI-Agenten',
+		subtitle:
+			'KI-Agenten sollten dein Projekt nicht in jeder Sitzung neu lernen müssen. toon-memory bewahrt das Wissen, die Entscheidungen und die Konventionen deines Projekts über Sitzungen hinweg — lokal und privat, über MCP.',
+		poweredBy: 'Bereitgestellt von TOON',
 		getStarted: 'Loslegen',
 		viewGithub: 'Auf GitHub ansehen',
 		copy: 'Kopieren',
@@ -2298,6 +2682,34 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		resolution:
 			'toon-memory gibt deinem Agenten einen persistenten, abfragbaren Speicher — sodass Kontext automatisch jede Sitzung überlebt.',
 	},
+
+	continuity: {
+		kicker: 'Lerne toon-memory kennen',
+		title: 'Die Kontinuitätsebene für deinen Workflow',
+		subtitle:
+			'Während ein Speicher Fakten ablegt, bewahrt eine Kontinuitätsebene, wie dein Projekt funktioniert — damit jede Sitzung dort beginnt, wo die letzte endete.',
+		items: [
+			{ icon: '🧭', title: 'Entscheidungen', body: 'Das "Warum" hinter jeder Wahl — Frameworks, Bibliotheken, Kompromisse. Abgerufen, wenn es zählt, nie neu aufgerollt.' },
+			{ icon: '📏', title: 'Konventionen', body: 'Namens-, Struktur- und Stilregeln, auf die sich dein Team geeinigt hat. Befolgt, ohne erneut gesagt zu werden.' },
+			{ icon: '🧠', title: 'Kontext', body: 'Architektur-, Umgebungs- und Betriebswissen, das in keiner einzelnen Datei lebt.' },
+			{ icon: '🤝', title: 'Geteiltes Verständnis', body: 'Projektwissen und Team-Entscheidungen, verfügbar für jeden Agenten und jede Sitzung.' },
+		],
+		closing:
+			'toon-memory führt das Konzept einer Kontinuitätsebene ein: ein leichtes System, das Projektwissen, Entscheidungen und Kontext zwischen KI-Sitzungen bewahrt — ohne Cloud-Dienste und schwere Infrastruktur.',
+	},
+
+	benefits: {
+		kicker: 'Warum Entwickler toon-memory wählen',
+		title: 'Gebaut um die Probleme, die du wirklich hast',
+		subtitle: 'Keine Liste von Werkzeugen — ein Satz von Ergebnissen.',
+		groups: [
+			{ icon: '🧭', title: 'Persistentes Projektwissen', items: ['Erinnert Entscheidungen und die Gründe dahinter', 'Erinnert Architektur und Konventionen', 'Sammelt sich zwischen Sitzungen an — nie wieder erklärt'] },
+			{ icon: '🔒', title: 'Datenschutz zuerst', items: ['100% lokal — kein Cloud, kein Server, keine Telemetrie', 'Optionale AES-256-GCM-Verschlüsselung', 'Du besitzt die Speicherdatei wie jede Quelldatei'] },
+			{ icon: '⚡', title: 'Leichtgewichtig', items: ['Natives TOON-Format — 22% weniger Tokens als JSON', 'Keine Abhängigkeiten, läuft auf jedem Node.js 18+', 'Deterministische Logik — keine LLM-Aufrufe, keine API-Schlüssel'] },
+			{ icon: '🛰️', title: 'Universell', items: ['Funktioniert mit 15+ Agenten: Claude Code, Codex, Gemini CLI, Cursor, OpenCode und mehr', 'Standard-MCP — Agenten wechseln, ohne Kontext zu verlieren', 'Projektweiter Speicher, den jedes Teammitglied teilt'] },
+		],
+	},
+
 	features: {
 		cards: [
 			{
@@ -2422,21 +2834,32 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	comparison: {
-		title: 'Vorher vs Nachher',
-		subtitle: 'Sieh, wie toon-memory deinen Workflow ändert',
-		beforeTitle: 'Vorher',
-		afterTitle: 'Nachher',
+		title: 'Gleiches Projekt. Zwei Sitzungen.',
+		subtitle: 'Was dein Agent sich merkt, ändert das Ergebnis.',
+		beforeTitle: 'Ohne toon-memory',
+		afterTitle: 'Mit toon-memory',
+		thinkingBefore: 'Denke nach…',
+		thinkingAfter: 'Erinnere…',
 		before: [
-			'Erklärungen in jeder Sitzung wiederholen',
-			'Vergessen, warum eine Entscheidung getroffen wurde',
-			'Im Git-Verlauf nach Kontext suchen',
-			'Notizen zwischen Chats kopieren und einfügen',
+			{ session: 'Sitzung 1' },
+			{ user: 'Verwende Sequelize.' },
+			{ assistant: 'OK.' },
+			{ note: 'Im Sitzungskontext gehalten — Tokens sammeln sich an.', tone: 'warn' },
+			{ session: 'Sitzung 2' },
+			{ user: 'Was ist unser ORM?' },
+			{ note: 'Keine Erinnerung zwischen Sitzungen.', tone: 'error' },
+			{ assistant: 'Ich weiß es nicht.' },
 		],
-		after: [
-			'Agent erinnert sich an alles',
-			'Ein Aufruf gibt vollständigen Projekt-Kontext',
-			'80% weniger Tool-Aufrufe pro Sitzung',
-			'Kein Kontextverlust zwischen Sitzungen',
+			after: [
+				{ session: 'Sitzung 1' },
+				{ user: 'Verwende Sequelize.' },
+				{ cmd: '$ memory_remember({ category: "decision", key: "orm:sequelize", content: "Sequelize als ORM verwenden" })' },
+				{ assistant: 'OK.' },
+				{ note: 'Im Speicher gespeichert.' },
+			{ session: 'Sitzung 2' },
+			{ user: 'Was ist unser ORM?' },
+			{ note: 'Aus dem Speicher erinnert.' },
+			{ assistant: 'Du verwendest Sequelize.' },
 		],
 	},
 	codeExamples: {
@@ -2569,9 +2992,23 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		points: [
 			'Verbinde Einträge mit `links` oder `[[key]]`-Referenzen — keine Embeddings, kein LLM',
 			'`memory_recall({ mode: "graph" })` erweitert einen beziehungsbewussten Subgraphen',
-			'Weniger Token, höhere Präzision, vollständig offline und deterministisch',
 		],
-		caption: 'Eine Entscheidung verbreitet sich auf Spec und Architektur — der Agent sieht das Gesamtbild.',
+		launchLabel: 'Interaktiven Viewer öffnen',
+	},
+	viewerSection: {
+		title: 'Memory-Graph-Viewer',
+		subtitle: 'Visualisiere dein Gedächtnis als interaktiven kraftgerichteten Graphen. Sieh Einträge, Verbindungen, Kategorien und Zugriffsmuster auf einen Blick.',
+		capsLabel: 'Im Viewer:',
+		caps: ['Suche', 'Pfadfinder', 'PNG / SVG-Export', 'Dunkles & helles Thema'],
+		features: [
+			'<strong>CLI-Viewer:</strong> <code>npx toon-memory viewer</code> startet einen HTTP-Server',
+			'<strong>Inline MCP-Apps-Viewer:</strong> rufe <code>memory_visualize()</code> auf, um den Graphen direkt in MCP-Apps-kompatiblen Hosts zu rendern — ohne Server',
+			'Hover über Knoten zeigt Tooltips mit Inhaltsvorschau und Qualitätspunktzahl',
+			'Klicken zum Auswählen und Zentrieren; Doppelklick öffnet Details',
+			'Suche filtert Einträge und hebt passende Knoten mit pulsierendem Glühen hervor',
+			'Pfadfinder findet und hebt die kürzeste Verbindung zwischen zwei Einträgen hervor',
+			'Einstellbare Physik, dunkles/helles Thema, PNG/SVG-Export',
+		],
 	},
 	smartRecallSection: {
 		title: 'Intelligenter, token-effizienter Recall',
@@ -2709,13 +3146,15 @@ whatNew: {
 	],
 },
 cta: {
-	title: 'Bereit, deinem Agenten einen Speicher zu geben?',
-	subtitle: 'In Sekunden installieren und nie wieder Kontext an deinen Agenten erklären.',
+	title: 'Bereit, deinem Agenten Kontinuität zu geben?',
+	subtitle: 'In Sekunden installiert — erkläre dein Projekt nie wieder.',
 	getStarted: 'Loslegen',
 	viewGithub: 'Auf GitHub ansehen',
 },
 	footer: {
 		text: 'MIT-Lizenz — ',
+		odalx: 'Ein Open-Source-Projekt von ODALX',
+		odalxTag: 'Infrastruktur für das KI-native Zeitalter aufbauen.',
 	},
 },
 	fr: {
@@ -2729,8 +3168,10 @@ cta: {
 		github: 'GitHub',
 	},
 	hero: {
-		tagline: 'Votre agent de code IA garde le contexte dont il a besoin — à chaque session',
-		subtitle: 'Les décisions, motifs et bugs survivent aux redémarrages, pour ne jamais réexpliquer deux fois la même chose.',
+		tagline: 'La couche de continuité pour les agents IA',
+		subtitle:
+			"Les agents IA ne devraient pas avoir à réapprendre votre projet à chaque session. toon-memory préserve le savoir, les décisions et les conventions de votre projet entre les sessions — localement et en privé, via MCP.",
+		poweredBy: 'Propulsé par TOON',
 		getStarted: 'Commencer',
 		viewGithub: 'Voir sur GitHub',
 		copy: 'Copier',
@@ -2759,6 +3200,29 @@ cta: {
 		],
 		resolution:
 			'toon-memory donne à votre agent une mémoire persistante et interrogeable — le contexte survit automatiquement à chaque session.',
+	},
+	continuity: {
+		kicker: 'Découvrez toon-memory',
+		title: 'La couche de continuité pour votre flux de travail',
+		subtitle: 'Une mémoire stocke des faits ; une couche de continuité préserve le fonctionnement de votre projet — pour que chaque session commence là où la précédente s\'est arrêtée.',
+		items: [
+			{ icon: '🧭', title: 'Décisions', body: 'Le « pourquoi » derrière chaque choix — frameworks, bibliothèques, compromis. Rappelé quand il compte, jamais re-débattu.' },
+			{ icon: '📏', title: 'Conventions', body: 'Règles de nommage, de structure et de style adoptées par votre équipe. Respectées sans être répétées.' },
+			{ icon: '🧠', title: 'Contexte', body: 'Connaissances d\'architecture, d\'environnement et d\'exploitation qui ne vivent dans aucun fichier unique.' },
+			{ icon: '🤝', title: 'Compréhension partagée', body: 'Connaissances du projet et décisions d\'équipe disponibles pour chaque agent et chaque session.' },
+		],
+			closing: 'toon-memory introduit le concept de couche de continuité : un système léger qui préserve le savoir, les décisions et le contexte d\'un projet entre les sessions IA — sans services cloud ni infrastructure lourde.',
+	},
+	benefits: {
+		kicker: 'Pourquoi les développeurs choisissent toon-memory',
+		title: 'Construit autour des vrais problèmes',
+			subtitle: 'Pas une liste d\'outils — un ensemble de résultats.',
+		groups: [
+				{ icon: '🧭', title: 'Connaissance persistante du projet', items: ['Retient les décisions et les raisons qui les motivent', 'Retient l\'architecture et les conventions', 'S\'accumule entre les sessions — jamais réexpliqué'] },
+				{ icon: '🔒', title: 'Confidentialité d\'abord', items: ['100% local — aucun cloud, aucun serveur, aucune télémétrie', 'Chiffrement AES-256-GCM optionnel', 'Vous possédez le fichier mémoire, comme n\'importe quel fichier source'] },
+			{ icon: '⚡', title: 'Léger', items: ['Format TOON natif — 22% de tokens en moins que JSON', 'Zéro dépendance, fonctionne sur tout Node.js 18+', 'Logique déterministe — aucun appel LLM, aucune clé API'] },
+				{ icon: '🛰️', title: 'Universel', items: ['Fonctionne avec 15+ agents : Claude Code, Codex, Gemini CLI, Cursor, OpenCode et plus', 'MCP standard — changez d\'agent sans perdre le contexte', 'Mémoire par projet partagée par toute l\'équipe'] },
+		],
 	},
 	features: {
 		cards: [
@@ -2884,21 +3348,32 @@ cta: {
 		],
 	},
 	comparison: {
-		title: 'Avant vs Après',
-		subtitle: 'Voyez comment toon-memory change votre flux de travail',
-		beforeTitle: 'Avant',
-		afterTitle: 'Après',
+		title: 'Même projet. Deux sessions.',
+		subtitle: 'Ce que votre agent retient change le résultat.',
+		beforeTitle: 'Sans toon-memory',
+		afterTitle: 'Avec toon-memory',
+		thinkingBefore: 'Réflexion…',
+		thinkingAfter: 'Rappel…',
 		before: [
-			'Répéter les explications à chaque session',
-			'Oublier pourquoi une décision a été prise',
-			'Fouiller l\'historique git pour le contexte',
-			'Copier-coller des notes entre les chats',
+			{ session: 'Session 1' },
+			{ user: 'Utilise Sequelize.' },
+			{ assistant: 'OK.' },
+			{ note: 'Conservé dans le contexte de session — les tokens s\'accumulent.', tone: 'warn' },
+			{ session: 'Session 2' },
+			{ user: 'Quel est notre ORM ?' },
+			{ note: 'Aucune mémoire entre les sessions.', tone: 'error' },
+			{ assistant: 'Je ne sais pas.' },
 		],
-		after: [
-			'L\'agent se souvient de tout',
-			'Un seul appel donne le contexte complet du projet',
-			'80% moins d\'appels d\'outil par session',
-			'Zéro perte de contexte entre les sessions',
+			after: [
+				{ session: 'Session 1' },
+				{ user: 'Utilise Sequelize.' },
+				{ cmd: '$ memory_remember({ category: "decision", key: "orm:sequelize", content: "Utiliser Sequelize comme ORM" })' },
+				{ assistant: 'OK.' },
+				{ note: 'Enregistré en mémoire.' },
+			{ session: 'Session 2' },
+			{ user: 'Quel est notre ORM ?' },
+			{ note: 'Rappelé de la mémoire.' },
+			{ assistant: 'Vous utilisez Sequelize.' },
 		],
 	},
 	codeExamples: {
@@ -3031,9 +3506,23 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		points: [
 			'Connectez les entrées avec `links` ou références `[[key]]` — sans embeddings, sans LLM',
 			'`memory_recall({ mode: "graph" })` étend un sous-graphe conscient des relations',
-			'Moins de tokens, plus de précision, totalement offline et déterministe',
 		],
-		caption: 'Une décision se propage à sa spec et architecture — l\'agent voit le tableau complet.',
+		launchLabel: 'Ouvrir la visionneuse interactive',
+	},
+	viewerSection: {
+		title: 'Visionneuse du graphe de mémoire',
+		subtitle: 'Visualisez votre mémoire sous forme de graphe interactif à force dirigée. Voyez entrées, connexions, catégories et schémas d\'accès d\'un coup d\'œil.',
+		capsLabel: 'Dans la visionneuse :',
+		caps: ['Recherche', 'Recherche de chemin', 'Export PNG / SVG', 'Thèmes clair & sombre'],
+		features: [
+			'<strong>Visionneuse CLI :</strong> <code>npx toon-memory viewer</code> démarre un serveur HTTP',
+			'<strong>Visionneuse inline MCP Apps :</strong> appelez <code>memory_visualize()</code> pour rendre le graphe directement dans les hôtes compatibles MCP Apps — sans serveur',
+			'Survolez les nœuds pour des infobulles avec aperçu du contenu et score de qualité',
+			'Cliquez pour sélectionner et centrer ; double-cliquez pour ouvrir les détails',
+			'La recherche filtre les entrées et met en évidence les nœuds correspondants avec une lueur pulsante',
+			'Le chercheur de chemins trouve et met en évidence la connexion la plus courte entre deux entrées',
+			'Physique ajustable, thème sombre/clair, export PNG/SVG',
+		],
 	},
 	smartRecallSection: {
 		title: 'Rappel intelligent et économe en tokens',
@@ -3175,13 +3664,15 @@ whatNew: {
 	],
 },
 cta: {
-	title: 'Prêt à donner une mémoire à votre agent ?',
-	subtitle: 'Installez en quelques secondes et n\'expliquez plus jamais le contexte à votre agent.',
+	title: 'Prêt à donner de la continuité à votre agent ?',
+	subtitle: 'Installez en quelques secondes et ne réexpliquez plus jamais votre projet.',
 	getStarted: 'Commencer',
 	viewGithub: 'Voir sur GitHub',
 },
 	footer: {
 		text: 'Licence MIT — ',
+		odalx: 'Un projet open source de ODALX',
+		odalxTag: "Construire l'infrastructure de l'ère native IA.",
 	},
 },
 } as const;

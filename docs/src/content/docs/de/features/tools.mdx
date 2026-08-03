@@ -17,7 +17,7 @@ toon-memory bietet 35 MCP-Tools und 4 MCP-Ressourcen zur Verwaltung des persiste
 | Tool | Beschreibung |
 |------|-------------|
 | `memory_remember` | Speichere eine Entscheidung, ein Muster, einen Bug, Wissen oder **warning** (negative „Tu das NICHT"-Erinnerung, mit Recall-Boost) (optionales TTL, automatische Tag-Inferenz, `links`, automatischer Qualitätsscore, Merge-Deduplizierung, Konfidenz, optional `importance`: `critical`/`high`/`medium`/`low`) |
-| `memory_recall` | Durchsuche den Speicher (VOR dem Lesen von Dateien verwenden, filtert abgelaufene TTL). `mode: "graph"` erweitert einen beziehungsbewussten Subgraphen für höhere Präzision. Die Rangfolge nutzt RRF-Fusion (BM25×3 + Graph-Zentralität, adaptives k); mit `rrf: false` wird der alte lineare Score verwendet. `sessionBias` boostet Einträge aus dem aktuellen Git-Branch. `pathScope` begrenzt die Ergebnisse auf einen Dateipfad (unterstützt globMatch). `budget`: `"tiny"` (Top 3), `"normal"` (Top 10) oder `"deep"` (Top 20). `as_of` schließt Einträge wieder ein, die nach einem bestimmten Datum superseded wurden. `explain: true` hängt jedem Eintrag eine Begründungszeile an, warum er abgerufen wurde. `budget_tokens` begrenzt die Ausgabe nach geschätzter Token-Anzahl (`0` = kein Limit) |
+| `memory_recall` | Durchsuche den Speicher (VOR dem Lesen von Dateien verwenden, filtert abgelaufene TTL). `mode: "graph"` erweitert einen beziehungsbewussten Subgraphen für höhere Präzision. Die Rangfolge nutzt RRF-Fusion (BM25×3 + Graph-Zentralität, adaptives k); mit `rrf: false` wird der alte lineare Score verwendet. `sessionBias` boostet Einträge aus dem aktuellen Git-Branch. `pathScope` begrenzt die Ergebnisse auf einen Dateipfad (unterstützt globMatch). `budget`: `"tiny"` (Top 3), `"normal"` (Top 10) oder `"deep"` (Top 20). `as_of` schließt Einträge wieder ein, die nach einem bestimmten Datum superseded wurden. `explain: true` hängt jedem Eintrag eine Begründungszeile an, warum er abgerufen wurde. `budget_tokens` begrenzt die Ausgabe nach geschätzter Token-Anzahl (`0` = kein Limit). `mode: "index"` listet eine Zeile pro Eintrag (key, id, Kategorie, Datum, Relevanz %) ohne Inhalt; `ids` ruft Einträge per id/key in Batches ab (Reihenfolge bleibt erhalten) |
 | `memory_forget` | Entferne einen Eintrag per Schlüssel oder ID |
 | `memory_stats` | Zeige den Speicherzustand an (einschließlich TTL-Statistiken, Qualitätsverteilung, kalten Erinnerungen unterhalb der Qualitäts-/Zugriffsschwellen sowie **Hit-Rate-/Duplikat-/Veraltet-Metriken** (% mindestens einmal abgerufener Einträge, % exakter Inhaltsduplikate, % obsoleter Einträge)) |
 | `memory_summary` | Speichere/rufe Dateizusammenfassungen ab |
@@ -140,6 +140,44 @@ memory_recall({ query: "redis", budget_tokens: 300 })
 ```
 
 > **Tipp:** Kombiniere `budget_tokens` mit `budget: "deep"` für ein Kontextfenster, das unabhängig von der Speichergröße innerhalb einer harten Token-Grenze bleibt.
+
+### Speicherindex durchsuchen (schrittweise Offenlegung)
+
+```typescript
+memory_recall({ mode: "index" }) // oder { query, mode: "index" } für eine gefilterte Ansicht
+// 📇 Speicherindex (15 Einträge):
+//
+// [1] use-zod (a1b2c3d4) · decision · 2026-07-10 · 100%
+// [2] redis-cache-config (e5f6g7h8) · decision · 2026-07-09 · 82%
+// ...
+```
+
+`mode: "index"` zeigt eine Zeile pro Eintrag — key, id, Kategorie, Datum, Relevanz % — ohne Inhalt, sodass das Durchsuchen großer Speicher fast nichts kostet. Wähle die gewünschten ids und rufe die vollständigen Einträge in einem Rutsch ab:
+
+```typescript
+memory_recall({ ids: "a1b2c3d4,e5f6g7h8" })
+// Fetched 2 entries:
+// [decision] use-zod (a1b2c3d4)
+//   Use Zod for validation
+//   File: src/types.ts | Tags: validation;types | Date: 2026-07-10
+```
+
+`ids` akzeptiert durch Komma/Leerzeichen/`;` getrennte Eintrags-ids oder -keys und behält deine Reihenfolge bei (unbekannte Einträge werden übersprungen). Drei Ebenen: Index durchsuchen → per ids abrufen → mit `mode: "flat"` das vollständige Ranking durchsuchen.
+
+### Abgelehnte Entscheidungen
+
+Halte Optionen fest, gegen die du dich entschieden hast, damit der Agent sie nicht erneut vorschlägt. Eine leichte Konvention — ein `decision`-Eintrag mit dem Tag `rejected`, ohne zusätzliches Schema:
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "rejected-graphql",
+  content: "Rejected GraphQL: REST + generated types wins on codegen and schema drift risk.",
+  tags: "rejected;api;graphql"
+})
+```
+
+Tagge den Eintrag mit `rejected` und verwende einen `rejected-<Thema>`-Key, damit das Stichwort leicht auffindbar ist. Verlinke bei Bedarf die gewinnende Alternative (`links: "rest-api"`). Beim nächsten `memory_recall` zu dieser Idee erscheint die Ablehnung samt Grund — dein „Nein" wird Teil des Projektgedächtnisses, statt in jeder Sitzung neu debattiert zu werden.
 
 ### Suche mit Datumsfilter
 

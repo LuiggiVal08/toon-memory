@@ -7,12 +7,49 @@ interface Props {
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 const g = c.graphSection;
+const s = c.smartRecallSection;
 const points = (g.points as string[]) || [];
-const viewer = (c as unknown as { viewerSection?: { capsLabel?: string; caps?: string[] } }).viewerSection;
+const viewer = (c as unknown as { viewerSection?: { title?: string; subtitle?: string; capsLabel?: string; caps?: string[]; features?: string[] } }).viewerSection;
 const caps = viewer?.caps || [];
+const features = viewer?.features || [];
+const launchLabel = (g as unknown as { launchLabel?: string }).launchLabel || 'Launch interactive viewer';
+const viewerTitle = viewer?.title || 'Interactive memory graph viewer';
+
+// Realistic graph: decision at center, dense cross-links between related entries.
+const nodes = [
+	{ id: 'center', label: 'risk-engine', x: 180, y: 145, r: 16, center: true, delay: 0, type: 'decision' },
+	{ id: 'spec', label: 'risk-spec', x: 55, y: 55, r: 11, delay: 0.12, type: 'pattern' },
+	{ id: 'arch', label: 'engine-arch', x: 305, y: 55, r: 11, delay: 0.24, type: 'pattern' },
+	{ id: 'bug', label: 'redis-pool', x: 40, y: 170, r: 10, delay: 0.36, type: 'bug' },
+	{ id: 'auth', label: 'auth-decision', x: 320, y: 170, r: 11, delay: 0.48, type: 'decision' },
+	{ id: 'session', label: 'session-log', x: 100, y: 260, r: 10, delay: 0.6, type: 'knowledge' },
+	{ id: 'api', label: 'api-route', x: 260, y: 260, r: 10, delay: 0.72, type: 'knowledge' },
+];
+
+// Dense mesh: star from center + cross-links between related entries
+const edges = [
+	// Star edges from center
+	...nodes.filter((n) => !n.center).map((n) => ({ from: nodes[0], to: n, delay: 0.3 })),
+	// Cross-links (realistic relationships)
+	{ from: nodes[1], to: nodes[2], delay: 0.65 },  // risk-spec → engine-arch
+	{ from: nodes[1], to: nodes[5], delay: 0.7 },   // risk-spec → session-log
+	{ from: nodes[2], to: nodes[4], delay: 0.75 },  // engine-arch → auth-decision
+	{ from: nodes[2], to: nodes[6], delay: 0.8 },   // engine-arch → api-route
+	{ from: nodes[3], to: nodes[4], delay: 0.85 },  // redis-pool → auth-decision
+	{ from: nodes[3], to: nodes[5], delay: 0.9 },   // redis-pool → session-log
+	{ from: nodes[5], to: nodes[6], delay: 0.95 },  // session-log → api-route
+	{ from: nodes[4], to: nodes[6], delay: 1.0 },   // auth-decision → api-route
+];
+
+const typeColors: Record<string, string> = {
+	decision: 'var(--brand)',
+	pattern: 'var(--color-success)',
+	bug: 'var(--color-error)',
+	knowledge: 'var(--color-warning)',
+};
 ---
 
-<section id="viewer" class="content-section graph-showcase">
+<section class="content-section graph-showcase">
 	<div class="section-header">
 		<h2>{g.title}</h2>
 		<p>{g.subtitle}</p>
@@ -21,8 +58,131 @@ const caps = viewer?.caps || [];
 	<div class="graph-grid">
 		<div class="graph-text">
 			<ul class="graph-points">
-				{points.map((p) => <li set:html={p} />)}
+				{g.points.map((p) => <li set:html={p} />)}
 			</ul>
+
+			<div class="recall-mini">
+				<div class="recall-example">
+					<div class="recall-example-header">
+						<span class="recall-tag">standard</span>
+						<span class="token-badge" data-target="1097">1097 tokens</span>
+					</div>
+					<pre class="code-block recall-code"><code>{s.standardCode}</code></pre>
+				</div>
+
+				<div class="recall-arrow" aria-hidden="true">
+					<svg viewBox="0 0 40 40" width="40" height="40">
+						<circle cx="20" cy="20" r="18" fill="none" stroke="var(--brand)" stroke-width="1.5" opacity="0.3" />
+						<path d="M14 20h12m-4-4 4 4-4 4" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="arrow-path" />
+					</svg>
+					<span class="arrow-label">−39%</span>
+				</div>
+
+				<div class="recall-example compact">
+					<div class="recall-example-header">
+						<span class="recall-tag compact-tag">compact: true</span>
+						<span class="token-badge compact-badge" data-target="520">~520 tokens</span>
+					</div>
+					<pre class="code-block recall-code compact-block"><code>{s.compactCode}</code></pre>
+				</div>
+			</div>
+		</div>
+
+		<div class="graph-viz" aria-hidden="true">
+			<svg viewBox="0 0 360 300" role="img" class="graph-svg">
+				<defs>
+					{Object.entries(typeColors).map(([type, color]) => (
+						<radialGradient id={`sphere-${type}`} cx="38%" cy="35%" r="65%">
+							<stop offset="0%" stop-color="white" stop-opacity="0.45" />
+							<stop offset="50%" stop-color={color} stop-opacity="1" />
+							<stop offset="100%" stop-color={color} stop-opacity="0.6" />
+						</radialGradient>
+					))}
+					<radialGradient id="sphere-center" cx="38%" cy="35%" r="65%">
+						<stop offset="0%" stop-color="white" stop-opacity="0.5" />
+						<stop offset="45%" stop-color="var(--brand)" stop-opacity="1" />
+						<stop offset="100%" stop-color="var(--brand)" stop-opacity="0.55" />
+					</radialGradient>
+				</defs>
+
+				{/* Edges */}
+				{edges.map((e) => (
+					<g class="graph-edge-group">
+						<line
+							class="graph-edge"
+							x1={e.from.x}
+							y1={e.from.y}
+							x2={e.to.x}
+							y2={e.to.y}
+							style={`transition-delay:${e.delay}s`}
+						/>
+						{/* Flow particle */}
+						<circle class="graph-particle" r="2.5" fill="var(--brand)">
+							<animateMotion
+								dur={`${2 + e.delay}s`}
+								repeatCount="indefinite"
+								begin={`${e.delay + 1.5}s`}
+								path={`M${e.from.x},${e.from.y} L${e.to.x},${e.to.y}`}
+							/>
+						</circle>
+					</g>
+				))}
+
+				{/* Nodes */}
+				{nodes.map((n) => (
+					<g class={`graph-node-group node-${n.type}`} data-node={n.id}>
+						{n.center && <circle class="graph-halo" cx={n.x} cy={n.y} r={n.r + 10} />}
+						{/* Shadow underneath for depth */}
+						<ellipse
+							cx={n.x + 1}
+							cy={n.y + n.r + 2}
+							rx={n.r * 0.7}
+							ry={n.r * 0.15}
+							fill="var(--color-surface-overlay)"
+							style={`transition-delay:${n.delay}s`}
+							class="graph-shadow"
+						/>
+						{/* Sphere body */}
+						<circle
+							class={`graph-node${n.center ? ' center' : ''}`}
+							cx={n.x}
+							cy={n.y}
+							r={n.r}
+							style={`transition-delay:${n.delay}s; fill:url(#sphere-${n.center ? 'center' : n.type}); stroke:${typeColors[n.type]}`}
+						/>
+						{/* Specular highlight */}
+						<ellipse
+							cx={n.x - n.r * 0.22}
+							cy={n.y - n.r * 0.22}
+							rx={n.r * 0.35}
+							ry={n.r * 0.25}
+							fill="white"
+							opacity="0.3"
+							style={`transition-delay:${n.delay}s`}
+							class="graph-highlight"
+						/>
+						<text
+							class="graph-label"
+							x={n.x}
+							y={n.y + (n.center ? n.r + 16 : n.r + 16)}
+							text-anchor="middle"
+							style={`transition-delay:${n.delay + 0.15}s`}
+						>
+							{n.label}
+						</text>
+					</g>
+				))}
+			</svg>
+		</div>
+	</div>
+
+	<div class="viewer-band">
+		<div class="viewer-band-preview">
+			<button type="button" class="viewer-launch" data-launch="viewer" aria-label={viewerTitle}>
+				<img src="/toon-memory/viewer/graph-full.png" alt="" loading="lazy" width="1200" height="900" />
+				<span class="viewer-play" aria-hidden="true"></span>
+				<span class="viewer-launch-label">{launchLabel}</span>
+			</button>
 			{caps.length > 0 && (
 				<div class="graph-caps">
 					{viewer?.capsLabel && <span class="graph-caps-label">{viewer.capsLabel}</span>}
@@ -31,32 +191,105 @@ const caps = viewer?.caps || [];
 					</div>
 				</div>
 			)}
-			<p class="graph-caption" set:html={g.caption}></p>
 		</div>
 
-		<div class="graph-viz">
-			<button type="button" class="viewer-launch" data-launch="viewer" aria-label="Launch interactive graph viewer">
-				<img src="/toon-memory/viewer/graph-full.png" alt="Memory graph viewer preview" loading="lazy" width="1200" height="900" />
-				<span class="viewer-play" aria-hidden="true"></span>
-				<span class="viewer-launch-label">Launch interactive viewer</span>
-			</button>
-			<p class="graph-caption">Run it: <code>npx toon-memory viewer</code> — or call <code>memory_visualize()</code> for inline rendering.</p>
+		<div class="viewer-band-info">
+			<h3>{viewerTitle}</h3>
+			{viewer?.subtitle && <p class="viewer-band-subtitle">{viewer.subtitle}</p>}
+			{features.length > 0 && (
+				<ul class="viewer-band-features">
+					{features.map((f) => <li set:html={f} />)}
+				</ul>
+			)}
+		</div>
+	</div>
 
-			<div class="viewer-modal" data-modal="viewer" role="dialog" aria-modal="true" aria-label="Memory graph viewer" hidden>
-				<div class="viewer-modal-backdrop" data-modal-close></div>
-				<div class="viewer-modal-card">
-					<div class="viewer-modal-controls">
-						<button type="button" class="viewer-modal-btn" data-fullscreen aria-label="Toggle fullscreen" title="Toggle fullscreen">⛶</button>
-						<button type="button" class="viewer-modal-btn" data-modal-close aria-label="Close" title="Close">&times;</button>
-					</div>
-					<iframe class="viewer-modal-frame" data-src="/toon-memory/viewer/embed.html" title="Interactive memory graph viewer" allow="fullscreen"></iframe>
-				</div>
+	<div class="viewer-modal" data-modal="viewer" role="dialog" aria-modal="true" aria-label={viewerTitle} hidden>
+		<div class="viewer-modal-backdrop" data-modal-close></div>
+		<div class="viewer-modal-card">
+			<div class="viewer-modal-controls">
+				<button type="button" class="viewer-modal-btn" data-fullscreen aria-label="Toggle fullscreen" title="Toggle fullscreen">⛶</button>
+				<button type="button" class="viewer-modal-btn" data-modal-close aria-label="Close" title="Close">&times;</button>
 			</div>
+			<iframe class="viewer-modal-frame" data-src="/toon-memory/viewer/embed.html" title="Interactive memory graph viewer" allow="fullscreen"></iframe>
 		</div>
 	</div>
 </section>
 
 <script>
+	import { revealOnView } from '../scripts/home-anim';
+	const root = document.querySelector<HTMLElement>('.graph-showcase');
+	if (root) revealOnView(root, 'in-view');
+
+	// Animate token counts when the section enters view
+	if (root) {
+		const badges = root.querySelectorAll('.token-badge');
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						badges.forEach((badge) => {
+							const target = +(badge as HTMLElement).dataset.target;
+							const suffix = badge.classList.contains('compact-badge') ? '~' : '';
+							const duration = 800;
+							const start = performance.now();
+							const animate = (now: number) => {
+								const progress = Math.min((now - start) / duration, 1);
+								const eased = 1 - Math.pow(1 - progress, 3);
+								const current = Math.round(target * eased);
+								badge.textContent = `${suffix}${current} tokens`;
+								if (progress < 1) requestAnimationFrame(animate);
+							};
+							requestAnimationFrame(animate);
+						});
+						observer.disconnect();
+					}
+				});
+			},
+			{ threshold: 0.3 }
+		);
+		observer.observe(root);
+	}
+
+	// Hover: highlight connected edges
+	const svg = root?.querySelector('.graph-svg');
+	if (svg) {
+		const nodeGroups = svg.querySelectorAll('.graph-node-group');
+		const edgeGroups = svg.querySelectorAll('.graph-edge-group');
+		const allNodes = Array.from(nodeGroups);
+
+		nodeGroups.forEach((ng) => {
+			ng.addEventListener('mouseenter', () => {
+				const id = (ng as HTMLElement).dataset.node;
+				// Find connected edges (where this node is from or to)
+				edgeGroups.forEach((eg) => {
+					const lines = eg.querySelectorAll('line');
+					lines.forEach((line) => {
+						const x1 = +line.getAttribute('x1')!;
+						const y1 = +line.getAttribute('y1')!;
+						const x2 = +line.getAttribute('x2')!;
+						const y2 = +line.getAttribute('y2')!;
+						const node = allNodes.find((n) => n.dataset.node === id);
+						if (!node) return;
+						const circle = node.querySelector('circle.graph-node');
+						const cx = +circle?.getAttribute('cx')!;
+						const cy = +circle?.getAttribute('cy')!;
+						const connected =
+							(Math.abs(x1 - cx) < 1 && Math.abs(y1 - cy) < 1) ||
+							(Math.abs(x2 - cx) < 1 && Math.abs(y2 - cy) < 1);
+						eg.classList.toggle('dimmed', !connected);
+						eg.classList.toggle('highlighted', connected);
+					});
+				});
+			});
+			ng.addEventListener('mouseleave', () => {
+				edgeGroups.forEach((eg) => {
+					eg.classList.remove('dimmed', 'highlighted');
+				});
+			});
+		});
+	}
+
 	const btn = document.querySelector<HTMLButtonElement>('[data-launch="viewer"]');
 	const modal = document.querySelector<HTMLElement>('[data-modal="viewer"]');
 	if (btn && modal) {

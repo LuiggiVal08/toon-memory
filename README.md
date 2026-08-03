@@ -2,7 +2,7 @@
 
 # toon-memory
 
-> Give your AI coding agent a memory that outlasts the session — decisions, patterns, and bugs remembered across every session.
+> The Continuity Layer for AI Agents — AI agents shouldn't have to relearn your project every session.
 
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -40,7 +40,7 @@
 
 Ever had that feeling where your AI agent forgets everything from yesterday's session? You explain the same architecture decision for the third time, and it still suggests the approach you already rejected?
 
-**toon-memory fixes this.** It gives your AI agent continuity — a memory that survives restarts, so it actually learns from your project over time. You never re-explain the same decision twice.
+**toon-memory fixes this.** It's the Continuity Layer for AI Agents — a lightweight system that preserves your project's knowledge, decisions, and conventions across sessions, so every session starts where the last one ended. Fully local and private, over MCP — no cloud, no server.
 
 📖 **[Read the documentation](https://luiggival08.github.io/toon-memory/)**
 

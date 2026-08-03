@@ -17,7 +17,7 @@ toon-memory fournit 35 outils MCP et 4 ressources MCP pour gérer la mémoire pe
 | Outil | Description |
 |-------|-------------|
 | `memory_remember` | Enregistrer une décision, un pattern, un bug, une connaissance ou un **warning** (mémoire négative « ne PAS faire ceci », rappelée avec un boost) (TTL optionnel, inférence automatique des tags, `links`, score de qualité automatique, fusion-dédup, confiance, importance optionnelle : `critical`/`high`/`medium`/`low`) |
-| `memory_recall` | Rechercher en mémoire (à utiliser AVANT de lire les fichiers, filtre les TTL expirés). `mode: "graph"` étend un sous-graphe conscient des relations pour plus de précision. Le classement utilise la fusion RRF (BM25×3 + centralité du graphe, k adaptatif) ; passez `rrf: false` pour le score linéaire hérité. `sessionBias` booste les entrées de la branche git courante. `pathScope` limite les résultats à un chemin de fichier (supporte globMatch). `budget` : `"tiny"` (top 3), `"normal"` (top 10) ou `"deep"` (top 20). `as_of` réinclut les entrées superseded après une date ponctuelle. `explain: true` ajoute une ligne de raison par entrée (pourquoi elle a été récupérée). `budget_tokens` plafonne la sortie par estimation des tokens (`0` = pas de limite) |
+| `memory_recall` | Rechercher en mémoire (à utiliser AVANT de lire les fichiers, filtre les TTL expirés). `mode: "graph"` étend un sous-graphe conscient des relations pour plus de précision. Le classement utilise la fusion RRF (BM25×3 + centralité du graphe, k adaptatif) ; passez `rrf: false` pour le score linéaire hérité. `sessionBias` booste les entrées de la branche git courante. `pathScope` limite les résultats à un chemin de fichier (supporte globMatch). `budget` : `"tiny"` (top 3), `"normal"` (top 10) ou `"deep"` (top 20). `as_of` réinclut les entrées superseded après une date ponctuelle. `explain: true` ajoute une ligne de raison par entrée (pourquoi elle a été récupérée). `budget_tokens` plafonne la sortie par estimation des tokens (`0` = pas de limite). `mode: "index"` liste une ligne par entrée (key, id, catégorie, date, % de pertinence) sans contenu ; `ids` récupère les entrées par id/key en lot, ordre préservé |
 | `memory_forget` | **Cycle de vie** par clé ou id : `action: "soft"` (défaut) marque obsolète, `"hard"` supprime définitivement, `"restore"` réactive, `"supersede"` remplace avec un lien `superseded_by` vers `new_key`. Outil canonique |
 | `memory_stats` | Voir l'état de la mémoire (y compris les stats TTL et la distribution de qualité, ainsi que les métriques **taux d'accès/doublons/obsolètes** (% d'entrées rappelées au moins une fois, % de doublons de contenu exact, % d'entrées obsolètes)) |
 | `memory_summary` | Enregistrer/récupérer des résumés de fichiers |
@@ -140,6 +140,44 @@ memory_recall({ query: "redis", budget_tokens: 300 })
 ```
 
 > **Astuce :** Combinez `budget_tokens` avec `budget: "deep"` pour une fenêtre de contexte qui reste sous un plafond de tokens fixe quelle que soit la taille de la mémoire.
+
+### Parcourir l'index mémoire (divulgation progressive)
+
+```typescript
+memory_recall({ mode: "index" }) // ou { query, mode: "index" } pour une vue filtrée
+// 📇 Index mémoire (15 entrées) :
+//
+// [1] use-zod (a1b2c3d4) · decision · 2026-07-10 · 100%
+// [2] redis-cache-config (e5f6g7h8) · decision · 2026-07-09 · 82%
+// ...
+```
+
+`mode: "index"` affiche une ligne par entrée — key, id, catégorie, date, % de pertinence — sans contenu, donc une grande mémoire coûte presque rien à parcourir. Choisissez les ids dont vous avez besoin, puis récupérez les entrées complètes en lot :
+
+```typescript
+memory_recall({ ids: "a1b2c3d4,e5f6g7h8" })
+// Fetched 2 entries:
+// [decision] use-zod (a1b2c3d4)
+//   Use Zod for validation
+//   File: src/types.ts | Tags: validation;types | Date: 2026-07-10
+```
+
+`ids` accepte des ids ou keys séparés par virgule/espace/`;` et préserve votre ordre (les entrées inconnues sont ignorées). Trois niveaux : parcourir l'index → récupérer par ids → rechercher avec `mode: "flat"` pour le résultat complet classé.
+
+### Décisions rejetées
+
+Enregistrez les options que vous avez décidé de *ne pas* retenir pour que l'agent ne les repropose jamais. Une convention légère — une entrée `decision` taguée `rejected`, sans schéma supplémentaire :
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "rejected-graphql",
+  content: "Rejected GraphQL: REST + generated types wins on codegen and schema drift risk.",
+  tags: "rejected;api;graphql"
+})
+```
+
+Taguez l'entrée avec `rejected` et utilisez une key `rejected-<sujet>` pour faciliter la récupération. Si utile, liez-la à l'alternative retenue (`links: "rest-api"`). Au prochain `memory_recall` de cette idée, le rejet apparaît avec sa raison — votre « non » fait partie de la mémoire du projet au lieu d'être redébattu à chaque session.
 
 ### Recherche avec filtre de date
 

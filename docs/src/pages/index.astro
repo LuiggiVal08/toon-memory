@@ -3,14 +3,15 @@ import logoSrc from '../assets/logo.svg';
 import SiteHeader from '../components/SiteHeader.astro';
 import Hero from '../components/Hero.astro';
 import Problem from '../components/Problem.astro';
+import Continuity from '../components/Continuity.astro';
+import Benefits from '../components/Benefits.astro';
+import Comparison from '../components/Comparison.astro';
+import HowItWorks from '../components/HowItWorks.astro';
 import FeatureGrid from '../components/FeatureGrid.astro';
 import MemoryGraphShowcase from '../components/MemoryGraphShowcase.astro';
-import SmartRecallShowcase from '../components/SmartRecallShowcase.astro';
 import Tools from '../components/Tools.astro';
 import Benchmarks from '../components/Benchmarks.astro';
-import HowItWorks from '../components/HowItWorks.astro';
 import Agents from '../components/Agents.astro';
-import Comparison from '../components/Comparison.astro';
 import WhatNew from '../components/WhatNew.astro';
 import FAQ from '../components/FAQ.astro';
 import CTA from '../components/CTA.astro';
@@ -18,7 +19,7 @@ import SiteFooter from '../components/SiteFooter.astro';
 import '../styles/home.css';
 
 const description =
-  'Give your AI coding agent a memory that outlasts the session — decisions, patterns, and bugs remembered across sessions, offline and token-efficient, for Claude, Cursor, OpenCode, Windsurf, and 15+ agents. Reproducible recall benchmark: npm run bench:retrieval.';
+  'The Continuity Layer for AI Agents. AI agents shouldn\'t have to relearn your project every session — toon-memory preserves project knowledge, decisions, and conventions across sessions, locally and privately, for Claude, Codex, Cursor, OpenCode, and 15+ agents.';
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -38,7 +39,7 @@ const jsonLd = {
     "@type": "Person",
     "name": "LuiggiVal"
   },
-  "keywords": "AI coding agent memory, continuity across sessions, Claude memory, Cursor memory, OpenCode memory, Model Context Protocol, token-efficient memory, reproducible recall benchmark"
+  "keywords": "Continuity Layer, AI agent memory, persistent context, project knowledge, Claude memory, Cursor memory, OpenCode memory, Model Context Protocol, token-efficient memory"
 };
 ---
 
@@ -47,12 +48,12 @@ const jsonLd = {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>toon-memory — Continuity for AI Coding Agents | Memory Across Sessions</title>
+    <title>toon-memory — The Continuity Layer for AI Agents</title>
     <meta name="description" content={description} />
-    <meta name="keywords" content="AI coding agent memory, continuity across sessions, Claude memory, Cursor memory, OpenCode memory, Model Context Protocol, token-efficient memory, reproducible recall benchmark, knowledge graph memory, AI coding agent, auto-loading" />
+    <meta name="keywords" content="continuity layer, AI agent memory, persistent context, project knowledge, across sessions, Claude memory, Cursor memory, OpenCode memory, Model Context Protocol, token-efficient memory, knowledge graph memory, AI coding agent" />
     <link rel="icon" type="image/svg+xml" href={logoSrc.src} />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="toon-memory — Continuity for AI Coding Agents" />
+    <meta property="og:title" content="toon-memory — The Continuity Layer for AI Agents" />
     <meta property="og:description" content={description} />
     <meta property="og:url" content="https://luiggival08.github.io/toon-memory/" />
     <meta property="og:image" content="https://luiggival08.github.io/toon-memory/og-image.svg" />
@@ -60,7 +61,7 @@ const jsonLd = {
     <meta property="og:image:height" content="630" />
     <meta property="og:site_name" content="toon-memory" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="toon-memory — Continuity for AI Coding Agents" />
+    <meta name="twitter:title" content="toon-memory — The Continuity Layer for AI Agents" />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content="https://luiggival08.github.io/toon-memory/og-image.svg" />
     <link rel="canonical" href="https://luiggival08.github.io/toon-memory/" />
@@ -85,15 +86,16 @@ const jsonLd = {
     <main>
       <Hero />
       <Problem />
-      <MemoryGraphShowcase />
-      <Benchmarks />
-      <FeatureGrid />
-      <SmartRecallShowcase />
-      <Tools />
-      <WhatNew />
-      <HowItWorks />
-      <Agents />
+      <Continuity />
+      <Benefits />
       <Comparison />
+      <Benchmarks />
+      <HowItWorks />
+      <FeatureGrid />
+      <MemoryGraphShowcase />
+      <Tools />
+      <Agents />
+      <WhatNew />
       <FAQ />
       <CTA />
     </main>

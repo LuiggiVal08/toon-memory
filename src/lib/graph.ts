@@ -612,6 +612,42 @@ export function graphRecall(
 	return graphRecallDetailed(data, query, opts).entries
 }
 
+export interface FetchByIdsOpts {
+	/** Temporal view: include superseded entries still valid on that date. */
+	asOf?: string
+	/** Reference date for TTL expiry checks. Defaults to the wall clock. */
+	today?: string
+}
+
+/**
+ * Resolve ids or keys (comma/space/`;`-separated tokens) to entries, preserving
+ * input order. Skips unknown tokens and entries that are obsolete/draft (unless
+ * they were still valid under `asOf`). Used by `memory_recall`'s batch fetch —
+ * the "second layer" of progressive disclosure after browsing the index.
+ */
+export function fetchEntriesByIds(data: string, tokens: string[], opts: FetchByIdsOpts = {}): GraphEntry[] {
+	const byId = new Map<string, GraphEntry>()
+	const byKey = new Map<string, GraphEntry>()
+	const asOf = opts.asOf || ""
+	for (const e of parseEntries(data)) {
+		const visible =
+			e.status === "active" ||
+			e.status === "resolved" ||
+			(asOf && e.status === "obsolete" && e.supersededOn && e.supersededOn > asOf)
+		if (!visible) continue
+		if (asOf && e.date && e.date > asOf) continue
+		if (e.ttl && isExpiredLocal(e.ttl, opts.today)) continue
+		if (!byId.has(e.id)) byId.set(e.id, e)
+		if (!byKey.has(e.key)) byKey.set(e.key, e)
+	}
+	const out: GraphEntry[] = []
+	for (const t of tokens) {
+		const e = byKey.get(t) || byId.get(t)
+		if (e && !out.includes(e)) out.push(e)
+	}
+	return out
+}
+
 export interface RenderCompactOpts {
 	/** Restricted adjacency for numeric edge rendering (graph mode). */
 	adjacency?: Map<string, string[]>
@@ -728,4 +764,34 @@ export function renderCompact(entries: GraphEntry[], opts: RenderCompactOpts = {
 	}
 
 	return rendered.join("\n\n")
+}
+
+export interface RenderIndexOpts {
+	/** Final combined score per key. Normalized to the best result and shown as %. */
+	scores?: Map<string, number>
+}
+
+/**
+ * Token-cheapest listing of recall results — the "first layer" of progressive
+ * disclosure. One line per entry: index, key, id, category, date, optional
+ * relative relevance %. No content. The agent picks ids from here, then does a
+ * full fetch with `memory_recall`'s `ids` parameter. Deterministic, no LLM.
+ */
+export function renderIndex(entries: GraphEntry[], opts: RenderIndexOpts = {}): string {
+	let max = 0
+	if (opts.scores) {
+		for (const v of opts.scores.values()) if (v > max) max = v
+	}
+	const lines: string[] = []
+	for (let i = 0; i < entries.length; i++) {
+		const e = entries[i]
+		const pin = e.priority > 0 ? (e.priority > 1 ? ` 📌${e.priority}` : " 📌") : ""
+		let score = ""
+		if (opts.scores && max > 0) {
+			const s = opts.scores.get(e.key)
+			if (s !== undefined) score = ` · ${Math.round((s / max) * 100)}%`
+		}
+		lines.push(`[${i + 1}] ${e.key} (${e.id})${pin} · ${e.category} · ${e.date}${score}`)
+	}
+	return lines.join("\n")
 }

@@ -29,6 +29,7 @@ export const ToonMemory = async ({ $, directory, worktree }) => {
   const recall = async (query, opts = {}) => {
     try {
       const args = { query, mode: "flat", budget: opts.budget || "tiny", path_scope: opts.path_scope || "" }
+      if (opts.category) args.category = opts.category
       const result = await $\`npx -y toon-memory mcp\`.cwd(root)
         .stdin(JSON.stringify({
           jsonrpc: "2.0",
@@ -42,9 +43,42 @@ export const ToonMemory = async ({ $, directory, worktree }) => {
     } catch { return "" }
   }
 
+  // Pre-edit risk surfacing: warning-category entries scoped to a file path.
+  // Injected as a distinct block so the agent sees known risks before it edits.
+  const risks = async (filePath) => {
+    return await recall(filePath, { budget: "tiny", path_scope: filePath, category: "warning" })
+  }
+
   const write = (text) => {
     fs.mkdirSync(INS, { recursive: true })
     fs.writeFileSync(OUT, text)
+  }
+
+  const pickPath = (args) => {
+    if (!args) return ""
+    if (args.file) return args.file
+    if (args.path) return args.path
+    if (args.filePath) return args.filePath
+    if (args.target) return args.target
+    return ""
+  }
+
+  const buildQuery = (filePath) => {
+    const basename = path.basename(filePath, path.extname(filePath))
+    const dirParts = path.dirname(filePath).split(path.sep).filter(Boolean)
+    return [basename, ...dirParts.slice(-2)].join(" ")
+  }
+
+  const inject = (ctx, key, text) => {
+    if (!text || text.includes("(empty)") || text.includes("No results")) return
+    if (typeof ctx?.setContext === "function") ctx.setContext(key, text)
+  }
+
+  // Edit/write-ish tools are where known risks matter most.
+  const isEditTool = (name) => {
+    if (!name) return false
+    return name === "edit" || name === "write" || name === "apply-patch" ||
+      name.includes("edit") || name.includes("write") || name.includes("patch")
   }
 
   return {
@@ -60,6 +94,19 @@ export const ToonMemory = async ({ $, directory, worktree }) => {
         if (Array.isArray(output?.context)) output.context.push(out)
       } catch {}
     },
+    "tool.execute.before": async (input, output) => {
+      // Pre-edit risk surfacing: for edit/write tools, surface known
+      // warning entries for the target file BEFORE the tool runs.
+      try {
+        const toolName = input?.tool || ""
+        if (!isEditTool(toolName)) return
+        const args = output?.args || input?.args || {}
+        const filePath = pickPath(args)
+        if (!filePath) return
+        const text = await risks(filePath)
+        inject(input, "toon-memory:risks:" + filePath, "⚠ KNOWN RISKS for " + filePath + ":\\n" + text)
+      } catch {}
+    },
     "tool.execute.after": async (input) => {
       // Intelligent auto-loading: extract file path from tool result,
       // recall only memory relevant to that file, inject as context.
@@ -69,11 +116,7 @@ export const ToonMemory = async ({ $, directory, worktree }) => {
         const args = input?.args || {}
 
         // Extract file path from tool arguments or output
-        let filePath = ""
-        if (args.file) filePath = args.file
-        else if (args.path) filePath = args.path
-        else if (args.filePath) filePath = args.filePath
-        else if (args.target) filePath = args.target
+        let filePath = pickPath(args)
 
         // Also try to extract from tool output text
         if (!filePath && input?.output) {
@@ -84,15 +127,15 @@ export const ToonMemory = async ({ $, directory, worktree }) => {
 
         if (filePath) {
           // Build recall query from file path components
-          const basename = path.basename(filePath, path.extname(filePath))
-          const dirParts = path.dirname(filePath).split(path.sep).filter(Boolean)
-          const query = [basename, ...dirParts.slice(-2)].join(" ")
-
+          const query = buildQuery(filePath)
           const text = await recall(query, { budget: "tiny", path_scope: filePath })
-          if (text && !text.includes("(empty)") && !text.includes("No results")) {
-            if (typeof input?.setContext === "function") {
-              input.setContext("toon-memory:" + filePath, text)
-            }
+          inject(input, "toon-memory:" + filePath, text)
+
+          // Pre-edit risk block for edit/write tools (same key as the before
+          // hook — setContext overwrites, so no duplication when both fire).
+          if (isEditTool(toolName)) {
+            const riskText = await risks(filePath)
+            inject(input, "toon-memory:risks:" + filePath, "⚠ KNOWN RISKS for " + filePath + ":\\n" + riskText)
           }
         }
 
@@ -110,11 +153,7 @@ export const ToonMemory = async ({ $, directory, worktree }) => {
 
           if (toolKeywords.length > 3) {
             const text = await recall(toolKeywords, { budget: "tiny" })
-            if (text && !text.includes("(empty)") && !text.includes("No results")) {
-              if (typeof input?.setContext === "function") {
-                input.setContext("toon-memory:" + toolName, text)
-              }
-            }
+            inject(input, "toon-memory:" + toolName, text)
           }
         }
       } catch {}

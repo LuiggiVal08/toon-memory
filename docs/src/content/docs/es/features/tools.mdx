@@ -12,7 +12,7 @@ toon-memory proporciona 35 herramientas MCP y 4 recursos MCP para gestionar la m
 | Herramienta | Descripción |
 |------|-------------|
 | `memory_remember` | Guarda una decisión, patrón, bug, conocimiento o **warning** (memoria negativa "NO hagas esto", recuperada con boost) (con TTL opcional, inferencia automática de etiquetas, `links`, quality score automático, merge-dedup, confidence, `importance` opcional: `critical`/`high`/`medium`/`low`) |
-| `memory_recall` | Busca en la memoria (úsalo ANTES de leer archivos, filtra entradas con TTL expirado). `mode: "graph"` expande un subgrafo con relaciones para mayor precisión. El ranking usa fusión RRF (BM25×3 + centralidad del grafo, k adaptativo); pasa `rrf: false` para el score lineal legacy. `sessionBias` potencia entradas de la rama git actual. `pathScope` limita los resultados a una ruta de archivo (con globMatch). `budget`: `"tiny"`, `"normal"` o `"deep"`. `as_of` re-incluye entradas superseded después de una fecha puntual. `explain: true` añade una línea de razón por entrada (por qué se recuperó). `budget_tokens` limita la salida por tokens estimados (`0` = sin límite) |
+| `memory_recall` | Busca en la memoria (úsalo ANTES de leer archivos, filtra entradas con TTL expirado). `mode: "graph"` expande un subgrafo con relaciones para mayor precisión. El ranking usa fusión RRF (BM25×3 + centralidad del grafo, k adaptativo); pasa `rrf: false` para el score lineal legacy. `sessionBias` potencia entradas de la rama git actual. `pathScope` limita los resultados a una ruta de archivo (con globMatch). `budget`: `"tiny"`, `"normal"` o `"deep"`. `as_of` re-incluye entradas superseded después de una fecha puntual. `explain: true` añade una línea de razón por entrada (por qué se recuperó). `budget_tokens` limita la salida por tokens estimados (`0` = sin límite). `mode: "index"` lista una línea por entrada (key, id, categoría, fecha, % de relevancia) sin contenido; `ids` recupera entradas por id/key en lote, conservando el orden |
 | `memory_forget` | Elimina una entrada por key o id |
 | `memory_stats` | Ver el estado de la memoria (incluyendo estadísticas de TTL, distribución de calidad, memorias frías por debajo de umbrales y métricas de **hit-rate/duplicadas/obsoletas**: % recuperadas al menos una vez, % de contenido duplicado exacto, % de entradas obsoletas) |
 | `memory_summary` | Guardar/recuperar resúmenes de archivos |
@@ -129,6 +129,44 @@ memory_recall({ query: "redis", budget_tokens: 300 })
 ```
 
 > **Tip:** Combina `budget_tokens` con `budget: "deep"` para una ventana de contexto que se mantenga dentro de un techo de tokens fijo sin importar el tamaño de la memoria.
+
+### Explorar el índice de memoria (divulgación progresiva)
+
+```typescript
+memory_recall({ mode: "index" }) // o { query, mode: "index" } para una vista filtrada
+// 📇 Índice de memoria (15 entradas):
+//
+// [1] use-zod (a1b2c3d4) · decision · 2026-07-10 · 100%
+// [2] redis-cache-config (e5f6g7h8) · decision · 2026-07-09 · 82%
+// ...
+```
+
+`mode: "index"` muestra una línea por entrada — key, id, categoría, fecha, % de relevancia — sin contenido, así que una memoria grande casi no cuesta de explorar. Elige los ids que necesites y recupera las entradas completas en lote:
+
+```typescript
+memory_recall({ ids: "a1b2c3d4,e5f6g7h8" })
+// Fetched 2 entries:
+// [decision] use-zod (a1b2c3d4)
+//   Use Zod for validation
+//   File: src/types.ts | Tags: validation;types | Date: 2026-07-10
+```
+
+`ids` acepta ids o keys de entrada separados por coma/espacio/`;` y conserva tu orden (las desconocidas se omiten). Tres capas: explora el índice → recupera por ids → busca con `mode: "flat"` para el ranking completo.
+
+### Decisiones descartadas
+
+Registra las opciones que decidiste *no* tomar para que el agente no vuelva a proponerlas. Una convención ligera — una entrada `decision` con la etiqueta `rejected`, sin schema extra:
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "rejected-graphql",
+  content: "Rejected GraphQL: REST + generated types wins on codegen and schema drift risk.",
+  tags: "rejected;api;graphql"
+})
+```
+
+Etiqueta la entrada con `rejected` y usa una key `rejected-<tema>` para que la palabra clave sea fácil de recuperar. Enlázala a la alternativa ganadora si aporta (`links: "rest-api"`). El siguiente `memory_recall` de esa idea saca el rechazo con su razón — tu «no» pasa a formar parte de la memoria del proyecto en vez de re-debatirse en cada sesión.
 
 ### Buscar con filtro de fecha
 

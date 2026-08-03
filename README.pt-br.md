@@ -2,7 +2,7 @@
 
 # toon-memory
 
-> Dê ao seu agente de IA uma memória que dura além da sessão — decisões, padrões e bugs lembrados em todas as sessões.
+> A camada de continuidade para agentes de IA — agentes de IA não deveriam ter que reaprender seu projeto a cada sessão.
 
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -39,7 +39,7 @@
 
 Já teve aquela sensação de que seu agente de IA esquece tudo da sessão de ontem? Você explica a mesma decisão de arquitetura pela terceira vez e ele ainda sugere a abordagem que você já rejeitou?
 
-**toon-memory resolve isso.** Ele dá ao seu agente de IA continuidade — uma memória que sobrevive a reinícios, para que ele realmente aprenda com o projeto ao longo do tempo. Você nunca reexplica a mesma decisão duas vezes.
+**toon-memory resolve isso.** É a camada de continuidade para agentes de IA — um sistema leve que preserva o conhecimento, as decisões e as convenções do seu projeto entre sessões, para que cada sessão comece onde a anterior terminou. 100% local e privado, via MCP — sem nuvem, sem servidor.
 
 📖 **[Leia a documentação](https://luiggival08.github.io/toon-memory/)**
 

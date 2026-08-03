@@ -12,7 +12,7 @@ import { archiveOldEntries } from "./archive"
 import { consolidateEntries, consolidateVersions } from "./consolidation"
 import { readUnderLock } from "../lib/lock"
 import { encrypt, decrypt } from "./crypto"
-import { graphRecallDetailed, renderCompact, parseEntries, buildGraph, parseLinkToken, formatLink, typedLinks } from "../lib/graph"
+import { graphRecallDetailed, renderCompact, renderIndex, fetchEntriesByIds, parseEntries, buildGraph, parseLinkToken, formatLink, typedLinks } from "../lib/graph"
 import { qualityScore, mergeEntries, generateSmartRecall } from "../lib/quality"
 import { generateContextBrief, generateContextGenerate, generateContextDiff, generateContextFocus, generateContextHealth, generateContextExport } from "../lib/context"
 import { coordinationView, resolveSessionId, currentBranch, SESSION_TTL_MS, getCurrentSessionFiles } from "../lib/sessions"
@@ -563,12 +563,14 @@ server.registerTool(
     title: "Search Memory",
     description: "Search the project's persistent memory. Returns relevant entries. Use BEFORE reading files. Pattern: recall → context_diff for recent changes → capture to save observations.",
     inputSchema: {
-      query: z.string().describe("Text to search for"),
+      query: z.string().optional().default("").describe("Text to search for (optional when mode:'index' or ids is given)"),
       category: z.string().optional().default("").describe("Filter by category (empty = all)"),
       from_date: z.string().optional().default("").describe("Start date filter (YYYY-MM-DD)"),
       to_date: z.string().optional().default("").describe("End date filter (YYYY-MM-DD)"),
-      mode: z.enum(["flat", "graph"]).optional().default("flat").describe("'flat' = keyword search (default). 'graph' = graph-based recall: expands the related-entry subgraph from matches (more precise, fewer tokens)."),
+      mode: z.enum(["flat", "graph", "index"]).optional().default("flat").describe("'flat' = keyword search (default). 'graph' = graph-based recall: expands the related-entry subgraph from matches (more precise, fewer tokens). 'index' = one line per entry (key, id, category, date, relevance %) with no content — browse then fetch full entries with `ids`."),
+      ids: z.string().optional().default("").describe("Batch fetch: comma/space/;-separated entry ids or keys, rendered in the given order (unknown entries skipped). Complements mode:'index' — layer 2 of progressive disclosure. Overrides mode."),
       hops: z.number().optional().default(1).describe("Graph depth in 'graph' mode (1 or 2). Default 1."),
+      limit: z.number().optional().describe("Maximum entries returned. Default 6 (15 in 'index' mode). Keeps token cost low."),
       compact: z.boolean().optional().default(false).describe("Token-efficient output: numeric indices (1, 2), omits id/date/file (keeps tags), edges as '->2', truncates graph neighbors to a snippet. Does not mutate .toon file."),
       budget: z.enum(["tiny", "normal", "deep"]).optional().default("deep").describe("'tiny': key+1 line (~50 tokens). 'normal': compact with tags/edges. 'deep': all fields (default). Overrides 'compact'."),
       budget_tokens: z.number().optional().default(0).describe("Deterministic token budget: include entries until the estimated output reaches ~N tokens (overrides limit). 0 = no budget."),
@@ -580,14 +582,61 @@ server.registerTool(
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
-  async ({ query, category, from_date, to_date, mode, hops, compact, budget: budgetParam, budget_tokens, explain, bias, path_scope, rrf, as_of }) => {
+  async ({ query, category, from_date, to_date, mode, ids, hops, limit: limitParam, compact, budget: budgetParam, budget_tokens, explain, bias, path_scope, rrf, as_of }) => {
     const data = readMemory()
+    const resolvedBudget = budgetParam || (compact ? "normal" : "deep")
+    const resolvedAsOf = as_of || undefined
 
-    // Delegate to graphRecallDetailed for both flat and graph modes
+    // ── Batch fetch by ids/keys (layer 2 of progressive disclosure) ──────
+    if (ids && ids.trim()) {
+      const tokens = ids.split(/[\s,;]+/).map((t) => t.trim()).filter(Boolean)
+      const entries = fetchEntriesByIds(data, tokens, { asOf: resolvedAsOf })
+      if (entries.length === 0) {
+        return { content: [{ type: "text" as const, text: `No entries found for ids: ${ids}` }] }
+      }
+      bumpAccessed(entries.map((e) => e.id))
+      const label = entries.length === 1 ? "entry" : "entries"
+      if (resolvedBudget === "tiny" || resolvedBudget === "normal") {
+        const formatted = renderCompact(entries, {
+          budget: resolvedBudget,
+          budgetTokens: budget_tokens || undefined,
+        })
+        return { content: [{ type: "text" as const, text: `Fetched ${entries.length} ${label}:\n\n${formatted}` }] }
+      }
+      const formatted = entries
+        .map((r) => {
+          const links = r.links.length ? `\n  links: ${r.links.join(", ")}` : ""
+          const pin = r.priority > 0 ? (r.priority > 1 ? ` 📌${r.priority}` : " 📌") : ""
+          const originInfo = r.origin !== "agent" ? ` | origin: ${r.origin}` : ""
+          const scopeInfo = r.path_scope ? ` | scope: ${r.path_scope}` : ""
+          const statusInfo = r.status !== "active" ? ` | status: ${r.status}` : ""
+          const supersededInfo = r.supersededOn ? ` | superseded: ${r.supersededOn}` : ""
+          return `[${r.category}] ${r.key}${pin} (${r.id})\n  ${r.content}\n  File: ${r.file} | Tags: ${r.tags.join(";")} | Date: ${r.date}${links}${originInfo}${scopeInfo}${statusInfo}${supersededInfo}`
+        })
+        .join("\n\n")
+      return { content: [{ type: "text" as const, text: `Fetched ${entries.length} ${label}:\n\n${formatted}` }] }
+    }
+
+    // Delegate to graphRecallDetailed for flat / graph / index modes
     // This avoids duplicating BM25 + ranking logic
     const sessionFiles = bias === "session" ? getCurrentSessionFiles() : undefined
-    const resolvedBudget = budgetParam || (compact ? "normal" : "deep")
-    const detail = graphRecallDetailed(data, query, { category, from_date, to_date, hops, sessionFiles, path_scope: path_scope || undefined, rrf, asOf: as_of || undefined })
+    const limit = limitParam ?? (mode === "index" ? 15 : 6)
+    const detail = graphRecallDetailed(data, query, { category, from_date, to_date, hops, limit, sessionFiles, path_scope: path_scope || undefined, rrf, asOf: resolvedAsOf })
+
+    // ── Index mode: one line per entry, no content ───────────────────────
+    if (mode === "index") {
+      if (detail.entries.length === 0) {
+        return { content: [{ type: "text" as const, text: `No results found for "${query}"` }] }
+      }
+      const formatted = renderIndex(detail.entries, { scores: detail.scores })
+      return {
+        content: [{
+          type: "text" as const,
+          text: `📇 Memory index (${detail.entries.length} entries):\n\n${formatted}\n\nFetch full entries with memory_recall ids="<id1>,<id2>" or search with mode:"flat".`,
+        }],
+      }
+    }
+
     if (detail.entries.length === 0) {
       return { content: [{ type: "text" as const, text: `No results found for "${query}"` }] }
     }

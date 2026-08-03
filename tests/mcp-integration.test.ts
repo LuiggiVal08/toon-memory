@@ -248,6 +248,46 @@ describe("MCP Integration", () => {
 		expect(recallResult).toContain("This is an integration test entry")
 	})
 
+	// ── memory_recall progressive disclosure (index + ids) ─────────
+
+	it("memory_recall mode:'index' lists key/id/category without content", async () => {
+		await client.callTool("memory_remember", {
+			category: "knowledge",
+			key: "index-probe",
+			content: "Index probe entry content",
+			file: "probe.ts",
+		})
+
+		const index = await client.callTool("memory_recall", { query: "probe", mode: "index" })
+		expect(index).toContain("index-probe")
+		expect(index).toMatch(/\[1\] index-probe \(/)
+		expect(index).not.toContain("Index probe entry content")
+
+		// Extract the id shown in the index and verify ids fetch returns it.
+		const idMatch = index.match(/index-probe \(([^)]+)\)/)
+		expect(idMatch).not.toBeNull()
+		const id = idMatch![1]
+
+		const fetched = await client.callTool("memory_recall", { ids: id })
+		expect(fetched).toContain("index-probe")
+		expect(fetched).toContain("Index probe entry content")
+	})
+
+	it("memory_recall ids fetches by key and skips unknown tokens", async () => {
+		const fetched = await client.callTool("memory_recall", { ids: "use-zod,no-such-entry" })
+		expect(fetched).toContain("use-zod")
+		expect(fetched).toContain("Use Zod for validation")
+		expect(fetched).not.toContain("no-such-entry")
+	})
+
+	it("memory_recall ids preserves the requested order", async () => {
+		const out = await client.callTool("memory_recall", { ids: "use-zod,index-probe", budget: "deep" })
+		const idxUseZod = out.indexOf("use-zod")
+		const idxProbe = out.indexOf("index-probe")
+		expect(idxUseZod).toBeGreaterThan(-1)
+		expect(idxProbe).toBeGreaterThan(idxUseZod)
+	})
+
 	// ── memory_stats ──────────────────────────────────────────────
 
 	it("memory_stats returns entry counts", async () => {

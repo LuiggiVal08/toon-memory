@@ -3,9 +3,10 @@ import logoSrc from '../../assets/logo.svg';
 import SiteHeader from '../../components/SiteHeader.astro';
 import Hero from '../../components/Hero.astro';
 import Problem from '../../components/Problem.astro';
+import Continuity from '../../components/Continuity.astro';
+import Benefits from '../../components/Benefits.astro';
 import FeatureGrid from '../../components/FeatureGrid.astro';
 import MemoryGraphShowcase from '../../components/MemoryGraphShowcase.astro';
-import SmartRecallShowcase from '../../components/SmartRecallShowcase.astro';
 import Tools from '../../components/Tools.astro';
 import Benchmarks from '../../components/Benchmarks.astro';
 import HowItWorks from '../../components/HowItWorks.astro';
@@ -18,7 +19,7 @@ import WhatNew from '../../components/WhatNew.astro';
 import '../../styles/home.css';
 
 const description =
-  'Gib deinem KI-Coding-Agenten ein Gedächtnis, das die Sitzung überdauert — Entscheidungen, Muster und Bugs werden über Sitzungen hinweg gemerkt, offline und token-effizient, für Claude, Cursor, OpenCode, Windsurf und 15+ Agenten. Reproduzierbarer Recall-Benchmark: npm run bench:retrieval.';
+  'Die Kontinuitätsschicht für KI-Agenten. KI-Agenten sollten dein Projekt nicht in jeder Sitzung neu lernen müssen — toon-memory bewahrt das Wissen, die Entscheidungen und die Konventionen deines Projekts über Sitzungen hinweg, lokal und privat, für Claude, Codex, Cursor, OpenCode und 15+ Agenten.';
 ---
 
 <!doctype html>
@@ -26,7 +27,7 @@ const description =
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>toon-memory — Kontinuität für KI-Coding-Agenten</title>
+    <title>toon-memory — Die Kontinuitätsschicht für KI-Agenten</title>
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href={logoSrc.src} />
     <meta property="og:type" content="website" />
@@ -45,15 +46,16 @@ const description =
     <main>
       <Hero lang="de" />
       <Problem lang="de" />
-      <MemoryGraphShowcase lang="de" />
-      <Benchmarks lang="de" />
-      <FeatureGrid lang="de" />
-      <SmartRecallShowcase lang="de" />
-      <Tools lang="de" />
-      <WhatNew lang="de" />
-      <HowItWorks lang="de" />
-      <Agents lang="de" />
+      <Continuity lang="de" />
+      <Benefits lang="de" />
       <Comparison lang="de" />
+      <Benchmarks lang="de" />
+      <HowItWorks lang="de" />
+      <FeatureGrid lang="de" />
+      <MemoryGraphShowcase lang="de" />
+      <Tools lang="de" />
+      <Agents lang="de" />
+      <WhatNew lang="de" />
       <FAQ lang="de" />
       <CTA lang="de" />
     </main>

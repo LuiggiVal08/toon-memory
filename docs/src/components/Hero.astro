@@ -8,23 +8,36 @@ interface Props {
 const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 const docsHref = lang === 'es' ? '/toon-memory/es/getting-started/quickstart' : '/toon-memory/getting-started/quickstart';
+const particles = Array.from({ length: 16 }, (_, i) => ({
+	left: (i * 61 + 7) % 100,
+	delay: (i * 1.7) % 14,
+	duration: 20 + ((i * 3.3) % 14),
+	size: 2.5 + ((i * 0.7) % 2.5),
+}));
 ---
 
 <section class="hero">
-  <div class="particles">
-    <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
-    <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
-    <div class="particle"></div><div class="particle"></div>
+  <div class="particles" aria-hidden="true">
+    {particles.map((p) => (
+      <span
+        class="particle"
+        style={`left:${p.left.toFixed(1)}%; animation-delay:${p.delay.toFixed(2)}s; animation-duration:${p.duration.toFixed(1)}s; width:${p.size.toFixed(1)}px; height:${p.size.toFixed(1)}px;`}
+      ></span>
+    ))}
   </div>
+
+  <div class="hero-header">
+    <p class="hero-eyebrow">
+      <img src={logoSrc.src} alt="" class="hero-eyebrow-logo" width="18" height="18" />
+      <span>toon-memory</span>
+      <span class="eyebrow-sep" aria-hidden="true"></span>
+      <span>{c.hero.poweredBy}</span>
+    </p>
+    <h1 class="hero-title">{c.hero.tagline}</h1>
+  </div>
+
   <div class="hero-split">
-    <div class="hero-visual">
-      <div class="hero-logo">
-        <img src={logoSrc.src} alt="toon-memory" class="hero-logo-img" />
-      </div>
-    </div>
-    <div class="hero-text">
-      <h1 class="hero-title">toon-memory</h1>
-      <p class="hero-tagline">{c.hero.tagline}</p>
+    <div class="hero-inner">
       <p class="hero-subtitle">{c.hero.subtitle}</p>
       <div class="hero-actions">
         <a href={docsHref} class="btn btn-primary">
@@ -37,22 +50,26 @@ const docsHref = lang === 'es' ? '/toon-memory/es/getting-started/quickstart' : 
           <svg class="external-icon" viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M18 10.82a.75.75 0 0 1-1.5 0V6.56l-7.22 7.22a.75.75 0 0 1-1.06-1.06L15.44 5.5h-4.26a.75.75 0 0 1 0-1.5H18a.75.75 0 0 1 .75.75v6.07z"/><path fill="currentColor" d="M5.5 6.25A2.25 2.25 0 0 1 7.75 4h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h11.5a.75.75 0 0 0 .75-.75v-4.5a.75.75 0 0 1 1.5 0v4.5a2.25 2.25 0 0 1-2.25 2.25H7.75A2.25 2.25 0 0 1 5.5 17.75V6.25z"/></svg>
         </a>
       </div>
-      <button id="installBtn" class="btn btn-install">
-        <span class="install-prompt">$</span>
-        <span class="install-cmd">{c.hero.installCmd}</span>
-        <span class="install-copy">{c.hero.copy}</span>
-        <span class="install-done">{c.hero.copied}</span>
-      </button>
     </div>
-  </div>
 
-  <div class="badges-row">
-    <span class="chip"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>35 tools</span></span>
-    <span class="chip"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>~90% fewer tokens with auto-loading</span></span>
-    <span class="chip"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>80% fewer tool calls</span></span>
-    <span class="chip"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>302 tests</span></span>
-    <span class="chip"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><span>15 agents</span></span>
-    <span class="chip chip-live"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 3v10.55l-3.5-3.5-1.41 1.41L12 16.41l4.91-4.96-1.41-1.41-3.5 3.5V3zM5 20h14v-2H5v2z"/></svg><span><span class="chip-value" id="npmDownloads">…</span> npm downloads</span></span>
+    <div class="hero-terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot" aria-hidden="true"></span>
+        <span class="terminal-dot" aria-hidden="true"></span>
+        <span class="terminal-dot" aria-hidden="true"></span>
+        <span class="terminal-title">~/.toon-memory</span>
+      </div>
+      <div class="terminal-body">
+        <p class="term-install">
+          <span class="term-prompt">$</span>
+          <span class="term-cmd">{c.hero.installCmd}</span>
+          <button id="installBtn" class="term-copy" type="button">
+            <span class="install-copy">{c.hero.copy}</span>
+            <span class="install-done">{c.hero.copied}</span>
+          </button>
+        </p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -63,28 +80,4 @@ const docsHref = lang === 'es' ? '/toon-memory/es/getting-started/quickstart' : 
       setTimeout(() => this.classList.remove('copied'), 1500);
     });
   });
-
-  const cmd = document.querySelector('.install-cmd');
-  if (cmd && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    const full = cmd.textContent;
-    cmd.textContent = '';
-    let i = 0;
-    const type = () => {
-      cmd.textContent = full.slice(0, i);
-      if (i++ <= full.length) setTimeout(type, 55);
-    };
-    setTimeout(type, 700);
-  }
-
-  const dl = document.getElementById('npmDownloads');
-  if (dl) {
-    fetch('https://api.npmjs.org/downloads/point/last-month/toon-memory')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d && typeof d.downloads === 'number') {
-          dl.textContent = d.downloads.toLocaleString('en-US');
-        }
-      })
-      .catch(() => {});
-  }
 </script>

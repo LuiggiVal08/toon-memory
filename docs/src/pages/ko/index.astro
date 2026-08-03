@@ -3,9 +3,10 @@ import logoSrc from '../../assets/logo.svg';
 import SiteHeader from '../../components/SiteHeader.astro';
 import Hero from '../../components/Hero.astro';
 import Problem from '../../components/Problem.astro';
+import Continuity from '../../components/Continuity.astro';
+import Benefits from '../../components/Benefits.astro';
 import FeatureGrid from '../../components/FeatureGrid.astro';
 import MemoryGraphShowcase from '../../components/MemoryGraphShowcase.astro';
-import SmartRecallShowcase from '../../components/SmartRecallShowcase.astro';
 import Tools from '../../components/Tools.astro';
 import Benchmarks from '../../components/Benchmarks.astro';
 import HowItWorks from '../../components/HowItWorks.astro';
@@ -18,7 +19,7 @@ import WhatNew from '../../components/WhatNew.astro';
 import '../../styles/home.css';
 
 const description =
-  '세션보다 오래 지속되는 메모리를 AI 코딩 에이전트에 제공 — 의사결정, 패턴, 버그를 세션 간에 기억하며, 오프라인 및 토큰 효율적, Claude, Cursor, OpenCode, Windsurf 및 15개 이상의 에이전트 지원. 재현 가능한 리콜 벤치마크: npm run bench:retrieval.';
+  'AI 에이전트를 위한 연속성 레이어. AI 에이전트는 매 세션마다 프로젝트를 다시 배우지 않아야 합니다 — toon-memory는 세션을 넘어 프로젝트의 지식, 결정, 관례를 보존합니다. 로컬에서 안전하게, Claude, Codex, Cursor, OpenCode 및 15개 이상의 에이전트 지원.';
 ---
 
 <!doctype html>
@@ -26,7 +27,7 @@ const description =
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>toon-memory — AI 코딩 에이전트를 위한 연속성 | 세션 간 메모리</title>
+    <title>toon-memory — AI 에이전트를 위한 연속성 레이어</title>
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href={logoSrc.src} />
     <meta property="og:type" content="website" />
@@ -45,15 +46,16 @@ const description =
     <main>
       <Hero lang="ko" />
       <Problem lang="ko" />
-      <MemoryGraphShowcase lang="ko" />
-      <Benchmarks lang="ko" />
-      <FeatureGrid lang="ko" />
-      <SmartRecallShowcase lang="ko" />
-      <Tools lang="ko" />
-      <WhatNew lang="ko" />
-      <HowItWorks lang="ko" />
-      <Agents lang="ko" />
+      <Continuity lang="ko" />
+      <Benefits lang="ko" />
       <Comparison lang="ko" />
+      <Benchmarks lang="ko" />
+      <HowItWorks lang="ko" />
+      <FeatureGrid lang="ko" />
+      <MemoryGraphShowcase lang="ko" />
+      <Tools lang="ko" />
+      <Agents lang="ko" />
+      <WhatNew lang="ko" />
       <FAQ lang="ko" />
       <CTA lang="ko" />
     </main>

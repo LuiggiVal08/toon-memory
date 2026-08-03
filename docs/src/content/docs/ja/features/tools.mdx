@@ -17,7 +17,7 @@ toon-memoryは永続メモリを管理するための35個のMCPツールと4つ
 | ツール | 説明 |
 |------|-------------|
 | `memory_remember` | 決定、パターン、バグ、ナレッジ、または**warning**（「これはやらない」否定的メモリ、リコールブースト付き）を保存（任意のTTL、自動タグ推論、`links`、自動品質スコア、マージ重複排除、信頼度、任意の`importance`: `critical`/`high`/`medium`/`low`） |
-| `memory_recall` | メモリを検索（ファイルを読む前に使用。期限切れTTLをフィルタ）。`mode: "graph"`で関係性を考慮したサブグラフを展開し、より高い精度を実現。ランキングはRRF融合（BM25×3 + グラフ中心性、適応的k）を使用。`rrf: false`で従来の線形スコアに。`sessionBias`は現在のgitブランチのエントリをブースト。`pathScope`は結果をファイルパスにスコープ（globMatch対応）。`budget`: `"tiny"`（上位3）、`"normal"`（上位10）、`"deep"`（上位20）。`as_of`は指定日以降にsupersededされたエントリを再包含。`explain: true`は取得理由の行をエントリごとに追加。`budget_tokens`は推定トークン数による出力制限（`0`＝制限なし） |
+| `memory_recall` | メモリを検索（ファイルを読む前に使用。期限切れTTLをフィルタ）。`mode: "graph"`で関係性を考慮したサブグラフを展開し、より高い精度を実現。ランキングはRRF融合（BM25×3 + グラフ中心性、適応的k）を使用。`rrf: false`で従来の線形スコアに。`sessionBias`は現在のgitブランチのエントリをブースト。`pathScope`は結果をファイルパスにスコープ（globMatch対応）。`budget`: `"tiny"`（上位3）、`"normal"`（上位10）、`"deep"`（上位20）。`as_of`は指定日以降にsupersededされたエントリを再包含。`explain: true`は取得理由の行をエントリごとに追加。`budget_tokens`は推定トークン数による出力制限（`0`＝制限なし）。`mode: "index"`はエントリごとに1行（key、id、カテゴリ、日付、関連性%）を内容なしで表示。`ids`でid/key指定の一括取得（順序保持） |
 | `memory_forget` | **ライフサイクル操作**: `action: "soft"`（デフォルト）でobsoleteに、`"hard"`で完全削除、`"restore"`で復元、`"supersede"`で`new_key`への`superseded_by`リンク付き置き換え。正規のライフサイクルツール |
 | `memory_stats` | メモリの状態を表示（TTL統計、品質分布、品質/アクセスしきい値未満のコールドメモリ、および**ヒット率/重複/廃止**メトリクス（少なくとも1回リコールされたエントリの%、完全一致コンテンツの%、obsoleteエントリの%）を含む） |
 | `memory_summary` | ファイルサマリーの保存/取得 |
@@ -140,6 +140,44 @@ memory_recall({ query: "redis", budget_tokens: 300 })
 ```
 
 > **ヒント:** `budget_tokens`を`budget: "deep"`と組み合わせると、メモリサイズに関係なくハードなトークン上限内に収まるコンテキストウィンドウになります。
+
+### メモリインデックスを閲覧する（段階的開示）
+
+```typescript
+memory_recall({ mode: "index" }) // または { query, mode: "index" } でフィルタ表示
+// 📇 メモリインデックス（15件）:
+//
+// [1] use-zod (a1b2c3d4) · decision · 2026-07-10 · 100%
+// [2] redis-cache-config (e5f6g7h8) · decision · 2026-07-09 · 82%
+// ...
+```
+
+`mode: "index"` はエントリごとに1行 — key、id、カテゴリ、日付、関連性% — を内容なしで表示するため、メモリが多くてもほぼコストゼロで閲覧できます。必要なidを選んで、完全なエントリを一括取得：
+
+```typescript
+memory_recall({ ids: "a1b2c3d4,e5f6g7h8" })
+// Fetched 2 entries:
+// [decision] use-zod (a1b2c3d4)
+//   Use Zod for validation
+//   File: src/types.ts | Tags: validation;types | Date: 2026-07-10
+```
+
+`ids` はカンマ/スペース/`;`区切りのエントリidまたはkeyを受け取り、指定順を維持します（不明なものはスキップ）。3層構成: インデックスを閲覧 → idで取得 → `mode: "flat"` で完全なランキング結果を検索。
+
+### 却下された決定
+
+採用しなかった選択肢を記録しておくと、エージェントがそれを再度提案しません。軽量な規約です — `rejected` タグ付きの `decision` エントリ、追加スキーマなし：
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "rejected-graphql",
+  content: "Rejected GraphQL: REST + generated types wins on codegen and schema drift risk.",
+  tags: "rejected;api;graphql"
+})
+```
+
+エントリに `rejected` タグを付け、`rejected-<トピック>` 形式のkeyにするとキーワード検索で見つけやすくなります。役立つ場合は採用案へのリンクも（`links: "rest-api"`）。次にそのアイデアを `memory_recall` すると、却下とその理由が表示されます — あなたの「ノー」がプロジェクトの記憶の一部になり、毎セッション再議論されることはありません。
 
 ### 日付フィルタ付きで検索する
 

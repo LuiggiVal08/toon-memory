@@ -2,7 +2,7 @@
 
 # toon-memory
 
-> Gib deinem KI-Coding-Agenten ein Gedächtnis, das die Sitzung überdauert — Entscheidungen, Muster und Fehler, in jeder Sitzung gemerkt.
+> Die Kontinuitätsebene für KI-Agenten — KI-Agenten sollten dein Projekt nicht jede Sitzung neu lernen müssen.
 
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -41,7 +41,7 @@
 
 Kannst du dich an diesen Moment erinnern, in dem dein KI-Agent alles aus der Sitzung von gestern vergessen hat? Du erklärst zum dritten Mal dieselbe Architekturentscheidung, und er schlägt immer noch den Ansatz vor, den du bereits abgelehnt hast?
 
-**toon-memory löst dieses Problem.** Es gibt deinem KI-Agenten Kontinuität — ein Gedächtnis, das Neustarts überlebt, sodass er tatsächlich im Laufe der Zeit aus deinem Projekt lernt. Du erklärst dieselbe Entscheidung nie zweimal.
+**toon-memory löst dieses Problem.** Es ist die Kontinuitätsebene für KI-Agenten — ein leichtes System, das das Wissen, die Entscheidungen und die Konventionen deines Projekts zwischen den Sitzungen bewahrt, damit jede Sitzung dort beginnt, wo die letzte endete. 100% lokal und privat, über MCP — kein Cloud, kein Server.
 
 📖 **[Dokumentation lesen](https://luiggival08.github.io/toon-memory/)**
 

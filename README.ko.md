@@ -2,7 +2,7 @@
 
 # toon-memory
 
-> 세션을 넘어 지속되는 메모리를 AI 코딩 에이전트에 제공하세요 — 모든 세션에서 의사결정, 패턴, 버그를 기억합니다.
+> AI 에이전트를 위한 연속성 레이어 — AI 에이전트는 매 세션마다 프로젝트를 다시 배우지 않아야 합니다.
 
 [![npm version](https://img.shields.io/npm/v/toon-memory.svg)](https://www.npmjs.com/package/toon-memory)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -41,7 +41,7 @@
 
 어제 세션에서 AI 에이전트가 모든 것을 잊어버린 경험 있으신가요? 같은 아키텍처 결정을 세 번째로 설명하는데, 이미 거절한 접근법을 또 제안하나요?
 
-**toon-memory는 이 문제를 해결합니다.** AI 에이전트에 연속성을 제공합니다 — 재시작 후에도 유지되는 메모리로, 프로젝트에서 시간이 지남에 따라 실제로 학습하게 됩니다. 같은 결정을 두 번 설명할 필요가 없습니다.
+**toon-memory는 이 문제를 해결합니다.** AI 에이전트를 위한 연속성 레이어 — 세션 간에 프로젝트의 지식, 결정, 관례를 보존하는 가벼운 시스템으로, 모든 세션이 이전 세션이 끝난 곳에서 시작됩니다. 100% 로컬 및 프라이빗, MCP 기반 — 클라우드도 서버도 필요 없습니다.
 
 📖 **[문서 읽기](https://luiggival08.github.io/toon-memory/)**
 

@@ -17,7 +17,7 @@ toon-memory provides 35 MCP tools and 4 MCP resources for managing persistent me
 | Tool | Description |
 |------|-------------|
 | `memory_remember` | Save a decision, pattern, bug, knowledge, or **warning** (negative "do NOT do this" memory, recalled with a boost) (optional TTL, auto-tag inference, `links`, auto quality score, merge-dedup, confidence, optional `importance`: `critical`/`high`/`medium`/`low`) |
-| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. Ranking uses RRF fusion (BM25×3 + graph centrality, adaptive `k`); pass `rrf: false` for the legacy linear score. `sessionBias` boosts entries from the current git branch. `pathScope` scopes results to a file path (supports globMatch). `budget`: `"tiny"` (top 3), `"normal"` (top 10), or `"deep"` (top 20). `as_of` re-includes entries superseded after a point-in-time date. `explain: true` appends a per-entry reason line (why it was retrieved). `budget_tokens` caps the output by estimated token count (`0` = no limit) |
+| `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. Ranking uses RRF fusion (BM25×3 + graph centrality, adaptive `k`); pass `rrf: false` for the legacy linear score. `sessionBias` boosts entries from the current git branch. `pathScope` scopes results to a file path (supports globMatch). `budget`: `"tiny"` (top 3), `"normal"` (top 10), or `"deep"` (top 20). `as_of` re-includes entries superseded after a point-in-time date. `explain: true` appends a per-entry reason line (why it was retrieved). `budget_tokens` caps the output by estimated token count (`0` = no limit). `mode: "index"` lists one line per entry (key, id, category, date, relevance %) with no content; `ids` bulk-fetches entries by id/key, order preserved |
 | `memory_forget` | **Lifecycle ops** by key or id: `action: "soft"` (default) marks obsolete, `"hard"` permanently removes, `"restore"` brings back to active, `"supersede"` retires it with a `superseded_by` link to `new_key` |
 | `memory_stats` | View memory state (including TTL stats, quality distribution, cold memories below quality/access thresholds, and **hit-rate/duplicate/dead** metrics: % recalled at least once, % exact-content duplicates, % obsolete entries) |
 | `memory_summary` | Save/retrieve file summaries |
@@ -154,6 +154,44 @@ memory_recall({ query: "redis", budget_tokens: 300 })
 ```
 
 > **Tip:** Combine `budget_tokens` with `budget: "deep"` for a context window that stays inside a hard token ceiling regardless of memory size.
+
+### Browse the memory index (progressive disclosure)
+
+```typescript
+memory_recall({ mode: "index" }) // or { query, mode: "index" } for a filtered view
+// 📇 Memory index (15 entries):
+//
+// [1] use-zod (a1b2c3d4) · decision · 2026-07-10 · 100%
+// [2] redis-cache-config (e5f6g7h8) · decision · 2026-07-09 · 82%
+// ...
+```
+
+`mode: "index"` shows one line per entry — key, id, category, date, relevance % — with no content, so a large memory costs almost nothing to browse. Pick the ids you need, then bulk-fetch the full entries:
+
+```typescript
+memory_recall({ ids: "a1b2c3d4,e5f6g7h8" })
+// Fetched 2 entries:
+// [decision] use-zod (a1b2c3d4)
+//   Use Zod for validation
+//   File: src/types.ts | Tags: validation;types | Date: 2026-07-10
+```
+
+`ids` accepts entry ids or keys, comma/space/`;`-separated, and preserves your order (unknown entries are skipped). Three layers: browse the index → fetch by ids → search with `mode: "flat"` for the full ranked result.
+
+### Rejected decisions
+
+Record options you decided *against* so the agent never re-proposes them. A lightweight convention — a `decision` entry tagged `rejected`, no extra schema:
+
+```typescript
+memory_remember({
+  category: "decision",
+  key: "rejected-graphql",
+  content: "Rejected GraphQL: REST + generated types wins on codegen and schema drift risk.",
+  tags: "rejected;api;graphql"
+})
+```
+
+Tag the entry with `rejected` and use a `rejected-<topic>` key so the keyword is easy to recall. Link it to the winning alternative if useful (`links: "rest-api"`). The next `memory_recall` for that idea surfaces the rejection with its reason — your "no" becomes part of the project memory instead of being re-debated every session.
 
 ### Search with date filter
 
