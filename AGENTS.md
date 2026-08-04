@@ -13,8 +13,11 @@ Build must complete before tests — `tests/cli.test.ts` executes `bin/toon-memo
 ## Architecture
 
 - `src/bin/toon-memory.ts` — Entry point. Routes `mcp` arg to MCP server, everything else to CLI.
-- `src/mcp/server.ts` — MCP server with 11 tools (memory_remember, memory_recall, memory_forget, memory_stats, memory_summary, memory_archive, memory_encrypt, memory_decrypt, memory_consolidate, memory_graph_path, memory_checkpoint).
+- `src/mcp/server.ts` — MCP server (38 tools + 4 resources + 1 prompt).
 - `src/mcp/tools.ts` — Tool implementations. Each tool is registered with the MCP server.
+- `src/mcp/vault.ts` — Encrypted secrets sidecar (`secrets.toon`, AES-256-GCM): store/get/list/forget.
+- `src/lib/evidence.ts` — Write-path evidence: contradiction detection + evidence levels (verified/unverified/conflict) with recall boosts.
+- `src/mcp/consolidation.ts` — Cleanup ops plus `mergeMemoryFiles` (global import merge).
 - `src/mcp/scoring.ts` — Entry scoring and access tracking (bumpAccessed).
 - `src/lib/quality.ts` — Quality scoring with staleness decay, merge-dedup, smart recall.
 - `src/lib/graph.ts` — Knowledge graph: adjacency, BM25, centrality, graph recall.

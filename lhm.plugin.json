@@ -1,8 +1,8 @@
 {
   "identifier": "luiggival08-toon-memory",
   "name": "toon-memory",
-  "description": "The Continuity Layer for AI Agents — an MCP memory server that preserves project knowledge, decisions, and conventions across sessions so every session starts where the last one ended. Offline, token-efficient, no LLM, no server; works with 15+ agents.",
-  "version": "4.3.2",
+  "description": "The Continuity Layer for AI Agents — an MCP memory server that preserves project knowledge, decisions, and conventions across sessions so every session starts where the last one ended. Offline, token-efficient, no LLM, no server; works with 20+ agents.",
+  "version": "4.3.3",
   "author": "LuiggiVal08",
   "authorUrl": "https://github.com/LuiggiVal08",
   "homepage": "https://github.com/LuiggiVal08/toon-memory",
@@ -152,6 +152,18 @@
     {
       "name": "memory_tag",
       "description": "Batch tag operations: add, remove, or set tags on one or more entries by key or id."
+    },
+    {
+      "name": "memory_secret",
+      "description": "Store/retrieve secrets in the encrypted vault (secrets.toon, AES-256-GCM) — store/get/list/forget. Keeps data.toon readable while sensitive values stay encrypted at rest. Requires TOON_MEMORY_KEY."
+    },
+    {
+      "name": "memory_export_global",
+      "description": "Write current project memory to the global file (~/.toon-memory/memory/global.toon). One-shot share of cross-project conventions."
+    },
+    {
+      "name": "memory_import_global",
+      "description": "Merge cross-project conventions from the global file into this project (one-shot, deterministic, offline). merge: false replaces instead."
     }
   ],
   "resources": [

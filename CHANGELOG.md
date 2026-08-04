@@ -1,5 +1,25 @@
 # Changelog
 
+## [4.3.3] - 2026-08-04
+
+### Added
+- **7 new MCP-capable agents** — expanded auto-detection from 15 to 22 supported agents: **Qwen** (`~/.qwen/settings.json`, hooks + AGENTS.md), **Kimi** (`~/.kimi/mcp.json`), **Goose** (`~/.config/goose/config.yaml`, YAML `extensions`), **Junie** (`.junie/mcp/mcp.json`), **Amp** (`~/.config/amp/settings.json`, nested `amp.mcpServers`), **Grok** (`.grok/config.toml`, `[mcp_servers]` TOML), **Trae** (`.trae/mcp.json`). New `yaml` config format plus nested-key + append-only TOML/YAML writers; `status`/`uninstall` cover global+local paths for all three formats. Marketing/docs updated from "15+" to "20+" across the 8-locale docs site and README.
+- **Write-path evidence (F1)** — `memory_remember` now annotates every save with an evidence level stored as the 20th TOON field (`parts[19]`): `verified` when the referenced file exists on disk, `unverified` when it doesn't, `conflict` when it overlaps a `warning` or a critical/high decision (Jaccard, deterministic, offline). Conflicts never block the write — the save succeeds and the response surfaces a `⚠️ Potential CONTRADICTION` warning (max 3 hits, sorted by similarity). Ranking bias: `conflict` +0.15, `verified` +0.03, `unverified` −0.02 (applied in both `graphRecallDetailed` and `generateSmartRecall`). `mergeEntries` keeps `conflict` over any other level. Empty = legacy entry or no file claim (neutral).
+- **Encrypted secrets vault (F3)** — `memory_secret` (`store`/`get`/`list`/`forget`) persists credentials in an encrypted sidecar `secrets.toon` (AES-256-GCM, reuses the main crypto, requires `TOON_MEMORY_KEY`). Values are encrypted once per entry and the whole file is encrypted again at rest, so neither values nor key names leak to plaintext while `data.toon` stays a readable open format. New module `src/mcp/vault.ts`.
+- **Global memory import/export (F5)** — `memory_export_global` writes project memory to `~/.toon-memory/memory/global.toon` (overridable via `TOON_MEMORY_GLOBAL_FILE`); `memory_import_global` merges cross-project conventions back with a one-shot, deterministic, offline merge by key (`mergeMemoryFiles` in `consolidation.ts`, preserves every field incl. summaries/prefix). Never a live dual-source recall.
+
+### Fixed
+- **`mergeMemoryFiles` emitted entries without the two-space TOON indent** — imported/kept entries were `.trim()`-ed and rejoined unindented, so `parseEntries` (which only reads lines starting with two spaces) silently ignored them and global imports were unrecallable. Output is now re-indented.
+- **`parseEntries` dropped minimal legacy lines** — entries with fewer than 7 fields (e.g. a hand-written or CLI-style `id|category|key|content` line) were skipped everywhere. They now parse with graceful defaults (≥3 fields required), so legacy global files import and recall correctly.
+- **`mergeMemoryFiles` silently skipped minimal incoming lines** — the `< 7` field gate dropped legacy lines without counting them. Now aligned with the local side (≥3).
+- **`storeSecret` stored values in plaintext inside the encrypted file** — `getSecret` tried to `decrypt()` a plaintext value and threw "wrong key". Values are now encrypted before they're written (double encryption at rest).
+
+### Tests
+- Evidence: contradiction thresholds (warning vs critical), obsolete/draft/self-key exclusions, similarity sorting, evidence levels, `mergeEntries` conflict-wins, 20-field round-trip, and conflict-ranking bias in `generateSmartRecall`
+- Vault: store/get/list/forget round-trip, no plaintext at rest (value *and* key name), in-place id preservation, cross-module-instance persistence, missing-key error
+- Global import: adds/merges keys, preserves prefix + summaries, evidence carried through the merge, minimal legacy lines accepted, output round-trips through `parseEntries`
+- Integration (spawned server): `memory_remember` evidence + CONTRADICTION end-to-end, `memory_secret` full lifecycle, `memory_export_global` → `memory_import_global` cross-project recall
+
 ## [4.3.2] - 2026-08-03
 
 ### Fixed
@@ -152,7 +172,7 @@
 - **Vendored D3.js** — Removed `d3` npm dependency. D3 v7.9.0 vendored at `src/viewer/d3.v7.min.js` (280 KB), read via `readFileSync` at module load time. Falls back to CDN URL string if local file not found
 - **`__MCP_UI__` polyfill** — Prevents host bridge injection crash (`Cannot read properties of undefined (reading 'invoke')`)
 - **ResizeObserver guard** — Waits for graph container to have non-zero dimensions before initializing D3. Safe proxy for graph methods before `initGraph()` completes
-- **Agent instructions for `memory_visualize`** — `toon-memory init` now writes "When asked to see the memory graph, call memory_visualize()" into AGENTS.md for all 15+ supported agents
+- **Agent instructions for `memory_visualize`** — `toon-memory init` now writes "When asked to see the memory graph, call memory_visualize()" into AGENTS.md for all 20+ supported agents
 - **`height: 100%` layout** — Changed from `100vh` for iframe compatibility in MCP Apps hosts
 
 ### Changed

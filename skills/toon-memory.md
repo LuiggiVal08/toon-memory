@@ -54,6 +54,9 @@ A persistent memory system for AI coding agents. It remembers decisions, pattern
 | `memory_merge_sessions` | Merge observations across parallel sessions |
 | `memory_export_gist` | Export memory to a private GitHub Gist |
 | `memory_import_gist` | Import memory from a GitHub Gist |
+| `memory_secret` | Store/retrieve secrets in the encrypted vault (`secrets.toon`, AES-256-GCM) — store/get/list/forget |
+| `memory_export_global` | Write project memory to the global file (`~/.toon-memory/memory/global.toon`) |
+| `memory_import_global` | Merge cross-project conventions from the global file (one-shot, deterministic) |
 | `memory_graph_path` | BFS shortest path between two entries |
 | `memory_visualize` | Open interactive memory graph viewer |
 | `memory_pin` | Pin entry with priority 1-5 for top recall placement |

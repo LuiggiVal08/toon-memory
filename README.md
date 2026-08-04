@@ -65,9 +65,9 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 
 ## Features
 
-- **A complete memory toolkit** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall with session bias), `memory_sessions` for multi-session coordination, `context_*` tools for one-call context generation (briefing, diff, focus, health audit, export), `memory_compress` (LLM-powered compression), `memory_consolidate` (deterministic dedup/merge/cleanup), `memory_primer` (auto-injected context), `memory_merge_sessions` (cross-session merge), `memory_pin`/`memory_unpin` (pin important entries with priority 1-5), `memory_checkpoint` (session snapshot with 7d TTL), `memory_search` (unified search with tag filters + session bias), `memory_tag` (batch tag operations), `memory_export_gist`/`memory_import_gist` (GitHub Gist sync), `memory_forget` (soft/hard delete, restore, supersede), `memory_reflect` (staleness/quality reflection), and `memory_promote` (auto-promote low-confidence drafts)
+- **A complete memory toolkit** — Full memory management via Model Context Protocol, including `memory_smart_recall` (unified recall with session bias), `memory_sessions` for multi-session coordination, `context_*` tools for one-call context generation (briefing, diff, focus, health audit, export), `memory_compress` (LLM-powered compression), `memory_consolidate` (deterministic dedup/merge/cleanup), `memory_primer` (auto-injected context), `memory_merge_sessions` (cross-session merge), `memory_pin`/`memory_unpin` (pin important entries with priority 1-5), `memory_checkpoint` (session snapshot with 7d TTL), `memory_search` (unified search with tag filters + session bias), `memory_tag` (batch tag operations), `memory_export_gist`/`memory_import_gist` (GitHub Gist sync), `memory_secret` (encrypted secrets vault), `memory_export_global`/`memory_import_global` (cross-project conventions), `memory_forget` (soft/hard delete, restore, supersede), `memory_reflect` (staleness/quality reflection), and `memory_promote` (auto-promote low-confidence drafts)
 - **MCP Resources** — Read memory as context without tool invocations, including a System Primer (auto-generated knowledge map)
-- **15 agents supported** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro
+- **22 agents supported** — OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex CLI, Gemini CLI, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro, Qwen, Kimi, Goose, Junie, Amp, Grok, Trae
 - **Interactive installer** — Select which agents to configure from a menu
 - **SessionStart hooks** — Auto-reminders for Claude Code, Codex CLI, Gemini CLI, Antigravity
 - **TOON format** — 22% fewer tokens than JSON (measured), better LLM comprehension
@@ -113,6 +113,9 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 - **Negative memories** — a `warning` category for "do NOT do this" facts; `warning` entries get a recall boost so the agent sees the landmines before repeating them
 - **Language + folder ranking** — recall boosts entries written in the same script family (latin/CJK/cyrillic/…) and entries whose `path_scope` matches the current file
 - **Explicit importance** — `memory_remember({ importance })` sets `critical`, `high`, `medium`, or `low`. Critical decisions surface first (+0.3), low notes stay out of the way (−0.1); empty = auto (recency + frequency). Re-saving keeps the higher level
+- **Evidence layer** — every `memory_remember` save is annotated with an evidence level: `verified` when its referenced file exists on disk, `unverified` when it doesn't, `conflict` when it overlaps a warning or critical/high decision. Conflicts get a +0.15 recall boost (verified +0.03, unverified −0.02) and a ⚠️ CONTRADICTION warning on save — but never block the write
+- **Secrets vault** — `memory_secret` stores credentials in an encrypted sidecar (`secrets.toon`, AES-256-GCM) so `data.toon` stays a readable open format while sensitive values never hit plaintext
+- **Global memory import/export** — `memory_export_global` writes project memory to `~/.toon-memory/memory/global.toon`; `memory_import_global` pulls cross-project conventions back with a one-shot, deterministic, offline merge (never a live dual source)
 
 ---
 
@@ -234,7 +237,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 
 | Tool | Description |
 |------|-------------|
-| `memory_remember` | Save a decision, pattern, bug, knowledge, or **warning** (negative "do NOT do this" memory, recalled with a boost) — optional TTL, auto-tag inference, `links` to build the memory graph, merge-dedup on same key, auto quality score and confidence |
+| `memory_remember` | Save a decision, pattern, bug, knowledge, or **warning** (negative "do NOT do this" memory, recalled with a boost) — optional TTL, auto-tag inference, `links` to build the memory graph, merge-dedup on same key, auto quality score and confidence. **Write-path intelligence**: each save is annotated with an evidence level — `verified` when the referenced file exists on disk, `unverified` when it doesn't, `conflict` when it overlaps a warning or critical/high decision (recalled with a boost and surfaced with a ⚠️ CONTRADICTION warning, but never blocks the write) |
 | `memory_recall` | Search memory (use BEFORE reading files, filters expired TTL). `mode: "graph"` expands a relationship-aware subgraph for higher precision. `budget: "tiny"|"normal"|"deep"` controls output verbosity (backward compat with `compact: true`). `path_scope` filters by glob pattern. `sessionBias` boosts entries from the current git branch. `explain: true` appends a per-entry reason line (why it was retrieved). `budget_tokens` caps output by estimated tokens (`0` = no limit). Quality-weighted ranking |
 | `memory_smart_recall` | **Unified recall**: BM25 + graph + decay + quality in one call. `sessionBias` boosts entries from the current git branch. `explain: true` appends per-entry reasons, `budget_tokens` caps output by estimated tokens. Use at the START of every task. Returns compact, token-efficient output |
 | `memory_forget` | **Lifecycle ops** by key or id: `action: "soft"` (default) marks obsolete, `"hard"` permanently removes, `"restore"` brings back to active, `"supersede"` retires it with a `superseded_by` link to `new_key` |
@@ -255,6 +258,9 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 | `memory_merge_sessions` | Merge observations across parallel sessions for a file. Deduplicates and optionally auto-promotes to memory |
 | `memory_export_gist` | Export memory entries to a GitHub Gist (public or private). Uses `GITHUB_TOKEN` or `gh` CLI |
 | `memory_import_gist` | Import entries from a GitHub Gist. Merges with existing entries (union of tags, max confidence) |
+| `memory_secret` | **Encrypted secrets vault** (`secrets.toon`, AES-256-GCM): `store`/`get`/`list`/`forget`. Keeps `data.toon` readable while sensitive values stay encrypted at rest. Requires `TOON_MEMORY_KEY` |
+| `memory_export_global` | Write current project memory to the global file (`~/.toon-memory/memory/global.toon`). One-shot share of cross-project conventions |
+| `memory_import_global` | Merge cross-project conventions from the global file into this project (one-shot, deterministic, offline). `merge: false` replaces instead |
 | `memory_graph_path` | BFS shortest path between two entries in the knowledge graph. Shows how concepts are connected |
 | `context_brief` | **One-call context briefing**: memory + sessions + health in compact markdown. Use instead of 5-6 separate memory_* calls. Zero LLM, pure deterministic aggregation |
 | `context_generate` | **Full project briefing**: combines project structure, git state, memory entries, and active sessions in one call. Replaces 5-6 manual tool calls |
@@ -980,7 +986,7 @@ npx toon-memory
 ```
 
 The installer (requires a terminal) will:
-1. Show all 15 supported agents with detection status (`✓` config found) and their supported scope (`local/global` or `solo local`)
+1. Show all 22 supported agents with detection status (`✓` config found) and their supported scope (`local/global` or `solo local`)
 2. Let you select which ones to configure — by number (`1,3,5`), by name (`claude,codex`), `all`, Enter for all, or `q` to quit
 3. Ask for the installation scope: **(1) Local** (project: `.toon-memory` + agent configs in the repo) or **(2) Global** (`~home` configs)
 4. Show a confirmation summary (`agent → scope → path (MCP/plugin/hooks/instrucciones)`) and ask `¿Proceder? [Y/n]`
@@ -1094,10 +1100,10 @@ Add to `~/.config/zed/settings.json`:
 
 ```
 version: 1
-entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority|path_scope|origin|status}:
-  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0||0||agent|active
-  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.55|1.0||0||agent|active
-  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20 (see [[use-zod]])|redis.ts|redis;fix|2026-07-10|7d|0|use-zod|0.70|0.9||0||agent|active
+entries[3|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed|priority|path_scope|origin|status|supersededOn|importance|evidence}:
+  a1b2c3d4|decision|use-zod|Use Zod for validation|src/types.ts|validation;types|2026-07-10||0||0.65|1.0||0||agent|active|||verified
+  e5f6g7h8|pattern|pydantic-configs|Project uses Pydantic v2|config.py|python;patterns|2026-07-10||0||0.55|1.0||0||agent|active|||
+  i9j0k1l2|bug|redis-pool-fix|Added max_connections=20 (see [[use-zod]])|redis.ts|redis;fix|2026-07-10|7d|0|use-zod|0.70|0.9||0||agent|active|||conflict
 summaries:
   src/services/redis.ts: Redis connection pool with retry logic
 ```
@@ -1322,7 +1328,7 @@ RRF is the top-ranked mode (0.861 R@5, 97.6% of queries answerable from the top-
 
 ### Does this work with any AI agent?
 
-Yes, as long as it supports MCP (Model Context Protocol). We have auto-setup for 15 agents, with manual configuration available for others.
+Yes, as long as it supports MCP (Model Context Protocol). We have auto-setup for 22 agents, with manual configuration available for others.
 
 ### Is my data sent anywhere?
 
@@ -1367,8 +1373,8 @@ toon-memory/
 │   │   ├── setup.ts             # CLI commands
 │   │   └── toon-memory.ts       # CLI runner
 │   ├── mcp/
-│   │   ├── server.ts            # MCP server (35 tools + 4 resources + 1 prompt)
-│   │   ├── tools.ts             # Tool registration (35 tools)
+│   │   ├── server.ts            # MCP server (38 tools + 4 resources + 1 prompt)
+│   │   ├── tools.ts             # Tool registration (38 tools)
 │   │   ├── resources.ts         # Resource registration (4 resources)
 │   │   ├── prompts.ts           # Prompt registration (1 prompt)
 │   │   ├── session-store.ts     # Session layer (auto-promote, cleanup)

@@ -6,7 +6,8 @@ bin/toon-memory.js
 DOCS-ROADMAP.md
 .opencode/
 .opencode/memory/
-.toon-memory/memory/
+**/.toon-memory/memory/
+**/.toon-memory/viewer/
 .opencode/instructions/memory-autoload.md
 IDEAS-DEFERRED.md
 .agents/
