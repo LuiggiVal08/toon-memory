@@ -1,7 +1,7 @@
 {
   "name": "toon-memory",
   "mcpName": "io.github.LuiggiVal08/toon-memory",
-  "version": "4.3.3",
+  "version": "4.3.4",
   "description": "The Continuity Layer for AI Agents — an MCP memory server that preserves project knowledge, decisions, and conventions across sessions so every session starts where the last one ended. Offline, token-efficient, no LLM, no server; works with 20+ agents.",
   "type": "module",
   "bin": {
@@ -37,21 +37,21 @@
     "bench:retrieval": "node scripts/bench-retrieval.mjs"
   },
   "dependencies": {
-    "@inquirer/prompts": "^8.5.2",
-    "@modelcontextprotocol/ext-apps": "^1.7.5",
-    "@modelcontextprotocol/sdk": "^1.30.0",
-    "@toon-format/toon": "^2.3.0",
-    "zod": "^4.4.3"
+    "@inquirer/prompts": "^8.5.2"
   },
   "devDependencies": {
     "@mcp-ui/server": "^6.1.0",
+    "@modelcontextprotocol/ext-apps": "^1.7.5",
     "@modelcontextprotocol/inspector": "^2.0.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@toon-format/toon": "^2.3.0",
     "@types/node": "^26.1.1",
     "esbuild": "^0.25.0",
     "gpt-tokenizer": "^3.4.0",
     "playwright": "^1.62.0",
     "typescript": "^7.0.2",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "zod": "^4.4.3"
   },
   "keywords": [
     "opencode",
