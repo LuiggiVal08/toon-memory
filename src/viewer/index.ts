@@ -33,39 +33,39 @@ const MAX_PORT_ATTEMPTS = 20
 
 export function viewer(portArg?: string): void {
   const startPort = resolvePort(portArg)
-  let port = startPort
   let currentHtml = generateHtml(buildViewerData())
 
-  const server = createServer((_req: IncomingMessage, res: ServerResponse) => {
-    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" })
-    res.end(currentHtml)
-  })
+  function serveOn(port: number, attempt: number): void {
+    const server = createServer((_req: IncomingMessage, res: ServerResponse) => {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" })
+      res.end(currentHtml)
+    })
 
-  server.on("error", (err: NodeJS.ErrnoException) => {
-    if (err.code === "EADDRINUSE" && port < startPort + MAX_PORT_ATTEMPTS) {
-      port += 1
-      console.log(`Port ${port - 1} in use, trying ${port}...`)
-      server.listen(port, "127.0.0.1", onListen)
-    } else if (err.code === "EADDRINUSE") {
-      console.error(`Port ${port} already in use. Try: toon-memory viewer --port ${port + 1} (or PORT=${port + 1} toon-memory viewer)`)
-      process.exit(1)
-    } else {
-      console.error(`Server error: ${err.message}`)
-      process.exit(1)
-    }
-  })
+    server.on("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "EADDRINUSE" && attempt < MAX_PORT_ATTEMPTS) {
+        console.log(`Port ${port} in use, trying ${port + 1}...`)
+        serveOn(port + 1, attempt + 1)
+      } else if (err.code === "EADDRINUSE") {
+        console.error(`Port ${port} already in use. Try: toon-memory viewer --port ${port + 1} (or PORT=${port + 1} toon-memory viewer)`)
+        process.exit(1)
+      } else {
+        console.error(`Server error: ${err.message}`)
+        process.exit(1)
+      }
+    })
 
-  function onListen(): void {
-    const url = `http://127.0.0.1:${port}`
-    const data = buildViewerData()
-    console.log(`\ntoon-memory viewer`)
-    console.log(`   Entries: ${data.totalEntries} | Edges: ${data.edges.length}`)
-    console.log(`   Serving at: ${url}`)
-    console.log(`   Press 'r' in terminal to reload | Ctrl+C to stop\n`)
-    openBrowser(url)
+    server.listen(port, "127.0.0.1", () => {
+      const url = `http://127.0.0.1:${port}`
+      const data = buildViewerData()
+      console.log(`\ntoon-memory viewer`)
+      console.log(`   Entries: ${data.totalEntries} | Edges: ${data.edges.length}`)
+      console.log(`   Serving at: ${url}`)
+      console.log(`   Press 'r' in terminal to reload | Ctrl+C to stop\n`)
+      openBrowser(url)
+    })
   }
 
-  server.listen(startPort, "127.0.0.1", onListen)
+  serveOn(startPort, 1)
 
   if (process.stdin.isTTY) {
     process.stdin.setRawMode?.(true)
