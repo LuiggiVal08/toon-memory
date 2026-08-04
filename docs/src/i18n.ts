@@ -93,7 +93,7 @@ export const content = {
 					title: 'Lightweight',
 					items: [
 						'Native TOON format — 22% fewer tokens than JSON',
-						'Zero dependencies, runs on any Node.js 18+',
+						'~1 MB install — a single runtime dependency, runs on any Node.js 18+',
 						'Deterministic logic — no LLM calls, no API keys',
 					],
 				},
@@ -720,7 +720,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					title: 'Ligero',
 					items: [
 						'Formato TOON nativo — 22% menos tokens que JSON',
-						'Cero dependencias, funciona en cualquier Node.js 18+',
+						'~1 MB de instalación — una sola dependencia runtime, funciona en cualquier Node.js 18+',
 						'Lógica determinista — sin llamadas LLM, sin claves API',
 					],
 				},
@@ -1293,7 +1293,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: '让项目记忆可以放心保留的保障。',
 		groups: [
 			{ icon: '🔒', title: '隐私优先', items: ['100% 本地 — 无云、无服务器、无遥测', '可选 AES-256-GCM 加密', '你拥有记忆文件，就像任何源文件'] },
-			{ icon: '⚡', title: '轻量', items: ['原生 TOON 格式 — 比 JSON 少 22% 的 token', '零依赖，任何 Node.js 18+ 都可运行', '确定性逻辑 — 无 LLM 调用、无 API 密钥'] },
+			{ icon: '⚡', title: '轻量', items: ['原生 TOON 格式 — 比 JSON 少 22% 的 token', '约 1 MB 安装 — 单个运行时依赖，任何 Node.js 18+ 都可运行', '确定性逻辑 — 无 LLM 调用、无 API 密钥'] },
 			{ icon: '🛰️', title: '通用', items: ['适用于 20+ 个代理：Claude Code、Codex、Gemini CLI、Cursor、OpenCode 等', '标准 MCP — 更换代理而不丢失上下文', '每个团队成员共享的项目记忆'] },
 		],
 	},
@@ -1580,7 +1580,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: 'プロジェクトの記憶を安全に保つための保証。',
 		groups: [
 			{ icon: '🔒', title: 'プライバシー優先', items: ['100% ローカル — クラウドなし、サーバーなし、テレメトリなし', 'オプションの AES-256-GCM 暗号化', '記憶ファイルはソースファイル同様、あなたのもの'] },
-			{ icon: '⚡', title: '軽量', items: ['ネイティブ TOON 形式 — JSON より 22% 少ないトークン', '依存関係ゼロ、Node.js 18+ で動作', '決定論的ロジック — LLM 呼び出しなし、API キー不要'] },
+			{ icon: '⚡', title: '軽量', items: ['ネイティブ TOON 形式 — JSON より 22% 少ないトークン', '約 1 MB のインストール — ランタイム依存 1 つ、Node.js 18+ で動作', '決定論的ロジック — LLM 呼び出しなし、API キー不要'] },
 			{ icon: '🛰️', title: 'ユニバーサル', items: ['20+ のエージェントに対応: Claude Code、Codex、Gemini CLI、Cursor、OpenCode など', '標準 MCP — コンテキストを失わずにエージェントを変更', 'チーム全員が共有するプロジェクト別メモリ'] },
 		],
 	},
@@ -1864,7 +1864,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: '프로젝트 메모리를 안전하게 유지하는 보장.',
 		groups: [
 			{ icon: '🔒', title: '프라이버시 우선', items: ['100% 로컬 — 클라우드, 서버, 텔레메트리 없음', '선택적 AES-256-GCM 암호화', '메모리 파일은 소스 파일처럼 당신의 것입니다'] },
-			{ icon: '⚡', title: '가벼움', items: ['네이티브 TOON 형식 — JSON보다 22% 적은 토큰', '의존성 제로, Node.js 18+에서 동작', '결정적 로직 — LLM 호출 없음, API 키 불필요'] },
+			{ icon: '⚡', title: '가벼움', items: ['네이티브 TOON 형식 — JSON보다 22% 적은 토큰', '설치 약 1 MB — 런타임 의존성 1개, Node.js 18+에서 동작', '결정적 로직 — LLM 호출 없음, API 키 불필요'] },
 			{ icon: '🛰️', title: '유니버설', items: ['20+ 에이전트 지원: Claude Code, Codex, Gemini CLI, Cursor, OpenCode 등', '표준 MCP — 컨텍스트를 잃지 않고 에이전트 변경', '팀 전체가 공유하는 프로젝트별 메모리'] },
 		],
 	},
@@ -2176,7 +2176,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: 'As garantias que tornam seguro manter a memória do projeto.',
 		groups: [
 			{ icon: '🔒', title: 'Privacidade em primeiro lugar', items: ['100% local — sem nuvem, sem servidor, sem telemetria', 'Criptografia opcional AES-256-GCM', 'Você é dono do arquivo de memória, como qualquer fonte'] },
-			{ icon: '⚡', title: 'Leve', items: ['Formato TOON nativo — 22% menos tokens que JSON', 'Zero dependências, roda em qualquer Node.js 18+', 'Lógica determinística — sem chamadas LLM, sem chaves de API'] },
+			{ icon: '⚡', title: 'Leve', items: ['Formato TOON nativo — 22% menos tokens que JSON', '~1 MB instalado — uma única dependência runtime, roda em qualquer Node.js 18+', 'Lógica determinística — sem chamadas LLM, sem chaves de API'] },
 			{ icon: '🛰️', title: 'Universal', items: ['Funciona com 20+ agentes: Claude Code, Codex, Gemini CLI, Cursor, OpenCode e mais', 'MCP padrão — troque de agente sem perder contexto', 'Memória por projeto compartilhada por todo o time'] },
 		],
 	},
@@ -2697,7 +2697,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: 'Die Garantien, die Projekterinnerung sicher machen.',
 		groups: [
 			{ icon: '🔒', title: 'Datenschutz zuerst', items: ['100% lokal — kein Cloud, kein Server, keine Telemetrie', 'Optionale AES-256-GCM-Verschlüsselung', 'Du besitzt die Speicherdatei wie jede Quelldatei'] },
-			{ icon: '⚡', title: 'Leichtgewichtig', items: ['Natives TOON-Format — 22% weniger Tokens als JSON', 'Keine Abhängigkeiten, läuft auf jedem Node.js 18+', 'Deterministische Logik — keine LLM-Aufrufe, keine API-Schlüssel'] },
+			{ icon: '⚡', title: 'Leichtgewichtig', items: ['Natives TOON-Format — 22% weniger Tokens als JSON', '~1 MB Installation — eine Laufzeitabhängigkeit, läuft auf jedem Node.js 18+', 'Deterministische Logik — keine LLM-Aufrufe, keine API-Schlüssel'] },
 			{ icon: '🛰️', title: 'Universell', items: ['Funktioniert mit 20+ Agenten: Claude Code, Codex, Gemini CLI, Cursor, OpenCode und mehr', 'Standard-MCP — Agenten wechseln, ohne Kontext zu verlieren', 'Projektweiter Speicher, den jedes Teammitglied teilt'] },
 		],
 	},
@@ -3214,7 +3214,7 @@ cta: {
 			subtitle: 'Les garanties qui rendent la mémoire du projet sûre à conserver.',
 		groups: [
 				{ icon: '🔒', title: 'Confidentialité d\'abord', items: ['100% local — aucun cloud, aucun serveur, aucune télémétrie', 'Chiffrement AES-256-GCM optionnel', 'Vous possédez le fichier mémoire, comme n\'importe quel fichier source'] },
-			{ icon: '⚡', title: 'Léger', items: ['Format TOON natif — 22% de tokens en moins que JSON', 'Zéro dépendance, fonctionne sur tout Node.js 18+', 'Logique déterministe — aucun appel LLM, aucune clé API'] },
+			{ icon: '⚡', title: 'Léger', items: ['Format TOON natif — 22% de tokens en moins que JSON', '~1 MB installé — une seule dépendance runtime, fonctionne sur tout Node.js 18+', 'Logique déterministe — aucun appel LLM, aucune clé API'] },
 				{ icon: '🛰️', title: 'Universel', items: ['Fonctionne avec 20+ agents : Claude Code, Codex, Gemini CLI, Cursor, OpenCode et plus', 'MCP standard — changez d\'agent sans perdre le contexte', 'Mémoire par projet partagée par toute l\'équipe'] },
 		],
 	},

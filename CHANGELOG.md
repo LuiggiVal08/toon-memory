@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.3.4] - 2026-08-04
+
+### Changed
+- **~14× smaller npm install** — `dependencies` trimmed to a single runtime dependency (`@inquirer/prompts`, for the interactive installer). The MCP SDK (`@modelcontextprotocol/sdk`), its HTTP/SSE transitives (hono, ajv, express, jose…), `@modelcontextprotocol/ext-apps`, `zod`, and `@toon-format/toon` are all bundled into the shipped binary (`mcp/server.js`, `dist/`) by esbuild and moved to `devDependencies` (build-only). Verified on a clean `npm pack` → `npm i --omit=dev`: download ~0.85 MB (was ~14 MB), installed ~5.5 MB across 11 packages (was ~33 MB / 120). All 38 MCP tools, the CLI, and the interactive installer work from the minimal install.
+
 ## [4.3.3] - 2026-08-04
 
 ### Added
