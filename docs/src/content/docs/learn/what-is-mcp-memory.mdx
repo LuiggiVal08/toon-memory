@@ -17,7 +17,7 @@ MCP memory is a way for AI coding agents to **remember things between sessions**
 - **Survives restarts** — your agent remembers yesterday's context today
 - **Works offline** — no cloud, no API calls, no LLM needed for storage
 - **Saves tokens** — 22% fewer tokens than JSON, 80% fewer tool calls per session
-- **Works with 15+ agents** — Claude Code, Cursor, OpenCode, Windsurf, VS Code Copilot, and more
+- **Works with 20+ agents** — Claude Code, Cursor, OpenCode, Windsurf, VS Code Copilot, and more
 
 ## How MCP Memory Works
 
@@ -43,7 +43,7 @@ toon-memory runs as a **local MCP server** that your agent connects to via the M
 
 | Approach | Pros | Cons |
 |----------|------|------|
-| **MCP Memory (toon-memory)** | Offline, token-efficient, graph-aware, 15+ agents | Requires MCP support |
+| **MCP Memory (toon-memory)** | Offline, token-efficient, graph-aware, 20+ agents | Requires MCP support |
 | **Markdown files** | Simple, human-readable | Not structured, not searchable, not MCP-compatible |
 | **Cloud memory (mem0)** | Managed, vector search | Requires internet, costs money, data leaves your machine |
 | **Memory banks (shodh-memory)** | Hybrid search | Complex setup, Docker required, sentence-transformers dependency |

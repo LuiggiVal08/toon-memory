@@ -30,6 +30,13 @@ toon-memory provides 35 MCP tools and 4 MCP resources for managing persistent me
 | `memory_encrypt` | Enable AES-256-GCM encryption |
 | `memory_decrypt` | Disable encryption |
 | `memory_backup` | Create timestamped backup of memory file (auto-prunes to 10 most recent) |
+| `memory_secret` | **Encrypted secrets vault** (`secrets.toon`, AES-256-GCM): `store`/`get`/`list`/`forget`. Keeps `data.toon` readable while sensitive values stay encrypted at rest. Requires `TOON_MEMORY_KEY` |
+| `memory_export_global` | Write current project memory to the global file (`~/.toon-memory/memory/global.toon`). One-shot share of cross-project conventions |
+| `memory_import_global` | Merge cross-project conventions from the global file into this project (one-shot, deterministic, offline). `merge: false` replaces instead |
+| `memory_export_gist` | Export memory to a private GitHub Gist for cloud sync. Requires `GITHUB_TOKEN` env var |
+| `memory_import_gist` | Import memory from a GitHub Gist. Merges entries (keeps newer dates, combines tags) |
+| `memory_merge_sessions` | Merge observations from multiple sessions/branches into a consolidated view. Deduplicates and suggests entries to promote |
+| `memory_compress` | **LLM-powered compression**: select entries to compress into one concise entry (two-step: the tool provides context, you provide the summary) |
 | `memory_sessions` | Show active agent sessions, branches, and soft file conflicts for parallel-session coordination |
 | `context_brief` | **One-call context briefing**: memory + sessions + health in compact markdown. Use instead of 5-6 separate memory_* calls. Zero LLM |
 | `context_generate` | **Full project briefing**: combines project structure, git state, memory entries, and active sessions in one call. Replaces 5-6 manual tool calls |

@@ -17,7 +17,7 @@ MCP 메모리는 AI 코딩 에이전트가 **세션 간에 정보를 기억하�
 - **재시작 후에도 유지** — 에이전트가 어제의 컨텍스트를 오늘도 기억합니다
 - **오프라인 작동** — 클라우드, API 호출, 저장에 필요한 LLM이 필요 없습니다
 - **토큰 절약** — JSON보다 22% 적은 토큰, 세션당 80% 적은 도구 호출
-- **15개 이상의 에이전트 지원** — Claude Code, Cursor, OpenCode, Windsurf, VS Code Copilot 등
+- **20개 이상의 에이전트 지원** — Claude Code, Cursor, OpenCode, Windsurf, VS Code Copilot 등
 
 ## MCP 메모리 작동 원리
 
@@ -43,7 +43,7 @@ toon-memory는 에이전트가 Model Context Protocol을 통해 연결하는 **�
 
 | 접근 방식 | 장점 | 단점 |
 |----------|------|------|
-| **MCP 메모리 (toon-memory)** | 오프라인, 토큰 효율적, 그래프 인식, 15개 이상 에이전트 | MCP 지원 필요 |
+| **MCP 메모리 (toon-memory)** | 오프라인, 토큰 효율적, 그래프 인식, 20개 이상 에이전트 | MCP 지원 필요 |
 | **Markdown 파일** | 간단, 사람이 읽기 쉬움 | 구조화 안 됨, 검색 불가, MCP 비호환 |
 | **클라우드 메모리 (mem0)** | 관리형, 벡터 검색 | 인터넷 필요, 비용 발생, 데이터가 기기 밖으로 나감 |
 | **메모리 뱅크 (shodh-memory)** | 하이브리드 검색 | 복잡한 설정, Docker 필요, sentence-transformers 의존성 |

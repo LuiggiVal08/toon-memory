@@ -17,7 +17,7 @@ export const content = {
 			copied: 'Copied!',
 			installCmd: 'npm install -g toon-memory',
 			worksWith: 'Works with',
-			agentsMore: '+10 more',
+			agentsMore: '+{count} more',
 		},
 		problem: {
 			title: 'Why do agents lose context between sessions?',
@@ -101,7 +101,7 @@ export const content = {
 					icon: '🛰️',
 					title: 'Universal',
 					items: [
-						'Works with 15+ agents: Claude Code, Codex, Gemini CLI, Cursor, OpenCode and more',
+						'Works with 20+ agents: Claude Code, Codex, Gemini CLI, Cursor, OpenCode and more',
 						'Standard MCP — switch agents without losing context',
 						'Project memory shared by every team member',
 					],
@@ -120,14 +120,14 @@ export const content = {
 					{ label: 'Context Briefing', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
 					{ label: 'Compression', tools: ['memory_compress', 'memory_primer'] },
 					{ label: 'Session Management', tools: ['memory_sessions', 'memory_merge_sessions'] },
-					{ label: 'Sync & Security', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+					{ label: 'Sync & Security', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup', 'memory_secret', 'memory_export_global', 'memory_import_global'] },
 				],
 				wide: true,
 			},
 				{
 					icon: '⭐',
 					title: 'Multi-Agent',
-					body: 'Works with 15+ AI coding agents. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw — zero configuration.',
+					body: 'Works with 20+ AI coding agents. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw — zero configuration.',
 					tags: ['OpenCode', 'Claude', 'Cursor', 'Windsurf'],
 				},
 				{
@@ -181,13 +181,13 @@ export const content = {
 			],
 		},
 		agents: {
-			title: 'Works with 15+ AI coding agents',
+			title: 'Works with 20+ AI coding agents',
 			subtitle: 'Zero configuration — toon-memory auto-detects and configures each one',
 		},
 		stats: {
 			items: [
 				{ number: '97.6%', label: 'Recall from top-5 (R@5 0.861)' },
-				{ number: '15', label: 'Agents' },
+				{ number: '20', label: 'Agents' },
 				{ number: '80%', label: 'Fewer Tool Calls / session' },
 				{ number: '0', label: 'Config Needed' },
 			],
@@ -196,7 +196,7 @@ export const content = {
 			title: 'How does it work?',
 			subtitle: 'Five steps from amnesia to memory',
 			steps: [
-				{ n: 1, title: 'Install', body: 'One command. Zero configuration for 15+ agents.', code: 'npm install -g toon-memory' },
+				{ n: 1, title: 'Install', body: 'One command. Zero configuration for 20+ agents.', code: 'npm install -g toon-memory' },
 				{
 					n: 2,
 					title: 'Remember',
@@ -442,6 +442,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{ name: 'memory_encrypt', title: 'Enable Encryption', desc: 'AES-256-GCM encryption with an auto-generated key.', group: 'sync' },
 				{ name: 'memory_decrypt', title: 'Disable Encryption', desc: 'Decrypt and disable encryption.', group: 'sync' },
 				{ name: 'memory_backup', title: 'Backup Memory', desc: 'Create timestamped backup of memory file. Auto-prunes to 10 most recent.', group: 'sync' },
+				{ name: 'memory_secret', title: 'Secrets Vault', desc: 'Encrypted secrets vault (secrets.toon, AES-256-GCM): store/get/list/forget. Keeps data.toon readable while sensitive values stay encrypted at rest. Requires TOON_MEMORY_KEY.', group: 'sync' },
+				{ name: 'memory_export_global', title: 'Export Global', desc: 'Write current project memory to the global file (~/.toon-memory/memory/global.toon). One-shot share of cross-project conventions.', group: 'sync' },
+				{ name: 'memory_import_global', title: 'Import Global', desc: 'Merge cross-project conventions from the global file (one-shot, deterministic, offline). merge: false replaces instead.', group: 'sync' },
 				{ name: 'memory_visualize', title: 'Open Graph Viewer', desc: 'Render the interactive memory graph inline in MCP Apps–compatible hosts. Force-directed graph, stats, timeline, detail panel.', group: 'core' },
 				{ name: 'memory_pin', title: 'Pin Entry', desc: 'Pin important entries with priority 1-5 — they always appear first in recall results sorted by priority, even without a keyword match.', group: 'core' },
 				{ name: 'memory_unpin', title: 'Unpin Entry', desc: 'Remove the priority flag from an entry.', group: 'core' },
@@ -507,7 +510,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				},
 				{
 					q: 'Which agents are supported?',
-					a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw, and Kiro — 15+ agents with zero configuration via the MCP server.',
+					a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw, and Kiro — 20+ agents with zero configuration via the MCP server.',
 				},
 				{
 					q: 'How is my data stored?',
@@ -641,7 +644,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			copied: '¡Copiado!',
 			installCmd: 'npm install -g toon-memory',
 			worksWith: 'Funciona con',
-			agentsMore: '+10 más',
+			agentsMore: '+{count} más',
 		},
 		problem: {
 			title: '¿Por qué los agentes pierden contexto entre sesiones?',
@@ -725,7 +728,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					icon: '🛰️',
 					title: 'Universal',
 					items: [
-						'Funciona con 15+ agentes: Claude Code, Codex, Gemini CLI, Cursor, OpenCode y más',
+						'Funciona con 20+ agentes: Claude Code, Codex, Gemini CLI, Cursor, OpenCode y más',
 						'MCP estándar — cambia de agente sin perder contexto',
 						'Memoria por proyecto que comparte todo el equipo',
 					],
@@ -745,14 +748,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{ label: 'Contexto Briefing', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
 					{ label: 'Compresión', tools: ['memory_compress', 'memory_primer'] },
 					{ label: 'Sesiones', tools: ['memory_sessions', 'memory_merge_sessions'] },
-					{ label: 'Sincronización y Seguridad', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+					{ label: 'Sincronización y Seguridad', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup', 'memory_secret', 'memory_export_global', 'memory_import_global'] },
 				],
 				wide: true,
 			},
 				{
 					icon: '⭐',
 					title: 'Multi-agente',
-					body: 'Funciona con 15+ agentes de IA principales. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw — sin configuración.',
+					body: 'Funciona con 20+ agentes de IA principales. OpenCode, VS Code, Claude, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw — sin configuración.',
 					tags: ['OpenCode', 'Claude', 'Cursor', 'Windsurf'],
 				},
 				{
@@ -806,13 +809,13 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			],
 		},
 		agents: {
-			title: 'Funciona con 15+ agentes de IA',
+			title: 'Funciona con 20+ agentes de IA',
 			subtitle: 'Sin configuración — toon-memory detecta y configura cada uno automáticamente',
 		},
 		stats: {
 			items: [
 				{ number: '97.6%', label: 'Recall en top-5 (R@5 0.861)' },
-				{ number: '15', label: 'Agentes' },
+				{ number: '20', label: 'Agentes' },
 				{ number: '80%', label: 'Menos tool calls por sesión' },
 				{ number: '0', label: 'Config necesaria' },
 			],
@@ -821,7 +824,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			title: '¿Cómo funciona?',
 			subtitle: 'Cuatro pasos de la amnesia a la memoria',
 			steps: [
-				{ n: 1, title: 'Instalar', body: 'Un solo comando. Sin configuración para 15+ agentes.', code: 'npm install -g toon-memory' },
+				{ n: 1, title: 'Instalar', body: 'Un solo comando. Sin configuración para 20+ agentes.', code: 'npm install -g toon-memory' },
 				{
 					n: 2,
 					title: 'Recordar',
@@ -1056,6 +1059,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: 'Habilitar encriptación', desc: 'Encriptación AES-256-GCM con clave autogenerada.', group: 'sync' },
 			{ name: 'memory_decrypt', title: 'Deshabilitar encriptación', desc: 'Desencripta y deshabilita la encriptación.', group: 'sync' },
 			{ name: 'memory_backup', title: 'Backup de memoria', desc: 'Crea backup con timestamp del archivo de memoria. Auto-limpia a los 10 más recientes.', group: 'sync' },
+			{ name: 'memory_secret', title: 'Bóveda de secretos', desc: 'Bóveda de secretos cifrada (secrets.toon, AES-256-GCM): store/get/list/forget. Mantiene data.toon legible mientras los valores sensibles quedan cifrados en reposo. Requiere TOON_MEMORY_KEY.', group: 'sync' },
+			{ name: 'memory_export_global', title: 'Exportar Global', desc: 'Escribe la memoria del proyecto en el archivo global (~/.toon-memory/memory/global.toon). Compartir convenciones entre proyectos.', group: 'sync' },
+			{ name: 'memory_import_global', title: 'Importar Global', desc: 'Fusiona convenciones entre proyectos desde el archivo global (one-shot, determinista, offline). merge: false reemplaza.', group: 'sync' },
 			{ name: 'memory_visualize', title: 'Abrir visor del grafo', desc: 'Renderiza el grafo de memoria interactivo inline en hosts compatibles con MCP Apps. Grafo de fuerza dirigida, estadísticas, línea de tiempo, panel de detalles.', group: 'core' },
 			{ name: 'memory_pin', title: 'Fijar entrada', desc: 'Fija entradas importantes con prioridad 1-5 — aparecen primero en resultados de recall ordenadas por prioridad, incluso sin coincidencia de palabras clave.', group: 'core' },
 			{ name: 'memory_unpin', title: 'Desfijar entrada', desc: 'Elimina la marca de prioridad de una entrada.', group: 'core' },
@@ -1121,7 +1127,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				},
 				{
 					q: '¿Qué agentes son compatibles?',
-					a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw y Kiro — 15+ agentes sin configuración vía el servidor MCP.',
+					a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw y Kiro — 20+ agentes sin configuración vía el servidor MCP.',
 				},
 				{
 					q: '¿Cómo se almacenan mis datos?',
@@ -1255,7 +1261,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		copied: '已复制！',
 		installCmd: 'npm install -g toon-memory',
 		worksWith: '兼容',
-		agentsMore: '+10 更多',
+		agentsMore: '+{count} 更多',
 	},
 	problem: {
 		title: '为什么代理会在会话之间丢失上下文？',
@@ -1288,7 +1294,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		groups: [
 			{ icon: '🔒', title: '隐私优先', items: ['100% 本地 — 无云、无服务器、无遥测', '可选 AES-256-GCM 加密', '你拥有记忆文件，就像任何源文件'] },
 			{ icon: '⚡', title: '轻量', items: ['原生 TOON 格式 — 比 JSON 少 22% 的 token', '零依赖，任何 Node.js 18+ 都可运行', '确定性逻辑 — 无 LLM 调用、无 API 密钥'] },
-			{ icon: '🛰️', title: '通用', items: ['适用于 15+ 个代理：Claude Code、Codex、Gemini CLI、Cursor、OpenCode 等', '标准 MCP — 更换代理而不丢失上下文', '每个团队成员共享的项目记忆'] },
+			{ icon: '🛰️', title: '通用', items: ['适用于 20+ 个代理：Claude Code、Codex、Gemini CLI、Cursor、OpenCode 等', '标准 MCP — 更换代理而不丢失上下文', '每个团队成员共享的项目记忆'] },
 		],
 	},
 
@@ -1304,7 +1310,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{ label: '上下文简报', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
 					{ label: '压缩', tools: ['memory_compress', 'memory_primer'] },
 					{ label: '会话管理', tools: ['memory_sessions', 'memory_merge_sessions'] },
-					{ label: '同步与安全', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+					{ label: '同步与安全', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup', 'memory_secret', 'memory_export_global', 'memory_import_global'] },
 				],
 				wide: true,
 			},
@@ -1315,13 +1321,13 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ icon: '🔒', title: '加密', body: 'AES-256-GCM 保护敏感数据。自动归档旧条目。Watch 模式每隔 N 分钟自动备份。', stats: ['AES-256-GCM', '自动备份'] },
 		],
 	},
-	agents: { title: '支持 15+ 个 AI 编程代理', subtitle: '零配置 — toon-memory 自动检测并配置每个代理' },
-	stats: { items: [{ number: '97.6%', label: '从前 5 名召回（R@5 0.861）' }, { number: '15', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
+	agents: { title: '支持 20+ 个 AI 编程代理', subtitle: '零配置 — toon-memory 自动检测并配置每个代理' },
+	stats: { items: [{ number: '97.6%', label: '从前 5 名召回（R@5 0.861）' }, { number: '20', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
 	howItWorks: {
 		title: '它是如何工作的？',
 		subtitle: '从失忆到记忆的四个步骤',
 		steps: [
-			{ n: 1, title: '安装', body: '一条命令。15+ 个代理零配置。', code: 'npm install -g toon-memory' },
+			{ n: 1, title: '安装', body: '一条命令。20+ 个代理零配置。', code: 'npm install -g toon-memory' },
 			{ n: 2, title: '记忆', body: '在工作时保存决策、模式和 bug — 支持自动标签推断和可选 TTL。', code: 'memory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})' },
 			{ n: 3, title: '召回', body: '你的代理按需查询记忆 — 无需重复解释，不浪费 token。', code: 'memory_recall({ query: "validation" })\n// [decision] use-zod (a1b2c3d4)\n//   Use Zod for validation — src/types.ts' },
 			{ n: 4, title: '上下文', body: '一次调用为你的代理提供全部信息：项目、git、记忆、会话。减少 80% 的工具调用。', code: 'context_generate({})\n// # Project Briefing (full)\n// ## Project — toon-memory v4.3.0\n// ## Git — branch: main, 3 commits\n// ## Memory — 26 entries, 18 edges\n// ## Sessions — 2 active' },
@@ -1425,6 +1431,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: '启用加密', desc: '使用自动生成密钥的 AES-256-GCM 加密。', group: 'sync' },
 			{ name: 'memory_decrypt', title: '禁用加密', desc: '解密并禁用加密。', group: 'sync' },
 			{ name: 'memory_backup', title: '备份记忆', desc: '创建带时间戳的记忆文件备份。自动修剪至最近 10 条。', group: 'sync' },
+			{ name: 'memory_secret', title: '加密保险库', desc: '加密机密保险库（secrets.toon，AES-256-GCM）：store/get/list/forget。data.toon 保持可读，敏感值静态加密。需要 TOON_MEMORY_KEY。', group: 'sync' },
+			{ name: 'memory_export_global', title: '导出全局', desc: '将项目记忆写入全局文件（~/.toon-memory/memory/global.toon）。一次性共享跨项目约定。', group: 'sync' },
+			{ name: 'memory_import_global', title: '导入全局', desc: '从全局文件合并跨项目约定（一次性、确定性、离线）。merge: false 则替换。', group: 'sync' },
 			{ name: 'memory_visualize', title: '打开图谱查看器', desc: '在兼容 MCP Apps 的主机中内联渲染交互式记忆图谱。力导向图、统计、时间线、详情面板。', group: 'core' },
 			{ name: 'memory_pin', title: '固定条目', desc: '固定重要条目，使其始终出现在召回结果顶部，即使没有关键字匹配。', group: 'core' },
 			{ name: 'memory_unpin', title: '取消固定', desc: '移除条目的固定标记。', group: 'core' },
@@ -1467,7 +1476,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		title: '常见问题', subtitle: '关于为你的代理提供记忆你需要知道的一切',
 		items: [
 			{ q: '什么是 toon-memory？', a: '面向 AI 编程代理的持久记忆层，包含 35 个 MCP 工具。它以紧凑的 TOON 格式存储决策、模式、bug 和上下文，让你的代理在会话之间记住一切 — 每次会话减少 80% 的工具调用。' },
-			{ q: '支持哪些代理？', a: 'OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex、Gemini、Zed、Antigravity、Aider、KiloCode、OpenClaw 和 Kiro — 通过 MCP 服务器零配置支持 15+ 个代理。' },
+			{ q: '支持哪些代理？', a: 'OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex、Gemini、Zed、Antigravity、Aider、KiloCode、OpenClaw 和 Kiro — 通过 MCP 服务器零配置支持 20+ 个代理。' },
 			{ q: '我的数据如何存储？', a: '条目写入本地 TOON 文件（一种 token 高效的格式，比 JSON 小约 22%，实测）。你拥有该文件，可以像任何其他源文件一样提交、diff 或备份。' },
 			{ q: '我的记忆是加密的吗？', a: '是的。使用 memory_encrypt 工具启用加密，通过 AES-256-GCM 保护敏感条目。密钥自动生成并保持在本地。' },
 			{ q: '它能离线工作吗？', a: '完全可以。toon-memory 在本地运行，无需外部服务或账户。Watch 模式甚至可以按计划自动创建备份。' },
@@ -1540,7 +1549,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		tagline: 'AIエージェントのための継続性レイヤー',
 		subtitle: 'エージェントの知識はセッションを超えて生き続けます — オフライン、プライベート、LLM不要。',
 		poweredBy: 'TOON を採用',
-		getStarted: 'はじめに', viewGithub: 'GitHub で見る', copy: 'コピー', copied: 'コピーしました！', installCmd: 'npm install -g toon-memory', worksWith: '対応', agentsMore: '+10 以上',
+		getStarted: 'はじめに', viewGithub: 'GitHub で見る', copy: 'コピー', copied: 'コピーしました！', installCmd: 'npm install -g toon-memory', worksWith: '対応', agentsMore: '+{count} 以上',
 	},
 	problem: {
 		title: 'なぜエージェントはセッション間でコンテキストを失うのか？', subtitle: 'AI コーディングエージェントは毎セッション記憶喪失から始める',
@@ -1572,7 +1581,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		groups: [
 			{ icon: '🔒', title: 'プライバシー優先', items: ['100% ローカル — クラウドなし、サーバーなし、テレメトリなし', 'オプションの AES-256-GCM 暗号化', '記憶ファイルはソースファイル同様、あなたのもの'] },
 			{ icon: '⚡', title: '軽量', items: ['ネイティブ TOON 形式 — JSON より 22% 少ないトークン', '依存関係ゼロ、Node.js 18+ で動作', '決定論的ロジック — LLM 呼び出しなし、API キー不要'] },
-			{ icon: '🛰️', title: 'ユニバーサル', items: ['15+ のエージェントに対応: Claude Code、Codex、Gemini CLI、Cursor、OpenCode など', '標準 MCP — コンテキストを失わずにエージェントを変更', 'チーム全員が共有するプロジェクト別メモリ'] },
+			{ icon: '🛰️', title: 'ユニバーサル', items: ['20+ のエージェントに対応: Claude Code、Codex、Gemini CLI、Cursor、OpenCode など', '標準 MCP — コンテキストを失わずにエージェントを変更', 'チーム全員が共有するプロジェクト別メモリ'] },
 		],
 	},
 
@@ -1588,7 +1597,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{ label: 'コンテキストブリーフィング', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
 					{ label: '圧縮', tools: ['memory_compress', 'memory_primer'] },
 					{ label: 'セッション', tools: ['memory_sessions', 'memory_merge_sessions'] },
-					{ label: '同期＆セキュリティ', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+					{ label: '同期＆セキュリティ', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup', 'memory_secret', 'memory_export_global', 'memory_import_global'] },
 				],
 				wide: true,
 			},
@@ -1599,12 +1608,12 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ icon: '🔒', title: '暗号化', body: 'AES-256-GCM による機密データ保護。古いエントリの自動アーカイブ。Watch モードで N 分ごとに自動バックアップ。', stats: ['AES-256-GCM', '自動バックアップ'] },
 		],
 	},
-	agents: { title: '15 以上の AI コーディングエージェントに対応', subtitle: 'ゼロコンフィグ — toon-memory が自動検出し、各エージェントを設定' },
-	stats: { items: [				{ number: '97.6%', label: 'トップ5からのリコール (R@5 0.861)' }, { number: '15', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
+	agents: { title: '20 以上の AI コーディングエージェントに対応', subtitle: 'ゼロコンフィグ — toon-memory が自動検出し、各エージェントを設定' },
+	stats: { items: [				{ number: '97.6%', label: 'トップ5からのリコール (R@5 0.861)' }, { number: '20', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
 	howItWorks: {
 		title: 'どのように機能するのか？', subtitle: '記憶喪失からメモリへの 4 つのステップ',
 		steps: [
-			{ n: 1, title: 'インストール', body: 'ワンコマンド。15 以上のエージェントにゼロコンフィグ。', code: 'npm install -g toon-memory' },
+			{ n: 1, title: 'インストール', body: 'ワンコマンド。20 以上のエージェントにゼロコンフィグ。', code: 'npm install -g toon-memory' },
 			{ n: 2, title: '記憶する', body: '作業しながら意思決定、パターン、バグを保存 — 自動タグ推論とオプションの TTL 対応。', code: 'memory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})' },
 			{ n: 3, title: 'リコール', body: 'エージェントがオンデマンドでメモリをクエリ — 再説明不要、トークン浪費なし。', code: 'memory_recall({ query: "validation" })\n// [decision] use-zod (a1b2c3d4)\n//   Use Zod for validation — src/types.ts' },
 			{ n: 4, title: 'コンテキスト', body: '1 回の呼び出しでエージェントにすべてを提供：プロジェクト、git、メモリ、セッション。ツール呼び出しを 80% 削減。', code: 'context_generate({})\n// # Project Briefing (full)\n// ## Project — toon-memory v4.3.0\n// ## Git — branch: main, 3 commits\n// ## Memory — 26 entries, 18 edges\n// ## Sessions — 2 active' },
@@ -1708,6 +1717,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: '暗号化を有効にする', desc: '自動生成キーによる AES-256-GCM 暗号化。', group: 'sync' },
 			{ name: 'memory_decrypt', title: '暗号化を無効にする', desc: '復号化して暗号化を無効にします。', group: 'sync' },
 			{ name: 'memory_backup', title: 'メモリバックアップ', desc: 'タイムスタンプ付きメモリファイルバックアップを作成。最新 10 件に自動修剪。', group: 'sync' },
+			{ name: 'memory_secret', title: 'シークレットボールト', desc: '暗号化シークレットボールト（secrets.toon、AES-256-GCM）：store/get/list/forget。data.toon は読みやすいまま、機密値は静止時に暗号化。TOON_MEMORY_KEY が必要。', group: 'sync' },
+			{ name: 'memory_export_global', title: 'グローバルエクスポート', desc: 'プロジェクトメモリをグローバルファイル（~/.toon-memory/memory/global.toon）に書き出し。プロジェクト横断の規約をワンショット共有。', group: 'sync' },
+			{ name: 'memory_import_global', title: 'グローバルインポート', desc: 'グローバルファイルからプロジェクト横断の規約を統合（ワンショット、決定論的、オフライン）。merge: false で置換。', group: 'sync' },
 			{ name: 'memory_pin', title: 'エントリをピン留め', desc: '重要なエントリをピン留めして、キーワード一致がなくても常にリコール結果の先頭に表示。', group: 'core' },
 			{ name: 'memory_unpin', title: 'ピン留めを解除', desc: 'エントリのピン留めフラグを削除。', group: 'core' },
 			{ name: 'memory_search', title: '統合検索', desc: 'カテゴリ、タグ、日付範囲フィルタでメモリを検索。タグフィルタは AND 論理 — 指定した全タグが一致する必要があります。', group: 'search' },
@@ -1748,7 +1760,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		title: 'よくある質問', subtitle: 'エージェントにメモリを与えるために知っておくべきことすべて',
 		items: [
 			{ q: 'toon-memory とは？', a: '35 個の MCP ツールを備えた AI コーディングエージェント向けの永続メモリレイヤー。意思決定、パターン、バグ、コンテキストをコンパクトな TOON フォーマットで保存し、エージェントがセッション間ですべてを記憶 — セッションあたり 80% ツール呼び出し削減。' },
-			{ q: 'どのエージェントがサポートされているか？', a: 'OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex、Gemini、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro — MCP サーバー経由でゼロコンフィグの 15 以上のエージェント。' },
+			{ q: 'どのエージェントがサポートされているか？', a: 'OpenCode、VS Code、Claude Code、Cursor、Windsurf、Cline、Continue、Codex、Gemini、Zed、Antigravity、Aider、KiloCode、OpenClaw、Kiro — MCP サーバー経由でゼロコンフィグの 20 以上のエージェント。' },
 			{ q: 'データはどのように保存されるか？', a: 'エントリはローカル TOON ファイル（JSON より約 22% 小さいトークン効率のフォーマット、実測）に書き込まれます。ファイルはあなたのもので、他のソースファイルと同様にコミット、diff、バックアップが可能。' },
 			{ q: 'メモリは暗号化されているか？', a: 'はい。memory_encrypt ツールで暗号化を有効にし、AES-256-GCM で機密エントリを保護。キーは自動生成され、ローカルに保持。' },
 			{ q: 'オフラインで動作するか？', a: '完全に。toon-memory は外部サービスやアカウント不要でローカルで実行。Watch モードではスケジュールに従って自動バックアップも作成。' },
@@ -1821,7 +1833,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		tagline: 'AI 에이전트를 위한 연속성 레이어',
 		subtitle: '에이전트의 지식은 세션을 넘어 살아남습니다 — 오프라인, 비공개, LLM 불필요.',
 		poweredBy: 'TOON 기반',
-		getStarted: '시작하기', viewGithub: 'GitHub에서 보기', copy: '복사', copied: '복사됨!', installCmd: 'npm install -g toon-memory', worksWith: '호환', agentsMore: '+10 이상',
+		getStarted: '시작하기', viewGithub: 'GitHub에서 보기', copy: '복사', copied: '복사됨!', installCmd: 'npm install -g toon-memory', worksWith: '호환', agentsMore: '+{count} 이상',
 	},
 	problem: {
 		title: '왜 에이전트가 세션 간에 컨텍스트를 잃는가?', subtitle: 'AI 코딩 에이전트는 매 세션 기억 상실로 시작합니다',
@@ -1853,7 +1865,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		groups: [
 			{ icon: '🔒', title: '프라이버시 우선', items: ['100% 로컬 — 클라우드, 서버, 텔레메트리 없음', '선택적 AES-256-GCM 암호화', '메모리 파일은 소스 파일처럼 당신의 것입니다'] },
 			{ icon: '⚡', title: '가벼움', items: ['네이티브 TOON 형식 — JSON보다 22% 적은 토큰', '의존성 제로, Node.js 18+에서 동작', '결정적 로직 — LLM 호출 없음, API 키 불필요'] },
-			{ icon: '🛰️', title: '유니버설', items: ['15+ 에이전트 지원: Claude Code, Codex, Gemini CLI, Cursor, OpenCode 등', '표준 MCP — 컨텍스트를 잃지 않고 에이전트 변경', '팀 전체가 공유하는 프로젝트별 메모리'] },
+			{ icon: '🛰️', title: '유니버설', items: ['20+ 에이전트 지원: Claude Code, Codex, Gemini CLI, Cursor, OpenCode 등', '표준 MCP — 컨텍스트를 잃지 않고 에이전트 변경', '팀 전체가 공유하는 프로젝트별 메모리'] },
 		],
 	},
 
@@ -1869,7 +1881,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{ label: '컨텍스트 브리핑', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
 					{ label: '압축', tools: ['memory_compress', 'memory_primer'] },
 					{ label: '세션', tools: ['memory_sessions', 'memory_merge_sessions'] },
-					{ label: '동기화 및 보안', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+					{ label: '동기화 및 보안', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup', 'memory_secret', 'memory_export_global', 'memory_import_global'] },
 				],
 				wide: true,
 			},
@@ -1880,12 +1892,12 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ icon: '🔒', title: '암호화', body: 'AES-256-GCM로 민감한 데이터 보호. 오래된 항목 자동 아카이브. Watch 모드로 N분마다 자동 백업.', stats: ['AES-256-GCM', '자동 백업'] },
 		],
 	},
-	agents: { title: '15개 이상의 AI 코딩 에이전트 지원', subtitle: '제로 구성 — toon-memory가 각 에이전트를 자동 감지하고 구성' },
-	stats: { items: [				{ number: '97.6%', label: '상위 5개에서 리콜 (R@5 0.861)' }, { number: '15', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
+	agents: { title: '20개 이상의 AI 코딩 에이전트 지원', subtitle: '제로 구성 — toon-memory가 각 에이전트를 자동 감지하고 구성' },
+	stats: { items: [				{ number: '97.6%', label: '상위 5개에서 리콜 (R@5 0.861)' }, { number: '20', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
 	howItWorks: {
 		title: '어떻게 작동하나요?', subtitle: '기억 상실에서 메모리까지 4단계',
 		steps: [
-			{ n: 1, title: '설치', body: '하나의 명령어. 15개 이상의 에이전트에 제로 구성.', code: 'npm install -g toon-memory' },
+			{ n: 1, title: '설치', body: '하나의 명령어. 20개 이상의 에이전트에 제로 구성.', code: 'npm install -g toon-memory' },
 			{ n: 2, title: '기억', body: '작업하면서 결정, 패턴, 버그를 저장 — 자동 태그 추론과 선택적 TTL 포함.', code: 'memory_remember({\n  category: "decision",\n  key: "use-zod",\n  content: "Use Zod for validation",\n  file: "src/types.ts"\n})' },
 			{ n: 3, title: '리콜', body: '에이전트가 필요할 때 메모리를 쿼리 — 재설명 불필요, 토큰 낭비 없음.', code: 'memory_recall({ query: "validation" })\n// [decision] use-zod (a1b2c3d4)\n//   Use Zod for validation — src/types.ts' },
 			{ n: 4, title: '컨텍스트', body: '한 번의 호출로 에이전트에 모든 것을 제공: 프로젝트, git, 메모리, 세션. 도구 호출 80% 절감.', code: 'context_generate({})\n// # Project Briefing (full)\n// ## Project — toon-memory v4.3.0\n// ## Git — branch: main, 3 commits\n// ## Memory — 26 entries, 18 edges\n// ## Sessions — 2 active' },
@@ -1989,6 +2001,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: '암호화 활성화', desc: '자동 생성 키로 AES-256-GCM 암호화.', group: 'sync' },
 			{ name: 'memory_decrypt', title: '암호화 비활성화', desc: '복호화하고 암호화를 비활성화.', group: 'sync' },
 			{ name: 'memory_backup', title: '메모리 백업', desc: '타임스탬프가 있는 메모리 파일 백업 생성. 최신 10개로 자동 정리.', group: 'sync' },
+			{ name: 'memory_secret', title: '시크릿 볼트', desc: '암호화된 시크릿 볼트 (secrets.toon, AES-256-GCM): store/get/list/forget. data.toon은 읽기 쉬운 상태로 유지하면서 민감한 값은 저장 시 암호화. TOON_MEMORY_KEY 필요.', group: 'sync' },
+			{ name: 'memory_export_global', title: '글로벌 내보내기', desc: '프로젝트 메모리를 글로벌 파일 (~/.toon-memory/memory/global.toon)에 기록. 프로젝트 간 규칙 공유.', group: 'sync' },
+			{ name: 'memory_import_global', title: '글로벌 가져오기', desc: '글로벌 파일에서 프로젝트 간 규칙을 병합 (원샷, 결정적, 오프라인). merge: false는 교체.', group: 'sync' },
 			{ name: 'memory_pin', title: '항목 고정', desc: '중요한 항목을 고정하여 키워드 일치가 없어도 항상 리콜 결과의 상단에 표시.', group: 'core' },
 			{ name: 'memory_unpin', title: '고정 해제', desc: '항목의 고정 플래그를 제거.', group: 'core' },
 			{ name: 'memory_search', title: '통합 검색', desc: '카테고리, 태그, 날짜 범위 필터로 메모리 검색. 태그 필터는 AND 로직 사용 — 지정된 모든 태그가 일치해야 함.', group: 'search' },
@@ -2029,7 +2044,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		title: '자주 묻는 질문', subtitle: '에이전트에 메모리를 부여하기 위해 알아야 할 모든 것',
 		items: [
 			{ q: 'toon-memory란?', a: '35개 MCP 도구를 갖춘 AI 코딩 에이전트용 지속적 메모리 레이어. 결정, 패턴, 버그, 컨텍스트를 컴팩트 TOON 형식으로 저장하여 에이전트가 세션 간에 모든 것을 기억 — 세션당 80% 도구 호출 절감.' },
-			{ q: '지원되는 에이전트는?', a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro — MCP 서버를 통한 제로 구성의 15개 이상 에이전트.' },
+			{ q: '지원되는 에이전트는?', a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw, Kiro — MCP 서버를 통한 제로 구성의 20개 이상 에이전트.' },
 			{ q: '데이터는 어떻게 저장되나요?', a: '항목은 로컬 TOON 파일 (JSON보다 ~22% 작은 토큰 효율 형식, 실측)에 기록됩니다. 파일은 귀하의 것이며 다른 소스 파일처럼 커밋, diff, 백업이 가능합니다.' },
 			{ q: '메모리가 암호화되나요?', a: '네. memory_encrypt 도구로 암호화를 활성화하여 AES-256-GCM로 민감한 항목을 보호합니다. 키는 자동 생성되고 로컬에 유지됩니다.' },
 			{ q: '오프라인에서 작동하나요?', a: '완전히. toon-memory는 외부 서비스나 계정 없이 로컬에서 실행됩니다. Watch 모드는 예약에 따라 자동 백업도 생성합니다.' },
@@ -2113,7 +2128,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		copy: 'Copiar',
 		copied: 'Copiado!',
 		worksWith: 'Funciona com',
-		agentsMore: '+10 mais',
+		agentsMore: '+{count} mais',
 		installCmd: 'npm install -g toon-memory',
 	},
 	problem: {
@@ -2162,7 +2177,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		groups: [
 			{ icon: '🔒', title: 'Privacidade em primeiro lugar', items: ['100% local — sem nuvem, sem servidor, sem telemetria', 'Criptografia opcional AES-256-GCM', 'Você é dono do arquivo de memória, como qualquer fonte'] },
 			{ icon: '⚡', title: 'Leve', items: ['Formato TOON nativo — 22% menos tokens que JSON', 'Zero dependências, roda em qualquer Node.js 18+', 'Lógica determinística — sem chamadas LLM, sem chaves de API'] },
-			{ icon: '🛰️', title: 'Universal', items: ['Funciona com 15+ agentes: Claude Code, Codex, Gemini CLI, Cursor, OpenCode e mais', 'MCP padrão — troque de agente sem perder contexto', 'Memória por projeto compartilhada por todo o time'] },
+			{ icon: '🛰️', title: 'Universal', items: ['Funciona com 20+ agentes: Claude Code, Codex, Gemini CLI, Cursor, OpenCode e mais', 'MCP padrão — troque de agente sem perder contexto', 'Memória por projeto compartilhada por todo o time'] },
 		],
 	},
 
@@ -2178,7 +2193,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{ label: 'Briefing de Contexto', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
 					{ label: 'Compressão', tools: ['memory_compress', 'memory_primer'] },
 					{ label: 'Sessões', tools: ['memory_sessions', 'memory_merge_sessions'] },
-					{ label: 'Sincronização & Segurança', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+					{ label: 'Sincronização & Segurança', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup', 'memory_secret', 'memory_export_global', 'memory_import_global'] },
 				],
 				wide: true,
 			},
@@ -2215,13 +2230,13 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: {
-		title: 'Funciona com 15+ agentes de IA',
+		title: 'Funciona com 20+ agentes de IA',
 		subtitle: 'Zero configuração — toon-memory detecta e configura cada um automaticamente',
 	},
 	stats: {
 		items: [
 			{ number: '97.6%', label: 'Recall no top-5 (R@5 0.861)' },
-			{ number: '15', label: 'Agentes' },
+			{ number: '20', label: 'Agentes' },
 			{ number: '80%', label: 'Menos chamadas de ferramenta/sessão' },
 			{ number: '0', label: 'Configuração necessária' },
 		],
@@ -2230,7 +2245,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		title: 'Como funciona?',
 		subtitle: 'Quatro passos da amnésia à memória',
 		steps: [
-			{ n: 1, title: 'Instalar', body: 'Um comando. Zero configuração para 15+ agentes.', code: 'npm install -g toon-memory' },
+			{ n: 1, title: 'Instalar', body: 'Um comando. Zero configuração para 20+ agentes.', code: 'npm install -g toon-memory' },
 			{
 				n: 2,
 				title: 'Lembrar',
@@ -2434,6 +2449,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: 'Ativar criptografia', desc: 'Criptografia AES-256-GCM com chave auto-gerada.', group: 'sync' },
 			{ name: 'memory_decrypt', title: 'Desativar criptografia', desc: 'Descriptografa e desativa a criptografia.', group: 'sync' },
 			{ name: 'memory_backup', title: 'Backup da memória', desc: 'Cria backup com timestamp do arquivo de memória. Auto-poduz para os 10 mais recentes.', group: 'sync' },
+			{ name: 'memory_secret', title: 'Cofre de segredos', desc: 'Cofre de segredos criptografado (secrets.toon, AES-256-GCM): store/get/list/forget. Mantém data.toon legível enquanto valores sensíveis ficam criptografados em repouso. Requer TOON_MEMORY_KEY.', group: 'sync' },
+			{ name: 'memory_export_global', title: 'Exportar Global', desc: 'Grava a memória do projeto no arquivo global (~/.toon-memory/memory/global.toon). Compartilhamento de convenções entre projetos.', group: 'sync' },
+			{ name: 'memory_import_global', title: 'Importar Global', desc: 'Mescla convenções entre projetos do arquivo global (one-shot, determinístico, offline). merge: false substitui.', group: 'sync' },
 			{ name: 'memory_pin', title: 'Fixar entrada', desc: 'Fixa entradas importantes para que apareçam sempre no topo dos resultados, mesmo sem correspondência de palavras-chave.', group: 'core' },
 			{ name: 'memory_unpin', title: 'Desfixar entrada', desc: 'Remove a marca de fixação de uma entrada.', group: 'core' },
 			{ name: 'memory_search', title: 'Busca unificada', desc: 'Pesquisa na memória com filtros de categoria, tags e intervalo de datas. Filtro de tags usa lógica AND.', group: 'search' },
@@ -2498,7 +2516,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 			{
 				q: 'Quais agentes são suportados?',
-				a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw e Kiro — 15+ agentes com zero configuração via servidor MCP.',
+				a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw e Kiro — 20+ agentes com zero configuração via servidor MCP.',
 			},
 			{
 				q: 'Como meus dados são armazenados?',
@@ -2631,7 +2649,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		copy: 'Kopieren',
 		copied: 'Kopiert!',
 		worksWith: 'Funktioniert mit',
-		agentsMore: '+10 weitere',
+		agentsMore: '+{count} weitere',
 		installCmd: 'npm install -g toon-memory',
 	},
 	problem: {
@@ -2680,7 +2698,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		groups: [
 			{ icon: '🔒', title: 'Datenschutz zuerst', items: ['100% lokal — kein Cloud, kein Server, keine Telemetrie', 'Optionale AES-256-GCM-Verschlüsselung', 'Du besitzt die Speicherdatei wie jede Quelldatei'] },
 			{ icon: '⚡', title: 'Leichtgewichtig', items: ['Natives TOON-Format — 22% weniger Tokens als JSON', 'Keine Abhängigkeiten, läuft auf jedem Node.js 18+', 'Deterministische Logik — keine LLM-Aufrufe, keine API-Schlüssel'] },
-			{ icon: '🛰️', title: 'Universell', items: ['Funktioniert mit 15+ Agenten: Claude Code, Codex, Gemini CLI, Cursor, OpenCode und mehr', 'Standard-MCP — Agenten wechseln, ohne Kontext zu verlieren', 'Projektweiter Speicher, den jedes Teammitglied teilt'] },
+			{ icon: '🛰️', title: 'Universell', items: ['Funktioniert mit 20+ Agenten: Claude Code, Codex, Gemini CLI, Cursor, OpenCode und mehr', 'Standard-MCP — Agenten wechseln, ohne Kontext zu verlieren', 'Projektweiter Speicher, den jedes Teammitglied teilt'] },
 		],
 	},
 
@@ -2696,7 +2714,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					{ label: 'Kontext-Briefing', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
 					{ label: 'Komprimierung', tools: ['memory_compress', 'memory_primer'] },
 					{ label: 'Sitzungen', tools: ['memory_sessions', 'memory_merge_sessions'] },
-					{ label: 'Sync & Sicherheit', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+					{ label: 'Sync & Sicherheit', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup', 'memory_secret', 'memory_export_global', 'memory_import_global'] },
 				],
 				wide: true,
 			},
@@ -2733,13 +2751,13 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: {
-		title: 'Funktioniert mit 15+ KI-Coding-Agenten',
+		title: 'Funktioniert mit 20+ KI-Coding-Agenten',
 		subtitle: 'Null Konfiguration — toon-memory erkennt und konfiguriert jeden automatisch',
 	},
 	stats: {
 		items: [
 			{ number: '97.6%', label: 'Recall aus den Top-5 (R@5 0.861)' },
-			{ number: '15', label: 'Agenten' },
+			{ number: '20', label: 'Agenten' },
 			{ number: '80%', label: 'Weniger Tool-Aufrufe/Sitzung' },
 			{ number: '0', label: 'Benötigte Konfiguration' },
 		],
@@ -2748,7 +2766,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		title: 'Wie funktioniert das?',
 		subtitle: 'Vier Schritte von Gedächtnisverlust zu Speicher',
 		steps: [
-			{ n: 1, title: 'Installieren', body: 'Ein Befehl. Null Konfiguration für 15+ Agenten.', code: 'npm install -g toon-memory' },
+			{ n: 1, title: 'Installieren', body: 'Ein Befehl. Null Konfiguration für 20+ Agenten.', code: 'npm install -g toon-memory' },
 			{
 				n: 2,
 				title: 'Merken',
@@ -2952,6 +2970,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: 'Verschlüsselung aktivieren', desc: 'AES-256-GCM-Verschlüsselung mit automatisch generiertem Schlüssel.', group: 'sync' },
 			{ name: 'memory_decrypt', title: 'Verschlüsselung deaktivieren', desc: 'Entschlüsselt und deaktiviert die Verschlüsselung.', group: 'sync' },
 			{ name: 'memory_backup', title: 'Speicher sichern', desc: 'Erstellt einen zeitgestempelten Backup der Speicherdatei. Automatisch auf die 10 neuesten gekürzt.', group: 'sync' },
+			{ name: 'memory_secret', title: 'Geheimnis-Tresor', desc: 'Verschlüsselter Geheimnis-Tresor (secrets.toon, AES-256-GCM): store/get/list/forget. data.toon bleibt lesbar, sensible Werte liegen verschlüsselt vor. Erfordert TOON_MEMORY_KEY.', group: 'sync' },
+			{ name: 'memory_export_global', title: 'Global exportieren', desc: 'Schreibt die Projekt-Memory in die globale Datei (~/.toon-memory/memory/global.toon). Einmalige Weitergabe projektübergreifender Konventionen.', group: 'sync' },
+			{ name: 'memory_import_global', title: 'Global importieren', desc: 'Führt projektübergreifende Konventionen aus der globalen Datei zusammen (einmalig, deterministisch, offline). merge: false ersetzt.', group: 'sync' },
 			{ name: 'memory_pin', title: 'Eintrag anheften', desc: 'Heftet wichtige Einträge an, sodass sie immer oben in den Ergebnissen erscheinen, auch ohne Keyword-Übereinstimmung.', group: 'core' },
 			{ name: 'memory_unpin', title: 'Eintrag lösen', desc: 'Entfernt die Anheft-Markierung eines Eintrags.', group: 'core' },
 			{ name: 'memory_search', title: 'Einheitliche Suche', desc: 'Durchsucht den Speicher mit Kategorie-, Tag- und Datumsbereichsfiltern. Tag-Filter verwendet UND-Logik.', group: 'search' },
@@ -3016,7 +3037,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 			{
 				q: 'Welche Agenten werden unterstützt?',
-				a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw und Kiro — 15+ Agenten mit Null Konfiguration über den MCP-Server.',
+				a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw und Kiro — 20+ Agenten mit Null Konfiguration über den MCP-Server.',
 			},
 			{
 				q: 'Wie werden meine Daten gespeichert?',
@@ -3149,7 +3170,7 @@ cta: {
 		copy: 'Copier',
 		copied: 'Copié !',
 		worksWith: 'Fonctionne avec',
-		agentsMore: '+10 autres',
+		agentsMore: '+{count} autres',
 		installCmd: 'npm install -g toon-memory',
 	},
 	problem: {
@@ -3194,7 +3215,7 @@ cta: {
 		groups: [
 				{ icon: '🔒', title: 'Confidentialité d\'abord', items: ['100% local — aucun cloud, aucun serveur, aucune télémétrie', 'Chiffrement AES-256-GCM optionnel', 'Vous possédez le fichier mémoire, comme n\'importe quel fichier source'] },
 			{ icon: '⚡', title: 'Léger', items: ['Format TOON natif — 22% de tokens en moins que JSON', 'Zéro dépendance, fonctionne sur tout Node.js 18+', 'Logique déterministe — aucun appel LLM, aucune clé API'] },
-				{ icon: '🛰️', title: 'Universel', items: ['Fonctionne avec 15+ agents : Claude Code, Codex, Gemini CLI, Cursor, OpenCode et plus', 'MCP standard — changez d\'agent sans perdre le contexte', 'Mémoire par projet partagée par toute l\'équipe'] },
+				{ icon: '🛰️', title: 'Universel', items: ['Fonctionne avec 20+ agents : Claude Code, Codex, Gemini CLI, Cursor, OpenCode et plus', 'MCP standard — changez d\'agent sans perdre le contexte', 'Mémoire par projet partagée par toute l\'équipe'] },
 		],
 	},
 	features: {
@@ -3209,7 +3230,7 @@ cta: {
 					{ label: 'Briefing Contexte', tools: ['context_brief', 'context_generate', 'context_diff', 'context_focus', 'context_health', 'context_export'] },
 					{ label: 'Compression', tools: ['memory_compress', 'memory_primer'] },
 					{ label: 'Sessions', tools: ['memory_sessions', 'memory_merge_sessions'] },
-					{ label: 'Synchronisation & Sécurité', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup'] },
+					{ label: 'Synchronisation & Sécurité', tools: ['memory_export_gist', 'memory_import_gist', 'memory_encrypt', 'memory_decrypt', 'memory_backup', 'memory_secret', 'memory_export_global', 'memory_import_global'] },
 				],
 				wide: true,
 			},
@@ -3246,13 +3267,13 @@ cta: {
 		],
 	},
 	agents: {
-		title: 'Fonctionne avec 15+ agents de code IA',
+		title: 'Fonctionne avec 20+ agents de code IA',
 		subtitle: 'Zéro configuration — toon-memory détecte et configure chacun automatiquement',
 	},
 	stats: {
 		items: [
 			{ number: '97.6%', label: 'Rappel depuis le top-5 (R@5 0.861)' },
-			{ number: '15', label: 'Agents' },
+			{ number: '20', label: 'Agents' },
 			{ number: '80%', label: 'Moins d\'appels d\'outil/session' },
 			{ number: '0', label: 'Configuration requise' },
 		],
@@ -3261,7 +3282,7 @@ cta: {
 		title: 'Comment ça marche ?',
 		subtitle: 'Quatre étapes de l\'amnésie à la mémoire',
 		steps: [
-			{ n: 1, title: 'Installer', body: 'Une commande. Zéro configuration pour 15+ agents.', code: 'npm install -g toon-memory' },
+			{ n: 1, title: 'Installer', body: 'Une commande. Zéro configuration pour 20+ agents.', code: 'npm install -g toon-memory' },
 			{
 				n: 2,
 				title: 'Mémoriser',
@@ -3465,6 +3486,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ name: 'memory_encrypt', title: 'Activer le chiffrement', desc: 'Chiffrement AES-256-GCM avec clé auto-générée.', group: 'sync' },
 			{ name: 'memory_decrypt', title: 'Désactiver le chiffrement', desc: 'Déchiffre et désactive le chiffrement.', group: 'sync' },
 			{ name: 'memory_backup', title: 'Sauvegarder la mémoire', desc: 'Crée une sauvegarde horodatée du fichier mémoire. Auto-nettoyage aux 10 plus récents.', group: 'sync' },
+			{ name: 'memory_secret', title: 'Coffre-fort de secrets', desc: 'Coffre-fort de secrets chiffré (secrets.toon, AES-256-GCM) : store/get/list/forget. data.toon reste lisible pendant que les valeurs sensibles restent chiffrées au repos. Nécessite TOON_MEMORY_KEY.', group: 'sync' },
+			{ name: 'memory_export_global', title: 'Exporter global', desc: 'Écrit la mémoire du projet dans le fichier global (~/.toon-memory/memory/global.toon). Partage ponctuel de conventions inter-projets.', group: 'sync' },
+			{ name: 'memory_import_global', title: 'Importer global', desc: 'Fusionne les conventions inter-projets depuis le fichier global (ponctuel, déterministe, hors ligne). merge: false remplace.', group: 'sync' },
 			{ name: 'memory_pin', title: 'Épingler une entrée', desc: 'Épingle les entrées importantes pour qu\'elles apparaissent toujours en haut des résultats, même sans correspondance de mot-clé.', group: 'core' },
 			{ name: 'memory_unpin', title: 'Détacher une entrée', desc: 'Supprime le marqueur d\'épingle d\'une entrée.', group: 'core' },
 			{ name: 'memory_search', title: 'Recherche unifiée', desc: 'Recherche dans la mémoire avec filtres par catégorie, tags et plage de dates. Le filtre de tags utilise la logique ET.', group: 'search' },
@@ -3529,7 +3553,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 			{
 				q: 'Quels agents sont supportés ?',
-				a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw et Kiro — 15+ agents avec zéro configuration via le serveur MCP.',
+				a: 'OpenCode, VS Code, Claude Code, Cursor, Windsurf, Cline, Continue, Codex, Gemini, Zed, Antigravity, Aider, KiloCode, OpenClaw et Kiro — 20+ agents avec zéro configuration via le serveur MCP.',
 			},
 			{
 				q: 'Comment mes données sont-elles stockées ?',

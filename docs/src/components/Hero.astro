@@ -1,11 +1,7 @@
 ---
 import logoSrc from '../assets/logo.svg';
 import { getContent } from '../i18n';
-import opencode from '../assets/agents/opencode.svg';
-import claude from '../assets/agents/claude.svg';
-import cursor from '../assets/agents/cursor.svg';
-import codex from '../assets/agents/codex.svg';
-import vscode from '../assets/agents/vscode.svg';
+import { AGENTS } from '../agents';
 
 interface Props {
 	lang?: string;
@@ -14,13 +10,9 @@ const { lang = 'en' } = Astro.props;
 const c = getContent(lang);
 const docsHref = lang === 'es' ? '/toon-memory/es/getting-started/quickstart' : '/toon-memory/getting-started/quickstart';
 const agentsHref = '#agents';
-const heroAgents = [
-	{ name: 'OpenCode', logo: opencode },
-	{ name: 'Claude', logo: claude },
-	{ name: 'Cursor', logo: cursor },
-	{ name: 'Codex', logo: codex },
-	{ name: 'VS Code', logo: vscode },
-];
+const heroAgents = AGENTS.slice(0, 5);
+const agentsMoreCount = AGENTS.length - heroAgents.length;
+const agentsMore = c.hero.agentsMore.replace('{count}', String(agentsMoreCount));
 
 const toonRow = (id: string, cat: string, key: string, content: string, tags: string, date: string) =>
 	`  ${id}|${cat}|${key}|${content}||${tags}|${date}||0||0.7|1|${date}T09:12:00.000Z|0`;
@@ -99,7 +91,7 @@ const wallB = [
             </a>
           ))}
         </div>
-        <a class="hero-agents-more" href={agentsHref}>{c.hero.agentsMore}</a>
+        <a class="hero-agents-more" href={agentsHref}>{agentsMore}</a>
       </div>
       <div class="hero-actions">
         <a href={docsHref} class="btn btn-primary">

@@ -17,7 +17,7 @@ O **toon-memory** é um servidor MCP que resolve esse problema. Ele dá ao seu a
 - **Sobrevive a reinicializações** — seu agente lembra do contexto de ontem hoje
 - **Funciona offline** — sem nuvem, sem chamadas de API, sem LLM necessário para armazenamento
 - **Economiza tokens** — 22% menos tokens que JSON, 80% menos chamadas de ferramenta por sessão
-- **Funciona com mais de 15 agentes** — Claude Code, Cursor, OpenCode, Windsurf, VS Code Copilot e mais
+- **Funciona com mais de 20 agentes** — Claude Code, Cursor, OpenCode, Windsurf, VS Code Copilot e mais
 
 ## Como a Memória MCP Funciona
 
@@ -43,7 +43,7 @@ O toon-memory roda como um **servidor MCP local** ao qual seu agente se conecta 
 
 | Abordagem | Prós | Contras |
 |-----------|------|---------|
-| **Memória MCP (toon-memory)** | Offline, eficiente em tokens, consciente de grafo, 15+ agentes | Requer suporte MCP |
+| **Memória MCP (toon-memory)** | Offline, eficiente em tokens, consciente de grafo, 20+ agentes | Requer suporte MCP |
 | **Arquivos Markdown** | Simples, legível por humanos | Não estruturado, não pesquisável, incompatível com MCP |
 | **Memória em nuvem (mem0)** | Gerenciada, busca vetorial | Requer internet, custa dinheiro, dados saem da sua máquina |
 | **Bancos de memória (shodh-memory)** | Busca híbrida | Configuração complexa, requer Docker, dependência de sentence-transformers |
