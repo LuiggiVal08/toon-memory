@@ -168,7 +168,7 @@ export function registerHookJSON(agent: Agent, hookPath: string): void {
     return
   }
 
-  if (agent.name === "claude" || agent.name === "gemini") {
+  if (agent.name === "claude" || agent.name === "gemini" || agent.name === "qwen") {
     if (!config.hooks) config.hooks = {}
     if (!config.hooks.SessionStart) config.hooks.SessionStart = []
     if (!config.hooks.SessionStart.some((h: any) => h.command === hookPath)) {

@@ -1,5 +1,5 @@
-/** Config format: "json" | "toml" | "jsonc" | "continue" | "openclaw" | "none" (instructions only) */
-export type AgentFormat = "json" | "toml" | "jsonc" | "continue" | "openclaw" | "none"
+/** Config format: "json" | "toml" | "jsonc" | "yaml" | "continue" | "openclaw" | "none" (instructions only) */
+export type AgentFormat = "json" | "toml" | "jsonc" | "yaml" | "continue" | "openclaw" | "none"
 
 /** Supported AI coding agent configuration */
 export interface Agent {

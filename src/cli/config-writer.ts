@@ -18,6 +18,14 @@ function loadJSON(file: string): Record<string, any> | null {
   }
 }
 
+/** Navigate (or create) a nested object path like "amp.mcpServers". */
+function nested(obj: Record<string, any>, key: string): Record<string, any> {
+  return key.split(".").reduce((acc: Record<string, any>, part) => {
+    if (typeof acc[part] !== "object" || acc[part] === null) acc[part] = {}
+    return acc[part]
+  }, obj)
+}
+
 /**
  * Install MCP server configuration for a JSON-format agent.
  */
@@ -39,21 +47,21 @@ export function installJSONConfig(agent: Agent, scope: string): void {
   }
 
   const mcpKey = agent.mcpKey || "mcpServers"
-  if (!config[mcpKey]) config[mcpKey] = {}
+  const servers = nested(config, mcpKey)
 
   if (agent.name === "opencode") {
-    config[mcpKey]["toon-memory"] = {
+    servers["toon-memory"] = {
       enabled: true,
       type: "local",
       command: ["npx", "-y", "toon-memory", "mcp"]
     }
   } else if (agent.name === "kilocode") {
-    config[mcpKey]["toon-memory"] = {
+    servers["toon-memory"] = {
       type: "local",
       command: ["npx", "-y", "toon-memory", "mcp"]
     }
   } else {
-    config[mcpKey]["toon-memory"] = {
+    servers["toon-memory"] = {
       command: "npx",
       args: ["-y", "toon-memory", "mcp"]
     }
@@ -64,21 +72,76 @@ export function installJSONConfig(agent: Agent, scope: string): void {
 }
 
 /**
- * Install MCP server configuration for Codex CLI (TOML format).
+ * Install MCP server configuration for a TOML-format agent (Codex / Grok).
+ * The table name comes from agent.mcpKey so Grok's `mcp_servers` works too.
+ * Appends to an existing file instead of overwriting user settings.
  */
-export function installTOMLConfig(agent: Agent): void {
-  const configPath = agent.local
+export function installTOMLConfig(agent: Agent, scope: string): void {
+  const configPath = scope === "global" ? agent.global : agent.local
   if (!configPath) return
 
   const configDir = dirname(configPath)
   if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
 
-  const toml = `[mcpServers.toon-memory]
+  const table = agent.mcpKey || "mcpServers"
+  const block = `[${table}.toon-memory]
 command = "npx"
 args = ["-y", "toon-memory", "mcp"]
 `
 
-  writeFileSync(configPath, toml)
+  let content = ""
+  if (existsSync(configPath)) {
+    content = readFileSync(configPath, "utf-8")
+    if (content.includes(`[${table}.toon-memory]`)) {
+      console.log(`  MCP server already registered in ${configPath}`)
+      return
+    }
+    if (content && !content.endsWith("\n")) content += "\n"
+  }
+
+  writeFileSync(configPath, content + block)
+  console.log(`  MCP server added to ${configPath}`)
+}
+
+/**
+ * Install MCP server configuration for Goose (YAML format).
+ * Configures a stdio extension under the top-level `extensions` key.
+ */
+export function installYAMLConfig(agent: Agent, scope: string): void {
+  const configPath = scope === "global" ? agent.global : agent.local
+  if (!configPath) {
+    console.log(`  No ${scope} config path for ${agent.name}`)
+    return
+  }
+
+  const configDir = dirname(configPath)
+  if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true })
+
+  const entry = `  toon-memory:
+    type: stdio
+    cmd: npx
+    args: ["-y", "toon-memory", "mcp"]
+`
+
+  let content = ""
+  if (existsSync(configPath)) {
+    content = readFileSync(configPath, "utf-8")
+    if (content.includes("toon-memory")) {
+      console.log(`  MCP server already registered in ${configPath}`)
+      return
+    }
+  }
+
+  if (!content) {
+    content = `extensions:\n${entry}`
+  } else if (/^extensions:\s*$/m.test(content)) {
+    content = content.replace(/^extensions:\s*$/m, `extensions:\n${entry}`)
+  } else {
+    if (!content.endsWith("\n")) content += "\n"
+    content += `extensions:\n${entry}`
+  }
+
+  writeFileSync(configPath, content)
   console.log(`  MCP server added to ${configPath}`)
 }
 
@@ -201,7 +264,9 @@ export function installMCPConfig(agent: Agent, scope: string): void {
   }
 
   if (agent.format === "toml") {
-    installTOMLConfig(agent)
+    installTOMLConfig(agent, scope)
+  } else if (agent.format === "yaml") {
+    installYAMLConfig(agent, scope)
   } else if (agent.format === "jsonc") {
     installZedConfig(agent)
   } else if (agent.format === "continue") {

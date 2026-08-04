@@ -184,5 +184,72 @@ export function detectAgents(): Agent[] {
     needsInstructions: false
   })
 
+  agents.push({
+    name: "qwen",
+    global: join(HOME, ".qwen", "settings.json"),
+    local: join(projectRoot, ".qwen", "settings.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: true,
+    needsInstructions: true,
+    instructionFile: join(projectRoot, ".qwen", "AGENTS.md"),
+    captureJson: ["PostToolUse", "Stop"]
+  })
+
+  agents.push({
+    name: "kimi",
+    global: join(HOME, ".kimi", "mcp.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: false,
+    needsInstructions: false
+  })
+
+  agents.push({
+    name: "goose",
+    global: join(HOME, ".config", "goose", "config.yaml"),
+    mcpKey: "extensions",
+    format: "yaml",
+    needsHooks: false,
+    needsInstructions: false
+  })
+
+  agents.push({
+    name: "junie",
+    local: join(projectRoot, ".junie", "mcp", "mcp.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: false,
+    needsInstructions: false
+  })
+
+  agents.push({
+    name: "amp",
+    global: join(HOME, ".config", "amp", "settings.json"),
+    mcpKey: "amp.mcpServers",
+    format: "json",
+    needsHooks: false,
+    needsInstructions: false
+  })
+
+  agents.push({
+    name: "grok",
+    global: join(HOME, ".grok", "config.toml"),
+    local: join(projectRoot, ".grok", "config.toml"),
+    mcpKey: "mcp_servers",
+    format: "toml",
+    needsHooks: false,
+    needsInstructions: false
+  })
+
+  agents.push({
+    name: "trae",
+    local: join(projectRoot, ".trae", "mcp.json"),
+    mcpKey: "mcpServers",
+    format: "json",
+    needsHooks: false,
+    needsInstructions: false
+  })
+
   return agents
 }

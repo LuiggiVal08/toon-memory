@@ -138,9 +138,11 @@ export function uninstall(): void {
           }
 
           const mcpKey = agent.mcpKey || "mcpServers"
+          const servers = config[mcpKey] ??
+            mcpKey.split(".").reduce((acc: any, k: string) => acc?.[k], config)
 
-          if (config[mcpKey]?.["toon-memory"]) {
-            delete config[mcpKey]["toon-memory"]
+          if (servers?.["toon-memory"]) {
+            delete servers["toon-memory"]
             writeFileSync(configPath, JSON.stringify(config, null, 2))
             console.log(`  Removed MCP from ${agent.name} (${configPath})`)
           }
@@ -148,13 +150,37 @@ export function uninstall(): void {
       }
     }
 
-    if (agent.format === "toml" && agent.local && existsSync(agent.local)) {
-      try {
-        let content = readFileSync(agent.local, "utf-8")
-        content = content.replace(/\[mcpServers\.toon-memory\][\s\S]*?(?=\n\[|$)/, "").trim() + "\n"
-        writeFileSync(agent.local, content)
-        console.log(`  Removed MCP from ${agent.name} (${agent.local})`)
-      } catch {}
+    if (agent.format === "toml") {
+      const configs = [agent.global, agent.local].filter(Boolean) as string[]
+      const table = agent.mcpKey || "mcpServers"
+
+      for (const configPath of configs) {
+        if (!existsSync(configPath)) continue
+        try {
+          let content = readFileSync(configPath, "utf-8")
+          content = content.replace(new RegExp(`\\[${table}\\.toon-memory\\][\\s\\S]*?(?=\\n\\[|$)`), "").trim() + "\n"
+          writeFileSync(configPath, content)
+          console.log(`  Removed MCP from ${agent.name} (${configPath})`)
+        } catch {}
+      }
+    }
+
+    if (agent.format === "yaml") {
+      const configs = [agent.global, agent.local].filter(Boolean) as string[]
+
+      for (const configPath of configs) {
+        if (!existsSync(configPath)) continue
+        try {
+          let content = readFileSync(configPath, "utf-8")
+          if (!content.includes("toon-memory")) continue
+          content = content
+            .replace(/^extensions:\s*$/m, "")
+            .replace(/^  toon-memory:\n(?:(?:^    .*\n?)|(?:^    -.*\n?)|(?:^    \[.*\n?))*/gm, "")
+            .trim()
+          writeFileSync(configPath, content + "\n")
+          console.log(`  Removed MCP from ${agent.name} (${configPath})`)
+        } catch {}
+      }
     }
   }
 
@@ -267,16 +293,29 @@ export function status(): void {
             config = JSON.parse(readFileSync(configPath, "utf-8"))
           }
 
-          if (config[agent.mcpKey]?.["toon-memory"]) {
-            configured = true
-          }
+          const servers = config[agent.mcpKey] ??
+            agent.mcpKey.split(".").reduce((acc: any, k: string) => acc?.[k], config)
+          if (servers?.["toon-memory"]) configured = true
         } catch {}
       }
     }
 
-    if (agent.format === "toml" && agent.local && existsSync(agent.local)) {
-      const content = readFileSync(agent.local, "utf-8")
-      if (content.includes("toon-memory")) configured = true
+    if (agent.format === "toml") {
+      const configs = [agent.global, agent.local].filter(Boolean) as string[]
+      for (const configPath of configs) {
+        if (!existsSync(configPath)) continue
+        const content = readFileSync(configPath, "utf-8")
+        if (content.includes("toon-memory")) configured = true
+      }
+    }
+
+    if (agent.format === "yaml") {
+      const configs = [agent.global, agent.local].filter(Boolean) as string[]
+      for (const configPath of configs) {
+        if (!existsSync(configPath)) continue
+        const content = readFileSync(configPath, "utf-8")
+        if (content.includes("toon-memory")) configured = true
+      }
     }
 
     const hasInstructions = agent.instructionFile ? existsSync(agent.instructionFile) : false

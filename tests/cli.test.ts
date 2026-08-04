@@ -357,6 +357,105 @@ describe("CLI Commands", () => {
     expect(content).toContain("memory_remember")
   })
 
+  it("should init Qwen with mcpServers config and hooks", () => {
+    execSync(`node ${cliPath} init local`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const qwenConfig = JSON.parse(readFileSync(join(testDir, ".qwen", "settings.json"), "utf-8"))
+    expect(qwenConfig.mcpServers["toon-memory"]).toEqual({
+      command: "npx",
+      args: ["-y", "toon-memory", "mcp"]
+    })
+    expect(qwenConfig.hooks?.SessionStart).toBeDefined()
+    expect(Array.isArray(qwenConfig.hooks.SessionStart)).toBe(true)
+    expect(existsSync(join(testDir, ".qwen", "AGENTS.md"))).toBe(true)
+  })
+
+  it("should init Kimi with mcp.json config", () => {
+    execSync(`node ${cliPath} init global`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const kimiConfig = JSON.parse(readFileSync(join(testDir, ".kimi", "mcp.json"), "utf-8"))
+    expect(kimiConfig.mcpServers["toon-memory"]).toEqual({
+      command: "npx",
+      args: ["-y", "toon-memory", "mcp"]
+    })
+  })
+
+  it("should init Goose with YAML extensions config", () => {
+    execSync(`node ${cliPath} init global`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const yaml = readFileSync(join(testDir, ".config", "goose", "config.yaml"), "utf-8")
+    expect(yaml).toContain("toon-memory:")
+    expect(yaml).toContain("cmd: npx")
+    expect(yaml).toContain('"-y", "toon-memory", "mcp"')
+  })
+
+  it("should init Junie with mcp/mcp.json config", () => {
+    execSync(`node ${cliPath} init local`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const junieConfig = JSON.parse(readFileSync(join(testDir, ".junie", "mcp", "mcp.json"), "utf-8"))
+    expect(junieConfig.mcpServers["toon-memory"]).toEqual({
+      command: "npx",
+      args: ["-y", "toon-memory", "mcp"]
+    })
+  })
+
+  it("should init Amp with nested amp.mcpServers config", () => {
+    execSync(`node ${cliPath} init global`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const ampConfig = JSON.parse(readFileSync(join(testDir, ".config", "amp", "settings.json"), "utf-8"))
+    expect(ampConfig.amp?.mcpServers["toon-memory"]).toEqual({
+      command: "npx",
+      args: ["-y", "toon-memory", "mcp"]
+    })
+  })
+
+  it("should init Grok with TOML mcp_servers config", () => {
+    execSync(`node ${cliPath} init local`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const toml = readFileSync(join(testDir, ".grok", "config.toml"), "utf-8")
+    expect(toml).toContain("[mcp_servers.toon-memory]")
+    expect(toml).toContain('command = "npx"')
+    expect(toml).toContain('"-y", "toon-memory", "mcp"')
+  })
+
+  it("should init Trae with mcp.json config", () => {
+    execSync(`node ${cliPath} init local`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+
+    const traeConfig = JSON.parse(readFileSync(join(testDir, ".trae", "mcp.json"), "utf-8"))
+    expect(traeConfig.mcpServers["toon-memory"]).toEqual({
+      command: "npx",
+      args: ["-y", "toon-memory", "mcp"]
+    })
+  })
+
   it("should uninstall from all agents", () => {
     // First init
     execSync(`node ${cliPath} init local`, {
