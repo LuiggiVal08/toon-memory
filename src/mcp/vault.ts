@@ -102,6 +102,8 @@ export function storeSecret(
   opts: { file?: string; tags?: string; ttl?: string } = {}
 ): { id: string; date: string } {
   if (!value) throw new Error("A secret needs a non-empty value.")
+  const vk = vaultKey()
+  const encrypted = encrypt(value, vk)
   const content = readVault()
   const list = vaultEntries(content)
   const date = new Date().toISOString().split("T")[0]
@@ -112,13 +114,13 @@ export function storeSecret(
   const merged: Array<{ id: string; key: string; value: string; file: string; tags: string; date: string; ttl: string }> = []
   for (const s of list) {
     if (s.key === key) {
-      merged.push({ id, key, value, file: opts.file || s.file, tags: opts.tags || s.tags, date, ttl: resolvedTtl || s.ttl })
+      merged.push({ id, key, value: encrypted, file: opts.file || s.file, tags: opts.tags || s.tags, date, ttl: resolvedTtl || s.ttl })
     } else {
       merged.push(s)
     }
   }
   if (!existing) {
-    merged.push({ id, key, value, file: opts.file || "", tags: opts.tags || "", date, ttl: resolvedTtl })
+    merged.push({ id, key, value: encrypted, file: opts.file || "", tags: opts.tags || "", date, ttl: resolvedTtl })
   }
 
   writeVault(rebuildVault(merged))

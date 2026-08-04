@@ -159,7 +159,8 @@ export function mergeMemoryFiles(
   let updated = 0
   for (const line of incomingData.split("\n").filter(isEntry)) {
     const parts = parseToonLine(line)
-    if (parts.length < 7) continue
+    // Minimal legacy lines (id|category|key|content) are valid entries too.
+    if (parts.length < 3) continue
     const key = parts[2]
     const existing = merged.get(key)
     if (existing === undefined) {
@@ -172,7 +173,10 @@ export function mergeMemoryFiles(
   }
 
   const header = `[${merged.size}|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence|lastAccessed}:`
-  const data = [...prefix, header, ...[...merged.values()], ...summaries].join("\n")
+  // Entries must keep the two-space TOON indent — parseEntries only reads
+  // lines starting with two spaces, so re-indent anything that lost it.
+  const indented = [...merged.values()].map((l) => (l.startsWith("  ") ? l : `  ${l}`))
+  const data = [...prefix, header, ...indented, ...summaries].join("\n")
   return { data, added, updated }
 }
 

@@ -4,7 +4,7 @@ import { z } from "zod"
 import { readFileSync, writeFileSync, existsSync, copyFileSync, mkdirSync, readdirSync } from "fs"
 import { join, basename, dirname } from "path"
 import { readMemory, writeMemory, safeWrite } from "./memory-io"
-import { loadConfig, saveConfig, getKey, MEMORY_FILE, OBSERVATIONS_FILE, MEMORY_DIR, MAX_ENTRIES, getMaxEntries, ARCHIVE_FILE, GLOBAL_FILE, ensureMemoryDir } from "./config"
+import { loadConfig, saveConfig, getKey, MEMORY_FILE, OBSERVATIONS_FILE, MEMORY_DIR, MAX_ENTRIES, getMaxEntries, ARCHIVE_FILE, GLOBAL_FILE } from "./config"
 import { generateId, parseTTL, isExpired, inferTags, parseRelativeDate } from "./entries"
 import { findRelatedEntries, bumpAccessed } from "./scoring"
 import { readObservations } from "./observations"
@@ -23,7 +23,7 @@ import { evidenceFor, detectContradictions } from "../lib/evidence"
 import { expandSynonyms } from "../lib/synonyms"
 
 /**
- * Register all 22 memory tools.
+ * Register all MCP memory tools (38 total across tools.ts).
  */
 export function registerTools(server: McpServer): void {
 

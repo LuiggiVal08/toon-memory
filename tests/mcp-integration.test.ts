@@ -2,7 +2,8 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest"
 import { spawn, type ChildProcess } from "child_process"
 import { join } from "path"
 import { tmpdir } from "os"
-import { mkdirSync, rmSync, writeFileSync, existsSync } from "fs"
+import { mkdirSync, rmSync, writeFileSync, existsSync, readFileSync } from "fs"
+import { parseToonLine } from "../src/lib/utils"
 
 const ROOT = join(import.meta.dirname, "..")
 const SERVER_BIN = join(ROOT, "bin", "toon-memory.js")
@@ -146,9 +147,9 @@ describe("MCP Integration", () => {
 
 	// ── Tool listing ──────────────────────────────────────────────
 
-  it("lists all 35 tools", async () => {
+  it("lists all 38 tools", async () => {
     const tools = await client.listTools()
-    expect(tools.length).toBe(35)
+    expect(tools.length).toBe(38)
     expect(tools).toContain("memory_remember")
     expect(tools).toContain("memory_recall")
     expect(tools).toContain("memory_forget")
@@ -184,6 +185,9 @@ describe("MCP Integration", () => {
     expect(tools).toContain("memory_checkpoint")
     expect(tools).toContain("memory_reflect")
     expect(tools).toContain("memory_promote")
+    expect(tools).toContain("memory_secret")
+    expect(tools).toContain("memory_export_global")
+    expect(tools).toContain("memory_import_global")
   })
 
   it("annotates tools with readOnly/destructive/idempotent hints", async () => {
@@ -605,5 +609,128 @@ describe("MCP Integration", () => {
 		)
 		const res = await client.callTool("memory_promote", { dryRun: false, max: 5 })
 		expect(res).toContain("Nothing new to promote")
+	})
+})
+
+describe("F1 evidence / F3 vault / F5 global tools", () => {
+	const testDir = join(tmpdir(), "toon-features-" + Date.now())
+	const sourceDir = join(testDir, "source")
+	const targetDir = join(testDir, "target")
+	const globalFile = join(testDir, "global.toon")
+	const KEY = "a".repeat(64)
+
+	beforeAll(() => {
+		mkdirSync(join(sourceDir, ".toon-memory", "memory"), { recursive: true })
+		mkdirSync(join(targetDir, ".toon-memory", "memory"), { recursive: true })
+	})
+
+	afterAll(() => {
+		rmSync(testDir, { recursive: true, force: true })
+	})
+
+	// ── F1: evidence annotation + contradiction detection ──────────
+
+	it("memory_remember annotates evidence and flags contradictions", async () => {
+		const dir = join(testDir, "evidence")
+		mkdirSync(join(dir, ".toon-memory", "memory"), { recursive: true })
+		mkdirSync(join(dir, "src", "lib"), { recursive: true })
+		writeFileSync(join(dir, "src", "lib", "quality.ts"), "export const qualityScore = () => 0\n")
+		writeFileSync(
+			join(dir, ".toon-memory", "memory", "data.toon"),
+			`version: 1\n[1|]{id|category|key|content}:\n  aaa000001|warning|dont-use-mysql|never use MySQL for this project|db.ts|db|2026-08-01||0||0.70|1.0||0||agent|active|||\n`
+		)
+
+		const c = new McpClient(dir)
+		await c.initialize()
+
+		const verified = await c.callTool("memory_remember", {
+			category: "knowledge", key: "quality-lib", content: "quality scoring lives here", file: "src/lib/quality.ts", tags: "quality",
+		})
+		expect(verified).toContain("Evidence: verified")
+
+		const unverified = await c.callTool("memory_remember", {
+			category: "knowledge", key: "ghost-file", content: "config lives in this ghost file", file: "src/nope-123.ts", tags: "cfg",
+		})
+		expect(unverified).toContain("Evidence: unverified")
+
+		const conflict = await c.callTool("memory_remember", {
+			category: "decision", key: "use-mysql", content: "lets use MySQL for this project instead", tags: "db",
+		})
+		expect(conflict).toContain("Potential CONTRADICTION")
+		expect(conflict).toContain("Evidence: conflict")
+		expect(conflict).toContain("dont-use-mysql")
+
+		const data = readFileSync(join(dir, ".toon-memory", "memory", "data.toon"), "utf-8")
+		const mysqlLine = data.split("\n").find((l) => l.includes("use-mysql"))
+		expect(parseToonLine(mysqlLine!)[19]).toBe("conflict")
+		const verifiedLine = data.split("\n").find((l) => l.includes("quality-lib"))
+		expect(parseToonLine(verifiedLine!)[19]).toBe("verified")
+
+		c.kill()
+	})
+
+	// ── F3: encrypted secrets vault ────────────────────────────────
+
+	it("memory_secret stores, gets, lists and forgets without leaking plaintext", async () => {
+		const dir = join(testDir, "vault")
+		mkdirSync(join(dir, ".toon-memory", "memory"), { recursive: true })
+		process.env.TOON_MEMORY_KEY = KEY
+		const c = new McpClient(dir)
+		await c.initialize()
+
+		const stored = await c.callTool("memory_secret", {
+			action: "store", key: "gh_token", value: "shhh-plaintext", tags: "github", file: "ci.yml",
+		})
+		expect(stored).toContain("Stored secret")
+
+		const got = await c.callTool("memory_secret", { action: "get", key: "gh_token" })
+		expect(got).toContain("shhh-plaintext")
+
+		const list = await c.callTool("memory_secret", { action: "list" })
+		expect(list).toContain("gh_token")
+		expect(list).not.toContain("shhh-plaintext")
+
+		const raw = readFileSync(join(dir, ".toon-memory", "memory", "secrets.toon"), "utf-8")
+		expect(raw).not.toContain("shhh-plaintext")
+
+		const gone = await c.callTool("memory_secret", { action: "forget", key: "gh_token" })
+		expect(gone).toContain("Removed")
+		const miss = await c.callTool("memory_secret", { action: "get", key: "gh_token" })
+		expect(miss).toContain("No secret")
+
+		c.kill()
+		delete process.env.TOON_MEMORY_KEY
+	})
+
+	// ── F5: global export/import one-shot ──────────────────────────
+
+	it("memory_export_global / memory_import_global round-trip cross-project memory", async () => {
+		process.env.TOON_MEMORY_GLOBAL_FILE = globalFile
+		writeFileSync(
+			join(sourceDir, ".toon-memory", "memory", "data.toon"),
+			`version: 1\n[1|]{id|category|key|content}:\n  aaa000001|decision|shared-convention|always use tabs for indentation\n`
+		)
+
+		const src = new McpClient(sourceDir)
+		await src.initialize()
+		const exported = await src.callTool("memory_export_global")
+		expect(exported).toContain("Exported")
+		expect(existsSync(globalFile)).toBe(true)
+		expect(readFileSync(globalFile, "utf-8")).toContain("shared-convention")
+		src.kill()
+
+		writeFileSync(
+			join(targetDir, ".toon-memory", "memory", "data.toon"),
+			`version: 1\n[0|]{id|category|key|content}:\n`
+		)
+		const tgt = new McpClient(targetDir)
+		await tgt.initialize()
+		const imported = await tgt.callTool("memory_import_global")
+		expect(imported).toContain("Added: 1")
+		const recall = await tgt.callTool("memory_recall", { query: "tabs indentation" })
+		expect(recall).toContain("always use tabs")
+		tgt.kill()
+
+		delete process.env.TOON_MEMORY_GLOBAL_FILE
 	})
 })

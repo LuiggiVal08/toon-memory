@@ -107,7 +107,9 @@ export function parseEntries(data: string): GraphEntry[] {
 	const out: GraphEntry[] = []
 	for (const line of entryLines(data)) {
 		const parts = parseToonLine(line)
-		if (parts.length < 7) continue
+		// Minimal legacy lines (id|category|key|...) are still valid entries;
+		// every optional field past `key` defaults gracefully below.
+		if (parts.length < 3) continue
 		const [id, category, key, content, file, tags, date, ttl, accessedRaw, linksRaw] =
 			parts
 		out.push({

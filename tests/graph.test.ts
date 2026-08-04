@@ -36,6 +36,19 @@ entries[1|]{id|category|key|content|file|tags|date|ttl|accessed}:
     expect(entries).toHaveLength(1)
     expect(entries[0].links).toEqual([])
   })
+
+  it("parses minimal legacy lines (4 fields) with defaults", () => {
+    const minimal = `version: 1
+[1|]{id|category|key|content}:
+  m1|decision|legacy-rule|always use tabs for indentation
+`
+    const entries = parseEntries(minimal)
+    expect(entries).toHaveLength(1)
+    expect(entries[0].key).toBe("legacy-rule")
+    expect(entries[0].tags).toEqual([])
+    expect(entries[0].status).toBe("active")
+    expect(entries[0].evidence).toBe("")
+  })
 })
 
 describe("buildGraph", () => {
