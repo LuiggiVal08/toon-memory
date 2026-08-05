@@ -31,6 +31,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Benchmark regression check
+        run: npm run bench:check
+
   lint:
     runs-on: ubuntu-latest
     steps:

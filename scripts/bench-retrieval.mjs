@@ -6,15 +6,26 @@
 // Read-only: no bumpAccess, no writes.
 //
 // Run with: npm run bench:retrieval
+// Options: --corpus <file>   override the corpus .toon file (second-project validation)
+//           --queries <file> override the gold queries json
+//           --out <file>     write the metrics json (default benchmarks/retrieval-results.json)
 
-import { readFileSync } from "node:fs"
-import { join, dirname } from "node:path"
+import { readFileSync, writeFileSync } from "node:fs"
+import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import esbuild from "esbuild"
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..")
-const corpus = readFileSync(join(ROOT, "benchmarks", "retrieval-corpus.toon"), "utf8")
-const goldFile = JSON.parse(readFileSync(join(ROOT, "benchmarks", "gold-queries.json"), "utf8"))
+const args = process.argv.slice(2)
+const flagOf = (name, fallback) => {
+	const i = args.indexOf(name)
+	return i >= 0 ? args[i + 1] : fallback
+}
+const corpusPath = flagOf("--corpus", join(ROOT, "benchmarks", "retrieval-corpus.toon"))
+const goldPath = flagOf("--queries", join(ROOT, "benchmarks", "gold-queries.json"))
+const outPath = flagOf("--out", join(ROOT, "benchmarks", "retrieval-results.json"))
+const corpus = readFileSync(corpusPath, "utf8")
+const goldFile = JSON.parse(readFileSync(goldPath, "utf8"))
 
 const bundle = await esbuild.build({
 	entryPoints: [join(ROOT, "scripts", "bench-retrieval-core.ts")],
@@ -87,20 +98,16 @@ for (const q of goldFile.queries) {
 }
 
 console.log("\n// metrics for the docs site")
-console.log(
-	JSON.stringify(
-		{
-			benchmark: "retrieval",
-			corpusEntries: results.corpusEntries,
-			queries: results.queryCount,
-			k: results.k,
-			snapshot: results.today,
-			pipeline: "production src/lib (esbuild in-memory bundle)",
-			modes: results.modes,
-			byCategory: results.byCategory,
-			goldKeysValid: true,
-		},
-		null,
-		2
-	)
-)
+const metrics = {
+	benchmark: "retrieval",
+	corpusEntries: results.corpusEntries,
+	queries: results.queryCount,
+	k: results.k,
+	snapshot: results.today,
+	pipeline: "production src/lib (esbuild in-memory bundle)",
+	modes: results.modes,
+	byCategory: results.byCategory,
+	goldKeysValid: true,
+}
+console.log(JSON.stringify(metrics, null, 2))
+writeFileSync(outPath, JSON.stringify(metrics, null, 2) + "\n")
