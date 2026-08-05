@@ -139,8 +139,8 @@ export const content = {
 				{
 					icon: '🔎',
 					title: 'Smart Recall',
-					body: 'Graph-aware recall re-ranked by BM25 relevance and graph centrality (hubs surface even without the query word). Per-hop decay keeps distant context low. Token-efficient `compact` mode returns numeric-indexed, snippet-truncated results.',
-					stats: ['BM25', 'Centrality', 'compact'],
+					body: 'Graph-aware recall re-ranked by BM25 relevance, deterministic char n-gram similarity (catches "autotag" ≈ "auto tag") and graph centrality — fused via Reciprocal Rank Fusion over the local candidate graph. Per-hop decay keeps distant context low. Token-efficient `compact` mode returns numeric-indexed, snippet-truncated results.',
+					stats: ['BM25', 'N-grams', 'Centrality', 'RRF'],
 				},
 				{
 					icon: '🧠',
@@ -186,7 +186,7 @@ export const content = {
 		},
 		stats: {
 			items: [
-				{ number: '97.6%', label: 'Recall from top-5 (R@5 0.861)' },
+				{ number: '100%', label: 'Recall from top-5 (R@5 0.891)' },
 				{ number: '20', label: 'Agents' },
 				{ number: '80%', label: 'Fewer Tool Calls / session' },
 				{ number: '0', label: 'Config Needed' },
@@ -347,11 +347,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				rrf: 'RRF',
 				smart: 'Unified',
 				metricRows: [
-					{ metric: 'R@5', gloss: 'gold entry in the top 5', linear: '0.643', rrf: '0.861', smart: '0.829' },
-					{ metric: 'nDCG@5', gloss: 'ordering quality', linear: '0.654', rrf: '0.764', smart: '0.739' },
-					{ metric: 'MRR@5', gloss: 'position of the right hit', linear: '0.776', rrf: '0.788', smart: '0.760' },
+					{ metric: 'R@5', gloss: 'gold entry in the top 5', linear: '0.643', rrf: '0.891', smart: '0.867' },
+					{ metric: 'nDCG@5', gloss: 'ordering quality', linear: '0.654', rrf: '0.825', smart: '0.800' },
+					{ metric: 'MRR@5', gloss: 'position of the right hit', linear: '0.776', rrf: '0.871', smart: '0.833' },
 				],
-				result: '97.6% of queries answered from the top-5',
+				result: '100% of queries answered from the top-5',
 				note: 'Real <code>data.toon</code> snapshot (187 entries, 2026-08-01), deterministic <code>today</code>, read-only, no code copies; 2 priority meta-entries excluded. Reproducible: <code>npm run bench:retrieval</code>.',
 			},
 			workflow: {
@@ -814,7 +814,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		stats: {
 			items: [
-				{ number: '97.6%', label: 'Recall en top-5 (R@5 0.861)' },
+				{ number: '100%', label: 'Recall en top-5 (R@5 0.891)' },
 				{ number: '20', label: 'Agentes' },
 				{ number: '80%', label: 'Menos tool calls por sesión' },
 				{ number: '0', label: 'Config necesaria' },
@@ -964,11 +964,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				rrf: 'RRF',
 				smart: 'Unificado',
 				metricRows: [
-					{ metric: 'R@5', gloss: 'entrada gold en el top 5', linear: '0.643', rrf: '0.861', smart: '0.829' },
-					{ metric: 'nDCG@5', gloss: 'calidad del orden', linear: '0.654', rrf: '0.764', smart: '0.739' },
-					{ metric: 'MRR@5', gloss: 'posición del acierto', linear: '0.776', rrf: '0.788', smart: '0.760' },
+					{ metric: 'R@5', gloss: 'entrada gold en el top 5', linear: '0.643', rrf: '0.891', smart: '0.867' },
+					{ metric: 'nDCG@5', gloss: 'calidad del orden', linear: '0.654', rrf: '0.825', smart: '0.800' },
+					{ metric: 'MRR@5', gloss: 'posición del acierto', linear: '0.776', rrf: '0.871', smart: '0.833' },
 				],
-				result: 'El 97.6% de las queries se responden desde el top-5',
+				result: 'El 100% de las queries se responden desde el top-5',
 				note: 'Snapshot real de <code>data.toon</code> (187 entries, 2026-08-01), <code>today</code> determinista, solo lectura y sin copias; se excluyen 2 meta-entries priority. Reproducible: <code>npm run bench:retrieval</code>.',
 			},
 			workflow: {
@@ -1322,7 +1322,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '支持 20+ 个 AI 编程代理', subtitle: '零配置 — toon-memory 自动检测并配置每个代理' },
-	stats: { items: [{ number: '97.6%', label: '从前 5 名召回（R@5 0.861）' }, { number: '20', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
+	stats: { items: [{ number: '100%', label: '从前 5 名召回（R@5 0.891）' }, { number: '20', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
 	howItWorks: {
 		title: '它是如何工作的？',
 		subtitle: '从失忆到记忆的四个步骤',
@@ -1370,11 +1370,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			rrf: 'RRF',
 			smart: '统一',
 			metricRows: [
-				{ metric: 'R@5', gloss: 'gold 条目在前 5 名', linear: '0.643', rrf: '0.861', smart: '0.829' },
-				{ metric: 'nDCG@5', gloss: '排序质量', linear: '0.654', rrf: '0.764', smart: '0.739' },
-				{ metric: 'MRR@5', gloss: '正确命中的位置', linear: '0.776', rrf: '0.788', smart: '0.760' },
+				{ metric: 'R@5', gloss: 'gold 条目在前 5 名', linear: '0.643', rrf: '0.891', smart: '0.867' },
+				{ metric: 'nDCG@5', gloss: '排序质量', linear: '0.654', rrf: '0.825', smart: '0.800' },
+				{ metric: 'MRR@5', gloss: '正确命中的位置', linear: '0.776', rrf: '0.871', smart: '0.833' },
 			],
-			result: '97.6% 的查询可从前 5 名得到答案',
+			result: '100% 的查询可从前 5 名得到答案',
 			note: '真实 <code>data.toon</code> 快照（187 条，2026-08-01），<code>today</code> 确定性、只读、无代码复刻；排除 2 条 priority 元条目。可复现：<code>npm run bench:retrieval</code>。',
 		},
 		workflow: {
@@ -1609,7 +1609,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '20 以上の AI コーディングエージェントに対応', subtitle: 'ゼロコンフィグ — toon-memory が自動検出し、各エージェントを設定' },
-	stats: { items: [				{ number: '97.6%', label: 'トップ5からのリコール (R@5 0.861)' }, { number: '20', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
+	stats: { items: [				{ number: '100%', label: 'トップ5からのリコール (R@5 0.891)' }, { number: '20', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
 	howItWorks: {
 		title: 'どのように機能するのか？', subtitle: '記憶喪失からメモリへの 4 つのステップ',
 		steps: [
@@ -1656,11 +1656,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			rrf: 'RRF',
 			smart: '統合',
 			metricRows: [
-				{ metric: 'R@5', gloss: 'goldエントリがトップ5以内', linear: '0.643', rrf: '0.861', smart: '0.829' },
-				{ metric: 'nDCG@5', gloss: '順序の品質', linear: '0.654', rrf: '0.764', smart: '0.739' },
-				{ metric: 'MRR@5', gloss: '正解の位置', linear: '0.776', rrf: '0.788', smart: '0.760' },
+				{ metric: 'R@5', gloss: 'goldエントリがトップ5以内', linear: '0.643', rrf: '0.891', smart: '0.867' },
+				{ metric: 'nDCG@5', gloss: '順序の品質', linear: '0.654', rrf: '0.825', smart: '0.800' },
+				{ metric: 'MRR@5', gloss: '正解の位置', linear: '0.776', rrf: '0.871', smart: '0.833' },
 			],
-			result: '97.6%のクエリがトップ5から回答可能',
+			result: '100%のクエリがトップ5から回答可能',
 			note: '実 <code>data.toon</code> スナップショット（187件、2026-08-01）、<code>today</code> で決定論的、読み取り専用・コピーなし；priority メタエントリ2件除外。再現: <code>npm run bench:retrieval</code>。',
 		},
 		workflow: {
@@ -1893,7 +1893,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '20개 이상의 AI 코딩 에이전트 지원', subtitle: '제로 구성 — toon-memory가 각 에이전트를 자동 감지하고 구성' },
-	stats: { items: [				{ number: '97.6%', label: '상위 5개에서 리콜 (R@5 0.861)' }, { number: '20', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
+	stats: { items: [				{ number: '100%', label: '상위 5개에서 리콜 (R@5 0.891)' }, { number: '20', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
 	howItWorks: {
 		title: '어떻게 작동하나요?', subtitle: '기억 상실에서 메모리까지 4단계',
 		steps: [
@@ -1940,11 +1940,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			rrf: 'RRF',
 			smart: '통합',
 			metricRows: [
-				{ metric: 'R@5', gloss: 'gold 항목이 상위 5개 안', linear: '0.643', rrf: '0.861', smart: '0.829' },
-				{ metric: 'nDCG@5', gloss: '순서 품질', linear: '0.654', rrf: '0.764', smart: '0.739' },
-				{ metric: 'MRR@5', gloss: '정답의 위치', linear: '0.776', rrf: '0.788', smart: '0.760' },
+				{ metric: 'R@5', gloss: 'gold 항목이 상위 5개 안', linear: '0.643', rrf: '0.891', smart: '0.867' },
+				{ metric: 'nDCG@5', gloss: '순서 품질', linear: '0.654', rrf: '0.825', smart: '0.800' },
+				{ metric: 'MRR@5', gloss: '정답의 위치', linear: '0.776', rrf: '0.871', smart: '0.833' },
 			],
-			result: '97.6%의 쿼리가 상위 5개에서 답변 가능',
+			result: '100%의 쿼리가 상위 5개에서 답변 가능',
 			note: '실제 <code>data.toon</code> 스냅샷(187개, 2026-08-01), <code>today</code> 결정적, 읽기 전용·복사본 없음; priority 메타 항목 2개 제외. 재현: <code>npm run bench:retrieval</code>.',
 		},
 		workflow: {
@@ -2235,7 +2235,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	stats: {
 		items: [
-			{ number: '97.6%', label: 'Recall no top-5 (R@5 0.861)' },
+			{ number: '100%', label: 'Recall no top-5 (R@5 0.891)' },
 			{ number: '20', label: 'Agentes' },
 			{ number: '80%', label: 'Menos chamadas de ferramenta/sessão' },
 			{ number: '0', label: 'Configuração necessária' },
@@ -2381,9 +2381,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			rrf: 'RRF',
 			smart: 'Unificado',
 			metricRows: [
-				{ metric: 'R@5', gloss: 'entrada gold no top 5', linear: '0.643', rrf: '0.861', smart: '0.829' },
-				{ metric: 'nDCG@5', gloss: 'qualidade do ordenamento', linear: '0.654', rrf: '0.764', smart: '0.739' },
-				{ metric: 'MRR@5', gloss: 'posição do acerto', linear: '0.776', rrf: '0.788', smart: '0.760' },
+				{ metric: 'R@5', gloss: 'entrada gold no top 5', linear: '0.643', rrf: '0.891', smart: '0.867' },
+				{ metric: 'nDCG@5', gloss: 'qualidade do ordenamento', linear: '0.654', rrf: '0.825', smart: '0.800' },
+				{ metric: 'MRR@5', gloss: 'posição do acerto', linear: '0.776', rrf: '0.871', smart: '0.833' },
 			],
 			result: '97,6% das queries respondidas a partir do top-5',
 			note: 'Snapshot real do <code>data.toon</code> (187 entradas, 2026-08-01), <code>today</code> determinístico, somente leitura e sem cópias; excluídas 2 meta-entradas priority. Reproduzível: <code>npm run bench:retrieval</code>.',
@@ -2756,7 +2756,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	stats: {
 		items: [
-			{ number: '97.6%', label: 'Recall aus den Top-5 (R@5 0.861)' },
+			{ number: '100%', label: 'Recall aus den Top-5 (R@5 0.891)' },
 			{ number: '20', label: 'Agenten' },
 			{ number: '80%', label: 'Weniger Tool-Aufrufe/Sitzung' },
 			{ number: '0', label: 'Benötigte Konfiguration' },
@@ -2902,9 +2902,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			rrf: 'RRF',
 			smart: 'Vereinheitlicht',
 			metricRows: [
-				{ metric: 'R@5', gloss: 'Gold-Eintrag in den Top 5', linear: '0.643', rrf: '0.861', smart: '0.829' },
-				{ metric: 'nDCG@5', gloss: 'Ordnungsqualität', linear: '0.654', rrf: '0.764', smart: '0.739' },
-				{ metric: 'MRR@5', gloss: 'Position des Treffers', linear: '0.776', rrf: '0.788', smart: '0.760' },
+				{ metric: 'R@5', gloss: 'Gold-Eintrag in den Top 5', linear: '0.643', rrf: '0.891', smart: '0.867' },
+				{ metric: 'nDCG@5', gloss: 'Ordnungsqualität', linear: '0.654', rrf: '0.825', smart: '0.800' },
+				{ metric: 'MRR@5', gloss: 'Position des Treffers', linear: '0.776', rrf: '0.871', smart: '0.833' },
 			],
 			result: '97,6 % der Queries aus den Top 5 beantwortet',
 			note: 'Echter <code>data.toon</code>-Snapshot (187 Einträge, 2026-08-01), deterministisches <code>today</code>, schreibgeschützt, keine Kopien; 2 Priority-Meta-Einträge ausgeschlossen. Reproduzierbar: <code>npm run bench:retrieval</code>.',
@@ -3272,7 +3272,7 @@ cta: {
 	},
 	stats: {
 		items: [
-			{ number: '97.6%', label: 'Rappel depuis le top-5 (R@5 0.861)' },
+			{ number: '100%', label: 'Rappel depuis le top-5 (R@5 0.891)' },
 			{ number: '20', label: 'Agents' },
 			{ number: '80%', label: 'Moins d\'appels d\'outil/session' },
 			{ number: '0', label: 'Configuration requise' },
@@ -3418,9 +3418,9 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			rrf: 'RRF',
 			smart: 'Unifié',
 			metricRows: [
-				{ metric: 'R@5', gloss: 'entrée gold dans le top 5', linear: '0.643', rrf: '0.861', smart: '0.829' },
-				{ metric: 'nDCG@5', gloss: 'qualité du classement', linear: '0.654', rrf: '0.764', smart: '0.739' },
-				{ metric: 'MRR@5', gloss: 'position du bon résultat', linear: '0.776', rrf: '0.788', smart: '0.760' },
+				{ metric: 'R@5', gloss: 'entrée gold dans le top 5', linear: '0.643', rrf: '0.891', smart: '0.867' },
+				{ metric: 'nDCG@5', gloss: 'qualité du classement', linear: '0.654', rrf: '0.825', smart: '0.800' },
+				{ metric: 'MRR@5', gloss: 'position du bon résultat', linear: '0.776', rrf: '0.871', smart: '0.833' },
 			],
 			result: '97,6 % des requêtes répondues depuis le top-5',
 			note: 'Snapshot réel de <code>data.toon</code> (187 entrées, 2026-08-01), <code>today</code> déterministe, lecture seule et sans copies ; 2 méta-entrées priority exclues. Reproductible : <code>npm run bench:retrieval</code>.',

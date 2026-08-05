@@ -12,18 +12,21 @@ import {
 	buildGraph,
 	bm25Scores,
 	centrality,
+	localCentrality,
 	renderCompact,
 	rankBy,
 	rrfFuse,
 	rrfK,
 	globMatch,
 	buildReason,
+	NGRAM_SEED_MIN,
 	type GraphEntry,
 } from "./graph"
 import { normalize, isExpiredLocal, tokenize, importance, importanceBoost, importanceRank, isPrivate, estimateTokens, languageFamily, parseToonLine, toToonLine } from "./utils"
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
 import { evidenceBoost } from "./evidence"
+import { ngramScores } from "./ngrams"
 
 /**
  * Quality score for an entry (0..1). Pure heuristics, no LLM.
@@ -221,6 +224,7 @@ export function generateSmartRecall(
 	const { adjacency } = buildGraph(entries)
 	const bm25 = bm25Scores(entries, intent)
 	const cent = centrality(adjacency)
+	const ngram = ngramScores(entries, intent)
 	const limit = opts.limit ?? 8
 	const category = opts.category || ""
 	const mtimes = opts.fileMtimes
@@ -236,14 +240,19 @@ export function generateSmartRecall(
 	})
 
 	// RRF mode: fuse per-signal rankers instead of the weighted linear score.
-	// BM25 (the only real retriever on a small memory graph) is fused three times;
-	// centrality contributes once as the graph signal. Importance is dropped from the
-	// fusion (recency-dominated noise on small graphs; validated on scripts/bench-rrf.mjs).
-	// k is adaptive (sqrt of candidate count) — the textbook k=60 flattens rank
+	// Ranks are computed ONLY over the eligible set (not the whole memory), and
+	// centrality is LOCAL to that same set — global hub centrality buries
+	// relevant peripheral entries. Signals: BM25 (3×), char n-gram cosine
+	// (morphology: "autotag" ≈ "auto tag"), local centrality (1×). k is
+	// adaptive (sqrt of candidate count) — the textbook k=60 flattens rank
 	// differences on small memory graphs.
-	const bm25Rank = rankBy(new Map([...bm25].filter(([k]) => eligible.some((e) => e.key === k))))
-	const centRank = rankBy(new Map([...cent].filter(([k]) => eligible.some((e) => e.key === k))))
-	const fused = opts.rrf ? rrfFuse([bm25Rank, bm25Rank, bm25Rank, centRank], rrfK(bm25Rank.size)) : null
+	const eligibleKeys = new Set(eligible.map((e) => e.key))
+	const sub = (m: Map<string, number>) => new Map([...m].filter(([k]) => eligibleKeys.has(k)))
+	const localCent = localCentrality(adjacency, eligibleKeys)
+	const bm25Rank = rankBy(sub(bm25))
+	const ngRank = rankBy(sub(ngram))
+	const centRank = rankBy(sub(localCent))
+	const fused = opts.rrf ? rrfFuse([bm25Rank, bm25Rank, bm25Rank, ngRank, centRank], rrfK(bm25Rank.size)) : null
 
 	const scored = eligible
 		.map((e) => {
@@ -253,7 +262,8 @@ export function generateSmartRecall(
 			const docTokens = text.split(" ")
 			const exactMatch = qTokens.length === 0 || expandedTokens.some((t) => text.includes(t))
 			const fuzzy = !exactMatch && qTokens.length > 0 && fuzzyMatch(qTokens, docTokens)
-			const matchesQuery = exactMatch || fuzzy
+			const ngMatch = !exactMatch && !fuzzy && (ngram.get(e.key) || 0) >= NGRAM_SEED_MIN
+			const matchesQuery = exactMatch || fuzzy || ngMatch
 			const bm25Score = bm25.get(e.key) || 0
 			const centScore = cent.get(e.key) || 0
 			const impScore = importance(e, opts.today)
@@ -289,9 +299,12 @@ export function generateSmartRecall(
 			const impBoost = importanceBoost(e.importance)
 			// Evidence bias: conflicts surface for review, verified is grounded, unverified sinks.
 			const evBoost = evidenceBoost(e.evidence)
+			// Morphological catch: "autotag" ≈ "auto tag", "plugin" ≈ "plugins".
+			const ngScore = ngram.get(e.key) || 0
+			const ngBoost = ngMatch ? ngScore * 0.15 : 0
 			let combined: number
 			if (opts.rrf) {
-				combined = (fused?.get(e.key) ?? 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost + evBoost
+				combined = (fused?.get(e.key) ?? 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost + evBoost + ngBoost
 			} else {
 				combined =
 					bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost + evBoost

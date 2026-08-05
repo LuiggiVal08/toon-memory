@@ -18,6 +18,7 @@ import { normalize, isExpiredLocal, tokenize, importance, importanceBoost, impor
 import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
 import { evidenceBoost } from "./evidence"
+import { ngramScores } from "./ngrams"
 
 export interface GraphEntry {
 	id: string
@@ -389,6 +390,30 @@ export function centrality(adjacency: Map<string, string[]>): Map<string, number
 	return out
 }
 
+/**
+ * Centrality restricted to a subset of keys, counting only edges whose
+ * neighbors are also inside the subset. On a small memory graph the global
+ * centrality of hubs dominates RRF fusion and buries relevant peripheral
+ * entries (a gold hit with bm25 rank 1 but global cent rank ~180 lands out of
+ * the top-5). Local centrality measures "hub of the candidate context" instead
+ * of "hub of the whole memory", which is what ranking against a query needs.
+ */
+export function localCentrality(
+	adjacency: Map<string, string[]>,
+	keys: Iterable<string>
+): Map<string, number> {
+	let maxDeg = 1
+	const deg = new Map<string, number>()
+	for (const k of keys) {
+		const d = (adjacency.get(k) || []).length
+		deg.set(k, d)
+		if (d > maxDeg) maxDeg = d
+	}
+	const out = new Map<string, number>()
+	for (const [k, d] of deg) out.set(k, d / maxDeg)
+	return out
+}
+
 export interface GraphRecallResult {
 	/** Selected entries, ordered by final score (desc). */
 	entries: GraphEntry[]
@@ -438,6 +463,9 @@ const W_IMP = 0.25
 const SEED_BONUS = 1.0
 /** Per-hop decay: a node 1 hop from a seed scores half of an equivalent seed. */
 const DECAY = 0.5
+/** Minimum char n-gram cosine for an entry to seed without a lexical match.
+ *  Tri-grams of "autotag" vs "auto tag" score ~0.7; unrelated entries < 0.3. */
+export const NGRAM_SEED_MIN = 0.45
 
 /**
  * Graph-aware recall with BM25 + centrality re-ranking.
@@ -462,6 +490,7 @@ export function graphRecallDetailed(
 	const expandedTokens = expandSynonyms(qTokens)
 	const bm25 = bm25Scores(entries, query)
 	const cent = centrality(adjacency)
+	const ngram = ngramScores(entries, query)
 
 	const seedKeys = new Set<string>()
 	const asOf = opts.asOf || ""
@@ -483,7 +512,11 @@ export function graphRecallDetailed(
 		const docTokens = text.split(" ")
 		const exactMatch = expandedTokens.some((t) => text.includes(t))
 		const fuzzy = !exactMatch && fuzzyMatch(qTokens, docTokens)
-		if (qTokens.length > 0 && !exactMatch && !fuzzy) continue
+		// Morphological catch: "autotag" ≈ "auto tag", "plugin" ≈ "plugins".
+		// The n-gram cosine is only consulted when lexical gates miss, and a
+		// fraction of the BM25 max keeps weak surface matches out of the seeds.
+		const ngMatch = !exactMatch && !fuzzy && (ngram.get(e.key) || 0) >= NGRAM_SEED_MIN
+		if (qTokens.length > 0 && !exactMatch && !fuzzy && !ngMatch) continue
 		seedKeys.add(e.key)
 	}
 
@@ -526,16 +559,23 @@ export function graphRecallDetailed(
 		}
 
 		// RRF mode: fuse per-signal rankers instead of the weighted linear score.
-		// BM25 (the only real retriever on a small memory graph) is fused three times;
-		// centrality contributes once as the graph signal. Importance is dropped from
-		// the fusion — on small graphs its rank is dominated by recency noise and
-		// including it drags nDCG down (validated on scripts/bench-rrf.mjs). k is
-		// adaptive: the textbook k=60 flattens rank differences on small graphs, so it
+		// Ranks are computed ONLY over the BFS candidate set (not the whole
+		// memory), and centrality is LOCAL to that same set — global hub
+		// centrality buries relevant peripheral entries (validated: a gold hit
+		// with bm25 rank 1 but global cent rank ~180 fell out of the top-5).
+		// Signals: BM25 (3×), char n-gram cosine (the morphological signal that
+		// catches "autotag" ≈ "auto tag"), local centrality (1×). k is adaptive:
+		// the textbook k=60 flattens rank differences on small graphs, so it
 		// scales with sqrt(candidate count).
-		const sub = (m: Map<string, number>) => new Map([...m].filter(([k]) => isVisible.has(k)))
+		const cand = new Set(best.keys())
+		const sub = (m: Map<string, number>) => new Map([...m].filter(([k]) => cand.has(k)))
+		const localCent = localCentrality(adjacency, cand)
 		const bm25Rank = rankBy(sub(bm25))
-		const centRank = rankBy(sub(cent))
-		const fused = opts.rrf ? rrfFuse([bm25Rank, bm25Rank, bm25Rank, centRank], rrfK(bm25Rank.size)) : null
+		const ngRank = rankBy(sub(ngram))
+		const centRank = rankBy(sub(localCent))
+		const fused = opts.rrf
+			? rrfFuse([bm25Rank, bm25Rank, bm25Rank, ngRank, centRank], rrfK(bm25Rank.size))
+			: null
 
 		scored.push(
 			...[...best.keys()]

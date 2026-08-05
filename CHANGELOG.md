@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- **Deterministic char n-gram embedding-lite (no model, no deps)** — new `src/lib/ngrams.ts`: FNV-1a hashed tri-grams with boundary sentinels, pure cosine similarity. Catches morphological matches (`autotag` ≈ `auto tag`, `plugin` ≈ `plugins`) that BM25 tokens miss. Wired into both recall paths:
+  - **Seed gate** — entries with n-gram cosine ≥ `NGRAM_SEED_MIN` (0.45) seed graph expansion even without a lexical hit, in `graphRecallDetailed` (new `ngMatch` alongside `exactMatch`/`fuzzy`).
+  - **RRF fusion** — the fused signal list is now `[BM25×3, n-gram, localCentrality]` in both `graphRecallDetailed` and `generateSmartRecall`.
+
+### Changed
+- **RRF ranks are computed only over the local candidate set** — before, ranks came from the whole memory, so global hub centrality buried relevant peripheral entries (a gold hit with bm25 rank 1 but global cent rank ~180 fell out of the top-5). New `localCentrality` in `graph.ts` measures "hub of the candidate context" counting only intra-set edges; both rankers and the RRF fusion run over the BFS/eligible candidate set.
+- **Measured on the frozen 187-entry benchmark (42 gold queries, k=5)** — RRF: R@5 **0.861 → 0.891**, nDCG@5 **0.764 → 0.825**, MRR **0.788 → 0.871**, answerable **97.6% → 100%**. Unified smart recall: R@5 **0.829 → 0.867**, nDCG@5 **0.739 → 0.800**, MRR **0.760 → 0.833**. Isolation sweep attributes +0.022 R@5 / +0.066 nDCG to the n-gram signal in the fusion; the local-centrality fix carries the rest.
+
 ## [4.3.5] - 2026-08-04
 
 ### Fixed
