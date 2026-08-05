@@ -93,7 +93,7 @@ export const content = {
 					title: 'Lightweight',
 					items: [
 						'Native TOON format — 22% fewer tokens than JSON',
-						'~1 MB install — a single runtime dependency, runs on any Node.js 18+',
+						'~1 MB install — three tiny prompt packages, runs on any Node.js 18+',
 						'Deterministic logic — no LLM calls, no API keys',
 					],
 				},
@@ -3214,7 +3214,7 @@ cta: {
 			subtitle: 'Les garanties qui rendent la mémoire du projet sûre à conserver.',
 		groups: [
 				{ icon: '🔒', title: 'Confidentialité d\'abord', items: ['100% local — aucun cloud, aucun serveur, aucune télémétrie', 'Chiffrement AES-256-GCM optionnel', 'Vous possédez le fichier mémoire, comme n\'importe quel fichier source'] },
-			{ icon: '⚡', title: 'Léger', items: ['Format TOON natif — 22% de tokens en moins que JSON', '~1 MB installé — une seule dépendance runtime, fonctionne sur tout Node.js 18+', 'Logique déterministe — aucun appel LLM, aucune clé API'] },
+			{ icon: '⚡', title: 'Léger', items: ['Format TOON natif — 22% de tokens en moins que JSON', '~1 MB installé — trois petits paquets de prompts, fonctionne sur tout Node.js 18+', 'Logique déterministe — aucun appel LLM, aucune clé API'] },
 				{ icon: '🛰️', title: 'Universel', items: ['Fonctionne avec 20+ agents : Claude Code, Codex, Gemini CLI, Cursor, OpenCode et plus', 'MCP standard — changez d\'agent sans perdre le contexte', 'Mémoire par projet partagée par toute l\'équipe'] },
 		],
 	},

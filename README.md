@@ -116,7 +116,7 @@ Read [How toon-memory Makes Your AI Agent Smarter](https://luiggival08.github.io
 - **Evidence layer** — every `memory_remember` save is annotated with an evidence level: `verified` when its referenced file exists on disk, `unverified` when it doesn't, `conflict` when it overlaps a warning or critical/high decision. Conflicts get a +0.15 recall boost (verified +0.03, unverified −0.02) and a ⚠️ CONTRADICTION warning on save — but never block the write
 - **Secrets vault** — `memory_secret` stores credentials in an encrypted sidecar (`secrets.toon`, AES-256-GCM) so `data.toon` stays a readable open format while sensitive values never hit plaintext
 - **Global memory import/export** — `memory_export_global` writes project memory to `~/.toon-memory/memory/global.toon`; `memory_import_global` pulls cross-project conventions back with a one-shot, deterministic, offline merge (never a live dual source)
-- **~1 MB install** — one runtime dependency (`@inquirer/prompts`); the MCP SDK, zod, and the TOON parser are bundled into the shipped binary — a single `npm i -g` downloads ~1 MB (was ~14 MB) and lands ~5.5 MB on disk (was ~33 MB)
+- **~1 MB install** — three tiny prompt packages (`@inquirer/checkbox`/`select`/`confirm`); the MCP SDK, zod, and the TOON parser are bundled into the shipped binary — a single `npm i -g` downloads ~1 MB (was ~14 MB) and lands ~4.4 MB on disk (was ~33 MB)
 
 ---
 
@@ -137,7 +137,7 @@ npm i -g toon-memory
 
 > **Tip:** The npm install is the most reliable method. The curl/irm scripts are convenience wrappers.
 
-> **Size:** A bare `npm i -g toon-memory` downloads ~1 MB and installs ~5.5 MB — a single runtime dependency; everything else (MCP SDK, zod, TOON parser) ships bundled.
+> **Size:** A bare `npm i -g toon-memory` downloads ~1 MB and installs ~4.4 MB — three tiny prompt packages; everything else (MCP SDK, zod, TOON parser) ships bundled.
 
 ### 2. Configure your agent(s)
 

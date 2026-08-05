@@ -3,20 +3,6 @@ import { resolve, dirname } from "path"
 import { fileURLToPath } from "url"
 import { ViewerData } from "./types"
 
-const d3Src = (() => {
-  try {
-    const dir = dirname(fileURLToPath(import.meta.url))
-    return readFileSync(resolve(dir, "../src/viewer/d3.v7.min.js"), "utf-8")
-  } catch {
-    try {
-      const dir = dirname(fileURLToPath(import.meta.url))
-      return readFileSync(resolve(dir, "d3.v7.min.js"), "utf-8")
-    } catch {
-      return null
-    }
-  }
-})()
-
 function readViewerAsset(name: string): string {
   const dir = dirname(fileURLToPath(import.meta.url))
   const candidates = [
@@ -33,6 +19,8 @@ function readViewerAsset(name: string): string {
   }
   return ""
 }
+
+const d3Src = readViewerAsset("d3.v7.min.js")
 const logoSrc = readViewerAsset("logo.svg")
 const isologoSrc = readViewerAsset("logo-isologo.svg")
 
@@ -311,7 +299,7 @@ const tooltip = document.getElementById('tooltip');
 function showTooltip(e, d) {
   const score = d.quality || 0;
   tooltip.innerHTML =
-    '<div class="tt-cat" style="color:' + (COLORS[d.category] || 'var(--muted)') + '">' + d.category + '</div>' +
+    '<div class="tt-cat" style="color:' + (COLORS[d.category] || 'var(--muted)') + '">' + escHtml(d.category) + '</div>' +
     '<div class="tt-key">' + escHtml(d.id) + '</div>' +
     '<div class="tt-content">' + escHtml(d.content) + '</div>' +
     '<div class="tt-score">Quality: ' + score.toFixed(2) + ' | Access: ' + (d.accessCount || 0) + '</div>';
@@ -401,7 +389,7 @@ function renderEntries() {
       div.className = 'entry-item' + (selectedEntry && selectedEntry.id === e.id ? ' selected' : '') + (firstEntriesRender ? ' reveal' : '');
       if (firstEntriesRender) div.style.animationDelay = Math.min(i * 0.03, 0.6) + 's';
       div.innerHTML =
-        '<div class="entry-cat ' + e.category + '">' + e.category + '</div>' +
+        '<div class="entry-cat ' + escHtml(e.category) + '">' + escHtml(e.category) + '</div>' +
         '<div class="entry-key">' + escHtml(e.id) + '</div>' +
         '<div class="entry-preview">' + escHtml(e.content) + '</div>' +
         (e.tags.length ? '<div class="entry-tags">' + e.tags.map(t => '<span class="entry-tag">' + escHtml(t) + '</span>').join('') + '</div>' : '');
@@ -411,7 +399,7 @@ function renderEntries() {
   firstEntriesRender = false;
 }
 
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 // --- Entry Selection ---
 function selectEntry(entry) {
@@ -430,23 +418,33 @@ function showDetail(e) {
     .map(ed => (typeof ed.source === 'object' ? ed.source.id : ed.source) === e.id ? (typeof ed.target === 'object' ? ed.target.id : ed.target) : (typeof ed.source === 'object' ? ed.source.id : ed.source));
 
   panel.innerHTML =
-    '<div class="detail-cat" style="color:' + (COLORS[e.category] || 'var(--muted)') + '">' + e.category + '</div>' +
+    '<div class="detail-cat" style="color:' + (COLORS[e.category] || 'var(--muted)') + '">' + escHtml(e.category) + '</div>' +
     '<h2>' + escHtml(e.id) + '</h2>' +
     '<div class="detail-field"><label>Content</label><span class="value mono">' + escHtml(e.content) + '</span></div>' +
     (e.file ? '<div class="detail-field"><label>File</label><span class="value mono"><a href="#" onclick="event.preventDefault()" style="color:var(--brand);text-decoration:none;cursor:pointer">' + escHtml(e.file) + '</a></span></div>' : '') +
-    (e.date ? '<div class="detail-field"><label>Date</label><span class="value">' + e.date + '</span></div>' : '') +
+    (e.date ? '<div class="detail-field"><label>Date</label><span class="value">' + escHtml(e.date) + '</span></div>' : '') +
     '<div class="detail-field"><label>Quality Score</label><span class="value" style="color:var(--brand);font-weight:700;font-size:1.1rem">' + (e.quality || 0).toFixed(3) + '</span></div>' +
     '<div class="detail-field"><label>Access Count</label><span class="value">' + (e.accessCount || 0) + '</span></div>' +
-    (e.ttl ? '<div class="detail-field"><label>TTL</label><span class="value">' + e.ttl + '</span></div>' : '') +
-    (e.lastAccessed ? '<div class="detail-field"><label>Last Accessed</label><span class="value">' + e.lastAccessed + '</span></div>' : '') +
+    (e.ttl ? '<div class="detail-field"><label>TTL</label><span class="value">' + escHtml(e.ttl) + '</span></div>' : '') +
+    (e.lastAccessed ? '<div class="detail-field"><label>Last Accessed</label><span class="value">' + escHtml(e.lastAccessed) + '</span></div>' : '') +
     (e.tags.length ? '<div class="detail-field"><label>Tags</label><div class="entry-tags">' + e.tags.map(t => '<span class="entry-tag">' + escHtml(t) + '</span>').join('') + '</div></div>' : '') +
-    (linkedNodes.length ? '<div class="detail-field"><label>Linked Entries (' + linkedNodes.length + ')</label><div class="detail-links">' + linkedNodes.map(k => '<span class="detail-link" onclick="selectEntryById(\\'' + k + '\\')">' + escHtml(k) + '</span>').join('') + '</div></div>' : '');
+    (linkedNodes.length ? '<div class="detail-field"><label>Linked Entries (' + linkedNodes.length + ')</label><div class="detail-links">' + linkedNodes.map(k => '<span class="detail-link" data-id="' + escHtml(k) + '">' + escHtml(k) + '</span>').join('') + '</div></div>' : '');
 }
 
 window.selectEntryById = function(id) {
   const e = DATA.nodes.find(n => n.id === id);
   if (e) selectEntry(e);
 };
+
+// Delegated click handling for data-id elements (detail links, timeline) —
+// avoids inline onclick handlers with interpolated entry data (XSS vector).
+document.addEventListener('click', function(ev) {
+  const t = ev.target;
+  const el = t && t.closest ? t.closest('[data-id]') : null;
+  if (el && el.dataset.id) {
+    window.selectEntryById(el.dataset.id);
+  }
+});
 
 // --- Stats ---
 function renderStats() {
@@ -466,7 +464,7 @@ function renderStats() {
     card(3, '<h3>Max Access</h3><div class="stat-big">' + maxAccess + '</div>') +
     card(4, '<h3>Categories</h3><div class="bar-chart">' +
       catEntries.map(([cat, count]) =>
-        '<div class="bar-row"><span class="bar-label">' + cat + '</span><div class="bar-track"><div class="bar-fill" data-w="' + (count/maxCat*100) + '" style="background:' + (COLORS[cat] || 'var(--brand)') + '"></div></div><span class="bar-value">' + count + '</span></div>'
+        '<div class="bar-row"><span class="bar-label">' + escHtml(cat) + '</span><div class="bar-track"><div class="bar-fill" data-w="' + (count/maxCat*100) + '" style="background:' + (COLORS[cat] || 'var(--brand)') + '"></div></div><span class="bar-value">' + count + '</span></div>'
       ).join('') +
     '</div>') +
     card(5, '<h3>Top Tags</h3><div class="tag-cloud">' +
@@ -496,9 +494,9 @@ function renderTimeline() {
   let idx = 0;
   for (const [date, entries] of Object.entries(grouped)) {
     for (const e of entries) {
-      html += '<div class="timeline-entry reveal" style="border-left:3px solid ' + (COLORS[e.category] || 'var(--border)') + ';animation-delay:' + Math.min(idx * 0.02, 0.6) + 's" onclick="selectEntryById(\\'' + e.id + '\\')">' +
+      html += '<div class="timeline-entry reveal" style="border-left:3px solid ' + (COLORS[e.category] || 'var(--border)') + ';animation-delay:' + Math.min(idx * 0.02, 0.6) + 's" data-id="' + escHtml(e.id) + '">' +
         '<div class="tl-date">' + escHtml(date) + '</div>' +
-        '<div class="tl-cat" style="color:' + (COLORS[e.category] || 'var(--muted)') + '">' + e.category + '</div>' +
+        '<div class="tl-cat" style="color:' + (COLORS[e.category] || 'var(--muted)') + '">' + escHtml(e.category) + '</div>' +
         '<div class="tl-key">' + escHtml(e.id) + '</div>' +
         '<div class="tl-content">' + escHtml(e.content.substring(0, 100)) + '</div>' +
       '</div>';

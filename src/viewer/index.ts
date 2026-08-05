@@ -1,6 +1,6 @@
 import { writeFileSync, mkdirSync } from "fs"
 import { join } from "path"
-import { execSync } from "child_process"
+import { spawn } from "child_process"
 import { buildViewerData } from "./data"
 import { generateHtml } from "./html"
 import { createServer, type IncomingMessage, type ServerResponse } from "http"
@@ -9,13 +9,13 @@ export { buildViewerData } from "./data"
 
 function openBrowser(url: string): void {
   const platform = process.platform
-  try {
-    if (platform === "darwin") execSync(`open "${url}"`)
-    else if (platform === "win32") execSync(`start "" "${url}"`)
-    else execSync(`xdg-open "${url}" || sensible-browser "${url}" || x-www-browser "${url}"`, { stdio: "ignore" })
-  } catch {
-    console.log(`Open in browser: ${url}`)
-  }
+  const opts = { stdio: "ignore" as const, detached: true }
+  const child =
+    platform === "darwin" ? spawn("open", [url], opts)
+    : platform === "win32" ? spawn("cmd", ["/c", "start", "", url], opts)
+    : spawn("xdg-open", [url], opts)
+  child.unref()
+  child.on("error", () => console.log(`Open in browser: ${url}`))
 }
 
 function resolvePort(portArg?: string): number {

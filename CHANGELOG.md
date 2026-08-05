@@ -1,5 +1,15 @@
 # Changelog
 
+## [4.3.5] - 2026-08-04
+
+### Fixed
+- **Viewer XSS hardening** — `innerHTML` injection points now escape `& < > " '` via `escHtml`; inline `onclick` handlers on stored `category`/`id` values replaced with `data-id` + delegated click handling (`window.selectEntryById`); category/date/ttl/lastAccessed escaped in the graph, timeline, tooltips, stats bar, and detail panel.
+- **Browser launch without shell** — `openBrowser` no longer shells out (`execSync` with string interpolation), using `spawn` with argv arrays and no shell, so viewer URLs can't be interpreted by a shell.
+- **Offline d3 loading** — the viewer now resolves `d3.v7.min.js` from the installed package for both CLI (`dist/cli/`) and MCP (`mcp/`) bundles, instead of falling back to the `d3js.org` CDN at runtime.
+
+### Changed
+- **Trimmed the last heavy transitive deps** — `@inquirer/prompts` umbrella replaced with direct `@inquirer/checkbox` / `@inquirer/select` / `@inquirer/confirm` imports. Drops `@inquirer/editor` → `@inquirer/external-editor` → `chardet` → `iconv-lite` → `safer-buffer` (unmaintained since 2018) from the install tree. Clean install: ~4.4 MB across 8 packages (was ~5.5 MB / 11), still a single "prompts" family in `dependencies`.
+
 ## [4.3.4] - 2026-08-04
 
 ### Changed
