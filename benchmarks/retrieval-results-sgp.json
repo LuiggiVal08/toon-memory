@@ -1,0 +1,145 @@
+{
+  "benchmark": "retrieval",
+  "corpusEntries": 44,
+  "queries": 36,
+  "k": 5,
+  "snapshot": "2026-08-05",
+  "pipeline": "production src/lib (esbuild in-memory bundle)",
+  "modes": {
+    "linear": {
+      "ndcg": 0.7186531480706918,
+      "mrr": 0.7393518518518518,
+      "rAtK": 0.7962962962962963,
+      "answerable": 0.8888888888888888
+    },
+    "rrf": {
+      "ndcg": 0.6182553744914153,
+      "mrr": 0.611111111111111,
+      "rAtK": 0.7777777777777778,
+      "answerable": 0.8611111111111112
+    },
+    "smart": {
+      "ndcg": 0.6231714368628679,
+      "mrr": 0.6287878787878788,
+      "rAtK": 0.7575757575757576,
+      "answerable": 0.8484848484848485
+    }
+  },
+  "byCategory": {
+    "linear": {
+      "core-fact": {
+        "ndcg": 0.7515530628605309,
+        "mrr": 0.7777777777777777,
+        "rAtK": 0.8472222222222222,
+        "answerable": 0.9166666666666666
+      },
+      "temporal": {
+        "ndcg": 0.6666666666666666,
+        "mrr": 0.6666666666666666,
+        "rAtK": 0.6666666666666666,
+        "answerable": 0.6666666666666666
+      },
+      "knowledge-updating": {
+        "ndcg": 0.4613147192765458,
+        "mrr": 0.4666666666666666,
+        "rAtK": 0.5,
+        "answerable": 0.6
+      },
+      "multi-hop": {
+        "ndcg": 0.7048043427024485,
+        "mrr": 0.7916666666666666,
+        "rAtK": 0.8333333333333334,
+        "answerable": 1
+      },
+      "meta-session": {
+        "ndcg": 0.7700698027129531,
+        "mrr": 0.75,
+        "rAtK": 0.875,
+        "answerable": 1
+      },
+      "distractor": {
+        "ndcg": 0.8728662854615493,
+        "mrr": 0.8666666666666667,
+        "rAtK": 0.9166666666666666,
+        "answerable": 1
+      }
+    },
+    "rrf": {
+      "core-fact": {
+        "ndcg": 0.6629342718438204,
+        "mrr": 0.6319444444444444,
+        "rAtK": 0.875,
+        "answerable": 0.9166666666666666
+      },
+      "temporal": {
+        "ndcg": 0.5641786884054361,
+        "mrr": 0.4166666666666667,
+        "rAtK": 1,
+        "answerable": 1
+      },
+      "knowledge-updating": {
+        "ndcg": 0.5226294385530916,
+        "mrr": 0.6,
+        "rAtK": 0.5,
+        "answerable": 0.6
+      },
+      "multi-hop": {
+        "ndcg": 0.5243358624465174,
+        "mrr": 0.638888888888889,
+        "rAtK": 0.5833333333333334,
+        "answerable": 0.8333333333333334
+      },
+      "meta-session": {
+        "ndcg": 0.6471060699403298,
+        "mrr": 0.5833333333333333,
+        "rAtK": 0.875,
+        "answerable": 1
+      },
+      "distractor": {
+        "ndcg": 0.7103099178571526,
+        "mrr": 0.6666666666666666,
+        "rAtK": 0.8333333333333334,
+        "answerable": 0.8333333333333334
+      }
+    },
+    "smart": {
+      "core-fact": {
+        "ndcg": 0.6629342718438204,
+        "mrr": 0.6319444444444444,
+        "rAtK": 0.875,
+        "answerable": 0.9166666666666666
+      },
+      "temporal": {
+        "ndcg": 0,
+        "mrr": 0,
+        "rAtK": 0,
+        "answerable": 0
+      },
+      "knowledge-updating": {
+        "ndcg": 0.5226294385530916,
+        "mrr": 0.6,
+        "rAtK": 0.5,
+        "answerable": 0.6
+      },
+      "multi-hop": {
+        "ndcg": 0.5243358624465174,
+        "mrr": 0.638888888888889,
+        "rAtK": 0.5833333333333334,
+        "answerable": 0.8333333333333334
+      },
+      "meta-session": {
+        "ndcg": 0.6471060699403298,
+        "mrr": 0.5833333333333333,
+        "rAtK": 0.875,
+        "answerable": 1
+      },
+      "distractor": {
+        "ndcg": 0.7103099178571526,
+        "mrr": 0.6666666666666666,
+        "rAtK": 0.8333333333333334,
+        "answerable": 0.8333333333333334
+      }
+    }
+  },
+  "goldKeysValid": true
+}

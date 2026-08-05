@@ -1,0 +1,316 @@
+{
+  "benchmark": "retrieval-sgp",
+  "corpus": "real SGP memory (develop worktree .toon-memory/memory/data.toon)",
+  "snapshot": "2026-08-05",
+  "queries": [
+    {
+      "id": "cf-01",
+      "q": "el dashboard de proyectos devuelve error al pedir estadisticas",
+      "gold": [
+        "projects-stats-404-and-empty-pagination",
+        "bug-order-rutas-stats-shadowing"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-02",
+      "q": "donde se registran las acciones de los usuarios del sistema",
+      "gold": [
+        "log-activity-auditoria-decorador"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-03",
+      "q": "cuales roles administrativos ven todos los proyectos sin filtro",
+      "gold": [
+        "project-scope-service-alcance-rol",
+        "roles-sgp-catalogo"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-04",
+      "q": "que libreria de data fetch usa el frontend y como se obtiene el server data",
+      "gold": [
+        "frontend-data-hooks-tanstack",
+        "frontend-stack-conventions"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-05",
+      "q": "como funciona el refresh token y el logout para cerrar las sesiones",
+      "gold": [
+        "seguridad-sesiones-tokens-auth"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-06",
+      "q": "el coordinador importado por archivo no ve sus proyectos",
+      "gold": [
+        "bug-coordinador-csv-pnf-out-of-scope",
+        "decision-importacion-usuarios-csv-k6"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-07",
+      "q": "que genera el pdf de culminacion al finalizar",
+      "gold": [
+        "dominio-defensas-certificados-flujo"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-08",
+      "q": "cuantas tablas tiene la base de datos y donde se define el esquema en el dbml",
+      "gold": [
+        "fuentes-verdad-sgp"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-09",
+      "q": "cual es la regla de negocio del tutor que no puede ser el docente del grupo",
+      "gold": [
+        "regla-imparte-distinto-tutor-D3"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-10",
+      "q": "como se resuelve la autorizacion de permisos por rol en cada ruta admin",
+      "gold": [
+        "decision-permisos-frontend-rutas",
+        "rbac-jwt-enriched",
+        "frontend-rutas-completas-permisos"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-11",
+      "q": "el seed borra las tablas de proyectos y rompe las consultas",
+      "gold": [
+        "bug-seed-dropea-tablas-proyecto"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-12",
+      "q": "que se uso para parsear el archivo de carga masiva de usuarios",
+      "gold": [
+        "decision-importacion-usuarios-csv-k6"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "tmp-01",
+      "q": "estado del oraculo y de los ciclos cuando termino la epica de notificaciones",
+      "gold": [
+        "estado-loop-k1-k9"
+      ],
+      "category": "temporal",
+      "asOf": "2026-08-05"
+    },
+    {
+      "id": "tmp-02",
+      "q": "cual era la version del oraculo que comparaba contra main rezagado",
+      "gold": [
+        "bug-oraculo-loop-main-rezagado"
+      ],
+      "category": "temporal",
+      "asOf": "2026-08-05"
+    },
+    {
+      "id": "tmp-03",
+      "q": "estado del arbol de trabajo al dia de la limpieza del desarrollo",
+      "gold": [
+        "working-tree-sucio-218-archivos"
+      ],
+      "category": "temporal",
+      "asOf": "2026-08-05"
+    },
+    {
+      "id": "ku-01",
+      "q": "como se decide ahora la visibilidad de proyectos segun el rol",
+      "gold": [
+        "project-scope-service-alcance-rol",
+        "roles-sgp-catalogo"
+      ],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "ku-02",
+      "q": "cual es la fuente de verdad del esquema y que documento ignorar",
+      "gold": [
+        "fuentes-verdad-sgp"
+      ],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "ku-03",
+      "q": "que contiene el catalogo de modulos del backend ahora",
+      "gold": [
+        "backend-modulos-completos",
+        "monorepo-architecture"
+      ],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "ku-04",
+      "q": "el modulo de carreras se sigue usando en la arquitectura actual",
+      "gold": [
+        "eliminacion-modulo-careers"
+      ],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "ku-05",
+      "q": "como se persiste el rbac en el backend y como se carga en el jwt",
+      "gold": [
+        "backend-rbac-persistencia",
+        "rbac-jwt-enriched"
+      ],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "mh-01",
+      "q": "que es la metodologia de desarrollo del sistema y que no es del sistema",
+      "gold": [
+        "sgp-metodologia-xp",
+        "dominio-sgp"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-02",
+      "q": "por que el @Get(stats) debe declararse antes que @Get(id) para evitar el shadowing de rutas",
+      "gold": [
+        "bug-order-rutas-stats-shadowing",
+        "projects-stats-404-and-empty-pagination"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-03",
+      "q": "por que el oraculo no podia correr sobre el worktree y en que base comparaba",
+      "gold": [
+        "bug-git-divergencia-develop-main-worktrees",
+        "bug-oraculo-loop-main-rezagado"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-04",
+      "q": "que revisar antes de crear un ciclo nuevo por el arbol sucio",
+      "gold": [
+        "working-tree-sucio-218-archivos",
+        "bug-host-desarrolllo-sucio-no-commiteado"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-05",
+      "q": "donde corre docker y que puertos expone cada servicio",
+      "gold": [
+        "docker-solo-runtime",
+        "docker-services-ports"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-06",
+      "q": "como se cablea el frontend con el backend en nginx",
+      "gold": [
+        "docker-services-ports",
+        "architecture-backend-fron-end-detalle"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "ms-01",
+      "q": "que herramienta valida tests lint y esquema en contenedores",
+      "gold": [
+        "fuentes-verdad-sgp",
+        "estado-loop-k1-k9"
+      ],
+      "category": "meta-session"
+    },
+    {
+      "id": "ms-02",
+      "q": "cuales son las reglas de instalacion de dependencias del monorepo",
+      "gold": [
+        "docker-solo-runtime",
+        "backend-stack-convencions"
+      ],
+      "category": "meta-session"
+    },
+    {
+      "id": "ms-03",
+      "q": "que epicas componen el roadmap del backend y su estado",
+      "gold": [
+        "roadmap-backend-epicas-A-J"
+      ],
+      "category": "meta-session"
+    },
+    {
+      "id": "ms-04",
+      "q": "cuales son las fuentes de verdad del proyecto y que papel juega el esquema dbml",
+      "gold": [
+        "fuentes-verdad-sgp"
+      ],
+      "category": "meta-session"
+    },
+    {
+      "id": "ds-01",
+      "q": "que se definio sobre el alta de alumnos y la carga por archivo",
+      "gold": [
+        "decision-alta-alumnos-opcion-A-C-P4"
+      ],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-02",
+      "q": "los errores 503 al intentar iniciar sesion son del backend",
+      "gold": [
+        "bug-503-nginx-ratelimit-login-cosmetico"
+      ],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-03",
+      "q": "que plan de mejoras tiene la interfaz en fases",
+      "gold": [
+        "roadmap-frontend-fases-1-10"
+      ],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-04",
+      "q": "quien puede crear etiquetas de busqueda en el sistema",
+      "gold": [
+        "decision-tags-creacion-libre-P1"
+      ],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-05",
+      "q": "que hay que revisar antes de hacer merge con el arbol sin commitear",
+      "gold": [
+        "working-tree-sucio-218-archivos"
+      ],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-06",
+      "q": "que stack y convenciones sigue el frontend de la aplicacion",
+      "gold": [
+        "frontend-stack-conventions",
+        "frontend-data-hooks-tanstack"
+      ],
+      "category": "distractor"
+    }
+  ]
+}
