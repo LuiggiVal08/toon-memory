@@ -62,6 +62,7 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
+          package-manager-cache: false
 
       - name: Download tarball
         uses: actions/download-artifact@v4
@@ -70,9 +71,7 @@ jobs:
           path: package
 
       - name: Publish to npm
-        run: npm publish --provenance --access public ./package/*.tgz
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public ./package/*.tgz
 
   publish-mcp-registry:
     name: Publish to MCP Registry
