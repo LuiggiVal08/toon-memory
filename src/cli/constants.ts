@@ -29,7 +29,7 @@ export const CAPTURE_CONFIG = join(MEMORY_DIR, "config.json")
 export const ANTIGRAVITY_HOOK_NAME = "toon-memory"
 
 /** Base instruction content for agents */
-export const INSTRUCTION_CONTENT = `# toon-memory
+const INSTRUCTION_CONTENT_BASE = `# toon-memory
 
 Persistent memory for this project. Use it to avoid re-investigating things.
 
@@ -49,15 +49,23 @@ Persistent memory for this project. Use it to avoid re-investigating things.
 - Save important decisions, bugs resolved, and patterns observed.
 `
 
-/**
- * Passive instruction note for OpenCode. Unlike other agents, OpenCode gets its
- * memory auto-injected via `.opencode/instructions/memory-autoload.md` (written
- * by the plugin on session.created), so the agent should NOT be told to actively
- * run memory_recall — that would duplicate context. memory_recall is only a
- * fallback for deep/semantic queries beyond the auto-loaded dump.
- */
-export const OPENCODE_PASSIVE_INSTRUCTION = `# toon-memory
+/** Marker used to keep injected instructions idempotent without matching unrelated prose. */
+export const INSTRUCTION_MARKER = "<!-- toon-memory:instructions -->"
 
-Memory auto-injects via .opencode/instructions/memory-autoload.md; use memory_recall only as fallback.
-When the user asks to see the memory graph, call memory_visualize().
+const ACTIVE_RULES = `
+## Memory loop
+- A compact brief is auto-injected at session start; when a task is known it is a context_compile packet with directives, constraints and retrieve/hydrate keys.
+- Call memory_compile(task=...) at task start for a fresh packet; follow its Retrieval plan and hydrate only the keys you need.
+- Use memory_recall BEFORE the first read/grep when the task may already be solved in memory.
+- Before editing a file, check the warnings in the brief; run memory_recall(query=<path>) for file-specific traps.
+- When a recalled entry was useful or wrong, call memory_feedback(key=..., signal=...) to train future ranking.
+- When you learn a directive, decision or fix, save it with memory_remember — or let the ambient hooks capture it.
+- When the user asks to see the memory graph, call memory_visualize().
 `
+
+export const OPENCODE_PASSIVE_INSTRUCTION = `${INSTRUCTION_MARKER}
+# toon-memory
+${ACTIVE_RULES}`
+
+export const INSTRUCTION_CONTENT = `${INSTRUCTION_MARKER}
+${INSTRUCTION_CONTENT_BASE}${ACTIVE_RULES}`

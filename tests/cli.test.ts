@@ -660,7 +660,18 @@ describe("CLI Commands", () => {
     expect(output).not.toContain("Unknown command")
   })
 
-  it("should init OpenCode plugin with passive injection hooks", () => {
+  it("should treat a positional agent name as a filter, not as scope", () => {
+    const output = execSync(`node ${cliPath} init local opencode`, {
+      cwd: testDir,
+      encoding: "utf-8",
+      env: { ...process.env, HOME: testDir },
+    })
+    expect(output).toContain("Installing (local) — opencode")
+    expect(output).not.toContain("vscode/copilot:")
+    expect(output).not.toContain("claude:")
+  })
+
+  it("should init OpenCode plugin with ambient injection hooks", () => {
     execSync(`node ${cliPath} init local`, {
       cwd: testDir,
       encoding: "utf-8",
@@ -668,20 +679,18 @@ describe("CLI Commands", () => {
     })
 
     const plugin = readFileSync(join(testDir, ".opencode", "plugins", "toon-memory.ts"), "utf-8")
-    expect(plugin).toContain('"session.created"')
+    expect(plugin).toContain('"experimental.chat.system.transform"')
     expect(plugin).toContain('"experimental.session.compacting"')
+    expect(plugin).toContain('"session.idle"')
     expect(plugin).toContain('"tool.execute.after"')
-    expect(plugin).toContain(".opencode/instructions")
-    expect(plugin).toContain("npx -y toon-memory dump")
+    expect(plugin).toContain("npx -y toon-memory brief")
+    expect(plugin).toContain("npx -y toon-memory signal")
     expect(plugin).toContain("output.context")
     expect(plugin).toContain("worktree || directory")
-
-    // Auto-loaded memory file seeded at install time
-    const autoload = join(testDir, ".opencode", "instructions", "memory-autoload.md")
-    expect(existsSync(autoload)).toBe(true)
+    expect(plugin).not.toContain("memory-autoload.md")
   })
 
-  it("should seed OpenCode AGENTS.md with a passive note", () => {
+  it("should seed OpenCode AGENTS.md with active memory rules", () => {
     execSync(`node ${cliPath} init local`, {
       cwd: testDir,
       encoding: "utf-8",
@@ -689,11 +698,11 @@ describe("CLI Commands", () => {
     })
 
     const content = readFileSync(join(testDir, "AGENTS.md"), "utf-8")
-    expect(content).toContain("auto-injects")
-    expect(content).toContain("memory-autoload.md")
+    expect(content).toContain("<!-- toon-memory:instructions -->")
+    expect(content).toContain("auto-injected")
+    expect(content).toContain("BEFORE the first read/grep")
     expect(content).toContain("memory_recall")
-    // Passive, not an active "run memory_recall before reading files" mandate
-    expect(content).not.toContain("BEFORE reading files")
+    expect(content).not.toContain("only as fallback")
   })
 
   it("should add the auto-load cache to .gitignore", () => {

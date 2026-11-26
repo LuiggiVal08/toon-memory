@@ -14,6 +14,12 @@ export const ARCHIVE_FILE = join(MEMORY_DIR, "archive.toon")
 /** Observations log written by capture hooks (opt-in, separate from memory) */
 export const OBSERVATIONS_FILE = join(MEMORY_DIR, "observations.toon")
 
+export const FEEDBACK_FILE = join(MEMORY_DIR, "feedback.toon")
+
+export const EDGES_FILE = join(MEMORY_DIR, "edges.toon")
+
+export const VECTORS_FILE = join(MEMORY_DIR, "vectors.bin")
+
 /** Encrypted sidecar vault for secrets. Whole-file AES-256-GCM when TOON_MEMORY_KEY is set.
  *  Kept separate from data.toon so the main memory stays a readable, open format. */
 export const SECRETS_FILE = join(MEMORY_DIR, "secrets.toon")
@@ -55,6 +61,20 @@ export interface MemoryConfig {
   checkpoint?: {
     enabled?: boolean
     interval?: number
+  }
+  feedback?: {
+    implicit?: boolean
+  }
+  graph?: {
+    activation?: boolean
+  }
+  sleep?: {
+    enabled?: boolean
+  }
+  dense?: {
+    enabled?: boolean
+    model?: string
+    dim?: number
   }
 }
 

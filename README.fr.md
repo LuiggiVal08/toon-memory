@@ -1185,13 +1185,13 @@ Les outils `context_*` remplacent 3 à 6 appels d'outils séparés par un seul a
 ```
 Scénario                        Sans       Avec     Économie  Outils
 ──────────────────────────────  ────────  ──────  ───────  ──────
-context_generate (briefing)       5,556     378    93.2%   6 → 1
+context_generate (briefing)       6,408     378    94.1%   6 → 1
 context_diff (incrémental)          533     152    71.5%   4 → 1
 context_focus (ciblé)               413     225    45.5%   4 → 1
 context_health (audit)              322     246    23.6%   5 → 1
 context_export (md injectable)    1,178     218    81.5%   3 → 1
 ──────────────────────────────  ────────  ──────  ───────  ──────
-TOTAL                            8,002   1,219    84.8%  22 → 5
+TOTAL                            8,854   1,219    86.2%  22 → 5
 ```
 
 **Ce que mesure chaque scénario :**

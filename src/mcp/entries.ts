@@ -86,25 +86,50 @@ export function inferTags(content: string, key: string, vocab?: Record<string, s
 
 /**
  * Parse a relative date string into an absolute YYYY-MM-DD date.
- * Supports: "24h", "7d", "30d", or an exact date "2026-07-10".
+ * Supports compact ("24h", "7d"), exact dates, and natural language in
+ * Spanish/English ("ayer", "la semana pasada", "hace 3 dias", "last 7 days").
  */
 export function parseRelativeDate(since: string): string {
   const trimmed = since.trim()
+  const iso = (d: Date) => d.toISOString().split("T")[0]
+  const shiftDays = (days: number) => {
+    const d = new Date()
+    d.setDate(d.getDate() - days)
+    return iso(d)
+  }
+
   const hourMatch = trimmed.match(/^(\d+)h$/)
   if (hourMatch) {
     const d = new Date()
     d.setHours(d.getHours() - parseInt(hourMatch[1]))
-    return d.toISOString().split("T")[0]
+    return iso(d)
   }
   const dayMatch = trimmed.match(/^(\d+)d$/)
-  if (dayMatch) {
-    const d = new Date()
-    d.setDate(d.getDate() - parseInt(dayMatch[1]))
-    return d.toISOString().split("T")[0]
-  }
+  if (dayMatch) return shiftDays(parseInt(dayMatch[1]))
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed
-  const today = new Date().toISOString().split("T")[0]
-  return today
+
+  const key = trimmed
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+
+  if (key === "hoy" || key === "today") return iso(new Date())
+  if (key === "ayer" || key === "yesterday") return shiftDays(1)
+  if (/^(la |el )?semana pasada$/.test(key) || key === "last week") return shiftDays(7)
+  if (/^(la |el )?mes pasada?$/.test(key) || key === "last month") return shiftDays(30)
+
+  const natural = key.match(/^(?:hace|last|ultimos?|past)\s+(\d+)\s*(dia|dias|day|days|semana|semanas|week|weeks|mes|meses|month|months)\b/)
+  if (natural) {
+    const n = parseInt(natural[1])
+    const unit = natural[2]
+    if (/^(dia|dias|day|days)$/.test(unit)) return shiftDays(n)
+    if (/^(semana|semanas|week|weeks)$/.test(unit)) return shiftDays(n * 7)
+    return shiftDays(n * 30)
+  }
+
+  return iso(new Date())
 }
 
 export { normalize } from "../lib/utils"

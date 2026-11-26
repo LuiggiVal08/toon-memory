@@ -3,14 +3,14 @@
 ## [Unreleased]
 
 ### Added
-- **Deterministic char n-gram embedding-lite (no model, no deps)** — new `src/lib/ngrams.ts`: FNV-1a hashed tri-grams with boundary sentinels, pure cosine similarity. Catches morphological matches (`autotag` ≈ `auto tag`, `plugin` ≈ `plugins`) that BM25 tokens miss. Wired into both recall paths:
-  - **Seed gate** — entries with n-gram cosine ≥ `NGRAM_SEED_MIN` (0.45) seed graph expansion even without a lexical hit, in `graphRecallDetailed` (new `ngMatch` alongside `exactMatch`/`fuzzy`).
-  - **RRF fusion** — the fused signal list is now `[BM25×3, n-gram, localCentrality]` in both `graphRecallDetailed` and `generateSmartRecall`.
-- **Cross-corpus benchmark validation** — gold queries redacted for two real second corpora (SGP 36 q, ARGOS 39 q) with a shared category taxonomy, plus `scripts/bench-corpus-stats.mjs` (deterministic structural metrics) and `benchmarks/BENCHMARKS.md` consolidating the 3-corpus matrix. Finding: RRF's advantage over BM25 correlates monotonically with explicit link density (79% → +0.248; 48% → −0.018; 0% → −0.141); the production default is kept, the linear-vs-RRF decision is deferred until ≥8 corpora.
+- **Ambient handoff loop (OpenCode first)** — `toon-memory brief` now injects a compact handoff packet at session start with cross-tool identity (`mcp_project`), freshness, directives, traps, decisions and file pointers — never an ellipsis-truncated dump. `context_brief` prepends the same packet; `doctor` reports freshness, hygiene and catalog mode.
+- **Deterministic promoter** — `signal`/`promote` append high-confidence directives, fixes and decisions from `session.toon` into `data.toon` using a fixed 0.75 threshold, no LLM and no network.
+- **Tolerant tool arguments** — numeric strings, natural-language dates (`ayer`, `la semana pasada`, `hace 3 dias`, `last 2 weeks`) and documented aliases (`today`, `sessionBias`, `since`) no longer produce validation errors; empty recalls return structured data with `found: false`, not an error.
+- **Expert tool catalog** — advanced tools stay hidden unless `TOON_MEMORY_EXPERT_TOOLS=1`, so the default MCP catalog is small enough for reliable tool selection.
 
 ### Changed
-- **RRF ranks are computed only over the local candidate set** — before, ranks came from the whole memory, so global hub centrality buried relevant peripheral entries (a gold hit with bm25 rank 1 but global cent rank ~180 fell out of the top-5). New `localCentrality` in `graph.ts` measures "hub of the candidate context" counting only intra-set edges; both rankers and the RRF fusion run over the BFS/eligible candidate set.
-- **Measured on the frozen 187-entry benchmark (42 gold queries, k=5)** — RRF: R@5 **0.861 → 0.891**, nDCG@5 **0.764 → 0.825**, MRR **0.788 → 0.871**, answerable **97.6% → 100%**. Unified smart recall: R@5 **0.829 → 0.867**, nDCG@5 **0.739 → 0.800**, MRR **0.760 → 0.833**. Isolation sweep attributes +0.022 R@5 / +0.066 nDCG to the n-gram signal in the fusion; the local-centrality fix carries the rest.
+- **Accent-aware tokenization and recomputed quality** — `normalize()` strips diacritics, `tokenize()` drops stopwords but keeps negations, and ranking recomputes a lightweight quality signal from entry fields instead of trusting stale stored scores.
+- **Benchmark baseline refreshed** — the committed `retrieval-results.json` was already stale on clean `HEAD` (39 drifted metrics; verified in an isolated worktree). Regenerated from the frozen 187-entry/42-query corpus: linear R@5 0.643, RRF R@5 0.655, smart R@5 0.867; `bench:check` passes again.
 
 ## [4.3.5] - 2026-08-04
 

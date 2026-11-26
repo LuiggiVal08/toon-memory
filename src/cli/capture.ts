@@ -4,6 +4,7 @@ import { createHash } from "crypto"
 import { withLockSync, atomicWrite } from "../lib/lock"
 import { heartbeat, endSession, resolveSessionId, currentBranch } from "../lib/sessions"
 import { pruneObservations } from "../mcp/observations"
+import { runSleep } from "./sleep"
 import { parseToonLine } from "../lib/utils"
 
 /**
@@ -153,8 +154,10 @@ function main(): void {
   if (sessionEnabled()) {
     const input = payload.tool_input ?? payload.input ?? {}
     const { file } = derive(effectiveTool, input)
-    if (isStop) endSession(agent, sessionId)
-    else heartbeat(agent, sessionId, { file })
+    if (isStop) {
+      endSession(agent, sessionId)
+      runSleep()
+    } else heartbeat(agent, sessionId, { file })
   }
 
   // Observation log: opt-in only.

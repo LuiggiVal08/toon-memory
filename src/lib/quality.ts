@@ -216,6 +216,7 @@ export function generateSmartRecall(
 		today?: string
 		explain?: boolean
 		budgetTokens?: number
+		utility?: Map<string, number>
 	} = {}
 ): string {
 	const entries = parseEntries(data)
@@ -303,11 +304,12 @@ export function generateSmartRecall(
 			const ngScore = ngram.get(e.key) || 0
 			const ngBoost = ngMatch ? ngScore * 0.15 : 0
 			let combined: number
+			const utilityBoost = (opts.utility?.get(e.key) || 0) * 0.25
 			if (opts.rrf) {
-				combined = (fused?.get(e.key) ?? 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost + evBoost + ngBoost
+				combined = (fused?.get(e.key) ?? 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost + evBoost + ngBoost + utilityBoost
 			} else {
 				combined =
-					bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost + evBoost
+					bm25Score + 0.3 * centScore + 0.3 * impScore + (matchesQuery ? 0.5 : 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost + evBoost + utilityBoost
 			}
 			return { entry: e, score: combined, matchesQuery, priority: e.priority, bm25Score }
 		})

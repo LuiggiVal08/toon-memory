@@ -60,18 +60,21 @@ export function registerResources(server: McpServer): void {
     }
   )
 
-  // MCP Apps: interactive graph viewer rendered inline in MCP hosts
-  const viewerResource = createUIResource({
-    uri: "ui://viewer",
-    content: { type: "rawHtml", htmlString: generateHtml(buildViewerData()) },
-    encoding: "text",
-    adapters: { mcpApps: { enabled: true } },
-  })
+  // MCP Apps: interactive graph viewer rendered inline in MCP hosts.
+  // Built lazily: a bad viewer build must never kill MCP startup.
   registerAppResource(
     server as unknown as Parameters<typeof registerAppResource>[0],
     "Memory Graph Viewer",
-    viewerResource.resource.uri,
+    "ui://viewer",
     { description: "Interactive memory graph viewer (D3.js force-directed graph with stats, timeline, detail panel)" },
-    async () => ({ contents: [viewerResource.resource] }),
+    async (uri) => {
+      const viewerResource = createUIResource({
+        uri: "ui://viewer",
+        content: { type: "rawHtml", htmlString: generateHtml(buildViewerData()) },
+        encoding: "text",
+        adapters: { mcpApps: { enabled: true } },
+      })
+      return { contents: [{ ...viewerResource.resource, uri: uri.href }] }
+    },
   )
 }

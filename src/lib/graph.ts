@@ -19,6 +19,7 @@ import { expandSynonyms } from "./synonyms"
 import { fuzzyMatch } from "./fuzzy"
 import { evidenceBoost } from "./evidence"
 import { ngramScores } from "./ngrams"
+import { activationScores, type ActivationEdge } from "./activation"
 
 export interface GraphEntry {
 	id: string
@@ -302,6 +303,12 @@ export interface GraphRecallOpts {
 	asOf?: string
 	/** Reference date (YYYY-MM-DD) for recency/decay/TTL scoring. Defaults to the wall clock. */
 	today?: string
+	utility?: Map<string, number>
+	edges?: ActivationEdge[]
+	activation?: boolean
+	activationDepth?: number
+	dense?: Map<string, number>
+	denseWeight?: number
 }
 
 /**
@@ -473,6 +480,31 @@ export const NGRAM_SEED_MIN = 0.45
  * expanded up to `hops` (1 or 2), with relevance propagated from the seeds.
  * Falls back to top-by-importance when the query matches nothing.
  */
+/**
+ * Recompute a lightweight quality signal from the entry itself instead of
+ * trusting a stored number that may be months old. Pure fields only.
+ */
+export function entryQuality(
+	e: GraphEntry,
+	today = new Date().toISOString().split("T")[0]
+): number {
+	let q = Math.min(0.3, e.tags.length * 0.1) + Math.min(0.2, e.links.length * 0.1)
+	const len = e.content.length
+	if (len > 20) q += 0.1
+	if (len > 60) q += 0.1
+	if (len > 150) q += 0.1
+	q += importance(e, today) * 0.1
+	q += Math.min(0.15, e.accessed * 0.03)
+	if (e.origin === "human") q += 0.1
+	else if (e.origin === "inferred") q -= 0.05
+	q += evidenceBoost(e.evidence)
+	if (e.date) {
+		const age = (Date.parse(`${today}T00:00:00`) - Date.parse(`${e.date}T00:00:00`)) / 86400000
+		if (age > 30) q -= Math.min(0.2, ((age - 30) / 90) * 0.2)
+	}
+	return Math.max(0, Math.min(1, Number(q.toFixed(3))))
+}
+
 export function graphRecallDetailed(
 	data: string,
 	query: string,
@@ -537,10 +569,13 @@ export function graphRecallDetailed(
 					const ia = importanceRank(a.importance)
 					const ib = importanceRank(b.importance)
 					if (ia !== ib) return ib - ia
-					return importance(b, opts.today) - importance(a, opts.today)
+					return (
+						importance(b, opts.today) + entryQuality(b, opts.today) * 0.25 -
+						(importance(a, opts.today) + entryQuality(a, opts.today) * 0.25)
+					)
 				})
 				.slice(0, opts.limit ?? 6)
-				.map((e) => ({ e, s: importance(e, opts.today) + importanceBoost(e.importance) }))
+				.map((e) => ({ e, s: importance(e, opts.today) + entryQuality(e, opts.today) * 0.25 + importanceBoost(e.importance) }))
 		)
 	} else {
 		// BFS from all seeds, recording the shortest hop distance to each node.
@@ -577,31 +612,43 @@ export function graphRecallDetailed(
 			? rrfFuse([bm25Rank, bm25Rank, bm25Rank, ngRank, centRank], rrfK(bm25Rank.size))
 			: null
 
+		const base = [...best.keys()].map((k) => {
+			const e = byKey.get(k)!
+			const dist = best.get(k)!
+			const decay = Math.pow(DECAY, dist)
+			let s = fused
+				? fused.get(k) || 0
+				: (bm25.get(k) || 0) + W_CENT * (cent.get(k) || 0) + W_IMP * importance(e, opts.today)
+			if (!fused && seedKeys.has(k)) s += SEED_BONUS
+			if (opts.sessionFiles && opts.sessionFiles.length > 0 && e.file) {
+				const entryFile = e.file.split(":")[0]
+				if (opts.sessionFiles.some((f) => f === entryFile)) {
+					s *= 1.15
+				}
+			}
+			// Negative-memory boost: warnings surface first.
+			if (e.category === "warning") s += 0.2
+			// Explicit importance boost: critical/high entries surface first, low last.
+			s += importanceBoost(e.importance)
+			// Evidence bias: conflicts surface for review, verified is grounded, unverified sinks.
+			s += evidenceBoost(e.evidence)
+			// Recomputed quality keeps stale stored fields from dominating old entries.
+			s += entryQuality(e, opts.today) * 0.08
+			if (opts.utility) s += (opts.utility.get(k) || 0) * 0.25
+			if (opts.dense) s += (opts.dense.get(k) || 0) * (opts.denseWeight ?? 0.25)
+			s *= decay
+			return { e, s, priority: e.priority }
+		})
+		if (opts.activation && opts.edges && base.length > 0) {
+			const seeds = [...base]
+				.sort((a, b) => b.s - a.s)
+				.slice(0, 5)
+				.map((x) => x.e.key)
+			const activated = activationScores(opts.edges, seeds, opts.activationDepth ?? 1)
+			for (const x of base) x.s += (activated.get(x.e.key) || 0) * 0.1
+		}
 		scored.push(
-			...[...best.keys()]
-				.map((k) => {
-					const e = byKey.get(k)!
-					const dist = best.get(k)!
-					const decay = Math.pow(DECAY, dist)
-					let s = fused
-						? fused.get(k) || 0
-						: (bm25.get(k) || 0) + W_CENT * (cent.get(k) || 0) + W_IMP * importance(e, opts.today)
-					if (!fused && seedKeys.has(k)) s += SEED_BONUS
-					if (opts.sessionFiles && opts.sessionFiles.length > 0 && e.file) {
-						const entryFile = e.file.split(":")[0]
-						if (opts.sessionFiles.some((f) => f === entryFile)) {
-							s *= 1.15
-						}
-					}
-					// Negative-memory boost: warnings surface first.
-					if (e.category === "warning") s += 0.2
-					// Explicit importance boost: critical/high entries surface first, low last.
-					s += importanceBoost(e.importance)
-					// Evidence bias: conflicts surface for review, verified is grounded, unverified sinks.
-					s += evidenceBoost(e.evidence)
-					s *= decay
-					return { e, s, priority: e.priority }
-				})
+			...base
 				.sort((a, b) => {
 					if (a.priority !== b.priority) return b.priority - a.priority
 					return b.s - a.s

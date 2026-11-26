@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest"
 import { spawn, type ChildProcess } from "child_process"
 import { join } from "path"
 import { tmpdir } from "os"
-import { mkdirSync, rmSync, writeFileSync, existsSync, readFileSync } from "fs"
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync, existsSync, readFileSync } from "fs"
 import { parseToonLine } from "../src/lib/utils"
 
 const ROOT = join(import.meta.dirname, "..")
@@ -21,12 +21,12 @@ class McpClient {
 	private pending = new Map<number, { resolve: (v: McpResponse) => void; reject: (e: Error) => void }>()
 	private nextId = 1
 
-	constructor(cwd: string) {
-		this.proc = spawn("node", [SERVER_BIN, "mcp"], {
-			cwd,
-			stdio: ["pipe", "pipe", "pipe"],
-			env: { ...process.env, NODE_OPTIONS: "" },
-		})
+  constructor(cwd: string, expertTools = true) {
+    this.proc = spawn("node", [SERVER_BIN, "mcp"], {
+      cwd,
+      stdio: ["pipe", "pipe", "pipe"],
+      env: { ...process.env, NODE_OPTIONS: "", TOON_MEMORY_EXPERT_TOOLS: expertTools ? "1" : "0" },
+    })
 
 		this.proc.stdout!.on("data", (chunk: Buffer) => {
 			this.buffer += chunk.toString()
@@ -97,7 +97,12 @@ class McpClient {
 		return result.content[0].text || ""
 	}
 
-	async listTools(): Promise<string[]> {
+  async callToolRaw(name: string, args: Record<string, unknown> = {}): Promise<{ result?: any; error?: any }> {
+    return await this.request("tools/call", { name, arguments: args }) as { result?: any; error?: any }
+  }
+
+  async listTools(): Promise<string[]> {
+
 		const res = await this.request("tools/list")
 		expect(res.result).toBeDefined()
 		const result = res.result as { tools: Array<{ name: string }> }
@@ -147,9 +152,9 @@ describe("MCP Integration", () => {
 
 	// ── Tool listing ──────────────────────────────────────────────
 
-  it("lists all 38 tools", async () => {
+  it("lists all 42 tools", async () => {
     const tools = await client.listTools()
-    expect(tools.length).toBe(38)
+    expect(tools.length).toBe(42)
     expect(tools).toContain("memory_remember")
     expect(tools).toContain("memory_recall")
     expect(tools).toContain("memory_forget")
@@ -160,6 +165,8 @@ describe("MCP Integration", () => {
     expect(tools).toContain("memory_decrypt")
     expect(tools).toContain("memory_suggest")
     expect(tools).toContain("memory_smart_recall")
+    expect(tools).toContain("memory_feedback")
+    expect(tools).toContain("memory_edges")
     expect(tools).toContain("memory_diff")
     expect(tools).toContain("memory_compress")
     expect(tools).toContain("memory_consolidate")
@@ -171,6 +178,8 @@ describe("MCP Integration", () => {
     expect(tools).toContain("memory_import_gist")
     expect(tools).toContain("memory_primer")
     expect(tools).toContain("context_brief")
+    expect(tools).toContain("context_compile")
+    expect(tools).toContain("context_hydrate")
     expect(tools).toContain("context_diff")
     expect(tools).toContain("context_focus")
     expect(tools).toContain("context_generate")
@@ -188,6 +197,20 @@ describe("MCP Integration", () => {
     expect(tools).toContain("memory_secret")
     expect(tools).toContain("memory_export_global")
     expect(tools).toContain("memory_import_global")
+  })
+
+  it("hides advanced tools by default unless TOON_MEMORY_EXPERT_TOOLS=1", async () => {
+    const minimal = new McpClient(testDir, false)
+    await minimal.initialize()
+    const tools = await minimal.listTools()
+    expect(tools).toContain("memory_recall")
+    expect(tools).toContain("memory_remember")
+    expect(tools).toContain("context_brief")
+    for (const advanced of ["memory_stats", "context_generate", "memory_secret", "memory_visualize"]) {
+      expect(tools).not.toContain(advanced)
+    }
+    expect(tools.length).toBeLessThan(20)
+    minimal.kill()
   })
 
   it("annotates tools with readOnly/destructive/idempotent hints", async () => {
@@ -426,16 +449,41 @@ describe("MCP Integration", () => {
 
 	// ── context_brief ─────────────────────────────────────────────
 
-	it("context_brief returns a compact briefing", async () => {
-		const result = await client.callTool("context_brief", { task: "validation" })
-		expect(result).toContain("Memory")
-		expect(result).toContain("Sessions")
-	})
+  it("context_brief returns a compact briefing with a cross-tool handoff packet", async () => {
+    const result = await client.callTool("context_brief", { task: "validation" })
+    expect(result).toContain("<memory")
+    expect(result).toContain("identity: mcp_project=")
+    expect(result).toContain("freshness=")
+    expect(result).toContain("Memory")
+    expect(result).toContain("Sessions")
+  })
 
 	it("context_brief works without task (general mode)", async () => {
 		const result = await client.callTool("context_brief")
 		expect(result).toContain("Memory")
 		expect(result).toContain("Top memories")
+	})
+
+	it("context_compile returns a task packet with hydrate keys", async () => {
+		const result = await client.callTool("context_compile", { task: "validation" })
+		expect(result).toContain("<memory")
+		expect(result).toContain("Memory")
+		expect(result).toContain("Retrieval")
+		expect(result).toContain("Hydrate")
+		expect(result).toContain("use-zod")
+	})
+
+	it("context_hydrate expands a compiled key", async () => {
+		const result = await client.callTool("context_hydrate", { keys: ["use-zod"] })
+		expect(result).toContain("Hydrated 1 entry")
+		expect(result).toContain("Use Zod for validation")
+	})
+
+	it("memory_edges rebuilds the typed edge sidecar", async () => {
+		const rebuilt = await client.callTool("memory_edges", { action: "rebuild" })
+		expect(rebuilt).toContain("Rebuilt")
+		const listed = await client.callTool("memory_edges")
+		expect(listed).toMatch(/typed edge/)
 	})
 
 	// ── context_generate ─────────────────────────────────────────
@@ -732,5 +780,54 @@ describe("F1 evidence / F3 vault / F5 global tools", () => {
 		tgt.kill()
 
 		delete process.env.TOON_MEMORY_GLOBAL_FILE
+	})
+
+	// ── Ambient memory: tolerant args, no false errors, discoverability ──
+
+	it("initialize returns actionable instructions and the prompt is registered", async () => {
+		const c = new McpClient(targetDir)
+		const res = await c.request("initialize", {
+			protocolVersion: "2025-03-26",
+			capabilities: {},
+			clientInfo: { name: "test-client", version: "1.0.0" },
+		})
+		const result = res.result as { instructions?: string }
+		expect(result.instructions).toContain("context_compile")
+		expect(result.instructions).toContain("memory_feedback")
+		const prompts = await c.request("prompts/list", {})
+		expect((prompts.result as any).prompts.map((p: any) => p.name)).toContain("summarize_project_context")
+		c.kill()
+	})
+
+	it("accepts numeric strings and documented aliases instead of failing validation", async () => {
+		const c = new McpClient(targetDir)
+		await c.initialize()
+		await c.callTool("memory_remember", { category: "knowledge", key: "ambient-alias-test", content: "A durable note used to verify tolerant recall arguments." })
+		const res = await c.callToolRaw("memory_recall", { query: "ambient", limit: "2", sessionBias: true, today: "" })
+		expect(res.error).toBeUndefined()
+		expect((res.result as any).isError).not.toBe(true)
+		expect((res.result as any).content[0].text).toContain("ambient-alias-test")
+		c.kill()
+	})
+
+	it("rejects a zero limit with a semantic validation error, not a silent empty result", async () => {
+		const c = new McpClient(targetDir)
+		await c.initialize()
+		const res = await c.callToolRaw("memory_recall", { query: "ambient", limit: 0 })
+		expect((res.result as any).isError).toBe(true)
+		expect((res.result as any).content[0].text).toMatch(/greater than or equal to 1|too small/i)
+		c.kill()
+	})
+
+	it("returns an empty recall as data with structuredContent, never isError", async () => {
+		const emptyDir = mkdtempSync(join(tmpdir(), "tm-empty-"))
+		const c = new McpClient(emptyDir)
+		await c.initialize()
+		const res = await c.callToolRaw("memory_recall", { query: "no-such-memory-zzz" })
+		expect(res.error).toBeUndefined()
+		expect((res.result as any).isError).not.toBe(true)
+		expect((res.result as any).structuredContent).toEqual({ found: false, count: 0 })
+		c.kill()
+		rmSync(emptyDir, { recursive: true, force: true })
 	})
 })

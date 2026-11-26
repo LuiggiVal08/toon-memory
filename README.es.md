@@ -1139,13 +1139,13 @@ Las herramientas `context_*` reemplazan 3–6 llamadas separadas de herramientas
 ```
 Escenario                          Sin      Con     Ahorro   Herramientas
 ───────────────────────────────  ────────  ──────  ───────  ────────────
-context_generate (briefing completo)  5,556     378    93.2%   6 → 1
+context_generate (briefing completo)  6,408     378     94.1%   6 → 1
 context_diff (incremental)            533     152    71.5%   4 → 1
 context_focus (enfocado)              413     225    45.5%   4 → 1
 context_health (auditoría)            322     246    23.6%   5 → 1
 context_export (md inyectable)      1,178     218    81.5%   3 → 1
 ───────────────────────────────  ────────  ──────  ───────  ────────────
-TOTAL                              8,002   1,219    84.8%  22 → 5
+TOTAL                              8,854   1,219     86.2%  22 → 5
 ```
 
 **Qué mide cada escenario:**

@@ -2,8 +2,44 @@ import { captureToggle } from "./capture-toggle"
 import { init, uninstall, status, upgrade, stats, exportMemory, importMemory, dumpMemory, interactiveInstall } from "./commands"
 import { watch } from "./watch"
 import { viewer, viewerExport } from "../viewer"
+import { printBrief, printDoctor, recordSignal, runPromotion } from "./ambient"
+import { runSleep } from "./sleep"
+import { runDense } from "./dense"
 
 const args = process.argv.slice(2)
+
+if (args[0] === "brief") {
+  printBrief(args.slice(1).join(" ") || process.env.TOON_MEMORY_TASK || "")
+  process.exit(0)
+}
+
+if (args[0] === "doctor") {
+  printDoctor()
+  process.exit(0)
+}
+
+if (args[0] === "signal") {
+  recordSignal(args.slice(1))
+  process.exit(0)
+}
+
+if (args[0] === "promote") {
+  runPromotion(args.slice(1))
+  process.exit(0)
+}
+
+if (args[0] === "sleep") {
+  const result = runSleep()
+  console.log(result.ran
+    ? `Sleep complete: ${result.promoted} promoted, ${result.edges} edges, ${result.pruned} pruned, ${result.duplicates} duplicates.`
+    : "Sleep is disabled (config.sleep.enabled or TOON_MEMORY_SLEEP=1).")
+  process.exit(0)
+}
+
+if (args[0] === "dense") {
+  await runDense(args.slice(1))
+  process.exit(0)
+}
 
 if (args[0] === "capture") {
   captureToggle(args[1] === "on")
@@ -22,17 +58,22 @@ if (args[0] === "init") {
   }
   const rest = args.slice(1)
   const agentNames: string[] = []
+  const scopes = new Set(["local", "global"])
+  const addAgents = (value: string) =>
+    value.split(",").map((a) => a.trim().toLowerCase()).filter(Boolean).forEach((a) => agentNames.push(a))
   let scope: string | undefined
   let i = 0
   while (i < rest.length) {
     if (rest[i] === "--agent" && rest[i + 1]) {
-      agentNames.push(rest[i + 1].toLowerCase())
+      addAgents(rest[i + 1])
       i += 2
     } else if (rest[i] === "--scope" && rest[i + 1]) {
       scope = rest[i + 1]
       i += 2
     } else if (rest[i] !== "--agent" && rest[i] !== "--scope") {
-      scope = rest[i]
+      const token = rest[i].toLowerCase()
+      if (scopes.has(token) && !scope) scope = token
+      else addAgents(token)
       i++
     } else {
       i++
@@ -118,9 +159,15 @@ Press 'r' in the terminal while serving to reload the graph.`)
 /** Minimal usage string for unknown commands. */
 function printUsage(): void {
   console.log(`Usage: toon-memory <command> [options]
-Commands: init, status, stats, export, import, watch, viewer, uninstall, capture, upgrade, mcp
+Commands: init, status, stats, export, import, watch, viewer, uninstall, capture, upgrade, brief, doctor, signal, promote, sleep, dense, mcp
+  brief [task]                   — Print the compact handoff brief injected at session start
+  doctor                         — Check memory path, signals and injection channel
+  signal --type <t> --summary <s> [--file <f>] — Append one deterministic signal
+  promote [--threshold <0-1>]    — Promote high-confidence signals into memory
+  sleep                          — Deterministic consolidation (opt-in: config.sleep.enabled)
+  dense <status|enable|disable|build|install> — Optional local embeddings with BM25 fallback
   viewer [--export] [--port <n>]  — Start an HTTP server with the graph viewer (press 'r' to reload). --export saves static HTML.
-Init: toon-memory init [--agent <name> --agent <name>...] [--scope local|global]
+Init: toon-memory init [local|global] [agent...] | --agent <name>[,<name>...] [--scope local|global]
   Without --agent: interactive agent and scope selector.
   With --agent: non-interactive installation (default: scope local).
 Options: -v/--version, -h/--help

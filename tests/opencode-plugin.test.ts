@@ -14,13 +14,15 @@ describe("opencode plugin source", () => {
 		expect(() => new Function(bodyOf(src))).not.toThrow()
 	})
 
-	it("keeps the existing auto-load hooks", () => {
-		const src = opencodePluginContent()
-		expect(src).toContain('"session.created"')
-		expect(src).toContain('"experimental.session.compacting"')
-		expect(src).toContain('"tool.execute.after"')
-		expect(src).toContain("npx -y toon-memory mcp")
-	})
+  it("uses supported hooks and the compact brief", () => {
+    const src = opencodePluginContent()
+    expect(src).toContain('"experimental.chat.system.transform"')
+    expect(src).toContain('"experimental.session.compacting"')
+    expect(src).toContain('"tool.execute.after"')
+    expect(src).toContain("npx -y toon-memory brief")
+    expect(src).toContain("npx -y toon-memory mcp")
+    expect(src).not.toContain("memory-autoload.md")
+  })
 
 	it("adds a pre-edit risk hook backed by warning-category recall", () => {
 		const src = opencodePluginContent()
@@ -37,10 +39,21 @@ describe("opencode plugin source", () => {
 		expect(src).toContain('name.includes("patch")')
 	})
 
-	it("guards context injection with a typeof check", () => {
-		const src = opencodePluginContent()
-		expect(src).toContain('typeof ctx?.setContext === "function"')
-	})
+  it("injects through the supported system.transform output channel", () => {
+    const src = opencodePluginContent()
+    expect(src).toContain("output.system.push(text)")
+    expect(src).not.toContain("setContext")
+  })
+
+  it("records directives, edits and errors, then promotes at session idle", () => {
+    const src = opencodePluginContent()
+    expect(src).toContain('"chat.message"')
+    expect(src).toContain('record("user_directive"')
+    expect(src).toContain('record("diff_pattern"')
+    expect(src).toContain('record("error_fix"')
+    expect(src).toContain('"session.idle"')
+    expect(src).toContain("npx -y toon-memory promote")
+  })
 
 	it("keeps the file-path extraction helpers shared between hooks", () => {
 		const src = opencodePluginContent()

@@ -4,7 +4,20 @@
  */
 
 export const normalize = (s: string): string =>
-	s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim()
+	s
+		.toLowerCase()
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "")
+		.replace(/[-_]/g, " ")
+		.replace(/\s+/g, " ")
+		.trim()
+
+const STOPWORDS = new Set([
+  "a", "de", "del", "la", "el", "los", "las", "un", "una", "unos", "unas", "y", "o", "en", "al",
+  "por", "para", "con", "sin", "sobre", "como", "que", "cual", "cuando", "donde", "es", "son",
+  "fue", "era", "se", "su", "sus", "lo", "le", "les", "me", "te", "nos", "os", "mi", "tu",
+  "the", "and", "or", "for", "with", "from", "this", "that", "into", "was", "were", "been", "being",
+])
 
 export const isExpiredLocal = (ttl: string, today = new Date().toISOString().split("T")[0]): boolean => {
 	if (!ttl) return false
@@ -48,12 +61,9 @@ export const importanceRank = (level: string): number => {
 }
 
 export const tokenize = (s: string): string[] =>
-	s
-		.replace(/([a-z])([A-Z])/g, "$1 $2")
-		.replace(/[-_]/g, " ")
-		.toLowerCase()
-		.split(/\s+/)
-		.filter(Boolean)
+	normalize(s.replace(/([a-z])([A-Z])/g, "$1 $2"))
+		.split(" ")
+		.filter((t) => t.length >= 2 && !STOPWORDS.has(t))
 
 /**
  * Deterministic token estimate for a text: roughly one token per 4 chars,

@@ -153,15 +153,26 @@ The installer will:
 
 ### 3. Use it
 
-That's it! In your next agent session, try:
+That's it! On OpenCode, `toon-memory brief` is injected automatically at session start: a compact handoff packet with `identity` (including the exact `mcp_project` slug), `freshness`, directives, traps, decisions and file pointers. No manual bootstrap call is needed.
+
+When a task is known, use:
 
 ```bash
-memory_stats      # See what's in memory
-memory_recall     # Search memory before reading files
-memory_remember   # Save important decisions
+context_brief(task="...")  # handoff packet + relevant memory + sessions
+memory_recall(query=...)   # drill into a path or concept before reading files
+memory_remember(...)       # save important decisions
 ```
 
-> **Tip:** Always run `memory_recall` at the start of a session. Your agent will have context from previous sessions instantly.
+CLI equivalents for hooks and debugging:
+
+```bash
+toon-memory brief [task]   # compact handoff packet
+toon-memory doctor         # memory path, freshness, injection channel, catalog mode
+toon-memory signal ...     # append one deterministic session signal
+toon-memory promote        # promote high-confidence signals into memory
+```
+
+> **Tip:** The brief is a handoff, not a search result: if its `freshness` marker says `stale-Nd`, treat older entries as historical context and verify before acting. Advanced tools are hidden by default; set `TOON_MEMORY_EXPERT_TOOLS=1` to expose the full catalog.
 
 ### MCP Client Quick Setup
 
@@ -265,7 +276,9 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 | `memory_export_global` | Write current project memory to the global file (`~/.toon-memory/memory/global.toon`). One-shot share of cross-project conventions |
 | `memory_import_global` | Merge cross-project conventions from the global file into this project (one-shot, deterministic, offline). `merge: false` replaces instead |
 | `memory_graph_path` | BFS shortest path between two entries in the knowledge graph. Shows how concepts are connected |
-| `context_brief` | **One-call context briefing**: memory + sessions + health in compact markdown. Use instead of 5-6 separate memory_* calls. Zero LLM, pure deterministic aggregation |
+| `context_brief` | **One-call handoff + briefing**: prepends a compact handoff packet (`identity`, `mcp_project`, `freshness`, directives, traps, file pointers) to memory + sessions + health. `handoff: false` returns the legacy briefing only. Zero LLM, deterministic |
+| `context_compile` | **Task-driven context compiler**: directives, constraints, retrieved memory, retrieval plan, hydrate keys, files and sessions in one packet. Use at task start |
+| `context_hydrate` | **Hydrate by key**: fetch exact memory entries by key/id and mark them accessed. Follow the `Hydrate` list from `context_compile` |
 | `context_generate` | **Full project briefing**: combines project structure, git state, memory entries, and active sessions in one call. Replaces 5-6 manual tool calls |
 | `context_diff` | **Incremental briefing**: git commits + modified files + new/updated memory + active sessions since last session |
 | `context_focus` | **Hyper-focused briefing**: only relevant memory + related source files + callers + test files for a query |
@@ -273,8 +286,10 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 | `context_export` | **Export memory as markdown**: injectable context for system prompts (full or compact) |
 | `memory_pin` | **Pin an entry with priority 1-5**: pinned entries always appear first in recall results sorted by priority, even without a keyword match |
 | `memory_unpin` | **Unpin an entry**: remove the priority flag |
-| `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match. `budget` controls output verbosity. `path_scope` filters by glob pattern. `sessionBias` boosts entries from the current git branch |
+| `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Dates accept compact (`7d`) or natural forms (`ayer`, `la semana pasada`, `hace 3 dias`, `last 2 weeks`). Tag filter uses AND logic — all specified tags must match. `budget` controls output verbosity. `path_scope` filters by glob pattern. `sessionBias` boosts entries from the current git branch |
 | `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
+| `memory_feedback` | **Explicit feedback** (`useful`/`irrelevant`/`outdated`/`wrong`) written to `feedback.toon`. Trains per-entry utility; `wrong` also marks evidence as `conflict` |
+| `memory_edges` | **Typed edge sidecar** (`edges.toon`): `list` derived/learned edges or `rebuild` them from `links` + feedback. Enables opt-in spread activation in recall |
 
 ### MCP Resources
 
@@ -748,6 +763,19 @@ Recall is deterministic and offline (no embeddings, no LLM). Each candidate entr
 
 In `graph` mode, recall seeds on keyword matches, expands the ego-subgraph up to `hops`, and returns the top `limit` (default 6) by combined score. `memory_smart_recall` combines all these signals in one call.
 
+### Learned ranking, edges and optional dense retrieval
+
+Four opt-in sidecars extend recall without changing `data.toon`:
+
+| Sidecar | Enabled by | Purpose |
+|---------|-----------|---------|
+| `feedback.toon` | `memory_feedback` (always on for explicit signals) | Learned per-entry utility (`useful`, `irrelevant`, `outdated`, `wrong`) with decay. `wrong` also sets evidence to `conflict`. |
+| `edges.toon` | `config.graph.activation = true` or `memory_edges(rebuild)` | Typed edges derived from `links` + feedback tasks. Spread activation boosts neighbours of top seeds. |
+| `vectors.bin` | `toon-memory dense enable` + `build` | Optional local embeddings via `toon-memory-dense`. Falls back to BM25 when the module or model is unavailable. |
+| `observations.toon` | capture hooks + `toon-memory sleep` | Opt-in end-of-session consolidation: promote observations, rebuild edges, prune expired signals, dedupe. |
+
+`context_compile(task=...)` turns the retrieved memory into a compact packet with directives, constraints, a retrieval plan and exact `Hydrate` keys. `context_hydrate(keys=[...])` fetches only those entries.
+
 ### Auto-tag from project dependencies
 
 On `toon-memory init`, the CLI scans your dependency manifests and writes a `vocab` table into `.toon-memory/memory/config.json`:
@@ -897,6 +925,9 @@ npx toon-memory viewer --export # Save viewer as static HTML
 npx toon-memory viewer --port 3001 # Custom port
 npx toon-memory watch [options] # Auto-backup with options
 npx toon-memory upgrade      # Update to latest version
+npx toon-memory sleep        # Deterministic consolidation (opt-in)
+npx toon-memory dense status # Optional embeddings status
+npx toon-memory dense enable && npx toon-memory dense build
 npx toon-memory uninstall    # Remove from all agents
 ```
 
@@ -997,8 +1028,23 @@ The installer (requires a terminal) will:
 
 > Sin una terminal (CI/pipes) `npx toon-memory` imprime la ayuda de instalación no interactiva. Usa `npx toon-memory init [local|global]` para instalar sin preguntas. Unknown commands print usage and exit with an error.
 
+### Memory config flags
 
+All flags live in `.toon-memory/memory/config.json` and are optional:
 
+```json
+{
+  "feedback": { "implicit": false },
+  "graph": { "activation": false },
+  "sleep": { "enabled": false },
+  "dense": { "enabled": false, "model": "multilingual-e5-small" }
+}
+```
+
+- `feedback.implicit` is reserved; only explicit `memory_feedback` events affect ranking today.
+- `graph.activation` enables spread activation over `edges.toon` (rebuild with `memory_edges(action="rebuild")`).
+- `sleep.enabled` (or `TOON_MEMORY_SLEEP=1`) runs consolidation on session `Stop`.
+- `dense.enabled` enables `vectors.bin`; install the embedder with `npx toon-memory dense install`. `TOON_MEMORY_DENSE_MODULE` overrides the module path. If anything is missing, recall stays BM25-only.
 
 ### OpenCode
 
@@ -1197,13 +1243,13 @@ The `context_*` tools replace 3–6 separate tool calls with a single call, savi
 ```
 Scenario                          Without   With    Saved    Tools
 ────────────────────────────────  ────────  ──────  ───────  ──────
-context_generate (full briefing)    5,556     378    93.2%   6 → 1
+context_generate (full briefing)    6,408     378    94.1%   6 → 1
 context_diff (incremental)            533     152    71.5%   4 → 1
 context_focus (targeted)              413     225    45.5%   4 → 1
 context_health (audit)                322     246    23.6%   5 → 1
 context_export (injectable md)      1,178     218    81.5%   3 → 1
 ────────────────────────────────  ────────  ──────  ───────  ──────
-TOTAL                              8,002   1,219    84.8%  22 → 5
+TOTAL                              8,854   1,219    86.2%  22 → 5
 ```
 
 **What each scenario measures:**
@@ -1376,8 +1422,8 @@ toon-memory/
 │   │   ├── setup.ts             # CLI commands
 │   │   └── toon-memory.ts       # CLI runner
 │   ├── mcp/
-│   │   ├── server.ts            # MCP server (38 tools + 4 resources + 1 prompt)
-│   │   ├── tools.ts             # Tool registration (38 tools)
+│   │   ├── server.ts            # MCP server (core catalog + expert mode; 4 resources + 1 prompt)
+│   │   ├── tools.ts             # Tool registration (TOON_MEMORY_EXPERT_TOOLS=1 exposes advanced tools)
 │   │   ├── resources.ts         # Resource registration (4 resources)
 │   │   ├── prompts.ts           # Prompt registration (1 prompt)
 │   │   ├── session-store.ts     # Session layer (auto-promote, cleanup)

@@ -58,7 +58,7 @@ Unlike LLM, RAG, or vector-database memory, toon-memory is a deterministic proje
 ## Evidence on Hand
 
 - 199 tests across 12 test files, all green
-- Benchmark data: 68.5% token savings on recall, 84.8% on context_* tools, 80% fewer tool calls in full session simulation
+- Benchmark data: 68.5% token savings on recall, 86.2% on context_* tools, 80% fewer tool calls in full session simulation
 - Real-world use cases documented: design decisions, framework choices, bug fixes, architecture notes, onboarding, team context
 - GitHub repository with CI/CD, npm publishing via GitHub Actions
 - Bilingual documentation (English/Spanish) at https://luiggival08.github.io/toon-memory/
