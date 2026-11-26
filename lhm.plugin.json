@@ -2,7 +2,7 @@
   "identifier": "luiggival08-toon-memory",
   "name": "toon-memory",
   "description": "The Continuity Layer for AI Agents — an MCP memory server that preserves project knowledge, decisions, and conventions across sessions so every session starts where the last one ended. Offline, token-efficient, no LLM, no server; works with 20+ agents.",
-  "version": "4.3.5",
+  "version": "4.4.0",
   "author": "LuiggiVal08",
   "authorUrl": "https://github.com/LuiggiVal08",
   "homepage": "https://github.com/LuiggiVal08/toon-memory",
@@ -75,7 +75,15 @@
     },
     {
       "name": "context_brief",
-      "description": "Generate a compact context briefing: relevant memory + active sessions + project health. Single call instead of 5-6 separate calls."
+      "description": "Generate a compact context briefing: relevant memory + active sessions + project health. With task, returns a compiled context packet."
+    },
+    {
+      "name": "context_compile",
+      "description": "Compile a task-driven context packet: directives, constraints, retrieved memory, retrieval plan, hydrate keys, files and sessions."
+    },
+    {
+      "name": "context_hydrate",
+      "description": "Fetch exact memory entries by key/id from context_compile's Hydrate list and mark them as accessed."
     },
     {
       "name": "context_generate",
@@ -164,6 +172,14 @@
     {
       "name": "memory_import_global",
       "description": "Merge cross-project conventions from the global file into this project (one-shot, deterministic, offline). merge: false replaces instead."
+    },
+    {
+      "name": "memory_feedback",
+      "description": "Explicit useful/irrelevant/outdated/wrong signal for an entry. Trains learned utility; wrong marks evidence as conflict."
+    },
+    {
+      "name": "memory_edges",
+      "description": "List or rebuild typed edges in edges.toon from links and feedback. Enables opt-in spread activation in recall."
     }
   ],
   "resources": [
