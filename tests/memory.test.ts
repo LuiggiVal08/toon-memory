@@ -204,10 +204,15 @@ describe("Memory Operations", () => {
   })
 
   it("should archive entries with expired TTL", () => {
+    const iso = (offsetDays: number) => {
+      const d = new Date()
+      d.setDate(d.getDate() + offsetDays)
+      return d.toISOString().split("T")[0]
+    }
     const entries = [
-      "  ttl000001|decision|keep-this|Still valid|file.ts|tag|2026-07-10|2027-12-31",
-      "  ttl000002|decision|archive-this|Has expired TTL|file.ts|tag|2026-07-10|2026-01-01",
-      "  ttl000003|decision|old-entry|Old by date|file.ts|tag|2025-01-01|",
+      `  ttl000001|decision|keep-this|Still valid|file.ts|tag|${iso(-5)}|${iso(400)}`,
+      `  ttl000002|decision|archive-this|Has expired TTL|file.ts|tag|${iso(-5)}|${iso(-30)}`,
+      `  ttl000003|decision|old-entry|Old by date|file.ts|tag|${iso(-45)}|`,
     ]
 
     const data = readFileSync(memoryFile, "utf-8")

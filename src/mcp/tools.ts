@@ -7,7 +7,8 @@ import { readMemory, writeMemory, safeWrite } from "./memory-io"
 import { loadConfig, saveConfig, getKey, MEMORY_FILE, OBSERVATIONS_FILE, MEMORY_DIR, MAX_ENTRIES, getMaxEntries, ARCHIVE_FILE, GLOBAL_FILE } from "./config"
 import { generateId, parseTTL, isExpired, inferTags, parseRelativeDate } from "./entries"
 import { findRelatedEntries, bumpAccessed } from "./scoring"
-import { readObservations } from "./observations"
+import { readObservations } from "./session-store"
+import { positiveInt, optionalPositiveInt, requiredText, splitIds, noMatches } from "./args"
 import { archiveOldEntries } from "./archive"
 import { consolidateEntries, consolidateVersions, mergeMemoryFiles } from "./consolidation"
 import { readUnderLock } from "../lib/lock"
@@ -21,13 +22,54 @@ import { fileMtimes } from "../lib/git"
 import { normalize, isExpiredLocal, tokenize, importance, estimateTokens, parseToonLine, toToonLine, escField, unescField } from "../lib/utils"
 import { evidenceFor, detectContradictions } from "../lib/evidence"
 import { expandSynonyms } from "../lib/synonyms"
+import { buildHandoffBrief, entryAgeDays, projectSlug } from "../lib/handoff"
+import { compileContext, renderContextPackage } from "../lib/compiler"
+import { appendFeedback, markWrong, readFeedback, utilityMap } from "./feedback"
+import { deriveEdges, readEdges, rebuildEdges } from "./edges"
+import type { ActivationEdge } from "../lib/activation"
+import { denseScores } from "../lib/dense"
 
 /**
- * Register all MCP memory tools (38 total across tools.ts).
+ * Register all MCP memory tools (42 total across tools.ts).
  */
 export function registerTools(server: McpServer): void {
 
 type ToolText = { type: "text"; text: string }
+
+  /**
+   * Advanced tools stay registered only with TOON_MEMORY_EXPERT_TOOLS=1 so the
+   * default catalog is small enough for an agent to choose correctly.
+   */
+  const EXPERT_TOOLS = new Set([
+    "memory_stats", "memory_diff", "memory_suggest", "memory_primer", "memory_reflect",
+    "memory_visualize", "memory_graph_path", "memory_sessions", "memory_merge_sessions",
+    "memory_compress", "memory_consolidate", "memory_archive", "memory_backup",
+    "memory_encrypt", "memory_decrypt", "memory_secret", "memory_tag", "memory_pin",
+    "memory_unpin", "memory_edges", "context_generate", "context_diff", "context_focus", "context_health",
+    "context_export", "memory_export_gist", "memory_import_gist", "memory_export_global",
+    "memory_import_global",
+  ])
+  const expertMode = process.env.TOON_MEMORY_EXPERT_TOOLS === "1"
+  const sdk = server as any
+  const register = (name: string, config: any, cb: (...args: any[]) => any): void => {
+    if (!expertMode && EXPERT_TOOLS.has(name)) return
+    sdk.registerTool(name, config, cb)
+  }
+  const recallExtras = async (query = ""): Promise<{
+    utility: Map<string, number>
+    edges?: ActivationEdge[]
+    activation?: boolean
+    dense?: Map<string, number>
+  }> => {
+    const config = loadConfig()
+    const edges = config.graph?.activation ? readEdges() : undefined
+    const dense = config.dense?.enabled ? await denseScores(query, readMemory()) : new Map()
+    return {
+      utility: utilityMap(),
+      ...(edges && edges.length ? { edges, activation: true } : {}),
+      ...(dense.size ? { dense } : {}),
+    }
+  }
 
 // ── Shared lifecycle helpers (backing canonical memory_forget) ──
 
@@ -453,15 +495,15 @@ function runCompressAll(minQuality: number, dryRun: boolean): { content: ToolTex
 
 // ── memory_remember ──────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_remember",
   {
     title: "Save to Memory",
     description: "Save a fact to the project's persistent memory (decisions, patterns, bugs, knowledge). Persists between sessions. Tags: 'private' excludes from context injection; 'superseded' marks as obsolete.",
     inputSchema: {
-      category: z.enum(["decision", "pattern", "bug", "knowledge", "warning"]).describe("Category of the fact. 'warning' = negative memory ('NO hacer esto, rompe X') — recalled with a boost so past mistakes surface first."),
-      key: z.string().describe("Short title in kebab-case (e.g. risk-engine-priority)"),
-      content: z.string().describe("Detailed content of the fact"),
+      category: z.enum(["decision", "pattern", "bug", "knowledge", "warning", "architecture"]).describe("Category of the fact. 'warning' = negative memory ('NO hacer esto, rompe X') — recalled with a boost so past mistakes surface first."),
+      key: requiredText("key", 120).describe("Short title in kebab-case (e.g. risk-engine-priority)"),
+      content: requiredText("content").describe("Detailed content of the fact"),
       file: z.string().optional().default("").describe("Related file or line (e.g. spec.md:145)"),
       tags: z.string().optional().default("").describe("Semicolon-separated tags (e.g. risk;spec)"),
       ttl: z.string().optional().default("").describe("Time to live (e.g. 7d, 2026-07-17). Empty = no expiration"),
@@ -511,7 +553,7 @@ server.registerTool(
     // Write-path intelligence (deterministic, no LLM): detect contradictions
     // against warnings / critical decisions and annotate the entry with its
     // evidence level (verified when the referenced file exists on disk).
-    const tagList = resolvedTags.split(";").map((t) => t.trim()).filter(Boolean)
+    const tagList = resolvedTags.split(";").map((t: string) => t.trim()).filter(Boolean)
     const candidate = { key, content, category, tags: tagList }
     const existingEntries = parseEntries(data)
     const conflicts = detectContradictions(existingEntries, candidate)
@@ -579,7 +621,7 @@ server.registerTool(
 
 // ── memory_recall ────────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_recall",
   {
     title: "Search Memory",
@@ -587,34 +629,39 @@ server.registerTool(
     inputSchema: {
       query: z.string().optional().default("").describe("Text to search for (optional when mode:'index' or ids is given)"),
       category: z.string().optional().default("").describe("Filter by category (empty = all)"),
-      from_date: z.string().optional().default("").describe("Start date filter (YYYY-MM-DD)"),
+      from_date: z.string().optional().default("").describe("Start date filter (YYYY-MM-DD or relative like 'ayer', 'la semana pasada', '7d')"),
+      since: z.string().optional().default("").describe("Alias of from_date with natural-language dates."),
       to_date: z.string().optional().default("").describe("End date filter (YYYY-MM-DD)"),
       mode: z.enum(["flat", "graph", "index"]).optional().default("flat").describe("'flat' = keyword search (default). 'graph' = graph-based recall: expands the related-entry subgraph from matches (more precise, fewer tokens). 'index' = one line per entry (key, id, category, date, relevance %) with no content — browse then fetch full entries with `ids`."),
       ids: z.string().optional().default("").describe("Batch fetch: comma/space/;-separated entry ids or keys, rendered in the given order (unknown entries skipped). Complements mode:'index' — layer 2 of progressive disclosure. Overrides mode."),
-      hops: z.number().optional().default(1).describe("Graph depth in 'graph' mode (1 or 2). Default 1."),
-      limit: z.number().optional().describe("Maximum entries returned. Default 6 (15 in 'index' mode). Keeps token cost low."),
-      compact: z.boolean().optional().default(false).describe("Token-efficient output: numeric indices (1, 2), omits id/date/file (keeps tags), edges as '->2', truncates graph neighbors to a snippet. Does not mutate .toon file."),
-      budget: z.enum(["tiny", "normal", "deep"]).optional().default("deep").describe("'tiny': key+1 line (~50 tokens). 'normal': compact with tags/edges. 'deep': all fields (default). Overrides 'compact'."),
-      budget_tokens: z.number().optional().default(0).describe("Deterministic token budget: include entries until the estimated output reaches ~N tokens (overrides limit). 0 = no budget."),
+      hops: positiveInt(1, 3).describe("Graph depth in 'graph' mode (1 or 2). Default 1."),
+      limit: optionalPositiveInt(200).describe("Maximum entries returned. Default 6 (15 in 'index' mode). Keeps token cost low."),
+      compact: z.boolean().optional().default(false).describe("Token-efficient output: numeric indices (1, 2), omits id/date/file (keeps tags). Does not mutate .toon file."),
+      budget: z.enum(["tiny", "normal", "deep"]).optional().describe("'tiny': key+1 line (~50 tokens). 'normal': compact with tags/edges. 'deep': all fields (default). Overrides 'compact'."),
+      budget_tokens: optionalPositiveInt(20000).describe("Deterministic token budget: include entries until the estimated output reaches ~N tokens (overrides limit)."),
       explain: z.boolean().optional().default(false).describe("Append a 'why this entry' line to each result (relevance %, times used, last used, importance). No LLM — pure heuristics."),
       bias: z.enum(["none", "session"]).optional().default("none").describe("'session': boost entries whose file matches current session files. 'none': no bias (default)."),
       path_scope: z.string().optional().default("").describe("Glob pattern to filter entries by path scope (e.g. 'src/**.ts')."),
       rrf: z.boolean().optional().default(false).describe("Use Reciprocal Rank Fusion (BM25x3 + centrality ranks, adaptive k=sqrtN) instead of weighted linear scoring. Weight-free: reaches parity with the tuned linear scorer on scripts/bench-rrf.mjs."),
       as_of: z.string().optional().default("").describe("Temporal view (YYYY-MM-DD): return entries valid on that date. Superseded entries still appear if they were active then."),
+      today: z.string().optional().default("").describe("Alias of as_of (documented in older changelogs)."),
+      sessionBias: z.boolean().optional().default(false).describe("Alias of bias:'session' (documented in older READMEs)."),
     },
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
-  async ({ query, category, from_date, to_date, mode, ids, hops, limit: limitParam, compact, budget: budgetParam, budget_tokens, explain, bias, path_scope, rrf, as_of }) => {
+  async ({ query, category, from_date, since, to_date, mode, ids, hops, limit: limitParam, compact, budget: budgetParam, budget_tokens, explain, bias, path_scope, rrf, as_of, today, sessionBias }) => {
     const data = readMemory()
     const resolvedBudget = budgetParam || (compact ? "normal" : "deep")
-    const resolvedAsOf = as_of || undefined
+    const resolvedAsOf = as_of || today || undefined
+    const resolvedBias = sessionBias && bias === "none" ? "session" : bias
+    const resolvedFrom = from_date || since ? parseRelativeDate(from_date || since) : ""
 
     // ── Batch fetch by ids/keys (layer 2 of progressive disclosure) ──────
     if (ids && ids.trim()) {
-      const tokens = ids.split(/[\s,;]+/).map((t) => t.trim()).filter(Boolean)
+      const tokens = splitIds(ids)
       const entries = fetchEntriesByIds(data, tokens, { asOf: resolvedAsOf })
       if (entries.length === 0) {
-        return { content: [{ type: "text" as const, text: `No entries found for ids: ${ids}` }] }
+        return noMatches(ids)
       }
       bumpAccessed(entries.map((e) => e.id))
       const label = entries.length === 1 ? "entry" : "entries"
@@ -641,15 +688,13 @@ server.registerTool(
 
     // Delegate to graphRecallDetailed for flat / graph / index modes
     // This avoids duplicating BM25 + ranking logic
-    const sessionFiles = bias === "session" ? getCurrentSessionFiles() : undefined
+    const sessionFiles = resolvedBias === "session" ? getCurrentSessionFiles() : undefined
     const limit = limitParam ?? (mode === "index" ? 15 : 6)
-    const detail = graphRecallDetailed(data, query, { category, from_date, to_date, hops, limit, sessionFiles, path_scope: path_scope || undefined, rrf, asOf: resolvedAsOf })
+    const detail = graphRecallDetailed(data, query, { category, from_date: resolvedFrom, to_date, hops, limit, sessionFiles, path_scope: path_scope || undefined, rrf, asOf: resolvedAsOf, ...(await recallExtras(query)) })
 
     // ── Index mode: one line per entry, no content ───────────────────────
     if (mode === "index") {
-      if (detail.entries.length === 0) {
-        return { content: [{ type: "text" as const, text: `No results found for "${query}"` }] }
-      }
+      if (detail.entries.length === 0) return noMatches(query)
       const formatted = renderIndex(detail.entries, { scores: detail.scores })
       return {
         content: [{
@@ -659,9 +704,7 @@ server.registerTool(
       }
     }
 
-    if (detail.entries.length === 0) {
-      return { content: [{ type: "text" as const, text: `No results found for "${query}"` }] }
-    }
+    if (detail.entries.length === 0) return noMatches(query)
     bumpAccessed(detail.entries.map((e) => e.id))
     const reasons = explain ? detail.reasons : undefined
     if (resolvedBudget === "tiny" || resolvedBudget === "normal") {
@@ -705,13 +748,13 @@ server.registerTool(
 
 // ── memory_forget ────────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_forget",
   {
     title: "Forget from Memory",
     description: "Lifecycle operations for a memory entry: soft (default) marks it obsolete and hides it from recalls, hard permanently removes it, restore brings it back to active, supersede retires it with a typed superseded_by edge to a newer entry.",
     inputSchema: {
-      key: z.string().describe("Key or id of the entry"),
+      key: requiredText("key", 200).describe("Key or id of the entry"),
       action: z.enum(["soft", "hard", "restore", "supersede"]).optional().default("soft").describe("soft: mark obsolete (default). hard: permanently remove. restore: bring an obsolete entry back to active. supersede: mark obsolete with a superseded_by link to new_key."),
       new_key: z.string().optional().default("").describe("Replacement entry key or id (only used with action: supersede)."),
       reason: z.string().optional().default("").describe("Optional note appended to the old entry (only used with action: supersede)."),
@@ -734,7 +777,7 @@ server.registerTool(
 
 // ── memory_stats ─────────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_stats",
   {
     title: "Memory Stats",
@@ -791,9 +834,19 @@ server.registerTool(
     const deadCount = byStatus["obsolete"] || 0
     const deadPct = entries.length > 0 ? ((deadCount / entries.length) * 100).toFixed(0) : "0"
 
+    const today = new Date().toISOString().split("T")[0]
+    const newest = fullParts.map((p) => p[6] || "").filter(Boolean).sort().at(-1) || ""
+    const age = newest ? entryAgeDays(newest, today) : 0
+    const freshness = !newest ? "empty" : age > 30 ? `stale-${age}d` : "fresh"
+    const staleCount = fullParts.filter((p) => p[6] && entryAgeDays(p[6], today) > 30 && p[16] !== "obsolete").length
+    const trapCount = fullParts.filter(
+      (p) => p[1] === "warning" || /(^|;)(trap|gotcha|risk)(;|$)/i.test(p[5] || "")
+    ).length
+
     const stats = [
       `Total entries: ${entries.length}`,
       `File summaries: ${summaryLines.length}`,
+      `Freshness: ${freshness} | stale: ${staleCount} | traps: ${trapCount} | catalog: ${expertMode ? "expert" : "core"}`,
       "",
       "By category:",
       ...Object.entries(byCategory).map(([k, v]) => `  ${k}: ${v}`),
@@ -879,13 +932,13 @@ server.registerTool(
 
 // ── memory_diff ──────────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_diff",
   {
     title: "Memory Diff",
     description: "Show what changed in memory since a date. Useful for seeing what was learned since the last session.",
     inputSchema: {
-      since: z.string().describe("Show changes since (e.g. 24h, 7d, 2026-07-10)"),
+      since: requiredText("since", 80).describe("Show changes since (e.g. 24h, 7d, 2026-07-10)"),
       type: z.enum(["all", "created", "updated"]).optional().default("all").describe("Filter by change type"),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
@@ -940,14 +993,14 @@ server.registerTool(
 
 // ── memory_suggest ───────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_suggest",
   {
     title: "Suggest Related Memories",
     description: "Suggest memory entries related to a given context. Useful for gathering context before a task.",
     inputSchema: {
-      context: z.string().describe("Text or context to search for suggestions"),
-      limit: z.number().optional().default(5).describe("Maximum suggestions"),
+      context: requiredText("context", 500).describe("Text or context to search for suggestions"),
+      limit: positiveInt(5, 20).describe("Maximum suggestions"),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
@@ -968,18 +1021,18 @@ server.registerTool(
 
 // ── memory_smart_recall ──────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_smart_recall",
   {
     title: "Smart Recall (Unified)",
     description: "Unified retrieval: combines BM25 + graph + decay + quality in a single call. Use at the START of each task to get all relevant memory context. Then use context_diff for recent changes, context_focus for deep dives.",
     inputSchema: {
-      intent: z.string().describe("Describe what you need to know (e.g. 'database schema for backend')"),
-      limit: z.number().optional().default(8).describe("Maximum entries to return"),
+      intent: requiredText("intent", 500).describe("Describe what you need to know (e.g. 'database schema for backend')"),
+      limit: positiveInt(8, 50).describe("Maximum entries to return"),
       category: z.string().optional().default("").describe("Filter by category (empty = all)"),
       bias: z.enum(["none", "session"]).optional().default("none").describe("'session': boost entries whose file matches current session files. 'none': no bias (default)."),
       rrf: z.boolean().optional().default(false).describe("Use Reciprocal Rank Fusion (BM25x3 + centrality ranks, adaptive k=sqrtN) instead of weighted linear scoring. Weight-free: reaches parity with the tuned linear scorer on scripts/bench-rrf.mjs."),
-      budget_tokens: z.number().optional().default(0).describe("Deterministic token budget: include entries until the estimated output reaches ~N tokens (overrides limit). 0 = no budget."),
+      budget_tokens: optionalPositiveInt(20000).describe("Deterministic token budget: include entries until the estimated output reaches ~N tokens (overrides limit)."),
       explain: z.boolean().optional().default(false).describe("Append a 'why this entry' line to each result (relevance %, times used, last used, importance). No LLM — pure heuristics."),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
@@ -988,21 +1041,21 @@ server.registerTool(
     const data = readMemory()
     const mtimes = fileMtimes()
     const sessionFiles = bias === "session" ? getCurrentSessionFiles() : undefined
-    const result = generateSmartRecall(data, intent, { limit, category, fileMtimes: mtimes, sessionFiles, rrf, budgetTokens: budget_tokens || undefined, explain })
+    const result = generateSmartRecall(data, intent, { limit, category, fileMtimes: mtimes, sessionFiles, rrf, budgetTokens: budget_tokens || undefined, explain, ...(await recallExtras(intent)) })
     return { content: [{ type: "text" as const, text: result }] }
   }
 )
 
 // ── memory_summary ───────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_summary",
   {
     title: "File Summary",
     description: "Save or retrieve a summary of a large file to save tokens.",
     inputSchema: {
       action: z.enum(["get", "set"]).describe("get to read, set to save"),
-      file: z.string().describe("File path"),
+      file: requiredText("file", 500).describe("File path"),
       summary: z.string().optional().default("").describe("File summary (only for set)"),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
@@ -1054,7 +1107,7 @@ server.registerTool(
 
 // ── memory_archive ───────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_archive",
   {
     title: "Archive Old Entries",
@@ -1080,7 +1133,7 @@ server.registerTool(
 
 // ── memory_encrypt ───────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_encrypt",
   {
     title: "Enable Encryption",
@@ -1114,13 +1167,13 @@ server.registerTool(
 
 // ── memory_decrypt ───────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_decrypt",
   {
     title: "Disable Encryption",
     description: "Disable encryption and decode memory.",
     inputSchema: {
-      key: z.string().describe("Encryption key"),
+      key: z.string().optional().default("").describe("Encryption key. If omitted, TOON_MEMORY_KEY is used."),
     },
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
   },
@@ -1154,7 +1207,7 @@ server.registerTool(
 
 // ── memory_secret ────────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_secret",
   {
     title: "Encrypted Secrets Vault",
@@ -1224,13 +1277,13 @@ server.registerTool(
 
 // ── memory_captured ──────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_captured",
   {
     title: "List Captured Activity",
     description: "Show activity log captured automatically by hooks (only if capture is enabled). Useful for promoting observations to memory with memory_remember.",
     inputSchema: {
-      limit: z.number().optional().default(20).describe("Maximum observations to show"),
+      limit: positiveInt(20, 100).describe("Maximum observations to show"),
       tool: z.string().optional().default("").describe("Filter by tool name"),
       file: z.string().optional().default("").describe("Filter by file"),
       clear: z.boolean().optional().default(false).describe("If true, clears the capture log"),
@@ -1269,14 +1322,14 @@ server.registerTool(
 
 // ── memory_consolidate ───────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_consolidate",
   {
     title: "Consolidate Memory",
     description: "Cleanup operations, all deterministic (no LLM): identical removes duplicate entries (keeps the first), similar merges entries with >50% word overlap (keeps longer content, combines tags), low-quality removes entries below minQuality or without tags, versions marks entries describing the same subject with older versions obsolete in favor of the newest.",
     inputSchema: {
       mode: z.enum(["identical", "similar", "low-quality", "versions"]).optional().default("identical").describe("identical: dedupe entries with identical content (default). similar: merge entries with >50% word overlap. low-quality: remove entries below minQuality or without tags. versions: detect version supersession ('Use React 18' vs 'React 19') and obsolete the older ones."),
-      minQuality: z.number().optional().default(0.3).describe("Entries below this quality score are candidates (only used with mode: low-quality)."),
+      minQuality: z.coerce.number().min(0).max(1).optional().default(0.3).describe("Entries below this quality score are candidates (only used with mode: low-quality)."),
       dryRun: z.boolean().optional().default(false).describe("If true, show what would change without writing."),
     },
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
@@ -1297,7 +1350,7 @@ server.registerTool(
 
 // ── memory_sessions ──────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_sessions",
   {
     title: "Active Sessions & Conflicts",
@@ -1365,27 +1418,85 @@ server.registerTool(
 
 // ── context_brief ────────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "context_brief",
   {
     title: "Context Briefing",
     description: "Generate a compact context briefing: relevant memory + active sessions + project health. Single call instead of 5-6 separate calls. Zero LLM, pure deterministic logic.",
     inputSchema: {
       task: z.string().optional().default("").describe("Current agent task. If provided, entries are ranked by relevance to this task. If empty, shows top entries by importance."),
-      limit: z.number().optional().default(6).describe("Maximum relevant entries to show"),
+      limit: positiveInt(6, 50).describe("Maximum relevant entries to show"),
+      handoff: z.boolean().optional().default(true).describe("Prepend the compact handoff packet with identity, freshness, directives, traps and file pointers."),
+      budget: positiveInt(1200, 4000).describe("Token ceiling for the handoff packet when handoff=true."),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
-  async ({ task, limit }) => {
+  async ({ task, limit, handoff, budget }) => {
     const data = readMemory()
+    if (task && handoff) {
+      const sessions = readObservations()
+        .slice(-2)
+        .map((e) => `${e.session || "cli"}: ${e.summary.slice(0, 80)}`)
+      const compiled = compileContext(data, task, { maxTokens: budget, ...(await recallExtras(task)), sessions })
+      return { content: [{ type: "text" as const, text: renderContextPackage(compiled) }] }
+    }
     const brief = generateContextBrief(data, { task: task || undefined, limit })
-    return { content: [{ type: "text" as const, text: brief }] }
+    if (!handoff) return { content: [{ type: "text" as const, text: brief }] }
+    const packet = buildHandoffBrief(data, process.cwd(), { task: task || undefined, maxTokens: budget })
+    return { content: [{ type: "text" as const, text: `${packet}\n\n${brief}` }] }
+  }
+)
+
+// ── context_compile ──────────────────────────────────────────────────────────
+
+register(
+  "context_compile",
+  {
+    title: "Compile Task Context",
+    description: "Compile a task into a tiny context packet: directives, constraints, relevant memory, decisions, retrieval queries, hydrate keys, files and sessions. Deterministic, zero LLM, feedback-aware. Prefer this over context_brief when a task is known.",
+    inputSchema: {
+      task: requiredText("task", 1000).describe("Current agent task or question"),
+      budget: positiveInt(200, 6000).describe("Token ceiling for the compiled packet"),
+    },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  },
+  async ({ task, budget }) => {
+    const data = readMemory()
+    const sessions = readObservations()
+      .slice(-2)
+      .map((e) => `${e.session || "cli"}: ${e.summary.slice(0, 80)}`)
+    const compiled = compileContext(data, task, { maxTokens: budget, ...(await recallExtras(task)), sessions })
+    return { content: [{ type: "text" as const, text: renderContextPackage(compiled) }] }
+  }
+)
+
+// ── context_hydrate ──────────────────────────────────────────────────────────
+
+register(
+  "context_hydrate",
+  {
+    title: "Hydrate Compressed Context",
+    description: "Expand hydrate keys emitted by context_compile into full memory entries. Layer 2 of progressive disclosure.",
+    inputSchema: {
+      keys: z.array(requiredText("key", 200)).min(1).max(20).describe("Keys or ids from context_compile's Hydrate section"),
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  },
+  async ({ keys }) => {
+    const data = readMemory()
+    const entries = fetchEntriesByIds(data, splitIds(keys.join(",")))
+    if (entries.length === 0) return noMatches(keys.join(","))
+    bumpAccessed(entries.map((e) => e.id))
+    const formatted = entries
+      .map((e) => `[${e.category}] ${e.key} (${e.id})\n  ${e.content}\n  File: ${e.file} | Tags: ${e.tags.join(";")} | Date: ${e.date}`)
+      .join("\n\n")
+    return { content: [{ type: "text" as const, text: `Hydrated ${entries.length} ${entries.length === 1 ? "entry" : "entries"}:\n\n${formatted}` }] }
   }
 )
 
 // ── context_generate ─────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "context_generate",
   {
     title: "Generate Full Context",
@@ -1405,7 +1516,7 @@ server.registerTool(
 
 // ── context_diff ─────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "context_diff",
   {
     title: "Context Diff",
@@ -1425,14 +1536,14 @@ server.registerTool(
 
 // ── context_focus ────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "context_focus",
   {
     title: "Focus Context for Task",
     description: "Hyper-focused context for a specific task: relevant entries + related files + code referencing the symbol + existing tests. Zero LLM.",
     inputSchema: {
-      task: z.string().describe("Task or symbol to search context for (e.g. 'fix auth bug', 'authenticate')"),
-      limit: z.number().optional().default(6).describe("Maximum memory entries to include"),
+      task: requiredText("task", 500).describe("Task or symbol to search context for (e.g. 'fix auth bug', 'authenticate')"),
+      limit: positiveInt(6, 50).describe("Maximum memory entries to include"),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
@@ -1446,7 +1557,7 @@ server.registerTool(
 
 // ── context_health ───────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "context_health",
   {
     title: "Memory Health Audit",
@@ -1464,7 +1575,7 @@ server.registerTool(
 
 // ── context_export ───────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "context_export",
   {
     title: "Export Memory as Markdown",
@@ -1483,7 +1594,7 @@ server.registerTool(
 
 // ── memory_backup ───────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_backup",
   {
     title: "Backup Memory",
@@ -1537,7 +1648,7 @@ server.registerTool(
 
 // ── memory_primer ─────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_primer",
   {
     title: "System Primer",
@@ -1555,14 +1666,14 @@ server.registerTool(
 
 // ── memory_compress ────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_compress",
   {
     title: "Compress Memory Entries",
     description: "LLM-powered compression: select entries to compress into one concise entry. The agent (YOU) reads the entries, writes a compressed summary, then calls memory_remember to save it. Two-step dance: this tool provides context, you provide intelligence.",
     inputSchema: {
       query: z.string().optional().default("").describe("Search query to find entries to compress (e.g. 'auth bug fixes'). Empty = show lowest-quality entries."),
-      count: z.number().optional().default(3).describe("Number of entries to compress (2-10). Default: 3."),
+      count: positiveInt(3, 10).describe("Number of entries to compress (2-10). Default: 3."),
       category: z.string().optional().default("").describe("Filter by category (empty = all)."),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
@@ -1642,7 +1753,7 @@ server.registerTool(
 
 // ── memory_export_gist ─────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_export_gist",
   {
     title: "Export to GitHub Gist",
@@ -1707,13 +1818,13 @@ server.registerTool(
 
 // ── memory_import_gist ─────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_import_gist",
   {
     title: "Import from GitHub Gist",
     description: "Import memory from a GitHub Gist. Merges entries (keeps newer dates, combines tags). Requires GITHUB_TOKEN env var.",
     inputSchema: {
-      gist_id: z.string().describe("GitHub Gist ID or full URL (https://gist.github.com/user/id)."),
+      gist_id: requiredText("gist_id", 300).describe("GitHub Gist ID or full URL (https://gist.github.com/user/id)."),
       merge: z.boolean().optional().default(true).describe("If true, merge with existing memory. If false, replace entirely."),
     },
     annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
@@ -1829,7 +1940,7 @@ server.registerTool(
 // are pulled into a project with a one-shot merge (offline, deterministic) —
 // never a live dual-source recall, so the ranking pipeline stays untouched.
 
-server.registerTool(
+register(
   "memory_export_global",
   {
     title: "Export to Global Memory",
@@ -1851,7 +1962,7 @@ server.registerTool(
   }
 )
 
-server.registerTool(
+register(
   "memory_import_global",
   {
     title: "Import Global Memory",
@@ -1891,7 +2002,7 @@ server.registerTool(
 
 // ── memory_merge_sessions ──────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_merge_sessions",
   {
     title: "Merge Session Observations",
@@ -2035,14 +2146,14 @@ server.registerTool(
 
 // ── memory_graph_path ────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_graph_path",
   {
     title: "Find Graph Path",
     description: "Find the shortest path between two memory entries in the knowledge graph. Shows how two concepts are connected through related entries.",
     inputSchema: {
-      from: z.string().describe("Starting entry key"),
-      to: z.string().describe("Target entry key"),
+      from: requiredText("from", 200).describe("Starting entry key"),
+      to: requiredText("to", 200).describe("Target entry key"),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
@@ -2111,7 +2222,7 @@ server.registerTool(
 
 // ── memory_checkpoint ─────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_checkpoint",
   {
     title: "Session Checkpoint",
@@ -2200,14 +2311,14 @@ server.registerTool(
 
 // ── memory_pin ───────────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_pin",
   {
     title: "Pin Entry",
     description: "Pin a memory entry with priority level (1-5). Higher priority entries appear first in recalls. Default: 1. Useful for critical decisions, project rules, or frequently-needed context.",
     inputSchema: {
-      key: z.string().describe("Key or id of the entry to pin"),
-      priority: z.number().optional().default(1).describe("Priority level 1-5 (5 = highest). Default: 1."),
+      key: requiredText("key", 200).describe("Key or id of the entry to pin"),
+      priority: positiveInt(1, 5).describe("Priority level 1-5 (5 = highest). Default: 1."),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
@@ -2248,13 +2359,13 @@ server.registerTool(
 
 // ── memory_unpin ─────────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_unpin",
   {
     title: "Unpin Entry",
     description: "Remove the pin from a memory entry so it returns to normal ranking.",
     inputSchema: {
-      key: z.string().describe("Key or id of the entry to unpin"),
+      key: requiredText("key", 200).describe("Key or id of the entry to unpin"),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
@@ -2292,22 +2403,81 @@ server.registerTool(
   }
 )
 
+// ── memory_feedback ──────────────────────────────────────────────────────────
+
+register(
+  "memory_feedback",
+  {
+    title: "Feedback on recalled memory",
+    description: "Tell toon-memory whether a recalled entry was useful, irrelevant, outdated or wrong. Explicit feedback adjusts learned utility; 'wrong' also flags evidence as conflict. Use this after acting on a recalled memory.",
+    inputSchema: {
+      key: requiredText("key", 200).describe("Key or id of the entry you used"),
+      signal: z.enum(["useful", "irrelevant", "outdated", "wrong"]).describe("useful | irrelevant | outdated | wrong"),
+      task: z.string().trim().max(500).optional().describe("Short description of the task where the memory was used"),
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+  },
+  async ({ key, signal, task }) => {
+    const data = readMemory()
+    const entry = parseEntries(data).find((e) => e.key === key || e.id === key)
+    if (!entry) {
+      return { content: [{ type: "text" as const, text: `"${key}" not found in memory.` }] }
+    }
+    appendFeedback({ key: entry.key, signal, source: "explicit", task: task || "" })
+    if (signal === "wrong") markWrong(entry.key)
+    const utility = utilityMap().get(entry.key) || 0
+    return {
+      content: [{
+        type: "text" as const,
+        text: `📣 Feedback recorded: ${entry.key} → ${signal}. Learned utility: ${utility.toFixed(2)}${signal === "wrong" ? " (evidence flagged as conflict)" : ""}.`,
+      }],
+    }
+  }
+)
+
+// ── memory_edges ─────────────────────────────────────────────────────────────
+
+register(
+  "memory_edges",
+  {
+    title: "Typed memory edges",
+    description: "List or rebuild typed edges in edges.toon. Edges are derived from explicit links and feedback; spread activation is opt-in via config.graph.activation.",
+    inputSchema: {
+      action: z.enum(["list", "rebuild"]).optional().default("list").describe("list shows current edges; rebuild derives them from data.toon and feedback.toon"),
+      limit: positiveInt(20, 200).describe("Maximum edges to list"),
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+  },
+  async ({ action, limit }) => {
+    if (action === "rebuild") {
+      const count = rebuildEdges(readMemory(), readFeedback())
+      return { content: [{ type: "text" as const, text: `Rebuilt ${count} typed edge(s) in edges.toon.` }] }
+    }
+    const edges = readEdges().slice(0, limit)
+    if (edges.length === 0) {
+      return { content: [{ type: "text" as const, text: "No typed edges yet. Run memory_edges(action=\"rebuild\")." }] }
+    }
+    const text = edges.map((e) => `${e.from} -[${e.type} ${e.weight.toFixed(2)}]-> ${e.to} (${e.ts || "unknown"})`).join("\n")
+    return { content: [{ type: "text" as const, text: `${edges.length} typed edge(s):\n${text}` }] }
+  }
+)
+
 // ── memory_search ────────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_search",
   {
     title: "Unified Search",
     description: "Search memory with combined filters: text query, category, tags, and date range. Returns ranked results.",
     inputSchema: {
-      query: z.string().describe("Text to search for"),
+      query: requiredText("query", 500).describe("Text to search for"),
       category: z.string().optional().default("").describe("Filter by category (empty = all)"),
       tags: z.string().optional().default("").describe("Semicolon-separated tags; entry must have ALL specified tags"),
       from_date: z.string().optional().default("").describe("Start date filter (YYYY-MM-DD or relative like 7d)"),
       to_date: z.string().optional().default("").describe("End date filter (YYYY-MM-DD)"),
-      limit: z.number().optional().default(6).describe("Maximum entries to return"),
+      limit: positiveInt(6, 200).describe("Maximum entries to return"),
       mode: z.enum(["flat", "graph"]).optional().default("flat").describe("'flat' = keyword search (default). 'graph' = graph-based recall."),
-      hops: z.number().optional().default(1).describe("Graph depth in 'graph' mode (1 or 2). Default 1."),
+      hops: positiveInt(1, 3).describe("Graph depth in 'graph' mode (1 or 2). Default 1."),
       compact: z.boolean().optional().default(false).describe("Token-efficient output"),
       budget: z.enum(["tiny", "normal", "deep"]).optional().default("deep").describe("'tiny': key+1 line (~50 tokens). 'normal': compact with tags/edges. 'deep': all fields (default). Overrides 'compact'."),
       bias: z.enum(["none", "session"]).optional().default("none").describe("'session': boost entries whose file matches current session files. 'none': no bias (default)."),
@@ -2315,7 +2485,7 @@ server.registerTool(
       rrf: z.boolean().optional().default(false).describe("Use Reciprocal Rank Fusion (BM25x3 + centrality ranks, adaptive k=sqrtN) instead of weighted linear scoring. Weight-free: reaches parity with the tuned linear scorer on scripts/bench-rrf.mjs."),
       as_of: z.string().optional().default("").describe("Temporal view (YYYY-MM-DD): return entries valid on that date."),
     },
-    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
   async ({ query, category, tags, from_date, to_date, limit, mode, hops, compact, bias, budget: budgetParam, path_scope, rrf, as_of }) => {
     const data = readMemory()
@@ -2333,12 +2503,11 @@ server.registerTool(
       sessionFiles,
       path_scope: path_scope || undefined,
       rrf,
+      ...(await recallExtras(query)),
       asOf: as_of || undefined,
     })
 
-    if (detail.entries.length === 0) {
-      return { content: [{ type: "text" as const, text: `No results found for "${query}"` }] }
-    }
+    if (detail.entries.length === 0) return noMatches(query)
 
     bumpAccessed(detail.entries.map((e) => e.id))
 
@@ -2378,15 +2547,15 @@ server.registerTool(
 
 // ── memory_tag ───────────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_tag",
   {
     title: "Batch Tag Operations",
     description: "Batch add, remove, or set tags on one or more memory entries by key or id.",
     inputSchema: {
       action: z.enum(["add", "remove", "set"]).describe("'add': merge tags (union). 'remove': remove specified tags. 'set': replace all tags."),
-      tags: z.string().describe("Semicolon-separated tags to apply"),
-      ids: z.string().describe("Comma or space-separated entry keys or IDs to modify"),
+      tags: requiredText("tags", 300).describe("Semicolon-separated tags to apply"),
+      ids: requiredText("ids", 1000).describe("Comma, semicolon or space-separated entry keys or IDs to modify"),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
   },
@@ -2399,9 +2568,9 @@ server.registerTool(
       return { content: [{ type: "text" as const, text: "No entries in memory." }] }
     }
 
-    const targetIds = ids.split(/[\s,]+/).filter(Boolean)
+    const targetIds = splitIds(ids)
     const targetSet = new Set(targetIds)
-    const tagsToApply = tags.split(";").map((t) => t.trim()).filter(Boolean)
+    const tagsToApply = tags.split(";").map((t: string) => t.trim()).filter(Boolean)
 
     if (tagsToApply.length === 0) {
       return { content: [{ type: "text" as const, text: "No tags provided." }] }
@@ -2455,14 +2624,14 @@ server.registerTool(
 
 // ── memory_reflect ───────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_reflect",
   {
     title: "Reflect on Memory",
     description: "Deterministic memory audit (no LLM): tag co-occurrence themes, hub/orphan entries, near-duplicates, contradiction candidates, stale entries, and superseded-but-active entries. Signals what to link, merge, or retire.",
     inputSchema: {
       category: z.string().optional().default("").describe("Restrict analysis to one category (empty = all)."),
-      limit: z.number().optional().default(5).describe("Max items per section."),
+      limit: positiveInt(5, 20).describe("Max items per section."),
     },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
   },
@@ -2607,16 +2776,16 @@ server.registerTool(
 
 // ── memory_promote ───────────────────────────────────────────────────────────
 
-server.registerTool(
+register(
   "memory_promote",
   {
     title: "Promote Observations",
     description: "Heuristic auto-promote from the capture log (no LLM). Each observation gets a deterministic confidence score; high-confidence ones promote as active entries, low-confidence (≤ minConfidence) become reviewable drafts. Opt-in: run with dryRun: true first.",
     inputSchema: {
       dryRun: z.boolean().optional().default(true).describe("If true, only preview what would be promoted (no writes)."),
-      minConfidence: z.number().optional().default(0.65).describe("Observations at or below this confidence become drafts; above it become active entries."),
-      max: z.number().optional().default(5).describe("Maximum observations to promote."),
-      days: z.number().optional().default(7).describe("Only consider observations from the last N days."),
+      minConfidence: z.coerce.number().min(0).max(1).optional().default(0.65).describe("Observations at or below this confidence become drafts; above it become active entries."),
+      max: positiveInt(5, 50).describe("Maximum observations to promote."),
+      days: positiveInt(7, 365).describe("Only consider observations from the last N days."),
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
   },
@@ -2746,7 +2915,7 @@ server.registerTool(
 
 // ── memory_visualize (MCP Apps) ──────────────────────────────────────────────
 
-registerAppTool(
+if (expertMode) registerAppTool(
   server as unknown as Parameters<typeof registerAppTool>[0],
   "memory_visualize",
   {

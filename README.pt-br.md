@@ -1186,13 +1186,13 @@ As ferramentas `context_*` substituem 3–6 chamadas de ferramentas separadas po
 ```
 Cenário                           Sem         Com       Economia  Ferramentas
 ───────────────────────────────  ────────  ──────  ───────  ──────
-context_generate (briefing)        5,556     378    93.2%   6 → 1
+context_generate (briefing)        6,408     378    94.1%   6 → 1
 context_diff (incremental)            533     152    71.5%   4 → 1
 context_focus (direcionado)           413     225    45.5%   4 → 1
 context_health (auditoria)            322     246    23.6%   5 → 1
 context_export (md injetável)      1,178     218    81.5%   3 → 1
 ───────────────────────────────  ────────  ──────  ───────  ──────
-TOTAL                              8,002   1,219    84.8%  22 → 5
+TOTAL                              8,854   1,219    86.2%  22 → 5
 ```
 
 **O que cada cenário mede:**

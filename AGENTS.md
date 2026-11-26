@@ -13,14 +13,20 @@ Build must complete before tests — `tests/cli.test.ts` executes `bin/toon-memo
 ## Architecture
 
 - `src/bin/toon-memory.ts` — Entry point. Routes `mcp` arg to MCP server, everything else to CLI.
-- `src/mcp/server.ts` — MCP server (38 tools + 4 resources + 1 prompt).
+- `src/mcp/server.ts` — MCP server (42 tools + 4 resources + 1 prompt).
 - `src/mcp/tools.ts` — Tool implementations. Each tool is registered with the MCP server.
 - `src/mcp/vault.ts` — Encrypted secrets sidecar (`secrets.toon`, AES-256-GCM): store/get/list/forget.
 - `src/lib/evidence.ts` — Write-path evidence: contradiction detection + evidence levels (verified/unverified/conflict) with recall boosts.
 - `src/mcp/consolidation.ts` — Cleanup ops plus `mergeMemoryFiles` (global import merge).
 - `src/mcp/scoring.ts` — Entry scoring and access tracking (bumpAccessed).
 - `src/lib/quality.ts` — Quality scoring with staleness decay, merge-dedup, smart recall.
-- `src/lib/graph.ts` — Knowledge graph: adjacency, BM25, centrality, graph recall.
+- `src/lib/graph.ts` — Knowledge graph: adjacency, BM25, centrality, graph recall, optional feedback/dense/activation scoring.
+- `src/lib/compiler.ts` — Task → compact context packet (directives, constraints, memory, retrieval plan, hydrate keys).
+- `src/lib/activation.ts` — Deterministic spread activation over typed edges.
+- `src/lib/dense.ts` — Optional local embeddings sidecar (`vectors.bin`), always falls back to BM25.
+- `src/mcp/feedback.ts` — Explicit feedback sidecar (`feedback.toon`) and learned per-entry utility.
+- `src/mcp/edges.ts` — Typed edge sidecar (`edges.toon`) derived from links and feedback.
+- `src/cli/sleep.ts` — Opt-in deterministic end-of-session consolidation (promote, edges, prune, dedupe).
 - `src/cli/setup.ts` — CLI commands: init, status, stats, export, import, watch, upgrade, uninstall. Also installs hooks per agent.
 - `src/cli/opencode-plugin.ts` — OpenCode plugin with intelligent auto-loading (recall by file path on tool.execute.after).
 
@@ -55,3 +61,15 @@ Tests use temp directories and clean up automatically. No external services requ
 
 - **test**: Node 20/22 matrix, runs `npm run build && npm test`
 - **lint**: Runs `npx tsc --noEmit` (no ESLint configured)
+
+<!-- toon-memory:instructions -->
+# toon-memory
+
+## Memory loop
+- A compact brief is auto-injected at session start; when a task is known it is a context_compile packet with directives, constraints and retrieve/hydrate keys.
+- Call memory_compile(task=...) at task start for a fresh packet; follow its Retrieval plan and hydrate only the keys you need.
+- Use memory_recall BEFORE the first read/grep when the task may already be solved in memory.
+- Before editing a file, check the warnings in the brief; run memory_recall(query=<path>) for file-specific traps.
+- When a recalled entry was useful or wrong, call memory_feedback(key=..., signal=...) to train future ranking.
+- When you learn a directive, decision or fix, save it with memory_remember — or let the ambient hooks capture it.
+- When the user asks to see the memory graph, call memory_visualize().

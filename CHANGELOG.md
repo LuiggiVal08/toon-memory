@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.4.0] - 2026-11-26
+
+### Added
+- **Ambient handoff loop (OpenCode first)** — `toon-memory brief` now injects a compact handoff packet at session start with cross-tool identity (`mcp_project`), freshness, directives, traps, decisions and file pointers — never an ellipsis-truncated dump. `context_brief` prepends the same packet; `doctor` reports freshness, hygiene and catalog mode.
+- **Deterministic promoter** — `signal`/`promote` append high-confidence directives, fixes and decisions from `session.toon` into `data.toon` using a fixed 0.75 threshold, no LLM and no network.
+- **Tolerant tool arguments** — numeric strings, natural-language dates (`ayer`, `la semana pasada`, `hace 3 dias`, `last 2 weeks`) and documented aliases (`today`, `sessionBias`, `since`) no longer produce validation errors; empty recalls return structured data with `found: false`, not an error.
+- **Expert tool catalog** — advanced tools stay hidden unless `TOON_MEMORY_EXPERT_TOOLS=1`, so the default MCP catalog is small enough for reliable tool selection.
+- **Explicit feedback loop** — `memory_feedback` writes `useful`/`irrelevant`/`outdated`/`wrong` signals to `feedback.toon`; learned utility with decay reinforces recall and `wrong` marks evidence as `conflict`.
+- **Context compiler** — `context_compile(task=...)` returns directives, constraints, retrieved memory, a retrieval plan and exact `context_hydrate` keys; `context_brief(task=...)` uses the same packet.
+- **Typed graph edges** — `memory_edges` lists or rebuilds `edges.toon` from `links` and feedback; optional `graph.activation` spreads activation from top seeds.
+- **Deterministic sleep** — `toon-memory sleep` (or `TOON_MEMORY_SLEEP=1`) promotes observations, rebuilds edges, prunes expired signals and dedupes at session `Stop`. No daemon.
+- **Optional dense retrieval** — `toon-memory dense enable|build|status|install` manages a local `vectors.bin` sidecar via `toon-memory-dense`; BM25 remains the fallback when the module is absent.
+
+### Changed
+- **Accent-aware tokenization and recomputed quality** — `normalize()` strips diacritics, `tokenize()` drops stopwords but keeps negations, and ranking recomputes a lightweight quality signal from entry fields instead of trusting stale stored scores.
+- **Benchmark baseline refreshed** — the committed `retrieval-results.json` was already stale on clean `HEAD` (39 drifted metrics; verified in an isolated worktree). Regenerated from the frozen 187-entry/42-query corpus: linear R@5 0.643, RRF R@5 0.655, smart R@5 0.867; `bench:check` passes again.
+- **Manifests synced to 4.4.0** — `package.json`, `package-lock.json`, `server.json`, `lhm.plugin.json` and the docs now advertise 42 MCP tools.
+
 ## [4.3.5] - 2026-08-04
 
 ### Fixed

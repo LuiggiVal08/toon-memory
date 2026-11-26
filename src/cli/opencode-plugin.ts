@@ -2,56 +2,70 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
 import { join } from "path"
 import type { Agent } from "./types"
 import { projectRoot } from "./constants"
-import { dumpMemoryMarkdown } from "./memory"
 
 /**
- * OpenCode plugin source with INTELLIGENT memory injection. OpenCode 1.17+
- * delivers hooks via plugins (not a top-level `hooks` config key), so `init`
- * writes this file into `.opencode/plugins/`.
+ * OpenCode plugin source with AMBIENT memory: a compact handoff brief is
+ * pushed into the system prompt on every turn, and signals are recorded
+ * automatically from user directives, tool errors and edits. Promotion to
+ * durable memory is deterministic and runs once at session idle.
  *
- * Two injection modes:
- *   1. Session start → full dump (seeded in instructions/)
- *   2. Tool execution → targeted recall by file path (injected via output.context)
+ * OpenCode 1.17+ delivers hooks via plugins. Only supported hooks are used:
+ * event, experimental.chat.system.transform, experimental.session.compacting,
+ * chat.message, tool.execute.before, tool.execute.after.
  */
 export function opencodePluginContent(): string {
-  return `import * as fs from "fs"
-import * as path from "path"
+  return `import * as path from "path"
 
 export const ToonMemory = async ({ $, directory, worktree }) => {
   const root = worktree || directory
-  const INS = root + "/.opencode/instructions"
-  const OUT = INS + "/memory-autoload.md"
+  let cachedBrief = ""
+  let cachedTask = ""
+  let cachedAt = 0
+  let lastTask = ""
+  let promoted = false
+  let dynamic = []
 
-  const dump = async () => {
-    return await $\`npx -y toon-memory dump\`.cwd(root).text()
+  const run = async (cmd) => {
+    try { return (await cmd.cwd(root).text()).trim() } catch { return "" }
+  }
+
+  const brief = async () => {
+    const task = (lastTask || "").replace(/[\`$"]/g, " ").trim().slice(0, 200)
+    const now = Date.now()
+    if (cachedBrief && cachedTask === task && now - cachedAt < 5 * 60 * 1000) return cachedBrief
+    cachedBrief = task
+      ? await run(\`TOON_MEMORY_TASK=\${JSON.stringify(task)} npx -y toon-memory brief\`)
+      : await run(\`npx -y toon-memory brief\`)
+    cachedTask = task
+    cachedAt = now
+    return cachedBrief
   }
 
   const recall = async (query, opts = {}) => {
     try {
-      const args = { query, mode: "flat", budget: opts.budget || "tiny", path_scope: opts.path_scope || "" }
+      const args = { query, mode: "flat", budget: "tiny", limit: 3, path_scope: opts.path_scope || "" }
       if (opts.category) args.category = opts.category
-      const result = await $\`npx -y toon-memory mcp\`.cwd(root)
-        .stdin(JSON.stringify({
-          jsonrpc: "2.0",
-          id: 1,
-          method: "tools/call",
-          params: { name: "memory_recall", arguments: args }
-        }))
-        .text()
+      const result = await run($\`npx -y toon-memory mcp\`.stdin(JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: { name: "memory_recall", arguments: args }
+      })))
       const parsed = JSON.parse(result)
       return parsed?.result?.content?.[0]?.text || ""
     } catch { return "" }
   }
 
-  // Pre-edit risk surfacing: warning-category entries scoped to a file path.
-  // Injected as a distinct block so the agent sees known risks before it edits.
-  const risks = async (filePath) => {
-    return await recall(filePath, { budget: "tiny", path_scope: filePath, category: "warning" })
+  const record = async (type, summary, file, session) => {
+    if (!summary) return
+    await run($\`npx -y toon-memory signal --type \${type} --summary \${summary} --file \${file || ""} --session \${session || "opencode"}\`)
   }
 
-  const write = (text) => {
-    fs.mkdirSync(INS, { recursive: true })
-    fs.writeFileSync(OUT, text)
+  const inject = (key, text) => {
+    if (!text || text.includes("(empty)") || text.includes("No results")) return
+    dynamic = dynamic.filter((d) => d.key !== key)
+    dynamic.push({ key, text: text.slice(0, 400) })
+    if (dynamic.length > 2) dynamic.shift()
   }
 
   const pickPath = (args) => {
@@ -69,92 +83,88 @@ export const ToonMemory = async ({ $, directory, worktree }) => {
     return [basename, ...dirParts.slice(-2)].join(" ")
   }
 
-  const inject = (ctx, key, text) => {
-    if (!text || text.includes("(empty)") || text.includes("No results")) return
-    if (typeof ctx?.setContext === "function") ctx.setContext(key, text)
+  const extractPath = (text) => {
+    const match = text.match(/(?:file|path|source):\\s*([\\w/.\\-]+)/i)
+    return match ? match[1] : ""
   }
 
-  // Edit/write-ish tools are where known risks matter most.
   const isEditTool = (name) => {
     if (!name) return false
     return name === "edit" || name === "write" || name === "apply-patch" ||
       name.includes("edit") || name.includes("write") || name.includes("patch")
   }
 
+  const isDirective = (text) =>
+    /recuerda|siempre|nunca|no hagas|importante|ten cuidado|decidimos|must not|always|never/i.test(text)
+
   return {
-    "session.created": async () => {
-      try {
-        const out = await dump()
-        write(out)
-      } catch {}
+    event: async ({ event }) => {
+      const type = event?.type || ""
+      if (type === "session.created" || type === "session.updated") {
+        cachedBrief = ""
+        cachedTask = ""
+        cachedAt = 0
+        lastTask = ""
+        dynamic = []
+        promoted = false
+      }
+      if (type === "session.idle" && !promoted) {
+        promoted = true
+        await run($\`npx -y toon-memory promote\`)
+      }
     },
-    "experimental.session.compacting": async ({ output }) => {
-      try {
-        const out = await dump()
-        if (Array.isArray(output?.context)) output.context.push(out)
-      } catch {}
+
+    "experimental.chat.system.transform": async (input, output) => {
+      const text = await brief()
+      if (text) output.system.push(text)
+      for (const d of dynamic) output.system.push(d.text)
     },
+
+    "experimental.session.compacting": async (input, output) => {
+      const text = await brief()
+      if (text && Array.isArray(output?.context)) output.context.push(text)
+    },
+
+    "chat.message": async (input) => {
+      const parts = input?.parts || input?.message?.parts || []
+      const text = parts.map((p) => typeof p?.text === "string" ? p.text : "").join(" ")
+      lastTask = text.replace(/\s+/g, " ").trim().slice(0, 200)
+      if (isDirective(text)) {
+        await record("user_directive", text.replace(/\\s+/g, " ").slice(0, 280), "", input?.sessionID)
+      }
+    },
+
     "tool.execute.before": async (input, output) => {
-      // Pre-edit risk surfacing: for edit/write tools, surface known
-      // warning entries for the target file BEFORE the tool runs.
       try {
         const toolName = input?.tool || ""
         if (!isEditTool(toolName)) return
-        const args = output?.args || input?.args || {}
-        const filePath = pickPath(args)
+        const filePath = pickPath(output?.args || input?.args || {})
         if (!filePath) return
-        const text = await risks(filePath)
-        inject(input, "toon-memory:risks:" + filePath, "⚠ KNOWN RISKS for " + filePath + ":\\n" + text)
+        const text = await recall(filePath, { category: "warning" })
+        inject("risks:" + filePath, "⚠ KNOWN RISKS for " + filePath + ":\\n" + text)
       } catch {}
     },
-    "tool.execute.after": async (input) => {
-      // Intelligent auto-loading: extract file path from tool result,
-      // recall only memory relevant to that file, inject as context.
-      // Also proactively recalls entries scoped to the matched paths.
+
+    "tool.execute.after": async (input, output) => {
       try {
         const toolName = input?.tool || ""
-        const args = input?.args || {}
-
-        // Extract file path from tool arguments or output
-        let filePath = pickPath(args)
-
-        // Also try to extract from tool output text
-        if (!filePath && input?.output) {
-          const outputText = typeof input.output === "string" ? input.output : ""
-          const fileMatch = outputText.match(/(?:file|path|source):\s*([\\w/.\\-]+)/i)
-          if (fileMatch) filePath = fileMatch[1]
-        }
+        const args = output?.args || input?.args || {}
+        const resultText = typeof output?.output === "string" ? output.output : ""
+        const filePath = pickPath(args) || extractPath(resultText)
 
         if (filePath) {
-          // Build recall query from file path components
-          const query = buildQuery(filePath)
-          const text = await recall(query, { budget: "tiny", path_scope: filePath })
-          inject(input, "toon-memory:" + filePath, text)
-
-          // Pre-edit risk block for edit/write tools (same key as the before
-          // hook — setContext overwrites, so no duplication when both fire).
+          const text = await recall(buildQuery(filePath), { path_scope: filePath })
+          inject("memory:" + filePath, text)
           if (isEditTool(toolName)) {
-            const riskText = await risks(filePath)
-            inject(input, "toon-memory:risks:" + filePath, "⚠ KNOWN RISKS for " + filePath + ":\\n" + riskText)
+            await record("diff_pattern", "Edited " + filePath + " while implementing a change", filePath, input?.sessionID)
           }
         }
 
-        // Proactive recall: if no file was found, try tool-name-based recall
-        // for common tool patterns that may have relevant memory entries
-        if (!filePath && toolName) {
-          const toolKeywords = toolName
-            .replace(/^memory_/, "")
-            .replace(/^context_/, "")
-            .replace(/^file_/, "")
-            .replace(/^text_document_/, "")
-            .split("_")
-            .filter(Boolean)
-            .join(" ")
-
-          if (toolKeywords.length > 3) {
-            const text = await recall(toolKeywords, { budget: "tiny" })
-            inject(input, "toon-memory:" + toolName, text)
-          }
+        if (/error|failed|exception|fatal/i.test(resultText)) {
+          const line = resultText.split("\\n").find((l) => /error|failed|exception|fatal/i.test(l)) || ""
+          const signature = line.replace(/\\s+/g, " ").slice(0, 180)
+          inject("error:" + toolName, "⚠ Tool error: " + signature)
+          await record("error_fix", "Tool " + toolName + " failed: " + signature, filePath, input?.sessionID)
         }
       } catch {}
     },
@@ -165,6 +175,7 @@ export const ToonMemory = async ({ $, directory, worktree }) => {
 
 /**
  * Install the toon-memory OpenCode plugin and remove any stale `hooks` key.
+ * No 87 KB markdown dump: the brief is injected live through system.transform.
  */
 export function installOpenCodePlugin(agent: Agent): void {
   const pluginsDir = join(projectRoot, ".opencode", "plugins")
@@ -173,12 +184,6 @@ export function installOpenCodePlugin(agent: Agent): void {
   const dest = join(pluginsDir, "toon-memory.ts")
   writeFileSync(dest, opencodePluginContent())
   console.log(`  Plugin created at ${dest}`)
-
-  const instrDir = join(projectRoot, ".opencode", "instructions")
-  if (!existsSync(instrDir)) mkdirSync(instrDir, { recursive: true })
-  const instrFile = join(instrDir, "memory-autoload.md")
-  writeFileSync(instrFile, dumpMemoryMarkdown())
-  console.log(`  Seeded ${instrFile}`)
 
   const configPath = agent.local || agent.global
   if (configPath && existsSync(configPath)) {

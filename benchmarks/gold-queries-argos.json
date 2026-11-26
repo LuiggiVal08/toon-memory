@@ -1,0 +1,365 @@
+{
+  "benchmark": "retrieval-argos",
+  "corpus": "real ARGOS memory (.toon-memory/memory/data.toon)",
+  "snapshot": "2026-08-05",
+  "queries": [
+    {
+      "id": "cf-01",
+      "q": "por que el cierre de posiciones falla con saldo insuficiente",
+      "gold": [
+        "close-position-free-btc",
+        "quote-currency-mistake"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-02",
+      "q": "el stop loss no se coloca por rate limit del exchange",
+      "gold": [
+        "sl-order-no-retry",
+        "sl-retry-decision"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-03",
+      "q": "como se evita procesar dos veces el mismo fill",
+      "gold": [
+        "duplicate-fill-processing",
+        "ring-buffer-dedup"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-04",
+      "q": "por que el modelo solo predice mantener posicion",
+      "gold": [
+        "ft001-diagnosis-live-hold",
+        "static-threshold-rejects"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-05",
+      "q": "el error 1021 de timestamp por reloj desincronizado",
+      "gold": [
+        "ccxt-1021-error",
+        "clock-skew-resilience"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-06",
+      "q": "el pipeline se queda sin procesar cuando la primera vela es vieja",
+      "gold": [
+        "pipeline-stall-stale",
+        "load-checkpoint-first"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-07",
+      "q": "cual es el limite de perdida diaria que detiene todo",
+      "gold": [
+        "drawdown-circuit-breaker",
+        "risk-cap-invariants"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-08",
+      "q": "como se calcula el sizing de la posicion segun el riesgo y el atr",
+      "gold": [
+        "risk-based-sizing"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-09",
+      "q": "la moneda de la cotizacion es la que se usa para cerrar",
+      "gold": [
+        "quote-currency-mistake",
+        "symbol-vo-pattern"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-10",
+      "q": "el journal de operaciones se pierde al reiniciar",
+      "gold": [
+        "journal-inmemory-loss"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-11",
+      "q": "que pasa con el ensemble cuando el filtro principal falla",
+      "gold": [
+        "ensemble-fallback-silent",
+        "variant-c-ensemble"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "cf-12",
+      "q": "los datos de aprendizaje se guardan en parquet cada cuantas inferencias",
+      "gold": [
+        "flush-every-25",
+        "parquet-learning-store"
+      ],
+      "category": "core-fact"
+    },
+    {
+      "id": "tmp-01",
+      "q": "estado del forward test de la variante c del ensemble",
+      "gold": [
+        "forward-test-c-status",
+        "forward-test-a-vs-c"
+      ],
+      "category": "temporal",
+      "asOf": "2026-08-05"
+    },
+    {
+      "id": "tmp-02",
+      "q": "que modelo se desplego como candidato de produccion",
+      "gold": [
+        "experiment-d-deployment",
+        "experiment-d-model-deployment"
+      ],
+      "category": "temporal",
+      "asOf": "2026-08-05"
+    },
+    {
+      "id": "tmp-03",
+      "q": "que diagnostico habia sobre la falta de conviccion del modelo",
+      "gold": [
+        "ft001-diagnosis-live-hold",
+        "ft001-entropy-alta"
+      ],
+      "category": "temporal",
+      "asOf": "2026-08-05"
+    },
+    {
+      "id": "ku-01",
+      "q": "como se selecciona el modelo hoy en el retrain",
+      "gold": [
+        "wf-oos-selector",
+        "walk-forward-oos-selection"
+      ],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "ku-02",
+      "q": "que features se usan en el retrain actual del modelo",
+      "gold": [
+        "retrain-relative-features",
+        "model-retrain-relative-features"
+      ],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "ku-03",
+      "q": "cual es la unica autoridad de decision de riesgo",
+      "gold": [
+        "risk-policy-single-authority",
+        "risk-action-matrix"
+      ],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "ku-04",
+      "q": "como se comunican los servicios entre si ahora",
+      "gold": [
+        "redis-only-interop"
+      ],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "ku-05",
+      "q": "que guarda el estado de cuenta del portfolio en cada ciclo",
+      "gold": [
+        "arch-portfolio-context",
+        "portfolio-context-enrichment"
+      ],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "ku-06",
+      "q": "donde se decide el routing de ejecucion de ordenes segun el modo",
+      "gold": [
+        "arch-execution-routing",
+        "arch-data-adapter-modes"
+      ],
+      "category": "knowledge-updating"
+    },
+    {
+      "id": "mh-01",
+      "q": "como llega un tick al almacen persistente antes de publicarse",
+      "gold": [
+        "ssot-first-write",
+        "ssot-first-token-decision",
+        "event-writer-sqlite"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-02",
+      "q": "que patron encadena el consumo del stream redis con la proyeccion",
+      "gold": [
+        "mc-pipeline-pattern",
+        "consumer-group-xread",
+        "normalizer-projector"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-03",
+      "q": "como se verifica la paridad entre investigacion y produccion",
+      "gold": [
+        "research-production-parity",
+        "replay-adapter-parity",
+        "single-feature-source"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-04",
+      "q": "como se deduplican los indices de tiempo antes del join",
+      "gold": [
+        "dedup-datetime-index",
+        "mtf-alignment-pattern",
+        "duplicate-timestamp-cartesian"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-05",
+      "q": "que pasa si el precio del fill difiere del de la senal",
+      "gold": [
+        "price-reconcile-decision",
+        "price-reconciliation",
+        "price-divergence-unhandled"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-06",
+      "q": "por que los tests en testnet no gatillan stop loss",
+      "gold": [
+        "testnet-algo-orders",
+        "testnet-algo-orders-sl-tp",
+        "testnet-sl-tp-not-trigger"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-07",
+      "q": "el operador humano que acciones puede pedir",
+      "gold": [
+        "human-operator-boundary",
+        "f4-governance"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "mh-08",
+      "q": "como funciona la verificacion del sistema antes de volver al estado activo tras un recovery",
+      "gold": [
+        "verify-before-activate",
+        "dual-invariant-verification",
+        "executable-invariants"
+      ],
+      "category": "multi-hop"
+    },
+    {
+      "id": "ms-01",
+      "q": "que gates frenan el merge de una feature",
+      "gold": [
+        "quality-gates-process"
+      ],
+      "category": "meta-session"
+    },
+    {
+      "id": "ms-02",
+      "q": "como se despliega un modelo sin tocar produccion",
+      "gold": [
+        "shadow-deploy-pattern",
+        "model-rollback-recovery"
+      ],
+      "category": "meta-session"
+    },
+    {
+      "id": "ms-03",
+      "q": "que informacion captura el registro forense de las decisiones",
+      "gold": [
+        "forensic-logging",
+        "structlog-correlation"
+      ],
+      "category": "meta-session"
+    },
+    {
+      "id": "ms-04",
+      "q": "como se versionan los artefactos de modelos para comparar",
+      "gold": [
+        "model-hash-compare"
+      ],
+      "category": "meta-session"
+    },
+    {
+      "id": "ds-01",
+      "q": "el buffer del websocket no debe crecer sin limite",
+      "gold": [
+        "bounded-queue-backpressure",
+        "bounded-queue-decision"
+      ],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-02",
+      "q": "que watchdog reemplaza al de pong",
+      "gold": [
+        "activity-based-watchdog",
+        "watchdog-clock-skew"
+      ],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-03",
+      "q": "los umbrales de confianza se configuran por variable de entorno",
+      "gold": [
+        "threshold-hardcoded",
+        "dynamic-threshold-decision",
+        "adaptive-thresholds-regime"
+      ],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-04",
+      "q": "la extraccion de features multi-timeframe no debe depender del orden",
+      "gold": [
+        "semantic-feature-classification",
+        "mtf-positional-bug",
+        "semantic-mtf-features"
+      ],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-05",
+      "q": "que le pasa al build de docker del engine",
+      "gold": [
+        "docker-build-apt-hang",
+        "hot-patch-container"
+      ],
+      "category": "distractor"
+    },
+    {
+      "id": "ds-06",
+      "q": "los secretos de la cuenta del exchange de donde salen",
+      "gold": [
+        "secrets-env-only",
+        "arch-ccxt-auth-separated"
+      ],
+      "category": "distractor"
+    }
+  ]
+}

@@ -1186,13 +1186,13 @@ Die `context_*`-Werkzeuge ersetzen 3–6 separate Werkzeugaufrufe durch einen ei
 ```
 Szenario                         Ohne     Mit     Gespart  Werkzeuge
 ───────────────────────────────  ────────  ──────  ───────  ────────
-context_generate (vollst.)         5,556     378    93,2%   6 → 1
+context_generate (vollst.)         6,408     378    94,1%   6 → 1
 context_diff (inkrementell)          533     152    71,5%   4 → 1
 context_focus (gezielt)              413     225    45,5%   4 → 1
 context_health (Prüfung)             322     246    23,6%   5 → 1
 context_export (injizierbar md)    1,178     218    81,5%   3 → 1
 ───────────────────────────────  ────────  ──────  ───────  ────────
-GESAMT                           8,002   1,219    84,8%  22 → 5
+GESAMT                           8,854   1,219    86,2%  22 → 5
 ```
 
 **Was jedes Szenario misst:**

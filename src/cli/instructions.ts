@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
 import { dirname } from "path"
 import type { Agent } from "./types"
-import { INSTRUCTION_CONTENT, OPENCODE_PASSIVE_INSTRUCTION } from "./constants"
+import { INSTRUCTION_CONTENT, OPENCODE_PASSIVE_INSTRUCTION, INSTRUCTION_MARKER } from "./constants"
 
 /**
  * Install instruction files for an agent.
@@ -22,7 +22,7 @@ export function installInstructions(agent: Agent): void {
 
   if (existsSync(filePath)) {
     const existing = readFileSync(filePath, "utf-8")
-    if (existing.includes("toon-memory") || existing.includes("memory_recall")) {
+    if (existing.includes(INSTRUCTION_MARKER)) {
       console.log(`  Instructions already present in ${filePath}`)
       return
     }

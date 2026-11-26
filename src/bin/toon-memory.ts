@@ -35,6 +35,10 @@ Commands:
   viewer [--port <n>]      Open the interactive graph viewer in a browser (auto-picks a free port)
   uninstall                Remove toon-memory from all agents
   capture <on|off>         Enable/disable activity capture hooks
+  brief [task]             Print the compact handoff brief for session start
+  doctor                   Check memory path, signals and injection channel
+  signal --type <t> --summary <s>  Append one deterministic signal
+  promote                  Promote high-confidence signals into memory
   upgrade                  Upgrade to the latest version
 
 Options:
