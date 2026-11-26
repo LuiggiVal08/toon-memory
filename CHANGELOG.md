@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.4.1] - 2026-11-26
+
+### Changed
+- **npm publishing migrated to OIDC trusted publishing** — `publish.yml` now authenticates with GitHub Actions OIDC instead of a long-lived `NPM_TOKEN`; npm generates provenance automatically and `package-manager-cache` is disabled for release builds.
+
 ## [4.4.0] - 2026-11-26
 
 ### Added
