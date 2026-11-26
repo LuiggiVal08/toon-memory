@@ -15,6 +15,19 @@ const c = getContent(lang);
     <p>{c.whatNew.subtitle}</p>
   </div>
 
+  <div class="whatnew-highlight">
+    <span class="whatnew-label">{c.whatNew.highlight.label}</span>
+    <h3>{c.whatNew.highlight.title}</h3>
+    <p>{c.whatNew.highlight.body}</p>
+    <div class="whatnew-code">
+      <pre><code>{c.whatNew.highlight.install}</code></pre>
+      <pre><code>{c.whatNew.highlight.enable}</code></pre>
+    </div>
+    <div class="card-stats">
+      {c.whatNew.highlight.stats.map((s) => <span class="stat">{s}</span>)}
+    </div>
+  </div>
+
   <div class="feature-cards">
     {
       c.whatNew.cards.map((card) => (

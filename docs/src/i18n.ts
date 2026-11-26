@@ -577,6 +577,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		whatNew: {
 			title: "What's New in v4.4.2",
 			subtitle: 'Learned ranking, typed edges, optional dense retrieval, task-driven context packets and end-of-session consolidation',
+			highlight: {
+				label: 'Optional local embeddings',
+				title: 'Dense retrieval is here — install it locally',
+				body: 'The embedded model is an add-on: install it in each project, then enable and build the local vectors. Without the module or model, recall stays BM25-only — no API keys, no cloud.',
+				install: 'npm install toon-memory-dense',
+				enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+				stats: ['vectors.bin', '0.25 boost', 'BM25 fallback'],
+			},
 			cards: [
 				{
 					icon: '🎯',
@@ -1232,6 +1240,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	whatNew: {
 		title: 'Novedades en v4.4.2',
 		subtitle: 'Ranking aprendido, aristas tipadas, recuperación densa opcional, paquetes de contexto por tarea y consolidación al final de la sesión',
+		highlight: {
+			label: 'Embeddings locales opcionales',
+			title: 'La búsqueda dense ya está aquí — instálala localmente',
+			body: 'El modelo embebido es un añadido: instálalo en cada proyecto y luego activa y construye los vectores locales. Sin el módulo o el modelo, el recall sigue siendo solo BM25 — sin claves API ni nube.',
+			install: 'npm install toon-memory-dense',
+			enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+			stats: ['vectors.bin', 'boost 0.25', 'fallback BM25'],
+		},
 		cards: [
 			{
 				icon: '🎯',
@@ -1578,6 +1594,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	whatNew: {
 		title: 'v4.4.2 新功能',
 		subtitle: '学习式排序、类型化边、可选密集检索、任务驱动上下文包和会话结束时的整合',
+		highlight: {
+			label: '可选本地嵌入',
+			title: '密集检索已上线 — 在本地安装',
+			body: '嵌入模型是附加组件：在每个项目中安装，然后启用并构建本地向量。没有模块或模型时，召回仍为纯 BM25 — 无需 API 密钥，不依赖云端。',
+			install: 'npm install toon-memory-dense',
+			enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+			stats: ['vectors.bin', '0.25 增益', 'BM25 回退'],
+		},
 		cards: [
 			{
 				icon: '🎯',
@@ -1900,6 +1924,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	whatNew: {
 		title: 'v4.4.2 新機能',
 		subtitle: '学習済みランキング、型付きエッジ、オプションの密集検索、タスク駆動のコンテキストパケット、セッション終了時の統合',
+		highlight: {
+			label: 'オプションのローカル埋め込み',
+			title: '密集検索が登場 — ローカルにインストール',
+			body: '埋め込みモデルはアドオンです。各プロジェクトにインストールし、有効化してローカルベクトルを構築してください。モジュールやモデルがない場合、検索は BM25 のみ — API キーもクラウドも不要です。',
+			install: 'npm install toon-memory-dense',
+			enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+			stats: ['vectors.bin', '0.25 ブースト', 'BM25 フォールバック'],
+		},
 		cards: [
 			{
 				icon: '🎯',
@@ -2222,6 +2254,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	whatNew: {
 		title: 'v4.4.2 새로운 기능',
 		subtitle: '학습된 순위, 타입 엣지, 선택적 밀집 검색, 태스크 기반 컨텍스트 패킷, 세션 종료 시 정리',
+		highlight: {
+			label: '선택적 로컬 임베딩',
+			title: '밀집 검색 추가 — 로컬에 설치하세요',
+			body: '임베딩 모델은 애드온입니다. 각 프로젝트에 설치한 뒤 활성화하고 로컬 벡터를 빌드하세요. 모듈이나 모델이 없으면 검색은 BM25 전용이며 API 키나 클라우드가 필요 없습니다.',
+			install: 'npm install toon-memory-dense',
+			enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+			stats: ['vectors.bin', '0.25 부스트', 'BM25 폴백'],
+		},
 		cards: [
 			{
 				icon: '🎯',
@@ -2775,6 +2815,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	whatNew: {
 		title: 'Novidades na v4.4.2',
 		subtitle: 'Ranking aprendido, arestas tipadas, recuperação densa opcional, pacotes de contexto orientados a tarefas e consolidação no fim da sessão',
+		highlight: {
+			label: 'Embeddings locais opcionais',
+			title: 'A busca dense chegou — instale localmente',
+			body: 'O modelo incorporado é um complemento: instale em cada projeto, depois habilite e construa os vetores locais. Sem o módulo ou modelo, a busca continua apenas BM25 — sem chaves de API e sem nuvem.',
+			install: 'npm install toon-memory-dense',
+			enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+			stats: ['vectors.bin', 'boost 0.25', 'fallback BM25'],
+		},
 		cards: [
 			{
 				icon: '🎯',
@@ -3337,6 +3385,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 whatNew: {
 	title: 'Neu in v4.4.2',
 	subtitle: 'Gelerntes Ranking, getippte Kanten, optionale dichte Suche, aufgabenbasierte Kontext-Pakete und Konsolidierung am Sitzungsende',
+	highlight: {
+		label: 'Optionale lokale Embeddings',
+		title: 'Dichte Suche ist da — lokal installieren',
+		body: 'Das Embedding-Modell ist ein Add-on: in jedem Projekt installieren, dann aktivieren und die lokalen Vektoren bauen. Ohne Modul oder Modell bleibt die Suche reines BM25 — keine API-Schlüssel, keine Cloud.',
+		install: 'npm install toon-memory-dense',
+		enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+		stats: ['vectors.bin', 'Boost 0.25', 'BM25-Fallback'],
+	},
 	cards: [
 		{
 			icon: '🎯',
@@ -3898,6 +3954,14 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 whatNew: {
 	title: 'Nouveautés dans v4.4.2',
 	subtitle: 'Classement appris, arêtes typées, recherche dense optionnelle, paquets de contexte pilotés par la tâche et consolidation en fin de session',
+	highlight: {
+		label: 'Embeddings locaux optionnels',
+		title: "La recherche dense est là — installez-la localement",
+		body: "Le modèle d'embedding est un module complémentaire : installez-le dans chaque projet, activez-le puis construisez les vecteurs locaux. Sans module ni modèle, le rappel reste BM25 seul — aucune clé API, aucun cloud.",
+		install: 'npm install toon-memory-dense',
+		enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+		stats: ['vectors.bin', 'gain 0.25', 'repli BM25'],
+	},
 	cards: [
 		{
 			icon: '🎯',
