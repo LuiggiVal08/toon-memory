@@ -1,0 +1,39 @@
+{
+  "name": "toon-memory-dense",
+  "version": "0.1.0",
+  "description": "Local multilingual embeddings for toon-memory dense retrieval",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "toon-memory",
+    "embeddings",
+    "dense-retrieval",
+    "transformers.js",
+    "local"
+  ],
+  "author": "LuiggiVal08",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LuiggiVal08/toon-memory.git"
+  },
+  "homepage": "https://github.com/LuiggiVal08/toon-memory#readme",
+  "bugs": {
+    "url": "https://github.com/LuiggiVal08/toon-memory/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.3.2"
+  }
+}
