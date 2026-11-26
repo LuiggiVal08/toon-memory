@@ -2,8 +2,13 @@
 
 ## [Unreleased]
 
+## [4.4.2] - 2026-11-26
+
 ### Added
 - **Local dense embedder package** — `toon-memory-dense` provides `embed(texts, model)` backed by `multilingual-e5-small` through Transformers.js, enabling `toon-memory dense enable` + `build` without a network service.
+
+### Fixed
+- **Dense scores now reach smart recall** — `recallExtras` computed `denseScores` but `generateSmartRecall` ignored them. Both linear and RRF branches now apply the same `0.25` dense boost used by graph recall; BM25-only ranking is unchanged when dense is disabled.
 
 ## [4.4.1] - 2026-11-26
 

@@ -153,6 +153,18 @@ entries[4|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|co
     expect(matches).toHaveLength(1)
   })
 
+  it("boosts entries using dense scores", () => {
+    const data = `version: 1
+entries[2|]{id|category|key|content|file|tags|date|ttl|accessed|links|quality|confidence}:
+  a1|knowledge|alpha-entry|Dense semantic match|src/a.ts|semantic|${new Date().toISOString().split("T")[0]}||0||0.60|1.0
+  a2|knowledge|beta-entry|Exact lexical match|src/b.ts|lexical|${new Date().toISOString().split("T")[0]}||0||0.60|1.0
+`
+    const result = generateSmartRecall(data, "zzz-no-match", {
+      dense: new Map([["alpha-entry", 1], ["beta-entry", 0]]),
+    })
+    expect(result.indexOf("alpha-entry")).toBeLessThan(result.indexOf("beta-entry"))
+  })
+
   it("applies drift penalty when file was modified after entry creation", () => {
     const old = new Date(Date.now() - 60 * 86400000).toISOString().split("T")[0]
     const today = new Date().toISOString().split("T")[0]
