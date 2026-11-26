@@ -1,0 +1,32 @@
+name: Publish dense module
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish toon-memory-dense
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Install dependencies
+        working-directory: packages/dense
+        run: npm ci
+
+      - name: Publish to npm
+        working-directory: packages/dense
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.DENSE_NPM_TOKEN }}

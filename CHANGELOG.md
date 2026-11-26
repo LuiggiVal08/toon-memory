@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- **Local dense embedder package** — `toon-memory-dense` provides `embed(texts, model)` backed by `multilingual-e5-small` through Transformers.js, enabling `toon-memory dense enable` + `build` without a network service.
+
 ## [4.4.1] - 2026-11-26
 
 ### Changed
