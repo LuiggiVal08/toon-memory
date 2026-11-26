@@ -256,7 +256,9 @@ memory_remember   # 保存重要决策
 | `memory_export_gist` | 将条目导出到 GitHub Gist（公开或私有）。使用 GITHUB_TOKEN 或 gh CLI |
 | `memory_import_gist` | 从 GitHub Gist 导入条目。与现有条目合并（标签联合，最大置信度） |
 | `memory_graph_path` | 知识图谱中两个条目之间的BFS最短路径 |
-| `context_brief` | **一键上下文简报**：紧凑 markdown 格式的记忆 + 会话 + 健康状态。替代 5-6 次独立 memory_* 调用。零 LLM 开销，纯确定性聚合 |
+| `context_brief` | **一键交接 + 简报**：在记忆 + 会话 + 健康状态前附加紧凑的交接包（`identity`、`mcp_project`、`freshness`、指令、陷阱、文件指针）。`handoff: false` 仅返回传统简报。零 LLM 开销，纯确定性 |
+| `context_compile` | **任务驱动的上下文编译器**：将指令、约束、检索到的记忆、检索计划、`Hydrate` 键、文件和会话打包为单个数据包。在任务开始时调用 |
+| `context_hydrate` | **按键水合**：按 key/id 精确获取记忆条目并标记为已访问。遵循 `context_compile` 返回的 `Hydrate` 列表 |
 | `context_generate` | **完整项目简报**：一次调用整合项目结构、git 状态、记忆条目和活跃会话。替代 5-6 次手动调用 |
 | `context_diff` | **增量简报**：自上次会话以来的 git 提交 + 修改文件 + 新增/更新记忆 + 活跃会话 |
 | `context_focus` | **精准简报**：仅返回与查询相关的记忆 + 关联源文件 + 调用方 + 测试文件 |
@@ -266,6 +268,8 @@ memory_remember   # 保存重要决策
 | `memory_unpin` | **取消固定条目**：移除优先级标记 |
 | `memory_search` | **带过滤器的统一搜索**：与 `memory_recall` 相同，加上 `category`、`tags`、`from_date`、`to_date` 过滤器。标签过滤器使用 AND 逻辑 — 所有指定的标签必须匹配。`budget` 控制输出详细程度。`path_scope` 按 glob 模式过滤。`sessionBias` 提升当前 git 分支的条目 |
 | `memory_tag` | **批量标签操作**：按 key 或 id 在一个或多个条目上添加、删除或设置标签 |
+| `memory_feedback` | **显式反馈**（`useful`/`irrelevant`/`outdated`/`wrong`）写入 `feedback.toon`。训练逐条记忆的效用；`wrong` 还会将证据标记为 `conflict` |
+| `memory_edges` | **类型化边 sidecar**（`edges.toon`）：列出派生/学习到的边，或从 `links` + 反馈重建。支持在召回中启用扩散激活 |
 
 ### MCP 资源
 
@@ -739,6 +743,19 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 
 在 `graph` 模式下，召回先以关键词匹配为种子，展开自我子图至 `hops` 跳，然后按综合评分返回前 `limit` 条（默认 6）。`memory_smart_recall` 在一次调用中融合所有这些信号。
 
+#### 学习排序、边与可选的稠密检索
+
+四个可选 sidecar 在不修改 `data.toon` 的前提下扩展召回：
+
+| Sidecar | 启用方式 | 用途 |
+|---------|---------|------|
+| `feedback.toon` | `memory_feedback`（显式信号始终启用） | 带衰减的逐条学习效用（`useful`、`irrelevant`、`outdated`、`wrong`）。`wrong` 还会将证据设为 `conflict`。 |
+| `edges.toon` | `config.graph.activation = true` 或 `memory_edges(rebuild)` | 从 `links` + 反馈任务派生的类型化边。扩散激活会提升高分种子的邻居。 |
+| `vectors.bin` | `toon-memory dense enable` + `build` | 通过 `toon-memory-dense` 实现可选本地嵌入。请在每个项目本地运行 `npm install toon-memory-dense` 安装模块；缺少模块或模型时回退到 BM25。 |
+| `observations.toon` | 捕获钩子 + `toon-memory sleep` | 会话结束时可选整合：提升观察、重建边、清理过期信号、去重。 |
+
+`context_compile(task=...)` 将检索到的记忆转换为紧凑数据包，包含指令、约束、检索计划和精确的 `Hydrate` 键。`context_hydrate(keys=[...])` 仅获取这些条目。
+
 #### 从项目依赖自动打标签
 
 执行 `toon-memory init` 时，CLI 扫描依赖清单并将 `vocab` 表写入 `.toon-memory/memory/config.json`：
@@ -888,6 +905,9 @@ npx toon-memory viewer --export # 将查看器保存为静态 HTML
 npx toon-memory viewer --port 3001 # 自定义端口
 npx toon-memory watch [options] # 自动备份（可配置选项）
 npx toon-memory upgrade      # 更新到最新版本
+npx toon-memory sleep        # 确定性整合（需要启用）
+npx toon-memory dense status # 查看可选嵌入状态
+npx toon-memory dense enable && npx toon-memory dense build
 npx toon-memory uninstall    # 从所有 Agent 中移除
 ```
 
@@ -987,6 +1007,24 @@ npx toon-memory
 5. 自动配置 MCP 服务器、说明文件和钩子
 
 > 在没有终端的环境（CI/管道）中，`npx toon-memory` 会打印非交互式安装帮助。使用 `npx toon-memory init [local|global]` 进行无提示安装。未知命令会打印用法并以错误退出。
+
+### 记忆配置标志
+
+所有标志都位于 `.toon-memory/memory/config.json`，且均为可选项：
+
+```json
+{
+  "feedback": { "implicit": false },
+  "graph": { "activation": false },
+  "sleep": { "enabled": false },
+  "dense": { "enabled": false, "model": "multilingual-e5-small" }
+}
+```
+
+- `feedback.implicit` 为预留项；目前只有显式 `memory_feedback` 事件会影响排序。
+- `graph.activation` 启用 `edges.toon` 上的扩散激活（使用 `memory_edges(action="rebuild")` 重建）。
+- `sleep.enabled`（或 `TOON_MEMORY_SLEEP=1`）在会话 `Stop` 事件时执行整合。
+- `dense.enabled` 启用 `vectors.bin`；请在每个项目本地运行 `npm install toon-memory-dense` 安装嵌入模块（`npx toon-memory dense install` 会打印该命令）。`TOON_MEMORY_DENSE_MODULE` 可覆盖模块路径。如有任何缺失，召回将保持仅使用 BM25。
 
 ### OpenCode
 
@@ -1364,8 +1402,8 @@ toon-memory/
 │   │   ├── setup.ts             # CLI 命令
 │   │   └── toon-memory.ts       # CLI 运行器
 │   ├── mcp/
-│   │   ├── server.ts            # MCP 服务器（35 个工具 + 4 个资源 + 1 个提示词）
-│   │   ├── tools.ts             # 工具注册（35 个工具）
+│   │   ├── server.ts            # MCP 服务器（42 个工具 + 4 个资源 + 1 个提示词）
+│   │   ├── tools.ts             # 工具注册（42 个工具）
 │   │   ├── resources.ts         # 资源注册（4 个资源）
 │   │   ├── prompts.ts           # 提示词注册（1 个提示词）
 │   │   ├── session-store.ts     # 会话层（自动提升、清理）

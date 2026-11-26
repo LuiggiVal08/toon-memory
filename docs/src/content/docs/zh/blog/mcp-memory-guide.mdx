@@ -18,7 +18,7 @@ MCP 记忆服务器是一个**本地服务**，它实现了 Model Context Protoc
 
 **toon-memory** 是目前最完整的 MCP 记忆服务器：
 
-- **35 个 MCP 工具** + 4 个资源
+- **42 个 MCP 工具** + 4 个资源
 - **20+ 代理支持** — Claude、Cursor、OpenCode 等
 - **Token 高效格式** — 比 JSON 少 22% token
 - **图感知召回** — BM25 + 中心性 + 质量评分
@@ -72,9 +72,9 @@ MCP 记忆服务器为你的代理提供**持久化记忆**：
 
 ## MCP 记忆服务器功能
 
-### 35 个 MCP 工具
+### 42 个 MCP 工具
 
-toon-memory 暴露 **35 个 MCP 工具**，实现完整的记忆管理：
+toon-memory 暴露 **42 个 MCP 工具**，实现完整的记忆管理：
 
 **核心工具：**
 - `memory_remember` — 保存决策、模式、缺陷、知识
@@ -85,6 +85,10 @@ toon-memory 暴露 **35 个 MCP 工具**，实现完整的记忆管理：
 
 **上下文工具：**
 - `context_brief` — 单次调用的上下文简报
+- `context_compile` — 任务驱动的上下文包
+- `context_hydrate` — 精确键的水合
+- `memory_feedback` — 显式反馈信号
+- `memory_edges` — 类型化边 sidecar
 - `context_generate` — 完整项目简报
 - `context_diff` — 自上次会话以来的更改
 - `context_focus` — 超聚焦简报
@@ -101,6 +105,23 @@ toon-memory 暴露 **35 个 MCP 工具**，实现完整的记忆管理：
 - `memory_consolidate` — 合并重复项
 - `memory_encrypt` — AES-256-GCM 加密
 - `memory_decrypt` — 禁用加密
+
+**排序与工作流工具：**
+- `memory_checkpoint` — 带 7d TTL 的会话快照
+- `memory_backup` — 带时间戳的备份
+- `memory_secret` — 加密的密钥库
+- `memory_export_global` / `memory_import_global` — 共享全局约定
+- `memory_export_gist` / `memory_import_gist` — 通过 Gist 云同步
+- `memory_merge_sessions` — 合并并行会话的观察
+- `memory_compress` — 由 LLM 驱动的压缩
+- `memory_primer` — 单次调用的上下文引导
+- `memory_visualize` — 交互式图谱查看器
+- `memory_pin` / `memory_unpin` — 按优先级固定
+- `memory_search` — 带过滤器的统一搜索
+- `memory_tag` — 批量标签操作
+- `memory_reflect` — 找出过期或过度连接的条目
+- `memory_promote` — 自动提升低置信度草稿
+- `memory_graph_path` — 条目间的 BFS 最短路径
 
 ### Token 高效格式
 
@@ -235,7 +256,7 @@ toon-memory 兼容 **20+ AI 编程代理**：
 
 MCP 记忆服务器为你的 AI 编程代理提供了真正高效工作所需的持久化记忆。toon-memory 是目前最完整的解决方案：
 
-- **35 个 MCP 工具**实现完整的记忆管理
+- **42 个 MCP 工具**实现完整的记忆管理
 - **Token 高效格式**每会话节省 22%
 - **图感知召回**自动查找相关上下文
 - **20+ 代理支持**零配置设置

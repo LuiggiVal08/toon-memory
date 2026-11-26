@@ -15,7 +15,7 @@ head:
 **toon-memory**는 다음과 같은 기능을 제공하는 MCP 서버입니다:
 
 - **영구 메모리** — 재시작 후에도 유지, 클라우드 불필요
-- **35개 MCP 도구** — Model Context Protocol을 통한 완전한 메모리 관리
+- **42개 MCP 도구** — Model Context Protocol을 통한 완전한 메모리 관리
 - **토큰 효율적 형식** — JSON보다 22% 적은 토큰
 - **그래프 인식 recall** — BM25 + 중심성 + 품질 점수
 - **20개 이상 에이전트 지원** — Claude, Cursor, OpenCode 등과 호환
@@ -39,30 +39,52 @@ AI 에이전트 (Claude/Cursor/OpenCode)
 
 ### MCP 도구
 
-toon-memory는 **35개 MCP 도구**와 **4개 MCP 리소스**를 제공합니다:
+toon-memory는 **42개 MCP 도구**와 **4개 MCP 리소스**를 제공합니다:
 
 | 도구 | 용도 |
 |------|---------|
 | `memory_remember` | 결정, 패턴, 버그, 지식 저장 |
 | `memory_recall` | 메모리 검색 (플랫 또는 그래프 모드) |
-| `memory_smart_recall` | 통합 recall: BM25 + 그래프 + 품질 |
-| `memory_forget` | 항목 삭제 |
+| `memory_smart_recall` | 통합 recall: BM25 + 그래프 + 품질 + 선택적 dense 임베딩 |
+| `memory_forget` | 수명 주기 작업: soft, hard, restore, supersede |
 | `memory_stats` | 메모리 상태 확인 |
 | `memory_summary` | 파일 요약 저장/검색 |
 | `memory_archive` | 오래된 항목 아카이브 |
 | `memory_diff` | 특정 날짜 이후 변경 사항 표시 |
 | `memory_suggest` | 관련 항목 찾기 |
+| `memory_captured` | 훅으로 캡처한 활동 보기 |
+| `memory_checkpoint` | 7d TTL 세션 스냅샷 |
+| `memory_consolidate` | 정리 작업: 중복 제거, 병합, 압축, 버전 폐기 |
+| `memory_encrypt` | AES-256-GCM 암호화 활성화 |
+| `memory_decrypt` | 암호화 비활성화 |
+| `memory_backup` | 타임스탬프 백업 (자동으로 10개까지 정리) |
+| `memory_secret` | 암호화된 시크릿 볼트 (`secrets.toon`) |
+| `memory_export_global` | 메모리를 전역 파일에 공유 |
+| `memory_import_global` | 전역 규칙을 이 프로젝트에 병합 |
+| `memory_export_gist` | 메모리를 GitHub Gist로 내보내기 |
+| `memory_import_gist` | 메모리를 GitHub Gist에서 가져오기 |
+| `memory_merge_sessions` | 세션 간 관찰 병합 |
+| `memory_compress` | LLM 기반 압축 |
+| `memory_primer` | 한 번의 호출로 컨텍스트 프라이머 |
 | `memory_sessions` | 멀티 세션 조율 |
-| `context_brief` | 한 번의 호출로 컨텍스트 브리핑 |
+| `context_brief` | 핸드오프 + 브리핑을 한 번에 |
+| `context_compile` | 작업 중심 컨텍스트 패킷 |
+| `context_hydrate` | 정확한 키 하이드레이트 |
 | `context_generate` | 전체 프로젝트 브리핑 |
 | `context_diff` | 증분 브리핑 |
 | `context_focus` | 초점 브리핑 |
 | `context_health` | 메모리 상태 감사 |
 | `context_export` | 마크다운으로 내보내기 |
-| `memory_encrypt` | AES-256-GCM 암호화 |
-| `memory_decrypt` | 암호화 비활성화 |
-| `memory_captured` | 훅으로 캡처한 활동 보기 |
-| `memory_consolidate` | 중복 항목 병합 |
+| `memory_visualize` | 대화형 그래프 뷰어 |
+| `memory_pin` | 우선순위 1-5로 항목 고정 |
+| `memory_unpin` | 고정 해제 |
+| `memory_search` | 필터가 있는 통합 검색 |
+| `memory_tag` | 일괄 태그 작업 |
+| `memory_feedback` | 명시적 피드백 신호 |
+| `memory_edges` | 타입 엣지 사이드카 |
+| `memory_graph_path` | 그래프에서 BFS 최단 경로 |
+| `memory_reflect` | 오래되었거나 과도하게 연결된 항목 표시 |
+| `memory_promote` | 낮은 신뢰도 초안 자동 승격 |
 
 ## 왜 메모리에 MCP를 사용하나?
 

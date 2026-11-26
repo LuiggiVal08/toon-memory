@@ -18,7 +18,7 @@ Um servidor MCP de memória é um **serviço local** que implementa o Model Cont
 
 O **toon-memory** é o servidor MCP de memória mais completo disponível:
 
-- **35 ferramentas MCP** + 4 recursos
+- **42 ferramentas MCP** + 4 recursos
 - **Suporte a 20+ agentes** — Claude, Cursor, OpenCode e mais
 - **Formato eficiente em tokens** — 22% menos tokens que JSON
 - **Recall consciente de grafo** — BM25 + centralidade + pontuação de qualidade
@@ -72,9 +72,9 @@ Um servidor MCP de memória dá ao seu agente **memória persistente**:
 
 ## Funcionalidades do Servidor MCP de Memória
 
-### 34 Ferramentas MCP
+### 42 Ferramentas MCP
 
-O toon-memory expõe **35 ferramentas MCP** para gerenciamento completo de memória:
+O toon-memory expõe **42 ferramentas MCP** para gerenciamento completo de memória:
 
 **Ferramentas Principais:**
 - `memory_remember` — Salvar decisões, padrões, bugs, conhecimento
@@ -85,6 +85,10 @@ O toon-memory expõe **35 ferramentas MCP** para gerenciamento completo de memó
 
 **Ferramentas de Contexto:**
 - `context_brief` — Briefing de contexto em uma chamada
+- `context_compile` — Pacote de contexto orientado a tarefa
+- `context_hydrate` — Hidratar chaves exatas
+- `memory_feedback` — Sinal de feedback explícito
+- `memory_edges` — Sidecar de arestas tipadas
 - `context_generate` — Briefing completo do projeto
 - `context_diff` — O que mudou desde a última sessão
 - `context_focus` — Briefing hiper-focado
@@ -101,6 +105,23 @@ O toon-memory expõe **35 ferramentas MCP** para gerenciamento completo de memó
 - `memory_consolidate` — Mesclar duplicatas
 - `memory_encrypt` — Criptografia AES-256-GCM
 - `memory_decrypt` — Desativar criptografia
+
+**Ferramentas de Ranking e Fluxo de Trabalho:**
+- `memory_checkpoint` — Snapshot de sessão com TTL de 7d
+- `memory_backup` — Backup com timestamp
+- `memory_secret` — Cofre de segredos criptografado
+- `memory_export_global` / `memory_import_global` — Compartilhar convenções globais
+- `memory_export_gist` / `memory_import_gist` — Sync na nuvem via Gist
+- `memory_merge_sessions` — Mesclar observações de sessões paralelas
+- `memory_compress` — Compressão com LLM
+- `memory_primer` — Primer de contexto em uma chamada
+- `memory_visualize` — Visualizador de grafo interativo
+- `memory_pin` / `memory_unpin` — Fixação por prioridade
+- `memory_search` — Busca unificada com filtros
+- `memory_tag` — Operações de tags em lote
+- `memory_reflect` — Mostrar entradas obsoletas ou superconectadas
+- `memory_promote` — Promover automaticamente rascunhos de baixa confiança
+- `memory_graph_path` — Caminho mais curto (BFS) entre entradas
 
 ### Formato Eficiente em Tokens
 
@@ -235,7 +256,7 @@ Veja a página de [Agentes Suportados](/toon-memory/pt-br/configuration/agents) 
 
 Um servidor MCP de memória dá ao seu agente de codificação com IA a memória persistente de que ele precisa para ser verdadeiramente produtivo. O toon-memory é a solução mais completa disponível:
 
-- **35 ferramentas MCP** para gerenciamento completo de memória
+- **42 ferramentas MCP** para gerenciamento completo de memória
 - **Formato eficiente em tokens** que economiza 22% em cada sessão
 - **Recall consciente de grafo** que encontra contexto relacionado automaticamente
 - **Suporte a 20+ agentes** com configuração zero

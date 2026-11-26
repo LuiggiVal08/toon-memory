@@ -1,6 +1,6 @@
 ---
-title: "35 MCP Tools for Persistent AI Memory"
-description: "35 MCP tools for persistent AI agent memory — memory_remember, memory_recall, memory_smart_recall, context_generate, and more. Token-efficient, graph-aware recall for Claude, Cursor, OpenCode."
+title: "42 MCP Tools for Persistent AI Memory"
+description: "42 MCP tools for persistent AI agent memory — memory_remember, memory_recall, memory_smart_recall, context_compile, memory_feedback, memory_edges, and more. Token-efficient, graph-aware recall for Claude, Cursor, OpenCode."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## Overview
 
-toon-memory provides 35 MCP tools and 4 MCP resources for managing persistent memory:
+toon-memory provides 42 MCP tools and 4 MCP resources for managing persistent memory:
 
 ## Tools
 
@@ -26,6 +26,7 @@ toon-memory provides 35 MCP tools and 4 MCP resources for managing persistent me
 | `memory_suggest` | Find related entries for a given context |
 | `memory_captured` | List activity auto-captured by hooks (opt-in) or clear the log |
 | `memory_checkpoint` | **Session checkpoint**: creates a snapshot of current memory state with 7d TTL. Useful for rollback reference during long sessions |
+| `memory_graph_path` | **BFS shortest path** between two entries in the knowledge graph. Shows how concepts are connected |
 | `memory_consolidate` | **Cleanup ops**, deterministic (no LLM): `mode: "identical"` (default) de-duplicates entries with identical content, `"similar"` merges near-duplicates (Jaccard >50%), `"low-quality"` batch-compresses low-quality entries (`minQuality`, `dryRun`), `"versions"` detects entries describing the same subject at different library versions and retires the older ones in favor of the newest |
 | `memory_encrypt` | Enable AES-256-GCM encryption |
 | `memory_decrypt` | Disable encryption |
@@ -37,6 +38,7 @@ toon-memory provides 35 MCP tools and 4 MCP resources for managing persistent me
 | `memory_import_gist` | Import memory from a GitHub Gist. Merges entries (keeps newer dates, combines tags) |
 | `memory_merge_sessions` | Merge observations from multiple sessions/branches into a consolidated view. Deduplicates and suggests entries to promote |
 | `memory_compress` | **LLM-powered compression**: select entries to compress into one concise entry (two-step: the tool provides context, you provide the summary) |
+| `memory_primer` | **One-call context primer**: top memories + categories + session file changes. Auto-injected at session start |
 | `memory_sessions` | Show active agent sessions, branches, and soft file conflicts for parallel-session coordination |
 | `context_brief` | **One-call context briefing**: memory + sessions + health in compact markdown. With `task`, returns a compiled context packet. Zero LLM |
 | `context_compile` | **Task-driven context compiler**: directives, constraints, retrieved memory, retrieval plan, hydrate keys, files and sessions in one packet |
@@ -46,7 +48,7 @@ toon-memory provides 35 MCP tools and 4 MCP resources for managing persistent me
 | `context_focus` | **Hyper-focused briefing**: only relevant memory + related source files + callers + test files for a query |
 | `context_health` | **Memory health audit**: orphan links, duplicates, broken file refs, expired TTL, stale sessions, score 0–100 |
 | `context_export` | **Export memory as markdown**: injectable context for system prompts (full or compact) |
-| `memory_smart_recall` | Unified search: BM25 + graph + quality + freshness + decay + session bias in one call |
+| `memory_smart_recall` | Unified search: BM25 + graph + quality + freshness + decay + session bias, plus optional dense embeddings (`vectors.bin`), explicit feedback and spread activation, in one call |
 | `memory_visualize` | **Open interactive graph viewer** inline in MCP Apps–compatible hosts. Force-directed graph, stats, timeline, detail panel |
 | `memory_pin` | **Pin an entry** (with priority 1-5): pinned entries always appear at the top of recall results sorted by priority, even without a keyword match |
 | `memory_unpin` | **Unpin an entry**: remove the priority flag |
@@ -68,6 +70,19 @@ Since v3.7.0 every edge in the memory graph carries a type, written as `type:key
 | `supersedes` | Entry that replaces an older one (mirrored on the new entry) | `supersedes:old-key` |
 
 Explicit `links` become `relates:key` edges, `memory_forget(key, action: "supersede")` adds the `superseded_by`/`supersedes` pair, and recall's graph expansion can traverse them — so you can tell *how* entries relate, not just that they do.
+
+## Learned Ranking and Optional Dense Retrieval
+
+Four opt-in sidecars extend recall without changing `data.toon`:
+
+| Sidecar | Enabled by | Purpose |
+|---------|-----------|---------|
+| `feedback.toon` | `memory_feedback` (explicit signals) | Learned per-entry utility (`useful`, `irrelevant`, `outdated`, `wrong`); `wrong` also marks evidence as `conflict` |
+| `edges.toon` | `config.graph.activation = true` or `memory_edges(rebuild)` | Typed edges derived from `links` + feedback; spread activation boosts neighbours of top seeds |
+| `vectors.bin` | `toon-memory dense enable` + `build` | Optional local embeddings via `toon-memory-dense`; install the module locally with `npm install toon-memory-dense`, otherwise recall stays BM25-only |
+| `observations.toon` | capture hooks + `toon-memory sleep` | Opt-in end-of-session consolidation: promote observations, rebuild edges, prune expired signals, dedupe |
+
+`context_compile(task=...)` returns a compact packet with directives, constraints, a retrieval plan and exact `Hydrate` keys; `context_hydrate(keys=[...])` fetches only those entries.
 
 ## MCP Resources
 

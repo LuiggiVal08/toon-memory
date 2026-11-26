@@ -210,7 +210,9 @@ memory_remember   # Guarda decisiones importantes
 | `memory_export_gist` | Exporta entradas de memoria a un GitHub Gist (público o privado). Usa `GITHUB_TOKEN` o `gh` CLI para autenticación |
 | `memory_import_gist` | Importa entradas desde un GitHub Gist. Fusiona con entradas existentes (unión de tags, máxima confianza) |
 | `memory_graph_path` | Camino BFS más corto entre dos entries en el knowledge graph |
-| `context_brief` | **Briefing de contexto en una llamada**: memoria + sesiones + salud en markdown compacto. Usa en lugar de 5-6 llamadas manuales de memory_*. Cero LLM, agregación puramente determinística |
+| `context_brief` | **Handoff + briefing en una llamada**: antepone un paquete de handoff compacto (`identity`, `mcp_project`, `freshness`, directivas, trampas, punteros a archivos) a memoria + sesiones + salud. `handoff: false` devuelve solo el briefing clásico. Cero LLM, determinístico |
+| `context_compile` | **Compilador de contexto orientado a tareas**: directivas, restricciones, memoria recuperada, plan de recuperación, claves `Hydrate`, archivos y sesiones en un solo paquete. Usa al INICIO de cada tarea |
+| `context_hydrate` | **Hidratar por clave**: obtiene entradas exactas de memoria por key/id y las marca como accedidas. Sigue la lista `Hydrate` de `context_compile` |
 | `context_generate` | **Briefing completo del proyecto**: combina estructura del proyecto, estado de git, entradas de memoria y sesiones activas en una llamada. Reemplaza 5-6 llamadas manuales de herramientas |
 | `context_diff` | **Briefing incremental**: commits de git + archivos modificados + memoria nueva/actualizada + sesiones activas desde la última sesión |
 | `context_focus` | **Briefing hiper-enfocado**: solo memoria relevante + archivos fuente relacionados + llamadores + archivos de test para una consulta |
@@ -220,6 +222,8 @@ memory_remember   # Guarda decisiones importantes
 | `memory_unpin` | **Desfija entrada**: elimina la marca de prioridad de una entrada |
 | `memory_search` | **Búsqueda unificada con filtros**: igual que `memory_recall` más filtros de `category`, `tags`, `from_date`, `to_date`. El filtro de tags usa lógica AND — todas las etiquetas deben coincidir. `sessionBias` potencia entradas de la rama git actual |
 | `memory_tag` | **Operaciones por lotes de etiquetas**: `add`, `remove` o `set` etiquetas en una o más entradas por key o id |
+| `memory_feedback` | **Feedback explícito** (`useful`/`irrelevant`/`outdated`/`wrong`) escrito en `feedback.toon`. Entrena la utilidad por entrada; `wrong` también marca la evidencia como `conflict` |
+| `memory_edges` | **Sidecar de aristas tipadas** (`edges.toon`): lista aristas derivadas/aprendidas o las reconstruye desde `links` + feedback. Habilita la activación difusa (spread activation) en el recall |
 
 ### Recursos MCP
 
@@ -693,6 +697,19 @@ El recall es determinístico y offline (sin embeddings, sin LLM). Cada entrada c
 
 En modo `graph`, el recall siembra en coincidencias por palabras clave, expande el subgrafo ego hasta `hops`, y devuelve los top `limit` (defecto 6) por puntaje combinado. `memory_smart_recall` combina todas estas señales en una sola llamada.
 
+### Ranking aprendido, aristas y recuperación densa opcional
+
+Cuatro sidecars opcionales amplían el recall sin modificar `data.toon`:
+
+| Sidecar | Activado por | Propósito |
+|---------|--------------|-----------|
+| `feedback.toon` | `memory_feedback` (siempre activo para señales explícitas) | Utilidad aprendida por entrada (`useful`, `irrelevant`, `outdated`, `wrong`) con decaimiento. `wrong` también marca la evidencia como `conflict`. |
+| `edges.toon` | `config.graph.activation = true` o `memory_edges(rebuild)` | Aristas tipadas derivadas de `links` + tareas de feedback. La activación difusa refuerza a los vecinos de las mejores semillas. |
+| `vectors.bin` | `toon-memory dense enable` + `build` | Embeddings locales opcionales vía `toon-memory-dense`. Instala el módulo localmente en cada proyecto con `npm install toon-memory-dense`; se recurre a BM25 si faltan el módulo o el modelo. |
+| `observations.toon` | Hooks de captura + `toon-memory sleep` | Consolidación opcional al final de la sesión: promover observaciones, reconstruir aristas, podar señales expiradas, deduplicar. |
+
+`context_compile(task=...)` convierte la memoria recuperada en un paquete compacto con directivas, restricciones, un plan de recuperación y claves `Hydrate` exactas. `context_hydrate(keys=[...])` obtiene solo esas entradas.
+
 ### Auto-tag desde dependencias del proyecto
 
 En `toon-memory init`, el CLI escanea tus manifiestos de dependencias y escribe una tabla `vocab` en `.toon-memory/memory/config.json`:
@@ -842,6 +859,9 @@ npx toon-memory viewer --export # Guarda el visualizador como HTML estático
 npx toon-memory viewer --port 3001 # Puerto personalizado
 npx toon-memory watch [opciones] # Backup automático con opciones
 npx toon-memory upgrade      # Actualiza a la última versión
+npx toon-memory sleep        # Consolidación determinística (opt-in)
+npx toon-memory dense status # Estado de los embeddings opcionales
+npx toon-memory dense enable && npx toon-memory dense build
 npx toon-memory uninstall    # Elimina de todos los agentes
 ```
 
@@ -941,6 +961,24 @@ El instalador (requiere terminal):
 5. Configurará servidor MCP, archivos de instrucciones y hooks automáticamente
 
 > Sin una terminal (CI/pipes) `npx toon-memory` imprime la ayuda de instalación no interactiva. Usa `npx toon-memory init [local|global]` para instalar sin preguntas. Comandos desconocidos imprimen uso y salen con error.
+
+### Flags de configuración de memoria
+
+Todos los flags están en `.toon-memory/memory/config.json` y son opcionales:
+
+```json
+{
+  "feedback": { "implicit": false },
+  "graph": { "activation": false },
+  "sleep": { "enabled": false },
+  "dense": { "enabled": false, "model": "multilingual-e5-small" }
+}
+```
+
+- `feedback.implicit` está reservado; hoy solo los eventos explícitos de `memory_feedback` afectan al ranking.
+- `graph.activation` habilita la activación difusa sobre `edges.toon` (reconstruye con `memory_edges(action="rebuild")`).
+- `sleep.enabled` (o `TOON_MEMORY_SLEEP=1`) ejecuta la consolidación al evento `Stop` de la sesión.
+- `dense.enabled` habilita `vectors.bin`; instala el embedder localmente en cada proyecto con `npm install toon-memory-dense` (`npx toon-memory dense install` imprime el comando). `TOON_MEMORY_DENSE_MODULE` anula la ruta del módulo. Si falta algo, el recall sigue siendo solo BM25.
 
 ### OpenCode
 
@@ -1318,8 +1356,8 @@ toon-memory/
 │   │   ├── setup.ts             # Comandos CLI
 │   │   └── toon-memory.ts       # Ejecutor CLI
 │   ├── mcp/
-│   │   ├── server.ts            # Servidor MCP (35 herramientas + 4 recursos + 1 prompt)
-│   │   ├── tools.ts             # Registro de herramientas (35 herramientas)
+│   │   ├── server.ts            # Servidor MCP (42 herramientas + 4 recursos + 1 prompt)
+│   │   ├── tools.ts             # Registro de herramientas (42 herramientas)
 │   │   ├── resources.ts         # Registro de recursos (4 recursos)
 │   │   ├── prompts.ts           # Registro de prompts (1 prompt)
 │   │   ├── session-store.ts     # Capa de sesiones (auto-promote, limpieza)

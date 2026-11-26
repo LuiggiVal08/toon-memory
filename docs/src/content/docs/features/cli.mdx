@@ -1,6 +1,6 @@
 ---
 title: "CLI Commands — Manage AI Agent Memory from Terminal"
-description: "CLI commands for toon-memory — install, init, stats, export, import, watch mode. Manage persistent AI agent memory from the terminal."
+description: "CLI commands for toon-memory — install, init, stats, export, import, watch, sleep and optional dense retrieval. Manage persistent AI agent memory from the terminal."
 head:
   - tag: meta
     attrs:
@@ -24,6 +24,10 @@ npx toon-memory import <file> # Import memory from JSON
 npx toon-memory viewer [opts] # Open the memory graph viewer (HTTP server)
 npx toon-memory watch [opts] # Auto-backup with options
 npx toon-memory upgrade      # Update to latest version
+npx toon-memory sleep        # Deterministic consolidation (opt-in)
+npx toon-memory dense status # Optional embeddings status
+npx toon-memory dense enable && npx toon-memory dense build
+npx toon-memory dense install # Prints the local embedder install command
 npx toon-memory uninstall    # Remove from all agents
 ```
 
@@ -49,6 +53,23 @@ npx toon-memory uninstall    # Remove from all agents
 | `-c, --compress` | Enable gzip compression | off |
 | `-l, --log [path]` | Enable file logging | off |
 | `-m, --max-backups <n>` | Max backups to keep (0=unlimited) | 10 |
+
+## Dense Retrieval (optional)
+
+`dense status` shows the configured model, module path and vector state. `dense enable` writes `config.dense.enabled = true`; `dense build` creates `vectors.bin` from current memory entries.
+
+Install the embedder **locally in each project** where the MCP server runs:
+
+```bash
+npm install toon-memory-dense
+npx toon-memory dense build
+```
+
+`npx toon-memory dense install` only prints this command. Set `TOON_MEMORY_DENSE_MODULE=/absolute/path/to/module.js` if the module is not on the default resolution path. If the module or model is unavailable, recall stays BM25-only.
+
+## End-of-session consolidation
+
+`toon-memory sleep` deterministically promotes captured observations, rebuilds `edges.toon`, prunes expired signals and deduplicates entries. Set `config.sleep.enabled = true` or `TOON_MEMORY_SLEEP=1` to run it on session `Stop`; it is opt-in.
 
 ## Examples
 

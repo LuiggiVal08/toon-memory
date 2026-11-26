@@ -255,7 +255,9 @@ memory_remember   # 重要な意思決定を保存
 | `memory_export_gist` | エントリを GitHub Gist（公開/非公開）にエクスポート。GITHUB_TOKEN または gh CLI を使用 |
 | `memory_import_gist` | GitHub Gist からエントリをインポート。既存エントリとマージ（タグ联合、最大信頼度） |
 | `memory_graph_path` | ナレッジグラフ内の2つのエントリ間のBFS最短経路 |
-| `context_brief` | **ワンコールコンテキストブリーフィング**：メモリ＋セッション＋ヘルスをコンパクトマークダウンで提供。5〜6回の個別`memory_*`呼び出しの代替。LLM不使用、純粋な決定論的集約 |
+| `context_brief` | **ワンコールのハンドオフ＋ブリーフィング**：メモリ＋セッション＋ヘルスの前にコンパクトなハンドオフパケット（`identity`、`mcp_project`、`freshness`、指示、落とし穴、ファイル参照）を付加。`handoff: false`は従来のブリーフィングのみを返します。LLM不使用、決定論的 |
+| `context_compile` | **タスク駆動型コンテキストコンパイラ**：指示、制約、取得したメモリ、取得計画、`Hydrate`キー、ファイルとセッションを1つのパケットにまとめます。タスク開始時に使用 |
+| `context_hydrate` | **キーでハイドレート**：キー/IDで正確なメモリエントリを取得し、アクセス済みとしてマークします。`context_compile`の`Hydrate`リストに従ってください |
 | `context_generate` | **完全プロジェクトブリーフィング**：プロジェクト構造、git状態、メモリエントリ、アクティブセッションを1回の呼び出しで統合。5〜6回の手動ツール呼び出しの代替 |
 | `context_diff` | **インクリメンタルブリーフィング**：gitコミット＋変更ファイル＋新規/更新メモリ＋前回セッション以降のアクティブセッション |
 | `context_focus` | **高度にフォーカスされたブリーフィング**：クエリにのみ関連するメモリ＋関連ソースファイル＋呼び出し元＋テストファイル |
@@ -265,6 +267,8 @@ memory_remember   # 重要な意思決定を保存
 | `memory_unpin` | **エントリのピン留めを解除**：優先度フラグを削除 |
 | `memory_search` | **フィルター付き統一検索**：`memory_recall`と同じ機能に加え、`category`、`tags`、`from_date`、`to_date`フィルター。タグフィルターはAND論理 — 指定したすべてのタグが一致する必要があります。`sessionBias`で現在のgitブランチのエントリをブースト |
 | `memory_tag` | **一括タグ操作**: キーまたはIDで1つ以上のエントリにタグを追加、削除、設定 |
+| `memory_feedback` | **明示的フィードバック**（`useful`/`irrelevant`/`outdated`/`wrong`）を`feedback.toon`に書き込みます。エントリごとの有用性を学習し、`wrong`はエビデンスも`conflict`としてマークします |
+| `memory_edges` | **型付きエッジのサイドカー**（`edges.toon`）：派生／学習済みエッジを一覧表示、`links`＋フィードバックから再構築。リコール時のスプレッドアクティベーションを有効化します |
 
 ### MCPリソース
 
@@ -738,6 +742,19 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 
 `graph`モードでは、キーワード一致からシードを開始し、`hops`の範囲でエゴサブグラフを展開し、スコアの上位`limit`（デフォルト6）を返します。`memory_smart_recall`はこれらのシグナルをすべて1回の呼び出しで組み合わせます。
 
+### 学習済みランキング、エッジ、オプションの密度検索
+
+4つのオプトインサイドカーが、`data.toon`を変更せずにリコールを拡張します：
+
+| サイドカー | 有効化するもの | 目的 |
+|-----------|----------------|------|
+| `feedback.toon` | `memory_feedback`（明示的なシグナルでは常に有効） | 減衰付きのエントリごとの学習済み有用性（`useful`、`irrelevant`、`outdated`、`wrong`）。`wrong`はエビデンスも`conflict`に設定します。 |
+| `edges.toon` | `config.graph.activation = true` または `memory_edges(rebuild)` | `links`＋フィードバック作業から派生した型付きエッジ。スプレッドアクティベーションが上位シードの隣接ノードを強化します。 |
+| `vectors.bin` | `toon-memory dense enable` ＋ `build` | `toon-memory-dense`によるオプションのローカル埋め込み。各プロジェクトに`npm install toon-memory-dense`でモジュールをローカルインストールしてください。モジュールやモデルがない場合はBM25にフォールバックします。 |
+| `observations.toon` | キャプチャフック＋`toon-memory sleep` | セッション終了時のオプトイン統合：観測の昇格、エッジの再構築、期限切れシグナルの削除、重複排除。 |
+
+`context_compile(task=...)`は取得したメモリを、指示、制約、取得計画、正確な`Hydrate`キーを含むコンパクトなパケットに変換します。`context_hydrate(keys=[...])`はそのエントリのみを取得します。
+
 ### プロジェクト依存関係からの自動タグ
 
 `toon-memory init`でCLIが依存関係マニフェストをスキャンし、`.toon-memory/memory/config.json`に`vocab`テーブルを書き込みます：
@@ -887,6 +904,9 @@ npx toon-memory viewer --export # ビューアーを静的HTMLとして保存
 npx toon-memory viewer --port 3001 # カスタムポート
 npx toon-memory watch [options] # オプション付き自動バックアップ
 npx toon-memory upgrade      # 最新バージョンに更新
+npx toon-memory sleep        # 決定論的な統合（オプトイン）
+npx toon-memory dense status # オプションの埋め込みの状態
+npx toon-memory dense enable && npx toon-memory dense build
 npx toon-memory uninstall    # 全エージェントから削除
 ```
 
@@ -986,6 +1006,24 @@ npx toon-memory
 5. MCPサーバー、設定ファイル、フックを自動的に設定
 
 > ターミナルがない場合（CI/パイプ）、`npx toon-memory`は非対話型インストールヘルプを表示します。`npx toon-memory init [local|global]`でプロンプトなしでインストールできます。不明なコマンドは使用方法を表示し、エラーで終了します。
+
+### メモリ設定フラグ
+
+すべてのフラグは`.toon-memory/memory/config.json`にあり、任意です：
+
+```json
+{
+  "feedback": { "implicit": false },
+  "graph": { "activation": false },
+  "sleep": { "enabled": false },
+  "dense": { "enabled": false, "model": "multilingual-e5-small" }
+}
+```
+
+- `feedback.implicit`は予約済みです。現在は明示的な`memory_feedback`イベントのみがランキングに影響します。
+- `graph.activation`は`edges.toon`上でスプレッドアクティベーションを有効化します（`memory_edges(action="rebuild")`で再構築）。
+- `sleep.enabled`（または`TOON_MEMORY_SLEEP=1`）はセッションの`Stop`イベントで統合を実行します。
+- `dense.enabled`は`vectors.bin`を有効化します。各プロジェクトに`npm install toon-memory-dense`で埋め込みモジュールをローカルインストールしてください（`npx toon-memory dense install`がコマンドを表示します）。`TOON_MEMORY_DENSE_MODULE`でモジュールパスを上書きできます。何かが不足していれば、リコールはBM25のみのままです。
 
 ### OpenCode
 
@@ -1363,8 +1401,8 @@ toon-memory/
 │   │   ├── setup.ts             # CLIコマンド
 │   │   └── toon-memory.ts       # CLIランナー
 │   ├── mcp/
-│   │   ├── server.ts            # MCPサーバー（35ツール＋4リソース＋1プロンプト）
-│   │   ├── tools.ts             # ツール登録（35ツール）
+│   │   ├── server.ts            # MCPサーバー（42ツール＋4リソース＋1プロンプト）
+│   │   ├── tools.ts             # ツール登録（42ツール）
 │   │   ├── resources.ts         # リソース登録（4リソース）
 │   │   ├── prompts.ts           # プロンプト登録（1プロンプト）
 │   │   ├── session-store.ts     # セッションレイヤー（自動昇格、クリーンアップ）

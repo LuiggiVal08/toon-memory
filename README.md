@@ -771,7 +771,7 @@ Four opt-in sidecars extend recall without changing `data.toon`:
 |---------|-----------|---------|
 | `feedback.toon` | `memory_feedback` (always on for explicit signals) | Learned per-entry utility (`useful`, `irrelevant`, `outdated`, `wrong`) with decay. `wrong` also sets evidence to `conflict`. |
 | `edges.toon` | `config.graph.activation = true` or `memory_edges(rebuild)` | Typed edges derived from `links` + feedback tasks. Spread activation boosts neighbours of top seeds. |
-| `vectors.bin` | `toon-memory dense enable` + `build` | Optional local embeddings via `toon-memory-dense`. Falls back to BM25 when the module or model is unavailable. |
+| `vectors.bin` | `toon-memory dense enable` + `build` | Optional local embeddings via `toon-memory-dense`. Install the module locally in each project with `npm install toon-memory-dense`; falls back to BM25 when the module or model is unavailable. |
 | `observations.toon` | capture hooks + `toon-memory sleep` | Opt-in end-of-session consolidation: promote observations, rebuild edges, prune expired signals, dedupe. |
 
 `context_compile(task=...)` turns the retrieved memory into a compact packet with directives, constraints, a retrieval plan and exact `Hydrate` keys. `context_hydrate(keys=[...])` fetches only those entries.
@@ -1044,7 +1044,7 @@ All flags live in `.toon-memory/memory/config.json` and are optional:
 - `feedback.implicit` is reserved; only explicit `memory_feedback` events affect ranking today.
 - `graph.activation` enables spread activation over `edges.toon` (rebuild with `memory_edges(action="rebuild")`).
 - `sleep.enabled` (or `TOON_MEMORY_SLEEP=1`) runs consolidation on session `Stop`.
-- `dense.enabled` enables `vectors.bin`; install the embedder with `npx toon-memory dense install`. `TOON_MEMORY_DENSE_MODULE` overrides the module path. If anything is missing, recall stays BM25-only.
+- `dense.enabled` enables `vectors.bin`; install the embedder locally in each project with `npm install toon-memory-dense` (`npx toon-memory dense install` prints the command). `TOON_MEMORY_DENSE_MODULE` overrides the module path. If anything is missing, recall stays BM25-only.
 
 ### OpenCode
 

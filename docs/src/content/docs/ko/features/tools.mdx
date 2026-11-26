@@ -1,6 +1,6 @@
 ---
-title: "AI 에이전트 영구 메모리를 위한 35개 MCP 도구"
-description: "AI 에이전트 영구 메모리를 위한 35개 MCP 도구 — memory_remember, memory_recall, memory_smart_recall, context_generate 등. Claude, Cursor, OpenCode를 위한 토큰 효율적이고 그래프 인식 검색."
+title: "AI 에이전트 영구 메모리를 위한 42개 MCP 도구"
+description: "AI 에이전트 영구 메모리를 위한 42개 MCP 도구 — memory_remember, memory_recall, memory_smart_recall, context_compile, memory_feedback, memory_edges 등. Claude, Cursor, OpenCode를 위한 토큰 효율적이고 그래프 인식 검색."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## 개요
 
-toon-memory는 영구 메모리를 관리하기 위한 35개의 MCP 도구와 4개의 MCP 리소스를 제공합니다:
+toon-memory는 영구 메모리를 관리하기 위한 42개의 MCP 도구와 4개의 MCP 리소스를 제공합니다:
 
 ## 도구
 
@@ -18,7 +18,7 @@ toon-memory는 영구 메모리를 관리하기 위한 35개의 MCP 도구와 4�
 |------|------|
 | `memory_remember` | 결정, 패턴, 버그, 지식 또는 **warning**("하지 마세요" 부정적 메모리, 리콜 부스트 포함) 저장 (선택적 TTL, 자동 태그 추론, `links`, 자동 품질 점수, 중복 병합, 신뢰도, 선택적 `importance`: `critical`/`high`/`medium`/`low`) |
 | `memory_recall` | 메모리 검색 (파일 읽기 전에 사용, 만료된 TTL 필터링). `mode: "graph"`는 더 높은 정확도를 위해 관계 인식 서브그래프를 확장합니다. 순위는 RRF 융합(BM25×3 + 그래프 중심성, 적응형 k)을 사용합니다. `rrf: false`로 기존 선형 점수를 사용할 수 있습니다. `sessionBias`는 현재 git 브랜치의 항목에 부스트를 줍니다. `pathScope`는 결과를 파일 경로로 제한합니다 (globMatch 지원). `budget`: `"tiny"`(상위 3), `"normal"`(상위 10) 또는 `"deep"`(상위 20). `as_of`는 특정 시점 이후에 superseded된 항목을 다시 포함합니다. `explain: true`는 항목별 이유 줄을 추가합니다 (왜 가져왔는지). `budget_tokens`는 예상 토큰 수로 출력을 제한합니다 (`0` = 제한 없음). `mode: "index"`는 내용 없이 항목별 한 줄(key, id, 카테고리, 날짜, 관련성 %)을 나열하며, `ids`는 id/key로 항목을 일괄 가져옵니다 (순서 유지) |
-| `memory_forget` | 키 또는 id로 항목 삭제 |
+| `memory_forget` | key 또는 id별 **라이프사이클 작업**: `action: "soft"`(기본값)는 폐기로 표시, `"hard"`는 영구 삭제, `"restore"`는 활성 복귀, `"supersede"`는 `new_key`로의 `superseded_by` 링크와 함께 은퇴 |
 | `memory_stats` | 메모리 상태 확인 (TTL 통계, 품질 분포, 품질/접근 임계값 아래의 콜드 메모리와 함께 **적중률/중복/폐기** 지표: 최소 1회 리콜된 항목 %, 완전 동일 콘텐츠 %, obsolete 항목 % 포함) |
 | `memory_summary` | 파일 요약 저장/조회 |
 | `memory_archive` | 오래된 항목 (>30일) 및 만료된 TTL 항목 아카이브 |
@@ -26,24 +26,51 @@ toon-memory는 영구 메모리를 관리하기 위한 35개의 MCP 도구와 4�
 | `memory_suggest` | 주어진 컨텍스트와 관련된 항목 검색 |
 | `memory_captured` | 훅이 자동으로 캡처한 활동 목록 (선택 사항) 또는 로그 지우기 |
 | `memory_checkpoint` | **세션 체크포인트**: 7d TTL로 현재 메모리 상태의 스냅샷 생성. 긴 세션 중 롤백 참조에 유용 |
+| `memory_graph_path` | 두 항목 사이의 **최단 경로(BFS)**. 지식 그래프에서 개념이 어떻게 연결되는지 표시 |
 | `memory_consolidate` | **정리 작업**, 결정론적 (LLM 없음): `mode: "identical"`(기본값)은 동일한 내용의 항목 중복을 제거하고, `"similar"`는 유사한 중복(Jaccard >50%)을 병합하며, `"low-quality"`는 저품질 항목을 일괄 압축합니다(`minQuality`, `dryRun`), `"versions"`는 다른 라이브러리 버전에서 같은 주제를 설명하는 항목을 감지하고 이전 항목을 최신 항목 대신 은퇴시킵니다 |
 | `memory_encrypt` | AES-256-GCM 암호화 활성화 |
 | `memory_decrypt` | 암호화 비활성화 |
 | `memory_backup` | 메모리 파일의 타임스탬프 백업 생성 (최근 10개로 자동 정리) |
+| `memory_secret` | **암호화된 시크릿 볼트**(`secrets.toon`, AES-256-GCM): `store`/`get`/`list`/`forget`. `data.toon`은 읽기 가능하게 유지하면서 민감한 값은 저장 시 암호화된 상태로 보관. `TOON_MEMORY_KEY` 필요 |
+| `memory_export_global` | 현재 프로젝트 메모리를 전역 파일(`~/.toon-memory/memory/global.toon`)에 기록. 프로젝트 간 규칙을 한 번에 공유 |
+| `memory_import_global` | 전역 파일의 프로젝트 간 규칙을 이 프로젝트로 병합(일회성, 결정론적, 오프라인). `merge: false`는 대체 |
+| `memory_export_gist` | 클라우드 동기화를 위해 메모리를 비공개 GitHub Gist로 내보내기. 환경 변수 `GITHUB_TOKEN` 필요 |
+| `memory_import_gist` | GitHub Gist에서 메모리 가져오기. 항목을 병합(최신 날짜 유지, 태그 결합) |
+| `memory_merge_sessions` | 여러 세션/브랜치의 관찰을 통합 뷰로 병합. 중복 제거 및 승격할 항목 제안 |
+| `memory_compress` | **LLM 기반 압축**: 간결한 한 항목으로 압축할 항목 선택(2단계: 도구가 컨텍스트를 제공하고, 사용자가 요약을 제공) |
+| `memory_primer` | **한 번의 호출로 컨텍스트 프라이머**: 상위 메모리 + 카테고리 + 세션 파일 변경. 세션 시작 시 자동 주입 |
 | `memory_sessions` | 활성 에이전트 세션, 브랜치 및 소프트 파일 충돌 표시 (병렬 세션 조정용) |
-| `context_brief` | **원 호출 컨텍스트 브리핑**: 메모리 + 세션 + 상태를 압축된 마크다운으로 제공. 5-6개의 별도 memory_* 호출 대신 사용. LLM 없음 |
+| `context_brief` | **원 호출 컨텍스트 브리핑**: 메모리 + 세션 + 상태를 압축된 마크다운으로 제공. `task`와 함께 사용하면 컴파일된 컨텍스트 패킷을 반환. LLM 없음 |
+| `context_compile` | **작업 중심 컨텍스트 컴파일러**: 지시문, 제약 조건, 검색된 메모리, 검색 계획, hydrate 키, 파일과 세션을 하나의 패킷에 |
+| `context_hydrate` | **키로 하이드레이션**: key/id로 정확한 메모리 항목을 가져와 접근 완료로 표시 |
 | `context_generate` | **전체 프로젝트 브리핑**: 프로젝트 구조, git 상태, 메모리 항목 및 활성 세션을 하나의 호출로 결합. 5-6개의 수동 도구 호출 대체 |
 | `context_diff` | **증분 브리핑**: git 커밋 + 수정된 파일 + 신규/업데이트된 메모리 + 이전 세션 이후 활성 세션 |
 | `context_focus` | **하이퍼 초점 브리핑**: 쿼리에 관련된 메모리 + 소스 파일 + 호출자 + 테스트 파일만 |
 | `context_health` | **메모리 상태 감사**: 고아 링크, 중복, 깨진 파일 참조, 만료된 TTL, 오래된 세션, 점수 0-100 |
 | `context_export` | **메모리를 마크다운으로 내보내기**: 시스템 프롬프트용 주입 가능한 컨텍스트 (전체 또는 압축) |
-| `memory_smart_recall` | 통합 검색: BM25 + 그래프 + 품질 + 신선도 + 감쇠 + 세션 편향을 하나의 호출로 결합. `explain: true`로 항목별 이유를 추가하고 `budget_tokens`로 출력 상한을 지정할 수 있습니다 |
-| `memory_pin` | **Pin an entry**: pinned entries always appear at the top of recall results, even without a keyword match |
-| `memory_unpin` | **Unpin an entry**: remove the pinned flag |
-| `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
-| `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
+| `memory_smart_recall` | 통합 검색: BM25 + 그래프 + 품질 + 신선도 + 감쇠에 더해 선택적 밀도 임베딩(`vectors.bin`), 명시적 피드백, 스프레드 활성화를 한 번의 호출로 결합 |
+| `memory_visualize` | **인터랙티브 그래프 뷰어 열기** MCP Apps 호환 호스트에 인라인 표시. 포스 다이렉티드 그래프, 통계, 타임라인, 상세 패널 |
+| `memory_pin` | **항목 고정**(우선순위 1-5): 고정된 항목은 키워드 일치가 없어도 우선순위별로 정렬된 검색 결과의 맨 위에 항상 표시됨 |
+| `memory_unpin` | **고정 해제**: 항목의 고정 플래그 제거 |
+| `memory_search` | **필터가 있는 통합 검색**: `memory_recall`과 동일하지만 `category`, `tags`, `from_date`, `to_date` 필터 추가. 태그 필터는 AND 논리를 사용 — 지정된 모든 태그가 일치해야 함. `sessionBias`는 현재 git 브랜치의 항목에 부스트를 줌 |
+| `memory_tag` | **태그 일괄 작업**: key 또는 id로 하나 이상의 항목의 태그를 `add`, `remove` 또는 `set` |
+| `memory_feedback` | **명시적 피드백**(`useful`/`irrelevant`/`outdated`/`wrong`)을 `feedback.toon`에 기록. 항목별 효용을 학습. `wrong`는 증거도 `conflict`로 표시 |
+| `memory_edges` | **타입 지정 엣지 사이드카**(`edges.toon`): `links` + 피드백에서 `list` 또는 `rebuild`. 검색 시 선택적 스프레드 활성화를 가능하게 함 |
 | `memory_reflect` | **메모리 반성**: 항목을 노후화·품질·과잉 연결별로 결정적으로 순위를 매겨 주의나 정리가 필요한 것을 드러냅니다. LLM 없음 |
 | `memory_promote` | **초안 자동 승격**: 낮은 신뢰도의 항목을 결정적으로 활성 상태로 승격(임계값 0.65, Jaccard 중복 제거 > 0.5, 기본 `dryRun`) |
+
+## 학습된 순위와 선택적 밀도 검색
+
+네 가지 옵트인 사이드카가 `data.toon`을 변경하지 않고 검색을 확장합니다:
+
+| 사이드카 | 활성화 방법 | 목적 |
+|---------|------------|------|
+| `feedback.toon` | `memory_feedback`(명시적 신호) | 항목별 학습된 효용(`useful`, `irrelevant`, `outdated`, `wrong`); `wrong`는 증거도 `conflict`로 표시 |
+| `edges.toon` | `config.graph.activation = true` 또는 `memory_edges(rebuild)` | `links` + 피드백에서 파생된 타입 지정 엣지; 스프레드 활성화가 상위 시드의 이웃에 부스트를 줌 |
+| `vectors.bin` | `toon-memory dense enable` + `build` | `toon-memory-dense`를 통한 선택적 로컬 임베딩. 로컬에 `npm install toon-memory-dense`로 모듈을 설치하지 않으면 검색은 BM25 전용 |
+| `observations.toon` | 캡처 훅 + `toon-memory sleep` | 세션 종료 시 옵트인 통합: 관찰 승격, 엣지 재구축, 만료된 신호 정리, 중복 제거 |
+
+`context_compile(task=...)`은 지시문, 제약 조건, 검색 계획, 정확한 `Hydrate` 키가 포함된 간결한 패킷을 반환하며, `context_hydrate(keys=[...])`는 해당 항목만 가져옵니다.
 
 ## MCP 리소스
 
@@ -54,6 +81,7 @@ toon-memory는 영구 메모리를 관리하기 위한 35개의 MCP 도구와 4�
 | 메모리 항목 | `toon://memory/entries` | 전체 메모리 덤프 |
 | 메모리 통계 | `toon://memory/stats` | 카테고리별 개수 및 TTL 정보 |
 | 메모리 요약 | `toon://memory/summaries` | 자동 생성 시스템 프라이머: 지식 맵, 최근 메모리 및 주요 결정 사항 |
+| 메모리 그래프 뷰어 | `ui://viewer` | MCP Apps 호환 호스트에 인라인으로 렌더링되는 인터랙티브 D3.js 포스 그래프 |
 
 리소스를 사용하면 에이전트가 도구 호출 없이 컨텍스트로 메모리를 읽을 수 있습니다 — 시스템 프롬프트나 세션 시작 시 유용합니다. 시스템 프라이머는 프로젝트의 지식 상태에 대한 즉각적인 컨텍스트를 제공합니다.
 

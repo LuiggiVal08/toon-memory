@@ -257,7 +257,9 @@ memory_remember   # 중요한 결정 저장
 | `memory_export_gist` | 항목을 GitHub Gist(공개/비공개)로 내보내기. GITHUB_TOKEN 또는 gh CLI 사용 |
 | `memory_import_gist` | GitHub Gist에서 항목 가져오기. 기존 항목과 병합(태그 합집합, 최대 신뢰도) |
 | `memory_graph_path` | 지식 그래프에서 두 항목 간의 BFS 최단 경로. 개념이 어떻게 연결되는지 보여줌 |
-| `context_brief` | **원 호출 컨텍스트 브리핑**: 컴팩트 마크다운에 메모리 + 세션 + 건강 상태. 별도의 5-6개 memory_* 호출 대신 사용. LLM 불필요, 순수 결정론적 집계 |
+| `context_brief` | **원 호출 핸드오프 + 브리핑**: 메모리 + 세션 + 건전성 앞에 컴팩트한 핸드오프 패킷(`identity`, `mcp_project`, `freshness`, 지시, 함정, 파일 포인터)을 붙입니다. `handoff: false`는 기존 브리핑만 반환. LLM 불필요, 결정론적 |
+| `context_compile` | **작업 중심 컨텍스트 컴파일러**: 지시, 제약, 검색된 메모리, 검색 계획, `Hydrate` 키, 파일과 세션을 하나의 패킷으로 제공. 작업 시작 시 사용 |
+| `context_hydrate` | **키로 하이드레이션**: 키/ID로 정확한 메모리 항목을 가져와 접근 완료로 표시합니다. `context_compile`의 `Hydrate` 목록을 따르세요 |
 | `context_generate` | **전체 프로젝트 브리핑**: 프로젝트 구조, git 상태, 메모리 항목, 활성 세션을 하나의 호출로 결합. 5-6개의 수동 도구 호출 대체 |
 | `context_diff` | **증분 브리핑**: git 커밋 + 수정된 파일 + 신규/업데이트된 메모리 + 이전 세션 이후 활성 세션 |
 | `context_focus` | **집중 브리핑**: 쿼리에 관련된 메모리 + 소스 파일 + 호출자 + 테스트 파일만 반환 |
@@ -267,6 +269,8 @@ memory_remember   # 중요한 결정 저장
 | `memory_unpin` | **항목 핀 해제**: 우선순위 플래그 제거 |
 | `memory_search` | **필터가 있는 통합 검색**: `memory_recall`과 동일한 기능에 `category`, `tags`, `from_date`, `to_date` 필터 추가. 태그 필터는 AND 논리 사용 — 지정된 모든 태그가 일치해야 함. `budget`은 출력 상세도 제어. `path_scope`는 glob 패턴으로 필터링. `sessionBias`는 현재 git 브랜치의 항목 부스트 |
 | `memory_tag` | **일괄 태그 작업**: 키 또는 ID로 하나 이상의 항목에 태그 추가, 제거 또는 설정 |
+| `memory_feedback` | **명시적 피드백**(`useful`/`irrelevant`/`outdated`/`wrong`)을 `feedback.toon`에 기록. 항목별 유용성을 학습하며, `wrong`은 증거를 `conflict`로 표시 |
+| `memory_edges` | **타입 엣지 사이드카**(`edges.toon`): 파생/학습된 엣지를 나열하거나 `links` + 피드백에서 재구성. 리콜에서 확산 활성화를 활성화 |
 
 ### MCP 리소스
 
@@ -740,6 +744,19 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 
 `graph` 모드에서 리콜은 키워드 매치를 시드로 사용하고, ego-서브그래프를 `hops`까지 확장한 다음, 합산 점수 기준 상위 `limit`(기본값 6)을 반환합니다. `memory_smart_recall`은 이 모든 신호를 하나의 호출로 결합합니다.
 
+### 학습된 순위, 엣지, 선택적 밀집 검색
+
+4개의 선택적 사이드카가 `data.toon`을 변경하지 않고 리콜을 확장합니다:
+
+| 사이드카 | 활성화 방법 | 용도 |
+|---------|------------|------|
+| `feedback.toon` | `memory_feedback` (명시적 신호는 항상 활성) | 감쇠가 적용된 항목별 학습 유용성(`useful`, `irrelevant`, `outdated`, `wrong`). `wrong`은 증거도 `conflict`로 표시합니다. |
+| `edges.toon` | `config.graph.activation = true` 또는 `memory_edges(rebuild)` | `links` + 피드백 작업에서 파생된 타입 엣지. 확산 활성화가 상위 시드의 이웃을 강화합니다. |
+| `vectors.bin` | `toon-memory dense enable` + `build` | `toon-memory-dense`를 통한 선택적 로컬 임베딩. 각 프로젝트에 `npm install toon-memory-dense`로 모듈을 로컬 설치하세요. 모듈이나 모델이 없으면 BM25로 폴백합니다. |
+| `observations.toon` | 캡처 훅 + `toon-memory sleep` | 세션 종료 시 선택적 통합: 관찰 승격, 엣지 재구성, 만료된 신호 가지치기, 중복 제거. |
+
+`context_compile(task=...)`은 검색된 메모리를 지시, 제약, 검색 계획, 정확한 `Hydrate` 키가 포함된 컴팩트 패킷으로 변환합니다. `context_hydrate(keys=[...])`는 해당 항목만 가져옵니다.
+
 ### 프로젝트 의존성으로 자동 태깅
 
 `toon-memory init` 시 CLI가 의존성 매니페스트를 스캔하고 `.toon-memory/memory/config.json`에 `vocab` 테이블을 작성합니다:
@@ -889,6 +906,9 @@ npx toon-memory viewer --export # 뷰어를 정적 HTML로 저장
 npx toon-memory viewer --port 3001 # 사용자 지정 포트
 npx toon-memory watch [options] # 옵션과 함께 자동 백업
 npx toon-memory upgrade      # 최신 버전으로 업데이트
+npx toon-memory sleep        # 결정론적 통합 (선택적)
+npx toon-memory dense status # 선택적 임베딩 상태 확인
+npx toon-memory dense enable && npx toon-memory dense build
 npx toon-memory uninstall    # 모든 에이전트에서 제거
 ```
 
@@ -988,6 +1008,24 @@ npx toon-memory
 5. MCP 서버, 설명서 파일, 훅을 자동으로 설정
 
 > 터미널이 없는 경우(CI/파이프) `npx toon-memory`는 비인터랙티브 설치 도움말을 출력합니다. 프롬프트 없이 설치하려면 `npx toon-memory init [local|global]`을 사용하세요. 알 수 없는 명령어는 사용법을 출력하고 오류로 종료됩니다.
+
+### 메모리 설정 플래그
+
+모든 플래그는 `.toon-memory/memory/config.json`에 있으며 선택 사항입니다:
+
+```json
+{
+  "feedback": { "implicit": false },
+  "graph": { "activation": false },
+  "sleep": { "enabled": false },
+  "dense": { "enabled": false, "model": "multilingual-e5-small" }
+}
+```
+
+- `feedback.implicit`는 예약됨; 현재는 명시적 `memory_feedback` 이벤트만 순위에 영향을 줍니다.
+- `graph.activation`은 `edges.toon`에서 확산 활성화를 켭니다 (`memory_edges(action="rebuild")`로 재구성).
+- `sleep.enabled` (또는 `TOON_MEMORY_SLEEP=1`)는 세션 `Stop` 이벤트에서 통합을 실행합니다.
+- `dense.enabled`는 `vectors.bin`을 활성화합니다. 각 프로젝트에 `npm install toon-memory-dense`로 임베더를 로컬 설치하세요 (`npx toon-memory dense install`이 명령을 출력합니다). `TOON_MEMORY_DENSE_MODULE`은 모듈 경로를 덮어씁니다. 무언가 누락되면 리콜은 BM25 전용으로 유지됩니다.
 
 ### OpenCode
 
@@ -1365,8 +1403,8 @@ toon-memory/
 │   │   ├── setup.ts             # CLI 명령어
 │   │   └── toon-memory.ts       # CLI 러너
 │   ├── mcp/
-│   │   ├── server.ts            # MCP 서버 (도구 35개 + 리소스 4개 + 프롬프트 1개)
-│   │   ├── tools.ts             # 도구 등록 (도구 35개)
+│   │   ├── server.ts            # MCP 서버 (도구 42개 + 리소스 4개 + 프롬프트 1개)
+│   │   ├── tools.ts             # 도구 등록 (도구 42개)
 │   │   ├── resources.ts         # 리소스 등록 (리소스 4개)
 │   │   ├── prompts.ts           # 프롬프트 등록 (프롬프트 1개)
 │   │   ├── session-store.ts     # 세션 계층 (자동 승격, 정리)

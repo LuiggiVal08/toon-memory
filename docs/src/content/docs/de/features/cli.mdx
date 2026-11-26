@@ -1,6 +1,6 @@
 ---
 title: "CLI-Befehle — AI-Agent-Speicher aus dem Terminal verwalten"
-description: "CLI-Befehle für toon-memory — install, init, stats, export, import, watch-Modus. Verwalte den persistenten AI-Agent-Speicher aus dem Terminal."
+description: "CLI-Befehle für toon-memory — install, init, stats, export, import, watch, sleep und optionales Dense-Retrieval. Verwalte den persistenten AI-Agent-Speicher aus dem Terminal."
 head:
   - tag: meta
     attrs:
@@ -23,6 +23,10 @@ npx toon-memory export       # Speicher als JSON exportieren
 npx toon-memory import <file> # Speicher aus JSON importieren
 npx toon-memory watch [opts] # Automatische Sicherung mit Optionen
 npx toon-memory upgrade      # Auf neueste Version aktualisieren
+npx toon-memory sleep        # Deterministische Konsolidierung (opt-in)
+npx toon-memory dense status # Status der optionalen Embeddings
+npx toon-memory dense enable && npx toon-memory dense build
+npx toon-memory dense install # Gibt den Installationsbefehl für den lokalen Embedder aus
 npx toon-memory uninstall    # Von allen Agenten entfernen
 ```
 
@@ -41,6 +45,23 @@ npx toon-memory uninstall    # Von allen Agenten entfernen
 | `-c, --compress` | gzip-Komprimierung aktivieren | aus |
 | `-l, --log [path]` | Dateiprotokollierung aktivieren | aus |
 | `-m, --max-backups <n>` | Max. Sicherungen behalten (0=unbegrenzt) | 10 |
+
+## Dense-Retrieval (optional)
+
+`dense status` zeigt das konfigurierte Modell, den Modulpfad und den Vektorstatus. `dense enable` schreibt `config.dense.enabled = true`; `dense build` erstellt `vectors.bin` aus den aktuellen Speichereinträgen.
+
+Installiere den Embedder **lokal in jedem Projekt**, in dem der MCP-Server läuft:
+
+```bash
+npm install toon-memory-dense
+npx toon-memory dense build
+```
+
+`npx toon-memory dense install` gibt nur diesen Befehl aus. Falls das Modul nicht im Standard-Auflösungspfad liegt, setze `TOON_MEMORY_DENSE_MODULE=/absoluter/pfad/zu/module.js`. Wenn Modul oder Modell nicht verfügbar sind, bleibt der Recall auf BM25 beschränkt.
+
+## Konsolidierung am Sitzungsende
+
+`toon-memory sleep` fördert deterministisch erfasste Beobachtungen, baut `edges.toon` neu auf, bereinigt abgelaufene Signale und entfernt doppelte Einträge. Setze `config.sleep.enabled = true` oder `TOON_MEMORY_SLEEP=1`, um dies beim `Stop` der Sitzung auszuführen; es ist opt-in.
 
 ## Beispiele
 

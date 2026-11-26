@@ -1,6 +1,6 @@
 ---
-title: "37 Ferramentas MCP para Memória Persistente de IA"
-description: "35 ferramentas MCP para memória persistente de agentes IA — memory_remember, memory_recall, memory_smart_recall, context_generate e mais. Recall eficiente em tokens e baseado em grafo para Claude, Cursor, OpenCode."
+title: "42 Ferramentas MCP para Memória Persistente de IA"
+description: "42 ferramentas MCP para memória persistente de agentes IA — memory_remember, memory_recall, memory_smart_recall, context_compile, memory_feedback, memory_edges e mais. Recall eficiente em tokens e baseado em grafo para Claude, Cursor, OpenCode."
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## Visão Geral
 
-O toon-memory fornece 35 ferramentas MCP e 4 recursos MCP para gerenciar memória persistente:
+O toon-memory fornece 42 ferramentas MCP e 4 recursos MCP para gerenciar memória persistente:
 
 ## Ferramentas
 
@@ -18,7 +18,7 @@ O toon-memory fornece 35 ferramentas MCP e 4 recursos MCP para gerenciar memóri
 |------------|-----------|
 | `memory_remember` | Salva uma decisão, padrão, bug, conhecimento ou **warning** (memória negativa "NÃO faça isso", recuperada com impulso) (TTL opcional, inferência automática de tags, `links`, pontuação de qualidade automática, merge-dedup, confiança, `importance` opcional: `critical`/`high`/`medium`/`low`) |
 | `memory_recall` | Busca na memória (use ANTES de ler arquivos, filtra TTL expirado). `mode: "graph"` expande um subgrafo consciente de relacionamentos para maior precisão. O ranking usa fusão RRF (BM25×3 + centralidade do grafo, k adaptativo); use `rrf: false` para o score linear legado. `sessionBias` impulsiona entradas do branch git atual. `pathScope` limita os resultados a um caminho de arquivo (suporta globMatch). `budget`: `"tiny"` (top 3), `"normal"` (top 10) ou `"deep"` (top 20). `as_of` re-inclui entradas superseded depois de uma data específica. `explain: true` anexa uma linha de motivo por entrada (por que foi recuperada). `budget_tokens` limita a saída por contagem de tokens estimada (`0` = sem limite). `mode: "index"` lista uma linha por entrada (key, id, categoria, data, % de relevância) sem conteúdo; `ids` busca entradas por id/key em lote, preservando a ordem |
-| `memory_forget` | Remove uma entrada por chave ou id |
+| `memory_forget` | **Operações de ciclo de vida** por chave ou id: `action: "soft"` (padrão) marca como obsoleta, `"hard"` remove permanentemente, `"restore"` reativa, `"supersede"` aposenta com um link `superseded_by` para `new_key` |
 | `memory_stats` | Visualiza o estado da memória (incluindo estatísticas de TTL, distribuição de qualidade, memórias frias abaixo dos limiares de qualidade/acesso e métricas de **hit-rate/duplicatas/obsoletas**: % de entradas recuperadas pelo menos uma vez, % de duplicatas de conteúdo exato, % de entradas obsoletas) |
 | `memory_summary` | Salva/recupera resumos de arquivos |
 | `memory_archive` | Arquiva entradas antigas (>30 dias) e entradas com TTL expirado |
@@ -26,24 +26,51 @@ O toon-memory fornece 35 ferramentas MCP e 4 recursos MCP para gerenciar memóri
 | `memory_suggest` | Encontra entradas relacionadas para um dado contexto |
 | `memory_captured` | Lista atividade capturada automaticamente por hooks (ativação opcional) ou limpa o log |
 | `memory_checkpoint` | **Ponto de verificação**: cria um snapshot do estado atual da memória com TTL de 7d. Útil para referência de rollback durante sessões longas |
+| `memory_graph_path` | **Caminho mais curto (BFS)** entre duas entradas no grafo de conhecimento. Mostra como os conceitos estão conectados |
 | `memory_consolidate` | **Operações de limpeza**, determinísticas (sem LLM): `mode: "identical"` (padrão) deduplica entradas com conteúdo idêntico, `"similar"` mescla quase-duplicatas (Jaccard >50%), `"low-quality"` comprime em lote entradas de baixa qualidade (`minQuality`, `dryRun`), `"versions"` detecta entradas descrevendo o mesmo assunto em versões diferentes de bibliotecas e aposenta as mais antigas em favor da mais nova |
 | `memory_encrypt` | Ativa criptografia AES-256-GCM |
 | `memory_decrypt` | Desativa criptografia |
 | `memory_backup` | Cria backup com timestamp do arquivo de memória (poda automática para os 10 mais recentes) |
+| `memory_secret` | **Cofre de segredos criptografado** (`secrets.toon`, AES-256-GCM): `store`/`get`/`list`/`forget`. Mantém `data.toon` legível enquanto valores sensíveis permanecem criptografados em repouso. Requer `TOON_MEMORY_KEY` |
+| `memory_export_global` | Gravar a memória atual do projeto no arquivo global (`~/.toon-memory/memory/global.toon`). Compartilhamento único de convenções entre projetos |
+| `memory_import_global` | Mesclar convenções de outros projetos do arquivo global neste projeto (uma vez, determinístico, offline). `merge: false` substitui em vez de mesclar |
+| `memory_export_gist` | Exportar memória para um Gist privado do GitHub para sincronização na nuvem. Requer a variável de ambiente `GITHUB_TOKEN` |
+| `memory_import_gist` | Importar memória de um Gist do GitHub. Mescla entradas (mantém as datas mais recentes, combina tags) |
+| `memory_merge_sessions` | Mesclar observações de várias sessões/branchs em uma visão consolidada. Deduplica e sugere entradas para promoção |
+| `memory_compress` | **Compressão com LLM**: selecione entradas para comprimir em uma única entrada concisa (duas etapas: a ferramenta fornece o contexto, você fornece o resumo) |
+| `memory_primer` | **Primer de contexto em uma chamada**: melhores memórias + categorias + alterações de arquivos da sessão. Injetado automaticamente no início da sessão |
 | `memory_sessions` | Mostra sessões ativas de agentes, branches e conflitos suaves de arquivos para coordenação entre sessões paralelas |
-| `context_brief` | **Briefing de contexto em uma chamada**: memória + sessões + saúde em markdown compacto. Use no lugar de 5-6 chamadas memory_* separadas. Zero LLM |
+| `context_brief` | **Briefing de contexto em uma chamada**: memória + sessões + saúde em markdown compacto. Com `task`, retorna um pacote de contexto compilado. Zero LLM |
+| `context_compile` | **Compilador de contexto orientado a tarefas**: diretrizes, restrições, memória recuperada, plano de recuperação, chaves hydrate, arquivos e sessões em um único pacote |
+| `context_hydrate` | **Hidratar por chave**: busca entradas exatas por key/id e as marca como acessadas |
 | `context_generate` | **Briefing completo do projeto**: combina estrutura do projeto, estado do git, entradas de memória e sessões ativas em uma chamada. Substitui 5-6 chamadas manuais de ferramentas |
 | `context_diff` | **Briefing incremental**: commits git + arquivos modificados + memória nova/atualizada + sessões ativas desde a última sessão |
 | `context_focus` | **Briefing hiper-focado**: apenas memória relevante + arquivos-fonte relacionados + chamadores + arquivos de teste para uma consulta |
 | `context_health` | **Auditoria de saúde da memória**: links órfãos, duplicatas, referências quebradas a arquivos, TTL expirado, sessões obsoletas, pontuação 0–100 |
 | `context_export` | **Exporta memória como markdown**: contexto injetável para system prompts (completo ou compacto) |
-| `memory_smart_recall` | Busca unificada: BM25 + grafo + qualidade + atualidade + decaimento + viés de sessão em uma chamada. `explain: true` anexa motivos por entrada; `budget_tokens` limita a saída |
-| `memory_pin` | **Pin an entry**: pinned entries always appear at the top of recall results, even without a keyword match |
-| `memory_unpin` | **Unpin an entry**: remove the pinned flag |
-| `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
-| `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
+| `memory_smart_recall` | Busca unificada: BM25 + grafo + qualidade + atualidade + decaimento + viés de sessão em uma chamada, além de embeddings densos opcionais (`vectors.bin`), feedback explícito e ativação por propagação |
+| `memory_visualize` | **Abrir o visualizador de grafo interativo** inline em hosts compatíveis com MCP Apps. Grafo de forças, estatísticas, linha do tempo, painel de detalhes |
+| `memory_pin` | **Fixar uma entrada** (com prioridade 1-5): entradas fixadas sempre aparecem no topo dos resultados de recall ordenados por prioridade, mesmo sem correspondência de palavra-chave |
+| `memory_unpin` | **Desafixar uma entrada**: remove a marca de prioridade |
+| `memory_search` | **Busca unificada com filtros**: igual a `memory_recall` mais os filtros `category`, `tags`, `from_date`, `to_date`. O filtro de tags usa lógica AND — todas as tags especificadas devem corresponder. `sessionBias` impulsiona entradas do branch git atual |
+| `memory_tag` | **Operações de tags em lote**: `add`, `remove` ou `set` tags em uma ou mais entradas por chave ou id |
+| `memory_feedback` | **Feedback explícito** (`useful`/`irrelevant`/`outdated`/`wrong`) gravado em `feedback.toon`. Treina a utilidade por entrada; `wrong` também marca a evidência como `conflict` |
+| `memory_edges` | **Arquivo sidecar de arestas tipadas** (`edges.toon`): `list` ou `rebuild` de arestas a partir de `links` + feedback. Habilita a ativação por propagação opcional no recall |
 | `memory_reflect` | **Reflexão de memória**: classifica entradas de forma determinística por obsolescência, qualidade e sobre-conexão para revelar o que precisa de atenção ou limpeza. Zero LLM |
 | `memory_promote` | **Auto-promover rascunhos**: promove entradas de baixa confiança para ativas de forma determinística (limiar 0.65, dedup Jaccard > 0.5, `dryRun` por padrão) |
+
+## Ranking aprendido e recuperação densa opcional
+
+Quatro sidecars opcionais ampliam o recall sem alterar `data.toon`:
+
+| Sidecar | Ativado por | Finalidade |
+|---------|-------------|------------|
+| `feedback.toon` | `memory_feedback` (sinais explícitos) | Utilidade aprendida por entrada (`useful`, `irrelevant`, `outdated`, `wrong`); `wrong` também marca a evidência como `conflict` |
+| `edges.toon` | `config.graph.activation = true` ou `memory_edges(rebuild)` | Arestas tipadas derivadas de `links` + feedback; a ativação por propagação impulsiona os vizinhos das melhores sementes |
+| `vectors.bin` | `toon-memory dense enable` + `build` | Embeddings locais opcionais via `toon-memory-dense`; instale o módulo localmente com `npm install toon-memory-dense`, caso contrário o recall permanece apenas BM25 |
+| `observations.toon` | hooks de captura + `toon-memory sleep` | Consolidação opcional ao final da sessão: promover observações, reconstruir arestas, podar sinais expirados, deduplicar |
+
+`context_compile(task=...)` retorna um pacote compacto com diretrizes, restrições, um plano de recuperação e chaves `Hydrate` exatas; `context_hydrate(keys=[...])` busca apenas essas entradas.
 
 ## Recursos MCP
 
@@ -54,6 +81,7 @@ A memória também é exposta como recursos MCP para leitura direta de contexto:
 | Entradas de Memória | `toon://memory/entries` | Despejo completo da memória |
 | Estatísticas de Memória | `toon://memory/stats` | Contagens por categoria e informações de TTL |
 | Resumos de Memória | `toon://memory/summaries` | Preparação do sistema gerada automaticamente: mapa de conhecimento, memórias recentes e decisões-chave |
+| Visualizador do grafo de memória | `ui://viewer` | Grafo de forças D3.js interativo renderizado inline em qualquer host compatível com MCP Apps |
 
 Os recursos permitem que os agentes leiam a memória como contexto sem invocação de ferramentas — útil para system prompts ou início de sessão. A preparação do sistema fornece contexto instantâneo sobre o estado de conhecimento do seu projeto.
 

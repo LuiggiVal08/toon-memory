@@ -1,6 +1,6 @@
 ---
 title: "CLI 命令 — 从终端管理 AI 代理记忆"
-description: "toon-memory CLI 命令 — install、init、stats、export、import、watch 模式。从终端管理持久化 AI 代理记忆。"
+description: "toon-memory CLI 命令 — install、init、stats、export、import、watch、sleep 和可选稠密检索。从终端管理持久化 AI 代理记忆。"
 head:
   - tag: meta
     attrs:
@@ -23,6 +23,10 @@ npx toon-memory export       # 将记忆导出为 JSON
 npx toon-memory import <file> # 从 JSON 导入记忆
 npx toon-memory watch [opts] # 自动备份，支持选项
 npx toon-memory upgrade      # 更新到最新版本
+npx toon-memory sleep        # 确定性整合（可选启用）
+npx toon-memory dense status # 查看可选嵌入的状态
+npx toon-memory dense enable && npx toon-memory dense build
+npx toon-memory dense install # 打印本地嵌入模块的安装命令
 npx toon-memory uninstall    # 从所有代理中移除
 ```
 
@@ -41,6 +45,23 @@ npx toon-memory uninstall    # 从所有代理中移除
 | `-c, --compress` | 启用 gzip 压缩 | 关闭 |
 | `-l, --log [path]` | 启用文件日志 | 关闭 |
 | `-m, --max-backups <n>` | 保留的最大备份数（0=无限制） | 10 |
+
+## 稠密检索（可选）
+
+`dense status` 显示配置的模型、模块路径和向量状态。`dense enable` 写入 `config.dense.enabled = true`；`dense build` 从当前记忆条目创建 `vectors.bin`。
+
+在 MCP 服务器运行的**每个项目中本地**安装嵌入模块：
+
+```bash
+npm install toon-memory-dense
+npx toon-memory dense build
+```
+
+`npx toon-memory dense install` 只打印此命令。如果模块不在默认解析路径中，请设置 `TOON_MEMORY_DENSE_MODULE=/绝对路径/module.js`。如果模块或模型不可用，召回仍仅限 BM25。
+
+## 会话结束整合
+
+`toon-memory sleep` 确定性地提升捕获的观察、重建 `edges.toon`、清理过期信号并对条目去重。设置 `config.sleep.enabled = true` 或 `TOON_MEMORY_SLEEP=1` 可在会话 `Stop` 时运行；该功能是可选启用的。
 
 ## 示例
 

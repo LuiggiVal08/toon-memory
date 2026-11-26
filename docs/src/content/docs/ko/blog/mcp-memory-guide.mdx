@@ -18,7 +18,7 @@ MCP 메모리 서버는 Model Context Protocol (MCP)을 구현하여 AI 코딩 �
 
 **toon-memory**는 현재 사용 가능한 가장 완전한 MCP 메모리 서버입니다:
 
-- **35개 MCP 도구** + 4개 리소스
+- **42개 MCP 도구** + 4개 리소스
 - **20개 이상 에이전트 지원** — Claude, Cursor, OpenCode 등
 - **토큰 효율적 형식** — JSON보다 22% 적은 토큰
 - **그래프 인식 recall** — BM25 + 중심성 + 품질 점수
@@ -72,9 +72,9 @@ MCP 메모리 서버는 에이전트에게 **영구 메모리**를 제공합니�
 
 ## MCP 메모리 서버 기능
 
-### 35개 MCP 도구
+### 42개 MCP 도구
 
-toon-memory는 완전한 메모리 관리를 위해 **35개 MCP 도구**를 제공합니다:
+toon-memory는 완전한 메모리 관리를 위해 **42개 MCP 도구**를 제공합니다:
 
 **핵심 도구:**
 - `memory_remember` — 결정, 패턴, 버그, 지식 저장
@@ -85,6 +85,10 @@ toon-memory는 완전한 메모리 관리를 위해 **35개 MCP 도구**를 제�
 
 **컨텍스트 도구:**
 - `context_brief` — 한 번의 호출로 컨텍스트 브리핑
+- `context_compile` — 작업 중심 컨텍스트 패킷
+- `context_hydrate` — 정확한 키 하이드레이트
+- `memory_feedback` — 명시적 피드백 신호
+- `memory_edges` — 타입 엣지 사이드카
 - `context_generate` — 전체 프로젝트 브리핑
 - `context_diff` — 마지막 세션 이후 변경 사항
 - `context_focus` — 초점 브리핑
@@ -101,6 +105,23 @@ toon-memory는 완전한 메모리 관리를 위해 **35개 MCP 도구**를 제�
 - `memory_consolidate` — 중복 항목 병합
 - `memory_encrypt` — AES-256-GCM 암호화
 - `memory_decrypt` — 암호화 비활성화
+
+**랭킹 및 워크플로 도구:**
+- `memory_checkpoint` — 7d TTL 세션 스냅샷
+- `memory_backup` — 타임스탬프 백업
+- `memory_secret` — 암호화된 시크릿 볼트
+- `memory_export_global` / `memory_import_global` — 전역 규칙 공유
+- `memory_export_gist` / `memory_import_gist` — Gist를 통한 클라우드 동기화
+- `memory_merge_sessions` — 병렬 세션 관찰 병합
+- `memory_compress` — LLM 기반 압축
+- `memory_primer` — 한 번의 호출로 컨텍스트 프라이머
+- `memory_visualize` — 대화형 그래프 뷰어
+- `memory_pin` / `memory_unpin` — 우선순위 고정
+- `memory_search` — 필터가 있는 통합 검색
+- `memory_tag` — 일괄 태그 작업
+- `memory_reflect` — 오래되었거나 과도하게 연결된 항목 표시
+- `memory_promote` — 낮은 신뢰도 초안 자동 승격
+- `memory_graph_path` — 항목 간 BFS 최단 경로
 
 ### 토큰 효율적 형식
 
@@ -235,7 +256,7 @@ toon-memory는 **20개 이상의 AI 코딩 에이전트**와 작동합니다:
 
 MCP 메모리 서버는 AI 코딩 에이전트에게 진정한 생산성을 위한 영구 메모리를 제공합니다. toon-memory는 현재 사용 가능한 가장 완전한 솔루션입니다:
 
-- 완전한 메모리 관리를 위한 **35개 MCP 도구**
+- 완전한 메모리 관리를 위한 **42개 MCP 도구**
 - 매 세션마다 22%를 절약하는 **토큰 효율적 형식**
 - 관련 컨텍스트를 자동으로 찾는 **그래프 인식 recall**
 - 제로 설정으로 **20개 이상 에이전트 지원**

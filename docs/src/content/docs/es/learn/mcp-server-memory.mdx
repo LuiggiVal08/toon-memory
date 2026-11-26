@@ -10,7 +10,7 @@ Un servidor MCP para memoria es un **servicio local** que implementa el Model Co
 **toon-memory** es un servidor MCP que proporciona:
 
 - **Memoria persistente** — sobrevive reinicios, sin nube necesaria
-- **35 herramientas MCP** — gestión completa de memoria vía Model Context Protocol
+- **42 herramientas MCP** — gestión completa de memoria vía Model Context Protocol
 - **Formato eficiente en tokens** — 22% menos tokens que JSON
 - **Recall basado en grafo** — BM25 + centralidad + puntuación de calidad
 - **Soporte para 20+ agentes** — funciona con Claude, Cursor, OpenCode, y más
@@ -34,30 +34,52 @@ Tu Agente de IA (Claude/Cursor/OpenCode)
 
 ### Herramientas MCP
 
-toon-memory expone **35 herramientas MCP** y **4 recursos MCP**:
+toon-memory expone **42 herramientas MCP** y **4 recursos MCP**:
 
 | Herramienta | Propósito |
 |-------------|-----------|
 | `memory_remember` | Guardar decisiones, patrones, bugs, conocimiento |
 | `memory_recall` | Buscar memoria (modo flat o graph) |
-| `memory_smart_recall` | Recall unificado: BM25 + grafo + calidad |
-| `memory_forget` | Eliminar entradas |
+| `memory_smart_recall` | Recall unificado: BM25 + grafo + calidad + embeddings densos opcionales |
+| `memory_forget` | Operaciones de ciclo de vida: soft, hard, restore, supersede |
 | `memory_stats` | Ver estado de la memoria |
 | `memory_summary` | Guardar/obtener resúmenes de archivos |
 | `memory_archive` | Archivar entradas antiguas |
 | `memory_diff` | Mostrar cambios desde una fecha |
 | `memory_suggest` | Encontrar entradas relacionadas |
+| `memory_captured` | Ver actividad capturada por hooks |
+| `memory_checkpoint` | Instantánea de sesión con TTL de 7d |
+| `memory_consolidate` | Operaciones de limpieza: dedupe, merge, compress, retirar versiones |
+| `memory_encrypt` | Habilitar encriptación AES-256-GCM |
+| `memory_decrypt` | Deshabilitar encriptación |
+| `memory_backup` | Backup con marca de tiempo (podado automático a 10) |
+| `memory_secret` | Bóveda de secretos encriptada (`secrets.toon`) |
+| `memory_export_global` | Compartir memoria con el archivo global |
+| `memory_import_global` | Fusionar convenciones globales en este proyecto |
+| `memory_export_gist` | Exportar memoria a un Gist de GitHub |
+| `memory_import_gist` | Importar memoria desde un Gist de GitHub |
+| `memory_merge_sessions` | Fusionar observaciones entre sesiones |
+| `memory_compress` | Compresión con LLM |
+| `memory_primer` | Primer de contexto en una llamada |
 | `memory_sessions` | Coordinación multi-sesión |
-| `context_brief` | Resumen de contexto en una llamada |
+| `context_brief` | Handoff + resumen en una llamada |
+| `context_compile` | Paquete de contexto basado en tareas |
+| `context_hydrate` | Hidratar claves exactas |
 | `context_generate` | Resumen completo del proyecto |
 | `context_diff` | Resumen incremental |
 | `context_focus` | Resumen hiper-enfocado |
 | `context_health` | Auditoría de salud de memoria |
 | `context_export` | Exportar como markdown |
-| `memory_encrypt` | Encriptación AES-256-GCM |
-| `memory_decrypt` | Deshabilitar encriptación |
-| `memory_captured` | Ver actividad capturada por hooks |
-| `memory_consolidate` | Fusionar duplicados |
+| `memory_visualize` | Visor de grafo interactivo |
+| `memory_pin` | Fijar entrada con prioridad 1-5 |
+| `memory_unpin` | Desfijar entrada |
+| `memory_search` | Búsqueda unificada con filtros |
+| `memory_tag` | Operaciones de etiquetado por lotes |
+| `memory_feedback` | Señal de feedback explícita |
+| `memory_edges` | Sidecar de aristas tipadas |
+| `memory_graph_path` | Ruta más corta (BFS) en el grafo |
+| `memory_reflect` | Mostrar entradas obsoletas o sobreconectadas |
+| `memory_promote` | Promover automáticamente borradores de baja confianza |
 
 ## Por Qué MCP para Memoria?
 

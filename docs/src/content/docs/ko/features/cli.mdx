@@ -1,6 +1,6 @@
 ---
 title: "CLI 명령어 — 터미널에서 AI 에이전트 메모리 관리"
-description: "toon-memory CLI 명령어 — 설치, 초기화, 통계, 내보내기, 가져오기, watch 모드. 터미널에서 AI 에이전트 영구 메모리를 관리하세요."
+description: "toon-memory CLI 명령어 — 설치, 초기화, 통계, 내보내기, 가져오기, watch, sleep 및 선택적 dense retrieval. 터미널에서 AI 에이전트 영구 메모리를 관리하세요."
 head:
   - tag: meta
     attrs:
@@ -23,6 +23,10 @@ npx toon-memory export       # 메모리를 JSON으로 내보내기
 npx toon-memory import <file> # JSON에서 메모리 가져오기
 npx toon-memory watch [opts] # 옵션과 함께 자동 백업
 npx toon-memory upgrade      # 최신 버전으로 업데이트
+npx toon-memory sleep        # 결정적 통합 (옵트인)
+npx toon-memory dense status # 선택적 임베딩 상태
+npx toon-memory dense enable && npx toon-memory dense build
+npx toon-memory dense install # 로컬 임베더 설치 명령 출력
 npx toon-memory uninstall    # 모든 에이전트에서 제거
 ```
 
@@ -41,6 +45,23 @@ npx toon-memory uninstall    # 모든 에이전트에서 제거
 | `-c, --compress` | gzip 압축 활성화 | 꺼짐 |
 | `-l, --log [path]` | 파일 로깅 활성화 | 꺼짐 |
 | `-m, --max-backups <n>` | 유지할 최대 백업 수 (0=무제한) | 10 |
+
+## Dense Retrieval (선택 사항)
+
+`dense status`는 구성된 모델, 모듈 경로, 벡터 상태를 표시합니다. `dense enable`은 `config.dense.enabled = true`를 기록하고, `dense build`는 현재 메모리 항목에서 `vectors.bin`을 생성합니다.
+
+MCP 서버가 실행되는 **각 프로젝트에 로컬로** 임베더를 설치하세요:
+
+```bash
+npm install toon-memory-dense
+npx toon-memory dense build
+```
+
+`npx toon-memory dense install`은 이 명령만 출력합니다. 모듈이 기본 해석 경로에 없다면 `TOON_MEMORY_DENSE_MODULE=/module.js의/절대/경로`를 설정하세요. 모듈이나 모델을 사용할 수 없으면 recall은 BM25만 사용합니다.
+
+## 세션 종료 시 통합
+
+`toon-memory sleep`은 캡처된 관찰을 결정적으로 승격하고, `edges.toon`을 다시 빌드하며, 만료된 신호를 정리하고, 항목 중복을 제거합니다. 세션 `Stop` 시 실행하려면 `config.sleep.enabled = true` 또는 `TOON_MEMORY_SLEEP=1`을 설정하세요. 옵트인입니다.
 
 ## 예제
 

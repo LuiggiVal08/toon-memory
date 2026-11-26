@@ -1,6 +1,6 @@
 ---
-title: "永続AIメモリ向けの35個のMCPツール"
-description: "永続AIエージェントメモリ向けの35個のMCPツール — memory_remember、memory_recall、memory_smart_recall、context_generateなど。Claude、Cursor、OpenCode向けのトークン効率の高いグラフ対応リコール。"
+title: "永続AIメモリ向けの42個のMCPツール"
+description: "永続AIエージェントメモリ向けの42個のMCPツール — memory_remember、memory_recall、memory_smart_recall、context_compile、memory_feedback、memory_edgesなど。Claude、Cursor、OpenCode向けのトークン効率の高いグラフ対応リコール。"
 head:
   - tag: meta
     attrs:
@@ -10,7 +10,7 @@ head:
 
 ## 概要
 
-toon-memoryは永続メモリを管理するための35個のMCPツールと4つのMCPリソースを提供します：
+toon-memoryは永続メモリを管理するための42個のMCPツールと4つのMCPリソースを提供します：
 
 ## ツール
 
@@ -18,7 +18,7 @@ toon-memoryは永続メモリを管理するための35個のMCPツールと4つ
 |------|-------------|
 | `memory_remember` | 決定、パターン、バグ、ナレッジ、または**warning**（「これはやらない」否定的メモリ、リコールブースト付き）を保存（任意のTTL、自動タグ推論、`links`、自動品質スコア、マージ重複排除、信頼度、任意の`importance`: `critical`/`high`/`medium`/`low`） |
 | `memory_recall` | メモリを検索（ファイルを読む前に使用。期限切れTTLをフィルタ）。`mode: "graph"`で関係性を考慮したサブグラフを展開し、より高い精度を実現。ランキングはRRF融合（BM25×3 + グラフ中心性、適応的k）を使用。`rrf: false`で従来の線形スコアに。`sessionBias`は現在のgitブランチのエントリをブースト。`pathScope`は結果をファイルパスにスコープ（globMatch対応）。`budget`: `"tiny"`（上位3）、`"normal"`（上位10）、`"deep"`（上位20）。`as_of`は指定日以降にsupersededされたエントリを再包含。`explain: true`は取得理由の行をエントリごとに追加。`budget_tokens`は推定トークン数による出力制限（`0`＝制限なし）。`mode: "index"`はエントリごとに1行（key、id、カテゴリ、日付、関連性%）を内容なしで表示。`ids`でid/key指定の一括取得（順序保持） |
-| `memory_forget` | **ライフサイクル操作**: `action: "soft"`（デフォルト）でobsoleteに、`"hard"`で完全削除、`"restore"`で復元、`"supersede"`で`new_key`への`superseded_by`リンク付き置き換え。正規のライフサイクルツール |
+| `memory_forget` | **ライフサイクル操作**：`action: "soft"`（デフォルト）でobsoleteに、`"hard"`で完全削除、`"restore"`で復元、`"supersede"`は`new_key`への`superseded_by`リンク付きで旧エントリを退役させます |
 | `memory_stats` | メモリの状態を表示（TTL統計、品質分布、品質/アクセスしきい値未満のコールドメモリ、および**ヒット率/重複/廃止**メトリクス（少なくとも1回リコールされたエントリの%、完全一致コンテンツの%、obsoleteエントリの%）を含む） |
 | `memory_summary` | ファイルサマリーの保存/取得 |
 | `memory_archive` | 古いエントリ（30日以上）と期限切れTTLエントリをアーカイブ |
@@ -26,24 +26,51 @@ toon-memoryは永続メモリを管理するための35個のMCPツールと4つ
 | `memory_suggest` | 特定のコンテキストに関連するエントリを検索 |
 | `memory_captured` | フックによって自動キャプチャされたアクティビティを一覧表示（オプトイン）またはログをクリア |
 | `memory_checkpoint` | **セッションチェックポイント**: 現在のメモリ状態のスナップショットを7d TTLで作成。長時間セッション中のロールバック参照に便利 |
+| `memory_graph_path` | **2つのエントリ間の最短パス（BFS）**。ナレッジグラフ内で概念がどのように結びついているかを表示 |
 | `memory_consolidate` | **クリーンアップ操作**、決定論的（LLM不使用）: `mode: "identical"`（デフォルト）で同一内容を重複排除、`"similar"`で近似重複をマージ（Jaccard >50%）、`"low-quality"`で低品質エントリを一括圧縮（`minQuality`、`dryRun`）、`"versions"`は同じ主題を異なるライブラリバージョンで説明するエントリを検出し、古い方を新しい方のために退役させます |
 | `memory_encrypt` | AES-256-GCM暗号化を有効化 |
 | `memory_decrypt` | 暗号化を無効化 |
 | `memory_backup` | メモリファイルのタイムスタンプ付きバックアップを作成（最新10件に自動プルーン） |
+| `memory_secret` | **暗号化シークレット保管庫**（`secrets.toon`、AES-256-GCM）：`store`/`get`/`list`/`forget`。`data.toon`は読み取り可能に保ちつつ、機密値は保存時に暗号化。`TOON_MEMORY_KEY`が必要 |
+| `memory_export_global` | 現在のプロジェクトメモリをグローバルファイル（`~/.toon-memory/memory/global.toon`）に書き出す。プロジェクト間規約を一度だけ共有 |
+| `memory_import_global` | グローバルファイルからプロジェクト間規約をこのプロジェクトにマージ（一度だけ、決定的、オフライン）。`merge: false`で置換 |
+| `memory_export_gist` | メモリをプライベートGitHub Gistにエクスポートしてクラウド同期。環境変数`GITHUB_TOKEN`が必要 |
+| `memory_import_gist` | GitHub Gistからメモリをインポート。エントリをマージ（新しい日付を保持し、タグを結合） |
+| `memory_merge_sessions` | 複数セッション/ブランチの観測を統合ビューにマージ。重複排除し、昇格候補を提案 |
+| `memory_compress` | **LLMによる圧縮**：1つの簡潔なエントリに圧縮するエントリを選択（2ステップ：ツールがコンテキストを提供し、あなたが要約を提供） |
+| `memory_primer` | **1回の呼び出しでコンテキストプライマー**：上位メモリ + カテゴリ + セッションのファイル変更。セッション開始時に自動注入 |
 | `memory_sessions` | アクティブなエージェントセッション、ブランチ、並列セッション調整用のソフトファイル競合を表示 |
-| `context_brief` | **1回の呼び出しでコンテキストブリーフィング**: メモリ+セッション+ヘルスをコンパクトなMarkdownで。5-6個の個別memory_*呼び出しの代替。LLM不使用 |
+| `context_brief` | **1回の呼び出しでコンテキストブリーフィング**：メモリ+セッション+ヘルスをコンパクトなMarkdownで。`task`を渡すとコンパイル済みコンテキストパケットを返す。LLM不使用 |
+| `context_compile` | **タスク駆動のコンテキストコンパイラ**：ディレクティブ、制約、取得メモリ、取得計画、Hydrateキー、ファイルとセッションを1つのパケットに |
+| `context_hydrate` | **キーでハイドレート**：key/idで正確なメモリエントリを取得し、アクセス済みとマーク |
 | `context_generate` | **完全なプロジェクトブリーフィング**: プロジェクト構造、git状態、メモリエントリ、アクティブなセッションを1回の呼び出しで結合。5-6個の手動ツール呼び出しを置き換え |
 | `context_diff` | **インクリメンタルブリーフィング**: 前回セッション以降のgitコミット+変更ファイル+新規/更新メモリ+アクティブセッション |
 | `context_focus` | **ハイパーコンテキストブリーフィング**: クエリにのみ関連するメモリ+関連ソースファイル+呼び出し元+テストファイル |
 | `context_health` | **メモリヘルス監査**: 孤立リンク、重複、壊れたファイル参照、期限切れTTL、古いセッション、スコア0-100 |
 | `context_export` | **メモリをMarkdownとしてエクスポート**: システムプロンプト用のインジェクタブルコンテキスト（完全版またはコンパクト版） |
-| `memory_smart_recall` | 統合検索: BM25+グラフ+品質+新鮮度+減衰+セッションバイアスを1回の呼び出しで。`explain: true`（エントリごとの理由）と`budget_tokens`（出力上限）をサポート |
-| `memory_pin` | **Pin an entry**: pinned entries always appear at the top of recall results, even without a keyword match |
-| `memory_unpin` | **Unpin an entry**: remove the pinned flag |
-| `memory_search` | **Unified search with filters**: same as `memory_recall` plus `category`, `tags`, `from_date`, `to_date` filters. Tag filter uses AND logic — all specified tags must match |
-| `memory_tag` | **Batch tag operations**: `add`, `remove`, or `set` tags on one or more entries by key or id |
-| `memory_reflect` | **メモリの振り返り**: エントリを陳腐度・品質・過接続で決定的にランク付けし、注意や整理が必要なものを明らかにします。LLM不使用 |
+| `memory_smart_recall` | 統合検索：BM25+グラフ+品質+新鮮度+減衰に加え、オプションの高密度埋め込み（`vectors.bin`）、明示的フィードバック、スプレッドアクティベーションを1回の呼び出しで |
+| `memory_visualize` | **インタラクティブなグラフビューアを開く** MCP Apps対応ホストにインライン表示。フォース指向グラフ、統計、タイムライン、詳細パネル |
+| `memory_pin` | **エントリを固定**（優先度1-5）：固定エントリはキーワード一致がなくても、優先度順に並んだリコール結果の先頭に常に表示されます |
+| `memory_unpin` | **固定を解除**：エントリの固定フラグを削除 |
+| `memory_search` | **フィルタ付き統合検索**：`memory_recall`に加え、`category`、`tags`、`from_date`、`to_date`フィルタ。タグフィルタはAND論理 — 指定したすべてのタグが一致する必要があります。`sessionBias`は現在のgitブランチのエントリをブースト |
+| `memory_tag` | **タグの一括操作**：keyまたはidで1つ以上のエントリのタグを`add`、`remove`、`set` |
+| `memory_feedback` | **明示的フィードバック**（`useful`/`irrelevant`/`outdated`/`wrong`）を`feedback.toon`に書き込む。エントリごとの有用性を学習。`wrong`はエビデンスも`conflict`にマーク |
+| `memory_edges` | **型付きエッジのサイドカーファイル**（`edges.toon`）：`links` + フィードバックから`list`または`rebuild`。リコール時のオプトインのスプレッドアクティベーションを有効化 |
+| `memory_reflect` | **メモリの振り返り**：エントリを陳腐度・品質・過接続で決定的にランク付けし、注意や整理が必要なものを明らかにします。LLM不使用 |
 | `memory_promote` | **ドラフトを自動昇格**: 低信頼度エントリを決定的にアクティブへ昇格（しきい値0.65、Jaccard重複排除>0.5、デフォルトで`dryRun`） |
+
+## 学習済みランキングとオプションの高密度検索
+
+4つのオプトインサイドカーが`data.toon`を変更せずにリコールを拡張します：
+
+| サイドカー | 有効化方法 | 目的 |
+|-----------|-----------|------|
+| `feedback.toon` | `memory_feedback`（明示的信号） | エントリごとの学習済み有用性（`useful`、`irrelevant`、`outdated`、`wrong`）；`wrong`はエビデンスも`conflict`にマーク |
+| `edges.toon` | `config.graph.activation = true`または`memory_edges(rebuild)` | `links` + フィードバックから派生した型付きエッジ；スプレッドアクティベーションがトップシードの近傍をブースト |
+| `vectors.bin` | `toon-memory dense enable` + `build` | `toon-memory-dense`によるオプションのローカル埋め込み。ローカルに`npm install toon-memory-dense`でインストールしない場合、リコールはBM25のみ |
+| `observations.toon` | キャプチャフック + `toon-memory sleep` | セッション終了時のオプトイン統合：観測を昇格、エッジを再構築、期限切れシグナルを削除、重複排除 |
+
+`context_compile(task=...)`はディレクティブ、制約、取得計画、正確な`Hydrate`キーを含むコンパクトなパケットを返し、`context_hydrate(keys=[...])`はそのエントリだけを取得します。
 
 ## MCPリソース
 
@@ -54,6 +81,7 @@ toon-memoryは永続メモリを管理するための35個のMCPツールと4つ
 | メモリエントリ | `toon://memory/entries` | 完全なメモリダンプ |
 | メモリ統計 | `toon://memory/stats` | カテゴリカウントとTTL情報 |
 | メモリサマリー | `toon://memory/summaries` | 自動生成システムプリマナー: ナレッジマップ、最近のメモリ、重要な決定 |
+| メモリグラフビューア | `ui://viewer` | MCP Apps対応ホストにインライン表示されるインタラクティブなD3.jsフォースグラフ |
 
 リソースを使用すると、ツール呼び出しなしでエージェントがメモリをコンテキストとして読み取れます。システムプロンプトやセッション開始時に便利です。システムプリマナーはプロジェクトのナレッジ状態についての即座のコンテキストを提供します。
 

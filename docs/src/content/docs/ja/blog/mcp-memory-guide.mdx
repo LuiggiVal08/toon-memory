@@ -18,7 +18,7 @@ MCPメモリサーバーは、Model Context Protocol（MCP）を実装し、AI�
 
 **toon-memory**は、最も完成度の高いMCPメモリサーバーです：
 
-- **21個のMCPツール** + 3つのリソース
+- **42個のMCPツール** + 4つのリソース
 - **20以上のエージェントサポート** — Claude、Cursor、OpenCodeなど
 - **トークン効率の高いフォーマット** — JSONより22%少ないトークン
 - **グラフ対応リコール** — BM25+中心性+品質スコアリング
@@ -72,9 +72,9 @@ MCPメモリサーバーはエージェントに**永続メモリ**を提供し�
 
 ## MCPメモリサーバーの機能
 
-### 21個のMCPツール
+### 42個のMCPツール
 
-toon-memoryは完全なメモリ管理のための**21個のMCPツール**を公開しています：
+toon-memoryは完全なメモリ管理のための**42個のMCPツール**を公開しています：
 
 **コアツール：**
 - `memory_remember` — 決定、パターン、バグ、ナレッジを保存
@@ -85,6 +85,10 @@ toon-memoryは完全なメモリ管理のための**21個のMCPツール**を公
 
 **コンテキストツール：**
 - `context_brief` — 1回呼び出しのコンテキストブリーフィング
+- `context_compile` — タスク駆動のコンテキストパケット
+- `context_hydrate` — 指定キーを正確にハイドレート
+- `memory_feedback` — 明示的なフィードバック信号
+- `memory_edges` — 型付きエッジのサイドカー
 - `context_generate` — 完全なプロジェクトブリーフィング
 - `context_diff` — 前回セッション以降の変更
 - `context_focus` — ハイパーコンテキストブリーフィング
@@ -101,6 +105,23 @@ toon-memoryは完全なメモリ管理のための**21個のMCPツール**を公
 - `memory_consolidate` — 重複をマージ
 - `memory_encrypt` — AES-256-GCM暗号化
 - `memory_decrypt` — 暗号化を無効化
+
+**ランキングとワークフローのツール：**
+- `memory_checkpoint` — 7d TTL付きセッションスナップショット
+- `memory_backup` — タイムスタンプ付きバックアップ
+- `memory_secret` — 暗号化シークレットボルト
+- `memory_export_global` / `memory_import_global` — グローバルな規約を共有
+- `memory_export_gist` / `memory_import_gist` — Gist経由のクラウド同期
+- `memory_merge_sessions` — 並列セッションの観測をマージ
+- `memory_compress` — LLMによる圧縮
+- `memory_primer` — 1回呼び出しのコンテキストプライマー
+- `memory_visualize` — インタラクティブなグラフビューア
+- `memory_pin` / `memory_unpin` — 優先度による固定
+- `memory_search` — フィルター付き統合検索
+- `memory_tag` — 一括タグ操作
+- `memory_reflect` — 古い/過剰接続のエントリを抽出
+- `memory_promote` — 低信頼度のドラフトを自動昇格
+- `memory_graph_path` — エントリ間のBFS最短経路
 
 ### トークン効率の高いフォーマット
 
@@ -235,7 +256,7 @@ toon-memoryは**20以上のAIコーディングエージェント**で動作し�
 
 MCPメモリサーバーは、AIコーディングエージェントが真に生産的であるために必要な永続メモリを提供します。toon-memoryは最も完成度の高いソリューションです：
 
-- 完全なメモリ管理のための**21個のMCPツール**
+- 完全なメモリ管理のための**42個のMCPツール**
 - 全セッションで22%を節約する**トークン効率の高いフォーマット**
 - 関連コンテキストを自動的に見つける**グラフ対応リコール**
 - ゼロコンフィグセットアップの**20以上のエージェントサポート**

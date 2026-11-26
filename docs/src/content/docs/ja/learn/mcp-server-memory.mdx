@@ -15,7 +15,7 @@ head:
 **toon-memory**は以下の機能を提供するMCPサーバーです：
 
 - **永続メモリ** — 再起動後も残る、クラウド不要
-- **21個のMCPツール** — Model Context Protocol経由の完全なメモリ管理
+- **42個のMCPツール** — Model Context Protocol経由の完全なメモリ管理
 - **トークン効率の高いフォーマット** — JSONより22%少ないトークン
 - **グラフ対応リコール** — BM25+中心性+品質スコアリング
 - **20以上のエージェントサポート** — Claude、Cursor、OpenCodeなどで動作
@@ -39,30 +39,52 @@ Your AI Agent (Claude/Cursor/OpenCode)
 
 ### MCPツール
 
-toon-memoryは**21個のMCPツール**と**3つのMCPリソース**を公開しています：
+toon-memoryは**42個のMCPツール**と**4つのMCPリソース**を公開しています：
 
 | ツール | 目的 |
 |------|---------|
 | `memory_remember` | 決定、パターン、バグ、ナレッジを保存 |
 | `memory_recall` | メモリを検索（フラットまたはグラフモード） |
-| `memory_smart_recall` | 統合リコール: BM25+グラフ+品質 |
-| `memory_forget` | エントリを削除 |
+| `memory_smart_recall` | 統合リコール: BM25 + グラフ + 品質 + オプションのDense埋め込み |
+| `memory_forget` | ライフサイクル操作: soft、hard、restore、supersede |
 | `memory_stats` | メモリの状態を表示 |
 | `memory_summary` | ファイルサマリーの保存/取得 |
 | `memory_archive` | 古いエントリをアーカイブ |
 | `memory_diff` | 指定日以降の変更を表示 |
 | `memory_suggest` | 関連エントリを検索 |
+| `memory_captured` | フックキャプチャアクティビティを表示 |
+| `memory_checkpoint` | 7d TTL付きセッションスナップショット |
+| `memory_consolidate` | クリーンアップ操作: 重複排除、マージ、圧縮、バージョンの退役 |
+| `memory_encrypt` | AES-256-GCM暗号化を有効化 |
+| `memory_decrypt` | 暗号化を無効化 |
+| `memory_backup` | タイムスタンプ付きバックアップ（自動的に10件へ剪定） |
+| `memory_secret` | 暗号化シークレットボルト（`secrets.toon`） |
+| `memory_export_global` | メモリをグローバルファイルへ共有 |
+| `memory_import_global` | グローバルな規約をこのプロジェクトへマージ |
+| `memory_export_gist` | メモリをGitHub Gistへエクスポート |
+| `memory_import_gist` | メモリをGitHub Gistからインポート |
+| `memory_merge_sessions` | セッション間の観測をマージ |
+| `memory_compress` | LLMによる圧縮 |
+| `memory_primer` | 1回呼び出しのコンテキストプライマー |
 | `memory_sessions` | マルチセッション調整 |
-| `context_brief` | 1回呼び出しのコンテキストブリーフィング |
+| `context_brief` | ハンドオフ + ブリーフィングを1回で |
+| `context_compile` | タスク駆動のコンテキストパケット |
+| `context_hydrate` | 指定キーを正確にハイドレート |
 | `context_generate` | 完全なプロジェクトブリーフィング |
 | `context_diff` | インクリメンタルブリーフィング |
-| `context_focus` | ハイパーコンテキストブリーフィング |
+| `context_focus` | ハイパー焦点ブリーフィング |
 | `context_health` | メモリヘルス監査 |
 | `context_export` | Markdownとしてエクスポート |
-| `memory_encrypt` | AES-256-GCM暗号化 |
-| `memory_decrypt` | 暗号化を無効化 |
-| `memory_captured` | フックキャプチャアクティビティを表示 |
-| `memory_consolidate` | 重複をマージ |
+| `memory_visualize` | インタラクティブなグラフビューア |
+| `memory_pin` | 優先度1-5でエントリを固定 |
+| `memory_unpin` | 固定を解除 |
+| `memory_search` | フィルター付き統合検索 |
+| `memory_tag` | 一括タグ操作 |
+| `memory_feedback` | 明示的なフィードバック信号 |
+| `memory_edges` | 型付きエッジのサイドカー |
+| `memory_graph_path` | グラフ内のBFS最短経路 |
+| `memory_reflect` | 古い/過剰接続のエントリを抽出 |
+| `memory_promote` | 低信頼度のドラフトを自動昇格 |
 
 ## なぜメモリにMCPなのか？
 

@@ -18,7 +18,7 @@ An MCP memory server is a **local service** that implements the Model Context Pr
 
 **toon-memory** is the most complete MCP memory server available:
 
-- **35 MCP tools** + 4 resources
+- **42 MCP tools** + 4 resources
 - **20+ agent support** — Claude, Cursor, OpenCode, and more
 - **Token-efficient format** — 22% fewer tokens than JSON
 - **Graph-aware recall** — BM25 + centrality + quality scoring
@@ -72,9 +72,9 @@ An MCP memory server gives your agent **persistent memory**:
 
 ## MCP Memory Server Features
 
-### 34 MCP Tools
+### 42 MCP Tools
 
-toon-memory exposes **35 MCP tools** for full memory management:
+toon-memory exposes **42 MCP tools** for full memory management:
 
 **Core Tools:**
 - `memory_remember` — Save decisions, patterns, bugs, knowledge
@@ -105,6 +105,23 @@ toon-memory exposes **35 MCP tools** for full memory management:
 - `memory_consolidate` — Merge duplicates
 - `memory_encrypt` — AES-256-GCM encryption
 - `memory_decrypt` — Disable encryption
+
+**Ranking & Workflow Tools:**
+- `memory_checkpoint` — Session snapshot with 7d TTL
+- `memory_backup` — Timestamped backup
+- `memory_secret` — Encrypted secrets vault
+- `memory_export_global` / `memory_import_global` — Share global conventions
+- `memory_export_gist` / `memory_import_gist` — Cloud sync via Gist
+- `memory_merge_sessions` — Merge parallel-session observations
+- `memory_compress` — LLM-powered compression
+- `memory_primer` — One-call context primer
+- `memory_visualize` — Interactive graph viewer
+- `memory_pin` / `memory_unpin` — Priority pinning
+- `memory_search` — Unified search with filters
+- `memory_tag` — Batch tag operations
+- `memory_reflect` — Surface stale or over-connected entries
+- `memory_promote` — Auto-promote low-confidence drafts
+- `memory_graph_path` — BFS shortest path between entries
 
 ### Token-Efficient Format
 
@@ -239,7 +256,7 @@ See the [Supported Agents](/toon-memory/configuration/agents) page for configura
 
 An MCP memory server gives your AI coding agent the persistent memory it needs to be truly productive. toon-memory is the most complete solution available:
 
-- **35 MCP tools** for full memory management
+- **42 MCP tools** for full memory management
 - **Token-efficient format** that saves 22% on every session
 - **Graph-aware recall** that finds related context automatically
 - **20+ agent support** with zero-config setup

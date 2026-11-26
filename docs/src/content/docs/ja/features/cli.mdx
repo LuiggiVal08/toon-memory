@@ -1,6 +1,6 @@
 ---
 title: "CLIコマンド — ターミナルからAIエージェントメモリを管理"
-description: "toon-memory CLIコマンド — ターミナルから永続AIエージェントメモリを管理。install、init、stats、export、import、watchモード。"
+description: "toon-memory CLIコマンド — ターミナルから永続AIエージェントメモリを管理。install、init、stats、export、import、watch、sleep、オプションのdense retrieval。"
 head:
   - tag: meta
     attrs:
@@ -23,6 +23,10 @@ npx toon-memory export       # メモリをJSONにエクスポート
 npx toon-memory import <file> # JSONからメモリをインポート
 npx toon-memory watch [opts] # オプション付き自動バックアップ
 npx toon-memory upgrade      # 最新バージョンに更新
+npx toon-memory sleep        # 決定的な統合（オプトイン）
+npx toon-memory dense status # オプションの埋め込みの状態
+npx toon-memory dense enable && npx toon-memory dense build
+npx toon-memory dense install # ローカル埋め込みモジュールのインストールコマンドを表示
 npx toon-memory uninstall    # 全エージェントから削除
 ```
 
@@ -41,6 +45,23 @@ npx toon-memory uninstall    # 全エージェントから削除
 | `-c, --compress` | gzip圧縮を有効化 | オフ |
 | `-l, --log [path]` | ファイルログを有効化 | オフ |
 | `-m, --max-backups <n>` | 保持する最大バックアップ数（0=無制限） | 10 |
+
+## Dense Retrieval（オプション）
+
+`dense status`は設定されたモデル、モジュールパス、ベクターの状態を表示します。`dense enable`は`config.dense.enabled = true`を書き込み、`dense build`は現在のメモリエントリから`vectors.bin`を作成します。
+
+MCPサーバーが動作する**各プロジェクトにローカルで**埋め込みモジュールをインストールしてください：
+
+```bash
+npm install toon-memory-dense
+npx toon-memory dense build
+```
+
+`npx toon-memory dense install`はこのコマンドを表示するだけです。モジュールが既定の解決パスにない場合は`TOON_MEMORY_DENSE_MODULE=/module.jsへの絶対パス`を設定してください。モジュールやモデルが利用できない場合、リコールはBM25のみになります。
+
+## セッション終了時の統合
+
+`toon-memory sleep`はキャプチャされた観測を決定的に昇格し、`edges.toon`を再構築し、期限切れのシグナルを剪定し、エントリの重複を排除します。セッションの`Stop`時に実行するには`config.sleep.enabled = true`または`TOON_MEMORY_SLEEP=1`を設定します。オプトインです。
 
 ## 例
 

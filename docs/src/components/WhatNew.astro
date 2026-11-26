@@ -1,0 +1,32 @@
+---
+import { getContent } from '../i18n';
+import Icon from './Icon.astro';
+
+interface Props {
+	lang?: string;
+}
+const { lang = 'en' } = Astro.props;
+const c = getContent(lang);
+---
+
+<section class="content-section" id="whats-new">
+  <div class="section-header">
+    <h2>{c.whatNew.title}</h2>
+    <p>{c.whatNew.subtitle}</p>
+  </div>
+
+  <div class="feature-cards">
+    {
+      c.whatNew.cards.map((card) => (
+        <div class="card">
+          <div class="card-icon"><Icon emoji={card.icon} /></div>
+          <h3>{card.title}</h3>
+          <p>{card.body}</p>
+          <div class="card-stats">
+            {card.stats.map((s) => <span class="stat">{s}</span>)}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</section>
