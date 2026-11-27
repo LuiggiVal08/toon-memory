@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -28,5 +29,3 @@ jobs:
       - name: Publish to npm
         working-directory: packages/dense
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.DENSE_NPM_TOKEN }}
