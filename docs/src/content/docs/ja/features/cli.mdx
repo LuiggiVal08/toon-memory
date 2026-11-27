@@ -25,8 +25,8 @@ npx toon-memory watch [opts] # オプション付き自動バックアップ
 npx toon-memory upgrade      # 最新バージョンに更新
 npx toon-memory sleep        # 決定的な統合（オプトイン）
 npx toon-memory dense status # オプションの埋め込みの状態
-npx toon-memory dense enable && npx toon-memory dense build
-npx toon-memory dense install # ローカル埋め込みモジュールのインストールコマンドを表示
+npx toon-memory dense install --yes && npx toon-memory dense enable --build
+npx toon-memory dense install # 確認後にローカル埋め込みモジュールをインストール
 npx toon-memory uninstall    # 全エージェントから削除
 ```
 
@@ -48,16 +48,16 @@ npx toon-memory uninstall    # 全エージェントから削除
 
 ## Dense Retrieval（オプション）
 
-`dense status`は設定されたモデル、モジュールパス、ベクターの状態を表示します。`dense enable`は`config.dense.enabled = true`を書き込み、`dense build`は現在のメモリエントリから`vectors.bin`を作成します。
+`dense status`は設定されたモデル、モジュール解決、ベクター数、古いベクター、読み込みエラーを表示します。`dense enable --build`はDenseを有効化し、現在のエントリから`vectors.bin`を增量で作成します。
 
 MCPサーバーが動作する**各プロジェクトにローカルで**埋め込みモジュールをインストールしてください：
 
 ```bash
-npm install toon-memory-dense
-npx toon-memory dense build
+npx toon-memory dense install --yes
+npx toon-memory dense enable --build
 ```
 
-`npx toon-memory dense install`はこのコマンドを表示するだけです。モジュールが既定の解決パスにない場合は`TOON_MEMORY_DENSE_MODULE=/module.jsへの絶対パス`を設定してください。モジュールやモデルが利用できない場合、リコールはBM25のみになります。
+`npx toon-memory dense install`は確認後にローカルへインストールします。`--dry-run`はコマンド表示のみです。初回ビルドではモデルがローカルキャッシュにダウンロードされます。モジュールが既定の解決パスにない場合は`TOON_MEMORY_DENSE_MODULE=/module.jsへの絶対パス`を設定してください。モジュールやモデルが利用できない場合、リコールはBM25のみになります。埋め込みモジュールはネイティブな推移依存を伴うため、制限された環境ではバージョンを固定しインストールスクリプトを確認してください。
 
 ## セッション終了時の統合
 

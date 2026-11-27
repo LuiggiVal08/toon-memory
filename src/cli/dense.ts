@@ -1,9 +1,33 @@
-import { existsSync } from "fs"
+import { spawnSync } from "child_process"
+import confirm from "@inquirer/confirm"
 import { loadConfig, saveConfig, VECTORS_FILE } from "../mcp/config"
 import { readMemory } from "../mcp/memory-io"
-import { buildVectors, loadDenseModule, readVectors } from "../lib/dense"
+import {
+  buildVectors,
+  denseDiagnostics,
+  loadDenseModuleDetailed,
+  rebuildVectors,
+  readVectors,
+} from "../lib/dense"
 
 export const DEFAULT_DENSE_MODEL = "multilingual-e5-small"
+
+async function buildFromCurrent(args: string[]): Promise<void> {
+  const detailed = await loadDenseModuleDetailed()
+  if (!detailed.module) {
+    console.error(`Dense embedder not found (${detailed.spec}): ${detailed.error || "unavailable"}`)
+    console.error("Run 'toon-memory dense install' first.")
+    process.exitCode = 1
+    return
+  }
+  const config = loadConfig()
+  const stats = await rebuildVectors(readMemory(), detailed.module, config.dense?.model || DEFAULT_DENSE_MODEL, {
+    force: args.includes("--force"),
+  })
+  console.log(
+    `Vectors in ${VECTORS_FILE}: ${stats.written} built, ${stats.reused} reused, ${stats.removed} removed, dim ${stats.dim}.`
+  )
+}
 
 export async function runDense(args: string[]): Promise<void> {
   const action = args[0] || "status"
@@ -11,8 +35,11 @@ export async function runDense(args: string[]): Promise<void> {
   const dense = config.dense || {}
 
   if (action === "enable") {
-    saveConfig({ ...config, dense: { ...dense, enabled: true, model: args[1] || dense.model || DEFAULT_DENSE_MODEL } })
-    console.log(`Dense retrieval enabled (model: ${args[1] || dense.model || DEFAULT_DENSE_MODEL}). Run 'toon-memory dense build' once.`)
+    const model = args[1] && !args[1].startsWith("--") ? args[1] : dense.model || DEFAULT_DENSE_MODEL
+    saveConfig({ ...config, dense: { ...dense, enabled: true, model } })
+    console.log(`Dense retrieval enabled (model: ${model}).`)
+    if (args.includes("--build")) await buildFromCurrent(args)
+    else console.log("Run 'toon-memory dense build' before relying on dense recall.")
     return
   }
 
@@ -23,28 +50,55 @@ export async function runDense(args: string[]): Promise<void> {
   }
 
   if (action === "install") {
-    console.log("Install the optional embedder: npm install toon-memory-dense")
-    console.log("Then point to it with TOON_MEMORY_DENSE_MODULE=/absolute/path/to/module.js if it is not on the default resolution path.")
+    const detailed = await loadDenseModuleDetailed()
+    if (detailed.module) {
+      console.log(`Dense embedder already available via ${detailed.spec}.`)
+      return
+    }
+    const command = "npm install toon-memory-dense"
+    if (process.env.TOON_MEMORY_DENSE_MODULE) {
+      console.log(`TOON_MEMORY_DENSE_MODULE points to ${detailed.spec}; install that module manually.`)
+      return
+    }
+    if (args.includes("--dry-run") || (!args.includes("--yes") && !process.stdin.isTTY)) {
+      console.log(`Install the optional embedder locally: ${command}`)
+      return
+    }
+    const ok = args.includes("--yes") || await confirm({ message: "Install toon-memory-dense in this project?", default: true })
+    if (!ok) {
+      console.log("Installation cancelled.")
+      return
+    }
+    const result = spawnSync("npm", ["install", "toon-memory-dense"], { stdio: "inherit" })
+    if (result.status !== 0) {
+      process.exitCode = 1
+      return
+    }
+    console.log("Embedder installed. Run 'toon-memory dense enable --build' to create vectors.")
     return
   }
 
   if (action === "build") {
-    const module = await loadDenseModule()
-    if (!module) {
-      console.error("Dense embedder not found. Run 'toon-memory dense install' first.")
-      process.exitCode = 1
-      return
-    }
-    const count = await buildVectors(readMemory(), module, dense.model || DEFAULT_DENSE_MODEL)
-    console.log(`Built vectors for ${count} entries in ${VECTORS_FILE}.`)
+    await buildFromCurrent(args)
     return
   }
 
+  const diagnostics = await denseDiagnostics(readMemory())
+  if (args.includes("--json")) {
+    console.log(JSON.stringify(diagnostics, null, 2))
+    return
+  }
   const stored = readVectors()
   console.log([
-    `dense: ${dense.enabled ? "enabled" : "disabled"}`,
-    `model: ${dense.model || DEFAULT_DENSE_MODEL}`,
-    `module: ${process.env.TOON_MEMORY_DENSE_MODULE || "toon-memory-dense"}`,
-    `vectors: ${existsSync(VECTORS_FILE) ? `${stored.vectors.size} entries, dim ${stored.dim}` : "not built"}`,
+    `dense: ${diagnostics.enabled ? "enabled" : "disabled"}`,
+    `model: ${diagnostics.model || DEFAULT_DENSE_MODEL}`,
+    `module: ${diagnostics.moduleSpec} (${diagnostics.moduleLoaded ? "loaded" : diagnostics.error || "missing"})`,
+    `vectors: ${stored.vectors.size} entries, dim ${stored.dim}`,
+    `stale: ${diagnostics.stale}`,
+    `boost: ${diagnostics.boost}`,
+    `auto-build: ${diagnostics.autoBuild ? "on" : "off"}`,
+    `built: ${diagnostics.builtAt || "never"}`,
   ].join("\n"))
 }
+
+export { buildVectors }

@@ -25,8 +25,8 @@ npx toon-memory watch [opts] # Sauvegarde automatique avec options
 npx toon-memory upgrade      # Mettre à jour vers la dernière version
 npx toon-memory sleep        # Consolidation déterministe (optionnelle)
 npx toon-memory dense status # État des embeddings optionnels
-npx toon-memory dense enable && npx toon-memory dense build
-npx toon-memory dense install # Affiche la commande d'installation de l'embedder local
+npx toon-memory dense install --yes && npx toon-memory dense enable --build
+npx toon-memory dense install # Installe l'embedder local après confirmation
 npx toon-memory uninstall    # Supprimer de tous les agents
 ```
 
@@ -48,16 +48,16 @@ npx toon-memory uninstall    # Supprimer de tous les agents
 
 ## Recherche dense (optionnelle)
 
-`dense status` affiche le modèle configuré, le chemin du module et l'état des vecteurs. `dense enable` écrit `config.dense.enabled = true`; `dense build` crée `vectors.bin` à partir des entrées mémoire actuelles.
+`dense status` affiche le modèle configuré, la résolution du module, le nombre de vecteurs, les vecteurs obsolètes et les erreurs de chargement. `dense enable --build` active Dense et crée `vectors.bin` de façon incrémentale à partir des entrées actuelles.
 
 Installez l'embedder **localement dans chaque projet** où le serveur MCP s'exécute :
 
 ```bash
-npm install toon-memory-dense
-npx toon-memory dense build
+npx toon-memory dense install --yes
+npx toon-memory dense enable --build
 ```
 
-`npx toon-memory dense install` affiche uniquement cette commande. Définissez `TOON_MEMORY_DENSE_MODULE=/chemin/absolu/vers/module.js` si le module n'est pas dans le chemin de résolution par défaut. Si le module ou le modèle est indisponible, le rappel reste limité à BM25.
+`npx toon-memory dense install` installe l'embedder localement après confirmation ; `--dry-run` n'affiche que la commande. Le premier build télécharge le modèle dans un cache local. Définissez `TOON_MEMORY_DENSE_MODULE=/chemin/absolu/vers/module.js` si le module n'est pas dans le chemin de résolution par défaut. Si le module ou le modèle est indisponible, le rappel reste limité à BM25. L'embedder apporte des dépendances natives transitives : épinglez les versions et vérifiez les scripts d'installation dans les environnements restreints.
 
 ## Consolidation en fin de session
 

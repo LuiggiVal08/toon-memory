@@ -75,6 +75,8 @@ export interface MemoryConfig {
     enabled?: boolean
     model?: string
     dim?: number
+    boost?: number
+    autoBuild?: boolean
   }
 }
 

@@ -752,7 +752,7 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 |---------|------------|------|
 | `feedback.toon` | `memory_feedback` (명시적 신호는 항상 활성) | 감쇠가 적용된 항목별 학습 유용성(`useful`, `irrelevant`, `outdated`, `wrong`). `wrong`은 증거도 `conflict`로 표시합니다. |
 | `edges.toon` | `config.graph.activation = true` 또는 `memory_edges(rebuild)` | `links` + 피드백 작업에서 파생된 타입 엣지. 확산 활성화가 상위 시드의 이웃을 강화합니다. |
-| `vectors.bin` | `toon-memory dense enable` + `build` | `toon-memory-dense`를 통한 선택적 로컬 임베딩. 각 프로젝트에 `npm install toon-memory-dense`로 모듈을 로컬 설치하세요. 모듈이나 모델이 없으면 BM25로 폴백합니다. |
+| `vectors.bin` | `toon-memory dense enable --build` | `toon-memory-dense`를 통한 선택적 로컬 임베딩. 각 프로젝트에서 `npx toon-memory dense install`을 실행하세요. 첫 빌드에서 모델을 캐시에 다운로드합니다. 모듈이나 모델이 없으면 BM25로 폴백합니다. |
 | `observations.toon` | 캡처 훅 + `toon-memory sleep` | 세션 종료 시 선택적 통합: 관찰 승격, 엣지 재구성, 만료된 신호 가지치기, 중복 제거. |
 
 `context_compile(task=...)`은 검색된 메모리를 지시, 제약, 검색 계획, 정확한 `Hydrate` 키가 포함된 컴팩트 패킷으로 변환합니다. `context_hydrate(keys=[...])`는 해당 항목만 가져옵니다.
@@ -908,7 +908,7 @@ npx toon-memory watch [options] # 옵션과 함께 자동 백업
 npx toon-memory upgrade      # 최신 버전으로 업데이트
 npx toon-memory sleep        # 결정론적 통합 (선택적)
 npx toon-memory dense status # 선택적 임베딩 상태 확인
-npx toon-memory dense enable && npx toon-memory dense build
+npx toon-memory dense install --yes && npx toon-memory dense enable --build
 npx toon-memory uninstall    # 모든 에이전트에서 제거
 ```
 
@@ -1025,7 +1025,7 @@ npx toon-memory
 - `feedback.implicit`는 예약됨; 현재는 명시적 `memory_feedback` 이벤트만 순위에 영향을 줍니다.
 - `graph.activation`은 `edges.toon`에서 확산 활성화를 켭니다 (`memory_edges(action="rebuild")`로 재구성).
 - `sleep.enabled` (또는 `TOON_MEMORY_SLEEP=1`)는 세션 `Stop` 이벤트에서 통합을 실행합니다.
-- `dense.enabled`는 `vectors.bin`을 활성화합니다. 각 프로젝트에 `npm install toon-memory-dense`로 임베더를 로컬 설치하세요 (`npx toon-memory dense install`이 명령을 출력합니다). `TOON_MEMORY_DENSE_MODULE`은 모듈 경로를 덮어씁니다. 무언가 누락되면 리콜은 BM25 전용으로 유지됩니다.
+- `dense.enabled`는 `vectors.bin`을 활성화합니다. 각 프로젝트에서 `npx toon-memory dense install --yes`를 실행하세요 (`--dry-run`은 npm 명령을 출력합니다). 선택적 임베더는 네이티브 전이 의존성을 가져오므로 제한된 환경에서는 버전을 고정하고 설치 스크립트를 검토하세요. `TOON_MEMORY_DENSE_MODULE`은 모듈 경로를 덮어씁니다. 무언가 누락되면 리콜은 BM25 전용으로 유지됩니다.
 
 ### OpenCode
 
@@ -1291,7 +1291,7 @@ v3.7.0부터 리콜은 BM25(×3)와 그래프 중심성 순위를 **Reciprocal R
 ```
 Metric        linear (v3.6.x)     RRF (v3.7.0)
 ────────────  ─────────────────   ────────────────
-nDCG@10       0.776               0.776   (parity)
+nDCG@5        0.776               0.776   (parity)
 MRR           0.917               0.917   (parity)
 ```
 
@@ -1304,12 +1304,12 @@ v4.1.0부터 리콜은 **실제 프로젝트 메모리의 고정 스냅샷**에 
 ```
 Mode            R@5     nDCG@5  MRR@5   answerable
 ─────────────   ─────   ─────   ─────   ──────────
-linear         0.643   0.654   0.776   81.0%
-rrf            0.861   0.764   0.788   97.6%
-smart (unified) 0.829  0.739   0.760   92.5%
+linear         0.643   0.650   0.766   81.0%
+rrf            0.655   0.652   0.770   83.3%
+smart (unified) 0.867  0.814   0.854   95.0%
 ```
 
-RRF가 최상위 모드입니다 (0.861 R@5, 쿼리의 97.6%가 상위 5개에서 답변 가능). `memory_smart_recall`은 단일 호출로 경쟁력을 유지합니다.
+`memory_smart_recall`이 최상위 모드입니다 (0.867 R@5, 쿼리의 95.0%가 상위 5개에서 답변 가능)를 단일 호출로 제공합니다.
 
 ---
 
@@ -1429,7 +1429,7 @@ toon-memory/
 │   ├── graph.test.ts            # 메모리 그래프 테스트
 │   └── quality.test.ts          # 품질 점수, 병합-중복제거, 스마트 리콜, 시스템 프라이머 테스트
 ├── .github/workflows/
-│   ├── ci.yml                   # CI (Node.js 20/22)
+│   ├── ci.yml                   # CI (Node.js 22/24)
 │   └── publish.yml              # 릴리스 시 자동 게시
 ├── package.json
 ├── tsconfig.json

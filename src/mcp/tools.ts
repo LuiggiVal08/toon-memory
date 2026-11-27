@@ -60,6 +60,7 @@ type ToolText = { type: "text"; text: string }
     edges?: ActivationEdge[]
     activation?: boolean
     dense?: Map<string, number>
+    denseBoost?: number
   }> => {
     const config = loadConfig()
     const edges = config.graph?.activation ? readEdges() : undefined
@@ -67,7 +68,7 @@ type ToolText = { type: "text"; text: string }
     return {
       utility: utilityMap(),
       ...(edges && edges.length ? { edges, activation: true } : {}),
-      ...(dense.size ? { dense } : {}),
+      ...(dense.size ? { dense, denseBoost: config.dense?.boost ?? 0.25 } : {}),
     }
   }
 

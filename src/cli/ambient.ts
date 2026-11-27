@@ -15,6 +15,7 @@ import { readMemory, writeMemory } from "../mcp/memory-io"
 import { MEMORY_DIR, MEMORY_FILE, CONFIG_FILE, GLOBAL_FILE } from "../mcp/config"
 import { readSessionEntries, writeSessionEntry } from "../mcp/session-store"
 import { parseEntries } from "../lib/graph"
+import { denseDiagnostics } from "../lib/dense"
 import { entryAgeDays, projectSlug } from "../lib/handoff"
 
 function flag(args: string[], name: string): string {
@@ -75,7 +76,7 @@ export function runPromotion(args: string[]): void {
 }
 
 /** Read-only health check for the ambient loops. */
-export function printDoctor(): void {
+export async function printDoctor(): Promise<void> {
   const root = process.cwd()
   const lines: string[] = [
     `toon-memory doctor — ${root}`,
@@ -112,6 +113,8 @@ export function printDoctor(): void {
     lines.push("opencode plugin: absent")
   }
   lines.push(`injection: brief via 'toon-memory brief' (system.transform) | auto-write via 'signal' + 'promote'`)
+  const dense = await denseDiagnostics(readMemory())
+  lines.push(`dense: ${dense.enabled ? "enabled" : "disabled"} | module: ${dense.moduleLoaded ? "OK" : dense.error || "missing"} | vectors: ${dense.vectors}/${dense.stale} stale`)
   lines.push(`catalog: ${process.env.TOON_MEMORY_EXPERT_TOOLS === "1" ? "expert" : "core"} (set TOON_MEMORY_EXPERT_TOOLS=1 for advanced tools)`)
   console.log(lines.join("\n"))
 }

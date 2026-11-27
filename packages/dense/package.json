@@ -34,6 +34,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@huggingface/transformers": "^4.3.2"
+    "@huggingface/transformers": "4.3.2"
+  },
+  "overrides": {
+    "define-properties": "npm:@socketregistry/define-properties@1.0.8"
   }
 }

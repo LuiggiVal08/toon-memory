@@ -25,8 +25,8 @@ npx toon-memory watch [opts] # 옵션과 함께 자동 백업
 npx toon-memory upgrade      # 최신 버전으로 업데이트
 npx toon-memory sleep        # 결정적 통합 (옵트인)
 npx toon-memory dense status # 선택적 임베딩 상태
-npx toon-memory dense enable && npx toon-memory dense build
-npx toon-memory dense install # 로컬 임베더 설치 명령 출력
+npx toon-memory dense install --yes && npx toon-memory dense enable --build
+npx toon-memory dense install # 확인 후 로컬 임베더 설치
 npx toon-memory uninstall    # 모든 에이전트에서 제거
 ```
 
@@ -48,16 +48,16 @@ npx toon-memory uninstall    # 모든 에이전트에서 제거
 
 ## Dense Retrieval (선택 사항)
 
-`dense status`는 구성된 모델, 모듈 경로, 벡터 상태를 표시합니다. `dense enable`은 `config.dense.enabled = true`를 기록하고, `dense build`는 현재 메모리 항목에서 `vectors.bin`을 생성합니다.
+`dense status`는 구성된 모델, 모듈 해석, 벡터 수, 오래된 벡터, 로드 오류를 표시합니다. `dense enable --build`는 Dense를 활성화하고 현재 항목에서 `vectors.bin`을 증분 생성합니다.
 
 MCP 서버가 실행되는 **각 프로젝트에 로컬로** 임베더를 설치하세요:
 
 ```bash
-npm install toon-memory-dense
-npx toon-memory dense build
+npx toon-memory dense install --yes
+npx toon-memory dense enable --build
 ```
 
-`npx toon-memory dense install`은 이 명령만 출력합니다. 모듈이 기본 해석 경로에 없다면 `TOON_MEMORY_DENSE_MODULE=/module.js의/절대/경로`를 설정하세요. 모듈이나 모델을 사용할 수 없으면 recall은 BM25만 사용합니다.
+`npx toon-memory dense install`은 확인 후 로컬에 설치합니다. `--dry-run`은 명령만 출력합니다. 첫 빌드 시 모델이 로컬 캐시에 다운로드됩니다. 모듈이 기본 해석 경로에 없다면 `TOON_MEMORY_DENSE_MODULE=/module.js의/절대/경로`를 설정하세요. 모듈이나 모델을 사용할 수 없으면 recall은 BM25만 사용합니다. 임베더는 네이티브 전이 의존성을 가져오므로 제한된 환경에서는 버전을 고정하고 설치 스크립트를 검토하세요.
 
 ## 세션 종료 시 통합
 

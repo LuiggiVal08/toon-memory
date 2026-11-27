@@ -14,7 +14,7 @@ if (args[0] === "brief") {
 }
 
 if (args[0] === "doctor") {
-  printDoctor()
+  await printDoctor()
   process.exit(0)
 }
 

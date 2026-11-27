@@ -750,7 +750,7 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 |-----------|----------------|------|
 | `feedback.toon` | `memory_feedback`（明示的なシグナルでは常に有効） | 減衰付きのエントリごとの学習済み有用性（`useful`、`irrelevant`、`outdated`、`wrong`）。`wrong`はエビデンスも`conflict`に設定します。 |
 | `edges.toon` | `config.graph.activation = true` または `memory_edges(rebuild)` | `links`＋フィードバック作業から派生した型付きエッジ。スプレッドアクティベーションが上位シードの隣接ノードを強化します。 |
-| `vectors.bin` | `toon-memory dense enable` ＋ `build` | `toon-memory-dense`によるオプションのローカル埋め込み。各プロジェクトに`npm install toon-memory-dense`でモジュールをローカルインストールしてください。モジュールやモデルがない場合はBM25にフォールバックします。 |
+| `vectors.bin` | `toon-memory dense enable --build` | `toon-memory-dense`によるオプションのローカル埋め込み。各プロジェクトで`npx toon-memory dense install`を実行してください。初回ビルドでモデルをキャッシュにダウンロードします。モジュールやモデルがない場合はBM25にフォールバックします。 |
 | `observations.toon` | キャプチャフック＋`toon-memory sleep` | セッション終了時のオプトイン統合：観測の昇格、エッジの再構築、期限切れシグナルの削除、重複排除。 |
 
 `context_compile(task=...)`は取得したメモリを、指示、制約、取得計画、正確な`Hydrate`キーを含むコンパクトなパケットに変換します。`context_hydrate(keys=[...])`はそのエントリのみを取得します。
@@ -906,7 +906,7 @@ npx toon-memory watch [options] # オプション付き自動バックアップ
 npx toon-memory upgrade      # 最新バージョンに更新
 npx toon-memory sleep        # 決定論的な統合（オプトイン）
 npx toon-memory dense status # オプションの埋め込みの状態
-npx toon-memory dense enable && npx toon-memory dense build
+npx toon-memory dense install --yes && npx toon-memory dense enable --build
 npx toon-memory uninstall    # 全エージェントから削除
 ```
 
@@ -1023,7 +1023,7 @@ npx toon-memory
 - `feedback.implicit`は予約済みです。現在は明示的な`memory_feedback`イベントのみがランキングに影響します。
 - `graph.activation`は`edges.toon`上でスプレッドアクティベーションを有効化します（`memory_edges(action="rebuild")`で再構築）。
 - `sleep.enabled`（または`TOON_MEMORY_SLEEP=1`）はセッションの`Stop`イベントで統合を実行します。
-- `dense.enabled`は`vectors.bin`を有効化します。各プロジェクトに`npm install toon-memory-dense`で埋め込みモジュールをローカルインストールしてください（`npx toon-memory dense install`がコマンドを表示します）。`TOON_MEMORY_DENSE_MODULE`でモジュールパスを上書きできます。何かが不足していれば、リコールはBM25のみのままです。
+- `dense.enabled`は`vectors.bin`を有効化します。各プロジェクトで`npx toon-memory dense install --yes`を実行してください（`--dry-run`はnpmコマンドを表示します）。オプションの埋め込みモジュールはネイティブな推移依存を伴うため、制限された環境ではバージョンを固定しインストールスクリプトを確認してください。`TOON_MEMORY_DENSE_MODULE`でモジュールパスを上書きできます。何かが不足していれば、リコールはBM25のみのままです。
 
 ### OpenCode
 
@@ -1289,7 +1289,7 @@ v3.7.0以降、リコールはBM25（×3）とグラフ中心性のランクに�
 ```
 Metric        linear (v3.6.x)     RRF (v3.7.0)
 ────────────  ─────────────────   ────────────────
-nDCG@10       0.776               0.776   (parity)
+nDCG@5        0.776               0.776   (parity)
 MRR           0.917               0.917   (parity)
 ```
 
@@ -1302,12 +1302,12 @@ v4.1.0以降、検索は**実プロジェクトメモリの凍結スナップシ
 ```
 Mode            R@5     nDCG@5  MRR@5   answerable
 ─────────────   ─────   ─────   ─────   ──────────
-linear         0.643   0.654   0.776   81.0%
-rrf            0.861   0.764   0.788   97.6%
-smart (unified) 0.829  0.739   0.760   92.5%
+linear         0.643   0.650   0.766   81.0%
+rrf            0.655   0.652   0.770   83.3%
+smart (unified) 0.867  0.814   0.854   95.0%
 ```
 
-RRFがトップランクのモードです（R@5 0.861、クエリの97.6%が上位5件から回答可能）；`memory_smart_recall`も1回の呼び出しで競争力があります。
+`memory_smart_recall`がトップランクのモードです（R@5 0.867、クエリの95.0%が上位5件から回答可能）を1回の呼び出しで実現します。
 
 ---
 
@@ -1427,7 +1427,7 @@ toon-memory/
 │   ├── graph.test.ts            # メモリグラフテスト
 │   └── quality.test.ts          # 品質スコア、マージ・重複排除、スマートリコール、システムプライマーテスト
 ├── .github/workflows/
-│   ├── ci.yml                   # CI（Node.js 20/22）
+│   ├── ci.yml                   # CI（Node.js 22/24）
 │   └── publish.yml              # リリース時に自動公開
 ├── package.json
 ├── tsconfig.json

@@ -751,7 +751,7 @@ Quatre sidecars optionnels étendent le rappel sans modifier `data.toon` :
 |---------|-----------|----------|
 | `feedback.toon` | `memory_feedback` (toujours actif pour les signaux explicites) | Utilité apprise par entrée (`useful`, `irrelevant`, `outdated`, `wrong`) avec décroissance. `wrong` marque aussi la preuve comme `conflict`. |
 | `edges.toon` | `config.graph.activation = true` ou `memory_edges(rebuild)` | Arêtes typées dérivées de `links` + tâches de feedback. L'activation diffusée renforce les voisins des meilleures graines. |
-| `vectors.bin` | `toon-memory dense enable` + `build` | Embeddings locaux optionnels via `toon-memory-dense`. Installez le module localement dans chaque projet avec `npm install toon-memory-dense` ; repli sur BM25 si le module ou le modèle manque. |
+| `vectors.bin` | `toon-memory dense enable --build` | Embeddings locaux optionnels via `toon-memory-dense`. Exécutez `npx toon-memory dense install` localement dans chaque projet ; le premier build télécharge le modèle dans un cache. Repli sur BM25 si le module ou le modèle manque. |
 | `observations.toon` | Hooks de capture + `toon-memory sleep` | Consolidation optionnelle en fin de session : promouvoir les observations, reconstruire les arêtes, élaguer les signaux expirés, dédoublonner. |
 
 `context_compile(task=...)` transforme la mémoire récupérée en un paquet compact avec directives, contraintes, plan de récupération et clés `Hydrate` exactes. `context_hydrate(keys=[...])` ne récupère que ces entrées.
@@ -907,7 +907,7 @@ npx toon-memory watch [options] # Sauvegarde automatique avec options
 npx toon-memory upgrade      # Mettre à jour vers la dernière version
 npx toon-memory sleep        # Consolidation déterministe (opt-in)
 npx toon-memory dense status # État des embeddings optionnels
-npx toon-memory dense enable && npx toon-memory dense build
+npx toon-memory dense install --yes && npx toon-memory dense enable --build
 npx toon-memory uninstall    # Supprimer de tous les agents
 ```
 
@@ -1024,7 +1024,7 @@ Tous les flags sont définis dans `.toon-memory/memory/config.json` et sont opti
 - `feedback.implicit` est réservé ; seuls les événements `memory_feedback` explicites influencent le classement aujourd'hui.
 - `graph.activation` active l'activation diffusée sur `edges.toon` (reconstruire avec `memory_edges(action="rebuild")`).
 - `sleep.enabled` (ou `TOON_MEMORY_SLEEP=1`) lance la consolidation lors de l'événement `Stop` de la session.
-- `dense.enabled` active `vectors.bin` ; installez l'embedder localement dans chaque projet avec `npm install toon-memory-dense` (`npx toon-memory dense install` affiche la commande). `TOON_MEMORY_DENSE_MODULE` écrase le chemin du module. Si quelque chose manque, le rappel reste en BM25 seul.
+- `dense.enabled` active `vectors.bin` ; exécutez `npx toon-memory dense install --yes` localement dans chaque projet (`--dry-run` affiche la commande npm). L'embedder optionnel apporte des dépendances natives transitives : épinglez les versions et vérifiez les scripts d'installation dans les environnements restreints. `TOON_MEMORY_DENSE_MODULE` écrase le chemin du module. Si quelque chose manque, le rappel reste en BM25 seul.
 
 ### OpenCode
 
@@ -1290,7 +1290,7 @@ Depuis la v3.7.0, le rappel classe les résultats avec la **fusion de rangs réc
 ```
 Metric        linear (v3.6.x)     RRF (v3.7.0)
 ────────────  ─────────────────   ────────────────
-nDCG@10       0.776               0.776   (parity)
+nDCG@5        0.776               0.776   (parity)
 MRR           0.917               0.917   (parity)
 ```
 
@@ -1303,12 +1303,12 @@ Depuis la v4.1.0, la récupération est évaluée contre un **instantané figé 
 ```
 Mode            R@5     nDCG@5  MRR@5   answerable
 ─────────────   ─────   ─────   ─────   ──────────
-linear         0.643   0.654   0.776   81.0%
-rrf            0.861   0.764   0.788   97.6%
-smart (unified) 0.829  0.739   0.760   92.5%
+linear         0.643   0.650   0.766   81.0%
+rrf            0.655   0.652   0.770   83.3%
+smart (unified) 0.867  0.814   0.854   95.0%
 ```
 
-Le RRF est le mode le mieux classé (0.861 R@5, 97.6% des requêtes répondables depuis le top-5) ; `memory_smart_recall` reste compétitif en un seul appel.
+`memory_smart_recall` est le mode le mieux classé (0.867 R@5, 95.0 % des requêtes répondables depuis le top-5) en un seul appel.
 
 ---
 
@@ -1428,7 +1428,7 @@ toon-memory/
 │   ├── graph.test.ts            # Tests du graphe mémoire
 │   └── quality.test.ts          # Tests de scoring de qualité, fusion-dédoublonnage, smart recall, system primer
 ├── .github/workflows/
-│   ├── ci.yml                   # CI (Node.js 20/22)
+│   ├── ci.yml                   # CI (Node.js 22/24)
 │   └── publish.yml              # Publication auto lors de la release
 ├── package.json
 ├── tsconfig.json

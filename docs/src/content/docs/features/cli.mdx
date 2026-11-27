@@ -26,8 +26,8 @@ npx toon-memory watch [opts] # Auto-backup with options
 npx toon-memory upgrade      # Update to latest version
 npx toon-memory sleep        # Deterministic consolidation (opt-in)
 npx toon-memory dense status # Optional embeddings status
-npx toon-memory dense enable && npx toon-memory dense build
-npx toon-memory dense install # Prints the local embedder install command
+npx toon-memory dense install --yes && npx toon-memory dense enable --build
+npx toon-memory dense install # Installs the local embedder after confirmation
 npx toon-memory uninstall    # Remove from all agents
 ```
 
@@ -56,16 +56,16 @@ npx toon-memory uninstall    # Remove from all agents
 
 ## Dense Retrieval (optional)
 
-`dense status` shows the configured model, module path and vector state. `dense enable` writes `config.dense.enabled = true`; `dense build` creates `vectors.bin` from current memory entries.
+`dense status` shows the configured model, module resolution, vector count, stale vectors and load errors. `dense enable --build` enables dense and creates `vectors.bin` incrementally from current memory entries.
 
 Install the embedder **locally in each project** where the MCP server runs:
 
 ```bash
-npm install toon-memory-dense
-npx toon-memory dense build
+npx toon-memory dense install --yes
+npx toon-memory dense enable --build
 ```
 
-`npx toon-memory dense install` only prints this command. Set `TOON_MEMORY_DENSE_MODULE=/absolute/path/to/module.js` if the module is not on the default resolution path. If the module or model is unavailable, recall stays BM25-only.
+`npx toon-memory dense install` installs the embedder locally after confirmation; `--dry-run` only prints the command. The first build downloads the model into a local cache. Set `TOON_MEMORY_DENSE_MODULE=/absolute/path/to/module.js` if the module is not on the default resolution path. If the module or model is unavailable, recall stays BM25-only. The embedder pulls native transitive dependencies: pin versions and review install scripts in restricted environments.
 
 ## End-of-session consolidation
 

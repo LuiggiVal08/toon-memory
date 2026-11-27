@@ -771,7 +771,7 @@ Four opt-in sidecars extend recall without changing `data.toon`:
 |---------|-----------|---------|
 | `feedback.toon` | `memory_feedback` (always on for explicit signals) | Learned per-entry utility (`useful`, `irrelevant`, `outdated`, `wrong`) with decay. `wrong` also sets evidence to `conflict`. |
 | `edges.toon` | `config.graph.activation = true` or `memory_edges(rebuild)` | Typed edges derived from `links` + feedback tasks. Spread activation boosts neighbours of top seeds. |
-| `vectors.bin` | `toon-memory dense enable` + `build` | Optional local embeddings via `toon-memory-dense`. Install the module locally in each project with `npm install toon-memory-dense`; falls back to BM25 when the module or model is unavailable. |
+| `vectors.bin` | `toon-memory dense enable --build` | Optional local embeddings via `toon-memory-dense`. Run `npx toon-memory dense install` locally in each project; the first build downloads a model into a cache. Falls back to BM25 when the module or model is unavailable. |
 | `observations.toon` | capture hooks + `toon-memory sleep` | Opt-in end-of-session consolidation: promote observations, rebuild edges, prune expired signals, dedupe. |
 
 `context_compile(task=...)` turns the retrieved memory into a compact packet with directives, constraints, a retrieval plan and exact `Hydrate` keys. `context_hydrate(keys=[...])` fetches only those entries.
@@ -927,7 +927,7 @@ npx toon-memory watch [options] # Auto-backup with options
 npx toon-memory upgrade      # Update to latest version
 npx toon-memory sleep        # Deterministic consolidation (opt-in)
 npx toon-memory dense status # Optional embeddings status
-npx toon-memory dense enable && npx toon-memory dense build
+npx toon-memory dense install --yes && npx toon-memory dense enable --build
 npx toon-memory uninstall    # Remove from all agents
 ```
 
@@ -1044,7 +1044,7 @@ All flags live in `.toon-memory/memory/config.json` and are optional:
 - `feedback.implicit` is reserved; only explicit `memory_feedback` events affect ranking today.
 - `graph.activation` enables spread activation over `edges.toon` (rebuild with `memory_edges(action="rebuild")`).
 - `sleep.enabled` (or `TOON_MEMORY_SLEEP=1`) runs consolidation on session `Stop`.
-- `dense.enabled` enables `vectors.bin`; install the embedder locally in each project with `npm install toon-memory-dense` (`npx toon-memory dense install` prints the command). `TOON_MEMORY_DENSE_MODULE` overrides the module path. If anything is missing, recall stays BM25-only.
+- `dense.enabled` enables `vectors.bin`; run `npx toon-memory dense install --yes` locally in each project (`--dry-run` previews the npm command). The optional embedder pulls native transitive dependencies: pin versions and review install scripts in restricted environments. `TOON_MEMORY_DENSE_MODULE` overrides the module path. If anything is missing, recall stays BM25-only.
 
 ### OpenCode
 
@@ -1310,7 +1310,7 @@ Since v3.7.0, recall ranks results with **Reciprocal Rank Fusion** over BM25 (×
 ```
 Metric        linear (v3.6.x)     RRF (v3.7.0)
 ────────────  ─────────────────   ────────────────
-nDCG@10       0.776               0.776   (parity)
+nDCG@5        0.776               0.776   (parity)
 MRR           0.917               0.917   (parity)
 ```
 
@@ -1323,12 +1323,12 @@ Since v4.1.0, retrieval is benchmarked against a **frozen snapshot of real proje
 ```
 Mode            R@5     nDCG@5  MRR@5   answerable
 ─────────────   ─────   ─────   ─────   ──────────
-linear         0.643   0.654   0.776   81.0%
-rrf            0.861   0.764   0.788   97.6%
-smart (unified) 0.829  0.739   0.760   92.5%
+linear         0.643   0.650   0.766   81.0%
+rrf            0.655   0.652   0.770   83.3%
+smart (unified) 0.867  0.814   0.854   95.0%
 ```
 
-RRF is the top-ranked mode (0.861 R@5, 97.6% of queries answerable from the top-5); `memory_smart_recall` stays competitive in a single call.
+`memory_smart_recall` is the top-ranked mode (0.867 R@5, 95.0% of queries answerable from the top-5) in a single call.
 
 ---
 
@@ -1448,7 +1448,7 @@ toon-memory/
 │   ├── graph.test.ts            # Memory graph tests
 │   └── quality.test.ts          # Quality scoring, merge-dedup, smart recall, system primer tests
 ├── .github/workflows/
-│   ├── ci.yml                   # CI (Node.js 20/22)
+│   ├── ci.yml                   # CI (Node.js 22/24)
 │   └── publish.yml              # Auto-publish on release
 ├── package.json
 ├── tsconfig.json

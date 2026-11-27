@@ -218,6 +218,7 @@ export function generateSmartRecall(
 		budgetTokens?: number
 		utility?: Map<string, number>
 		dense?: Map<string, number>
+		denseBoost?: number
 	} = {}
 ): string {
 	const entries = parseEntries(data)
@@ -306,7 +307,7 @@ export function generateSmartRecall(
 			const ngBoost = ngMatch ? ngScore * 0.15 : 0
 			let combined: number
 			const utilityBoost = (opts.utility?.get(e.key) || 0) * 0.25
-			const denseBoost = (opts.dense?.get(e.key) || 0) * 0.25
+			const denseBoost = (opts.dense?.get(e.key) || 0) * (opts.denseBoost ?? 0.25)
 			if (opts.rrf) {
 				combined = (fused?.get(e.key) ?? 0) - drift + sessionBias + langBoost + folderBoost + warningBoost + impBoost + evBoost + ngBoost + utilityBoost + denseBoost
 			} else {

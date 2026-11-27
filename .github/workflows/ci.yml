@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [24]
+        node-version: [22, 24]
 
     steps:
       - name: Checkout repository
@@ -33,6 +33,12 @@ jobs:
 
       - name: Benchmark regression check
         run: npm run bench:check
+
+      - name: Dense benchmark regression check
+        run: npm run bench:dense:check
+
+      - name: Documentation metrics check
+        run: npm run doc:check
 
   lint:
     runs-on: ubuntu-latest

@@ -751,7 +751,7 @@ memory_recall({ query: "riesgo", mode: "graph", hops: 2, compact: true })
 |---------|---------|------|
 | `feedback.toon` | `memory_feedback`（显式信号始终启用） | 带衰减的逐条学习效用（`useful`、`irrelevant`、`outdated`、`wrong`）。`wrong` 还会将证据设为 `conflict`。 |
 | `edges.toon` | `config.graph.activation = true` 或 `memory_edges(rebuild)` | 从 `links` + 反馈任务派生的类型化边。扩散激活会提升高分种子的邻居。 |
-| `vectors.bin` | `toon-memory dense enable` + `build` | 通过 `toon-memory-dense` 实现可选本地嵌入。请在每个项目本地运行 `npm install toon-memory-dense` 安装模块；缺少模块或模型时回退到 BM25。 |
+| `vectors.bin` | `toon-memory dense enable --build` | 通过 `toon-memory-dense` 实现可选本地嵌入。请在每个项目本地运行 `npx toon-memory dense install`；首次构建会把模型下载到缓存。缺少模块或模型时回退到 BM25。 |
 | `observations.toon` | 捕获钩子 + `toon-memory sleep` | 会话结束时可选整合：提升观察、重建边、清理过期信号、去重。 |
 
 `context_compile(task=...)` 将检索到的记忆转换为紧凑数据包，包含指令、约束、检索计划和精确的 `Hydrate` 键。`context_hydrate(keys=[...])` 仅获取这些条目。
@@ -907,7 +907,7 @@ npx toon-memory watch [options] # 自动备份（可配置选项）
 npx toon-memory upgrade      # 更新到最新版本
 npx toon-memory sleep        # 确定性整合（需要启用）
 npx toon-memory dense status # 查看可选嵌入状态
-npx toon-memory dense enable && npx toon-memory dense build
+npx toon-memory dense install --yes && npx toon-memory dense enable --build
 npx toon-memory uninstall    # 从所有 Agent 中移除
 ```
 
@@ -1024,7 +1024,7 @@ npx toon-memory
 - `feedback.implicit` 为预留项；目前只有显式 `memory_feedback` 事件会影响排序。
 - `graph.activation` 启用 `edges.toon` 上的扩散激活（使用 `memory_edges(action="rebuild")` 重建）。
 - `sleep.enabled`（或 `TOON_MEMORY_SLEEP=1`）在会话 `Stop` 事件时执行整合。
-- `dense.enabled` 启用 `vectors.bin`；请在每个项目本地运行 `npm install toon-memory-dense` 安装嵌入模块（`npx toon-memory dense install` 会打印该命令）。`TOON_MEMORY_DENSE_MODULE` 可覆盖模块路径。如有任何缺失，召回将保持仅使用 BM25。
+- `dense.enabled` 启用 `vectors.bin`；请在每个项目本地运行 `npx toon-memory dense install --yes`（`--dry-run` 仅显示 npm 命令）。可选嵌入模块会引入原生传递依赖：在受限环境中请固定版本并审查安装脚本。`TOON_MEMORY_DENSE_MODULE` 可覆盖模块路径。如有任何缺失，召回将保持仅使用 BM25。
 
 ### OpenCode
 
@@ -1290,7 +1290,7 @@ context_export (可注入 markdown)    1,178     218    81.5%   3 → 1
 ```
 指标          linear (v3.6.x)     RRF (v3.7.0)
 ────────────  ─────────────────   ────────────────
-nDCG@10       0.776               0.776   （一致）
+nDCG@5        0.776               0.776   （一致）
 MRR           0.917               0.917   （一致）
 ```
 
@@ -1303,12 +1303,12 @@ RRF 以**零排序代价**匹配了之前的线性加权评分，同时简化了
 ```
 模式            R@5     nDCG@5  MRR@5   可回答
 ─────────────   ─────   ─────   ─────   ──────────
-linear         0.643   0.654   0.776   81.0%
-rrf            0.861   0.764   0.788   97.6%
-smart (unified) 0.829  0.739   0.760   92.5%
+linear         0.643   0.650   0.766   81.0%
+rrf            0.655   0.652   0.770   83.3%
+smart (unified) 0.867  0.814   0.854   95.0%
 ```
 
-RRF 是排名最高的模式（R@5 0.861，97.6% 的查询可从前 5 条中得到答案）；`memory_smart_recall` 在一次调用中保持竞争力。
+`memory_smart_recall` 是排名最高的模式（R@5 0.867，95.0% 的查询可从前 5 条中得到答案），只需一次调用。
 
 ---
 
@@ -1428,7 +1428,7 @@ toon-memory/
 │   ├── graph.test.ts            # 记忆图谱测试
 │   └── quality.test.ts          # 质量评分、合并去重、智能召回、系统知识图谱测试
 ├── .github/workflows/
-│   ├── ci.yml                   # CI（Node.js 20/22）
+│   ├── ci.yml                   # CI（Node.js 22/24）
 │   └── publish.yml              # 发布时自动发布
 ├── package.json
 ├── tsconfig.json

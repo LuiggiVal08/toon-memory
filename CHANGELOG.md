@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [4.5.0] - 2026-11-27
+
+### Added
+- **Dense setup is one command** — `npx toon-memory dense install [--yes|--dry-run]` installs the optional local embedder after confirmation, or only prints the npm command in `--dry-run` / non-interactive shells. `dense enable --build` enables and builds in one step; `dense status [--json]` reports model, module resolution, vectors, stale entries and load errors.
+- **Incremental dense vectors** — `vectors.bin` now has a `TMVEC2` format with per-entry hashes, model and source metadata. Rebuilds reuse unchanged vectors, embed only stale entries, prune removed entries and invalidate on model changes. `TMVEC1` files remain readable. `config.dense.boost` and `config.dense.autoBuild` are configurable; the default boost stays `0.25` and missing modules/models still fall back to BM25.
+- **Truth-in-docs guards** — `doc:check` validates benchmark copy in all 8 landing locales, and `bench:dense` / `bench:dense:check` freeze the dense ranking baseline. CI now runs Node 22 and 24.
+
+### Changed
+- **Benchmark and docs corrected** — landing and README metrics now match the committed 187-entry/42-query baseline (smart R@5 0.867, nDCG 0.814, MRR 0.854, 95.0% answerable); install size is documented as ~4.4 MB and Node.js 22+. Dense docs explain first-model download, `status`, `enable --build`, `boost`, `autoBuild` and native transitive dependencies.
+- **Supply-chain hardening** — `toon-memory-dense` pins `@huggingface/transformers@4.3.2` and overrides `define-properties` with the Socket-optimized `1.0.8` build; docs pin `sharp@0.35.3`; root extraneous packages removed. Native `sharp` capability alerts remain inherent to Transformers.js and Astro dependencies.
+
+### Fixed
+- **Dense pruned-entry accounting** — rebuild reports removed vectors from the stored sidecar instead of the in-memory reuse map.
+- **`doctor` reports dense** — the ambient handoff/doctor line now surfaces dense module and vector state instead of omitting it.
+
 ## [4.4.2] - 2026-11-26
 
 ### Added

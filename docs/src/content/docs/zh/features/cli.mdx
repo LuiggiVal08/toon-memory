@@ -25,8 +25,8 @@ npx toon-memory watch [opts] # 自动备份，支持选项
 npx toon-memory upgrade      # 更新到最新版本
 npx toon-memory sleep        # 确定性整合（可选启用）
 npx toon-memory dense status # 查看可选嵌入的状态
-npx toon-memory dense enable && npx toon-memory dense build
-npx toon-memory dense install # 打印本地嵌入模块的安装命令
+npx toon-memory dense install --yes && npx toon-memory dense enable --build
+npx toon-memory dense install # 确认后本地安装嵌入模块
 npx toon-memory uninstall    # 从所有代理中移除
 ```
 
@@ -48,16 +48,16 @@ npx toon-memory uninstall    # 从所有代理中移除
 
 ## 稠密检索（可选）
 
-`dense status` 显示配置的模型、模块路径和向量状态。`dense enable` 写入 `config.dense.enabled = true`；`dense build` 从当前记忆条目创建 `vectors.bin`。
+`dense status` 显示配置的模型、模块解析、向量数量、过期向量和加载错误。`dense enable --build` 启用 Dense 并从当前条目增量创建 `vectors.bin`。
 
 在 MCP 服务器运行的**每个项目中本地**安装嵌入模块：
 
 ```bash
-npm install toon-memory-dense
-npx toon-memory dense build
+npx toon-memory dense install --yes
+npx toon-memory dense enable --build
 ```
 
-`npx toon-memory dense install` 只打印此命令。如果模块不在默认解析路径中，请设置 `TOON_MEMORY_DENSE_MODULE=/绝对路径/module.js`。如果模块或模型不可用，召回仍仅限 BM25。
+`npx toon-memory dense install` 会在确认后本地安装；`--dry-run` 仅打印命令。首次构建会把模型下载到本地缓存。如果模块不在默认解析路径中，请设置 `TOON_MEMORY_DENSE_MODULE=/绝对路径/module.js`。如果模块或模型不可用，召回仍仅限 BM25。嵌入模块会引入原生传递依赖：在受限环境中请固定版本并审查安装脚本。
 
 ## 会话结束整合
 

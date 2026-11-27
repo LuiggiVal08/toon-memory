@@ -25,8 +25,8 @@ npx toon-memory watch [opções] # Backup automático com opções
 npx toon-memory upgrade      # Atualizar para a versão mais recente
 npx toon-memory sleep        # Consolidação determinística (opcional)
 npx toon-memory dense status # Status dos embeddings opcionais
-npx toon-memory dense enable && npx toon-memory dense build
-npx toon-memory dense install # Imprime o comando de instalação do embedder local
+npx toon-memory dense install --yes && npx toon-memory dense enable --build
+npx toon-memory dense install # Instala o embedder local após confirmação
 npx toon-memory uninstall    # Remover de todos os agentes
 ```
 
@@ -48,16 +48,16 @@ npx toon-memory uninstall    # Remover de todos os agentes
 
 ## Recuperação densa (opcional)
 
-`dense status` mostra o modelo configurado, o caminho do módulo e o estado dos vetores. `dense enable` grava `config.dense.enabled = true`; `dense build` cria `vectors.bin` a partir das entradas atuais da memória.
+`dense status` mostra o modelo configurado, a resolução do módulo, a contagem de vetores, os vetores desatualizados e os erros de carregamento. `dense enable --build` ativa o dense e cria `vectors.bin` de forma incremental a partir das entradas atuais.
 
 Instale o embedder **localmente em cada projeto** onde o servidor MCP é executado:
 
 ```bash
-npm install toon-memory-dense
-npx toon-memory dense build
+npx toon-memory dense install --yes
+npx toon-memory dense enable --build
 ```
 
-`npx toon-memory dense install` apenas imprime este comando. Defina `TOON_MEMORY_DENSE_MODULE=/caminho/absoluto/para/module.js` se o módulo não estiver no caminho de resolução padrão. Se o módulo ou o modelo estiver indisponível, o recall permanece apenas BM25.
+`npx toon-memory dense install` instala o embedder localmente após confirmação; `--dry-run` apenas imprime o comando. O primeiro build baixa o modelo para um cache local. Defina `TOON_MEMORY_DENSE_MODULE=/caminho/absoluto/para/module.js` se o módulo não estiver no caminho de resolução padrão. Se o módulo ou o modelo estiver indisponível, o recall permanece apenas BM25. O embedder traz dependências transitivas nativas: fixe versões e revise os scripts de instalação em ambientes restritos.
 
 ## Consolidação ao final da sessão
 

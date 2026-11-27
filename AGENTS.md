@@ -59,7 +59,7 @@ Tests use temp directories and clean up automatically. No external services requ
 
 ## CI
 
-- **test**: Node 20/22 matrix, runs `npm run build && npm test`
+- **test**: Node 22/24 matrix, runs `npm run build && npm test`
 - **lint**: Runs `npx tsc --noEmit` (no ESLint configured)
 
 <!-- toon-memory:instructions -->

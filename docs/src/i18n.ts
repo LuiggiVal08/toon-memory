@@ -93,7 +93,7 @@ export const content = {
 					title: 'Lightweight',
 					items: [
 						'Native TOON format — 22% fewer tokens than JSON',
-						'~1 MB install — three tiny prompt packages, runs on any Node.js 18+',
+						'≈4.4 MB installed — three tiny prompt packages, runs on Node.js 22+',
 						'Deterministic logic — no LLM calls, no API keys',
 					],
 				},
@@ -186,7 +186,7 @@ export const content = {
 		},
 		stats: {
 			items: [
-				{ number: '100%', label: 'Recall from top-5 (R@5 0.867)' },
+				{ number: '95%', label: 'Queries answerable from top-5 (R@5 0.867)' },
 				{ number: '20', label: 'Agents' },
 				{ number: '80%', label: 'Fewer Tool Calls / session' },
 				{ number: '0', label: 'Config Needed' },
@@ -347,11 +347,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				rrf: 'RRF',
 				smart: 'Unified',
 				metricRows: [
-					{ metric: 'R@5', gloss: 'gold entry in the top 5', linear: '0.643', rrf: '0.891', smart: '0.867' },
-					{ metric: 'nDCG@5', gloss: 'ordering quality', linear: '0.654', rrf: '0.825', smart: '0.800' },
-					{ metric: 'MRR@5', gloss: 'position of the right hit', linear: '0.776', rrf: '0.871', smart: '0.833' },
+					{ metric: 'R@5', gloss: 'gold entry in the top 5', linear: '0.643', rrf: '0.655', smart: '0.867' },
+					{ metric: 'nDCG@5', gloss: 'ordering quality', linear: '0.650', rrf: '0.652', smart: '0.814' },
+					{ metric: 'MRR@5', gloss: 'position of the right hit', linear: '0.766', rrf: '0.770', smart: '0.854' },
 				],
-				result: '100% of queries answered from the top-5',
+				result: '95% of queries answered from the top-5',
 				note: 'Real <code>data.toon</code> snapshot (187 entries, 2026-08-01), deterministic <code>today</code>, read-only, no code copies; 2 priority meta-entries excluded. Reproducible: <code>npm run bench:retrieval</code>.',
 			},
 			workflow: {
@@ -570,19 +570,19 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				},
 				{
 					q: 'Can recall use embeddings?',
-					a: 'Optionally. Install toon-memory-dense locally in each project, run `toon-memory dense enable && build`, and recall adds a conservative local-embedding boost. Without the module or model, recall stays BM25-only — no API keys, no cloud.',
+					a: 'Optionally. Install toon-memory-dense locally in each project, run `toon-memory dense install && dense enable --build`, and recall adds a conservative local-embedding boost. Without the module or model, recall stays BM25-only — no API keys, no cloud.',
 				},
 			],
 		},
 		whatNew: {
-			title: "What's New in v4.4.2",
+			title: "What's New in v4.5.0",
 			subtitle: 'Learned ranking, typed edges, optional dense retrieval, task-driven context packets and end-of-session consolidation',
 			highlight: {
 				label: 'Optional local embeddings',
 				title: 'Dense retrieval is here — install it locally',
 				body: 'The embedded model is an add-on: install it in each project, then enable and build the local vectors. Without the module or model, recall stays BM25-only — no API keys, no cloud.',
-				install: 'npm install toon-memory-dense',
-				enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+				install: 'npx toon-memory dense install',
+				enable: 'npx toon-memory dense enable --build',
 				stats: ['vectors.bin', '0.25 boost', 'BM25 fallback'],
 			},
 			cards: [
@@ -643,7 +643,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				{
 					icon: '🧮',
 					title: 'Optional dense retrieval',
-					body: 'Install `toon-memory-dense` locally, run `toon-memory dense enable && build`, and recall adds a conservative local-embedding boost. No module or model means plain BM25.',
+					body: 'Install `toon-memory-dense` locally, run `toon-memory dense install && dense enable --build`, and recall adds a conservative local-embedding boost. No module or model means plain BM25.',
 					stats: ['vectors.bin', 'local only', '0.25 boost'],
 				},
 				{
@@ -766,7 +766,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 					title: 'Ligero',
 					items: [
 						'Formato TOON nativo — 22% menos tokens que JSON',
-						'~1 MB de instalación — una sola dependencia runtime, funciona en cualquier Node.js 18+',
+						'≈4,4 MB instalados — una sola dependencia runtime, funciona en Node.js 22+',
 						'Lógica determinista — sin llamadas LLM, sin claves API',
 					],
 				},
@@ -860,7 +860,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		stats: {
 			items: [
-				{ number: '100%', label: 'Recall en top-5 (R@5 0.867)' },
+				{ number: '95%', label: 'Consultas respondidas desde el top-5 (R@5 0.867)' },
 				{ number: '20', label: 'Agentes' },
 				{ number: '80%', label: 'Menos tool calls por sesión' },
 				{ number: '0', label: 'Config necesaria' },
@@ -1010,11 +1010,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 				rrf: 'RRF',
 				smart: 'Unificado',
 				metricRows: [
-					{ metric: 'R@5', gloss: 'entrada gold en el top 5', linear: '0.643', rrf: '0.891', smart: '0.867' },
-					{ metric: 'nDCG@5', gloss: 'calidad del orden', linear: '0.654', rrf: '0.825', smart: '0.800' },
-					{ metric: 'MRR@5', gloss: 'posición del acierto', linear: '0.776', rrf: '0.871', smart: '0.833' },
+					{ metric: 'R@5', gloss: 'entrada gold en el top 5', linear: '0.643', rrf: '0.655', smart: '0.867' },
+					{ metric: 'nDCG@5', gloss: 'calidad del orden', linear: '0.650', rrf: '0.652', smart: '0.814' },
+					{ metric: 'MRR@5', gloss: 'posición del acierto', linear: '0.766', rrf: '0.770', smart: '0.854' },
 				],
-				result: 'El 100% de las queries se responden desde el top-5',
+				result: 'El 95% de las queries respondidas desde el top-5',
 				note: 'Snapshot real de <code>data.toon</code> (187 entries, 2026-08-01), <code>today</code> determinista, solo lectura y sin copias; se excluyen 2 meta-entries priority. Reproducible: <code>npm run bench:retrieval</code>.',
 			},
 			workflow: {
@@ -1233,19 +1233,19 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 			{
 				q: '¿Puede el recall usar embeddings?',
-				a: 'Opcionalmente. Instala toon-memory-dense localmente en cada proyecto, ejecuta `toon-memory dense enable && build` y el recall añade un refuerzo conservador de incrustaciones locales. Sin el módulo o el modelo, el recall sigue usando solo BM25 — sin claves API ni nube.',
+				a: 'Opcionalmente. Instala toon-memory-dense localmente en cada proyecto, ejecuta `toon-memory dense install && dense enable --build` y el recall añade un refuerzo conservador de incrustaciones locales. Sin el módulo o el modelo, el recall sigue usando solo BM25 — sin claves API ni nube.',
 			},
 		],
 	},
 	whatNew: {
-		title: 'Novedades en v4.4.2',
+		title: 'Novedades en v4.5.0',
 		subtitle: 'Ranking aprendido, aristas tipadas, recuperación densa opcional, paquetes de contexto por tarea y consolidación al final de la sesión',
 		highlight: {
 			label: 'Embeddings locales opcionales',
 			title: 'La búsqueda dense ya está aquí — instálala localmente',
 			body: 'El modelo embebido es un añadido: instálalo en cada proyecto y luego activa y construye los vectores locales. Sin el módulo o el modelo, el recall sigue siendo solo BM25 — sin claves API ni nube.',
-			install: 'npm install toon-memory-dense',
-			enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+			install: 'npx toon-memory dense install',
+			enable: 'npx toon-memory dense enable --build',
 			stats: ['vectors.bin', 'boost 0.25', 'fallback BM25'],
 		},
 		cards: [
@@ -1306,7 +1306,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{
 				icon: '🧮',
 				title: 'Recuperación densa opcional',
-				body: 'Instala `toon-memory-dense` localmente, ejecuta `toon-memory dense enable && build` y el recall añade un refuerzo conservador de incrustaciones locales. Sin módulo ni modelo, se usa BM25 simple.',
+				body: 'Instala `toon-memory-dense` localmente, ejecuta `toon-memory dense install && dense enable --build` y el recall añade un refuerzo conservador de incrustaciones locales. Sin módulo ni modelo, se usa BM25 simple.',
 				stats: ['vectors.bin', 'solo local', 'refuerzo 0.25'],
 			},
 			{
@@ -1385,7 +1385,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: '让项目记忆可以放心保留的保障。',
 		groups: [
 			{ icon: '🔒', title: '隐私优先', items: ['100% 本地 — 无云、无服务器、无遥测', '可选 AES-256-GCM 加密', '你拥有记忆文件，就像任何源文件'] },
-			{ icon: '⚡', title: '轻量', items: ['原生 TOON 格式 — 比 JSON 少 22% 的 token', '约 1 MB 安装 — 单个运行时依赖，任何 Node.js 18+ 都可运行', '确定性逻辑 — 无 LLM 调用、无 API 密钥'] },
+			{ icon: '⚡', title: '轻量', items: ['原生 TOON 格式 — 比 JSON 少 22% 的 token', '安装约 4.4 MB — 单个运行时依赖，Node.js 22+ 可运行', '确定性逻辑 — 无 LLM 调用、无 API 密钥'] },
 			{ icon: '🛰️', title: '通用', items: ['适用于 20+ 个代理：Claude Code、Codex、Gemini CLI、Cursor、OpenCode 等', '标准 MCP — 更换代理而不丢失上下文', '每个团队成员共享的项目记忆'] },
 		],
 	},
@@ -1414,7 +1414,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '支持 20+ 个 AI 编程代理', subtitle: '零配置 — toon-memory 自动检测并配置每个代理' },
-	stats: { items: [{ number: '100%', label: '从前 5 名召回（R@5 0.867）' }, { number: '20', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
+	stats: { items: [{ number: '95%', label: '从前 5 名可回答的查询（R@5 0.867）' }, { number: '20', label: '代理' }, { number: '80%', label: '每次会话减少工具调用' }, { number: '0', label: '所需配置' }] },
 	howItWorks: {
 		title: '它是如何工作的？',
 		subtitle: '从失忆到记忆的四个步骤',
@@ -1462,11 +1462,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			rrf: 'RRF',
 			smart: '统一',
 			metricRows: [
-				{ metric: 'R@5', gloss: 'gold 条目在前 5 名', linear: '0.643', rrf: '0.891', smart: '0.867' },
-				{ metric: 'nDCG@5', gloss: '排序质量', linear: '0.654', rrf: '0.825', smart: '0.800' },
-				{ metric: 'MRR@5', gloss: '正确命中的位置', linear: '0.776', rrf: '0.871', smart: '0.833' },
+				{ metric: 'R@5', gloss: 'gold 条目在前 5 名', linear: '0.643', rrf: '0.655', smart: '0.867' },
+				{ metric: 'nDCG@5', gloss: '排序质量', linear: '0.650', rrf: '0.652', smart: '0.814' },
+				{ metric: 'MRR@5', gloss: '正确命中的位置', linear: '0.766', rrf: '0.770', smart: '0.854' },
 			],
-			result: '100% 的查询可从前 5 名得到答案',
+			result: '95% 的查询可从前 5 名得到答案',
 			note: '真实 <code>data.toon</code> 快照（187 条，2026-08-01），<code>today</code> 确定性、只读、无代码复刻；排除 2 条 priority 元条目。可复现：<code>npm run bench:retrieval</code>。',
 		},
 		workflow: {
@@ -1588,18 +1588,18 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ q: '如果我两次保存相同的键会怎样？', a: '系统合并属性而非替换：标签和链接取并集，质量和置信度取最大值，日期更新。你的条目随时间变得更丰富。' },
 			{ q: '什么是记忆压缩？', a: 'memory_compress 允许 LLM 将相关条目摘要为简洁的总结。memory_consolidate(mode: "low-quality") 可确定性地移除低质量条目（无标签、短内容）— 无需 LLM。两者都减少令牌数量。' },
 			{ q: '可以在机器之间同步记忆吗？', a: '可以。使用 memory_export_gist 将条目推送到 GitHub Gist，然后在另一台机器上使用 memory_import_gist。条目会自动合并（标签并集、最大置信度）。' },
-			{ q: '召回可以使用嵌入吗？', a: '可选。在每个项目中本地安装 toon-memory-dense，运行 `toon-memory dense enable && build`，召回会加入保守的本地嵌入增益。没有该模块或模型时，召回仍只使用 BM25 — 无需 API 密钥，无需云端。' },
+			{ q: '召回可以使用嵌入吗？', a: '可选。在每个项目中本地安装 toon-memory-dense，运行 `toon-memory dense install && dense enable --build`，召回会加入保守的本地嵌入增益。没有该模块或模型时，召回仍只使用 BM25 — 无需 API 密钥，无需云端。' },
 		],
 	},
 	whatNew: {
-		title: 'v4.4.2 新功能',
+		title: 'v4.5.0 新功能',
 		subtitle: '学习式排序、类型化边、可选密集检索、任务驱动上下文包和会话结束时的整合',
 		highlight: {
 			label: '可选本地嵌入',
 			title: '密集检索已上线 — 在本地安装',
 			body: '嵌入模型是附加组件：在每个项目中安装，然后启用并构建本地向量。没有模块或模型时，召回仍为纯 BM25 — 无需 API 密钥，不依赖云端。',
-			install: 'npm install toon-memory-dense',
-			enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+			install: 'npx toon-memory dense install',
+			enable: 'npx toon-memory dense enable --build',
 			stats: ['vectors.bin', '0.25 增益', 'BM25 回退'],
 		},
 		cards: [
@@ -1660,7 +1660,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{
 				icon: '🧮',
 				title: '可选密集检索',
-				body: '在本地安装 `toon-memory-dense`，运行 `toon-memory dense enable && build`，召回会加入保守的本地嵌入增益。没有模块或模型时使用普通 BM25。',
+				body: '在本地安装 `toon-memory-dense`，运行 `toon-memory dense install && dense enable --build`，召回会加入保守的本地嵌入增益。没有模块或模型时使用普通 BM25。',
 				stats: ['vectors.bin', '仅本地', '0.25 增益'],
 			},
 			{
@@ -1717,7 +1717,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: 'プロジェクトの記憶を安全に保つための保証。',
 		groups: [
 			{ icon: '🔒', title: 'プライバシー優先', items: ['100% ローカル — クラウドなし、サーバーなし、テレメトリなし', 'オプションの AES-256-GCM 暗号化', '記憶ファイルはソースファイル同様、あなたのもの'] },
-			{ icon: '⚡', title: '軽量', items: ['ネイティブ TOON 形式 — JSON より 22% 少ないトークン', '約 1 MB のインストール — ランタイム依存 1 つ、Node.js 18+ で動作', '決定論的ロジック — LLM 呼び出しなし、API キー不要'] },
+			{ icon: '⚡', title: '軽量', items: ['ネイティブ TOON 形式 — JSON より 22% 少ないトークン', 'インストール約 4.4 MB — ランタイム依存 1 つ、Node.js 22+ で動作', '決定論的ロジック — LLM 呼び出しなし、API キー不要'] },
 			{ icon: '🛰️', title: 'ユニバーサル', items: ['20+ のエージェントに対応: Claude Code、Codex、Gemini CLI、Cursor、OpenCode など', '標準 MCP — コンテキストを失わずにエージェントを変更', 'チーム全員が共有するプロジェクト別メモリ'] },
 		],
 	},
@@ -1746,7 +1746,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '20 以上の AI コーディングエージェントに対応', subtitle: 'ゼロコンフィグ — toon-memory が自動検出し、各エージェントを設定' },
-	stats: { items: [				{ number: '100%', label: 'トップ5からのリコール (R@5 0.867)' }, { number: '20', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
+	stats: { items: [				{ number: '95%', label: 'トップ5で回答可能なクエリ (R@5 0.867)' }, { number: '20', label: 'エージェント' }, { number: '80%', label: 'セッションあたりツール呼び出し削減' }, { number: '0', label: '必要な設定' }] },
 	howItWorks: {
 		title: 'どのように機能するのか？', subtitle: '記憶喪失からメモリへの 4 つのステップ',
 		steps: [
@@ -1793,11 +1793,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			rrf: 'RRF',
 			smart: '統合',
 			metricRows: [
-				{ metric: 'R@5', gloss: 'goldエントリがトップ5以内', linear: '0.643', rrf: '0.891', smart: '0.867' },
-				{ metric: 'nDCG@5', gloss: '順序の品質', linear: '0.654', rrf: '0.825', smart: '0.800' },
-				{ metric: 'MRR@5', gloss: '正解の位置', linear: '0.776', rrf: '0.871', smart: '0.833' },
+				{ metric: 'R@5', gloss: 'goldエントリがトップ5以内', linear: '0.643', rrf: '0.655', smart: '0.867' },
+				{ metric: 'nDCG@5', gloss: '順序の品質', linear: '0.650', rrf: '0.652', smart: '0.814' },
+				{ metric: 'MRR@5', gloss: '正解の位置', linear: '0.766', rrf: '0.770', smart: '0.854' },
 			],
-			result: '100%のクエリがトップ5から回答可能',
+			result: '95%のクエリがトップ5から回答可能',
 			note: '実 <code>data.toon</code> スナップショット（187件、2026-08-01）、<code>today</code> で決定論的、読み取り専用・コピーなし；priority メタエントリ2件除外。再現: <code>npm run bench:retrieval</code>。',
 		},
 		workflow: {
@@ -1918,18 +1918,18 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ q: '同じキーを 2 回保存するとどうなるか？', a: 'システムは属性をマージして置換しない：タグとリンクは和集合、品質と信頼度は最大値、日付は更新。エントリは時間とともに豊かになる。' },
 			{ q: 'メモリ圧縮とは？', a: 'memory_compressはLLMに関連するエントリを簡潔な要約にまとめるさせます。memory_consolidate(mode: "low-quality")は低品質なエントリ（タグなし、短いコンテンツ）を決定論的に削除します — LLM不要。どちらもトークン数を削減します。' },
 			{ q: 'マシン間でメモリを同期できますか？', a: 'はい。memory_export_gistでGitHub Gistにエントリをプッシュし、別のマシンでmemory_import_gistを使用します。エントリは自動的にマージされます（タグの和集合、最大信頼度）。' },
-			{ q: 'リコールに埋め込みを使用できますか？', a: 'オプションです。各プロジェクトに toon-memory-dense をローカルインストールし、`toon-memory dense enable && build` を実行すると、リコールに控えめなローカル埋め込みブーストが加わります。モジュールやモデルがなければ BM25 のみ — API キーもクラウドも不要です。' },
+			{ q: 'リコールに埋め込みを使用できますか？', a: 'オプションです。各プロジェクトに toon-memory-dense をローカルインストールし、`toon-memory dense install && dense enable --build` を実行すると、リコールに控えめなローカル埋め込みブーストが加わります。モジュールやモデルがなければ BM25 のみ — API キーもクラウドも不要です。' },
 		],
 	},
 	whatNew: {
-		title: 'v4.4.2 新機能',
+		title: 'v4.5.0 新機能',
 		subtitle: '学習済みランキング、型付きエッジ、オプションの密集検索、タスク駆動のコンテキストパケット、セッション終了時の統合',
 		highlight: {
 			label: 'オプションのローカル埋め込み',
 			title: '密集検索が登場 — ローカルにインストール',
 			body: '埋め込みモデルはアドオンです。各プロジェクトにインストールし、有効化してローカルベクトルを構築してください。モジュールやモデルがない場合、検索は BM25 のみ — API キーもクラウドも不要です。',
-			install: 'npm install toon-memory-dense',
-			enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+			install: 'npx toon-memory dense install',
+			enable: 'npx toon-memory dense enable --build',
 			stats: ['vectors.bin', '0.25 ブースト', 'BM25 フォールバック'],
 		},
 		cards: [
@@ -1990,7 +1990,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{
 				icon: '🧮',
 				title: 'オプションの密集検索',
-				body: '`toon-memory-dense` をローカルにインストールし、`toon-memory dense enable && build` を実行すると、リコールに控えめなローカル埋め込みブーストが加わります。モジュールやモデルがなければ通常の BM25 です。',
+				body: '`toon-memory-dense` をローカルにインストールし、`toon-memory dense install && dense enable --build` を実行すると、リコールに控えめなローカル埋め込みブーストが加わります。モジュールやモデルがなければ通常の BM25 です。',
 				stats: ['vectors.bin', 'ローカルのみ', '0.25 ブースト'],
 			},
 			{
@@ -2047,7 +2047,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: '프로젝트 메모리를 안전하게 유지하는 보장.',
 		groups: [
 			{ icon: '🔒', title: '프라이버시 우선', items: ['100% 로컬 — 클라우드, 서버, 텔레메트리 없음', '선택적 AES-256-GCM 암호화', '메모리 파일은 소스 파일처럼 당신의 것입니다'] },
-			{ icon: '⚡', title: '가벼움', items: ['네이티브 TOON 형식 — JSON보다 22% 적은 토큰', '설치 약 1 MB — 런타임 의존성 1개, Node.js 18+에서 동작', '결정적 로직 — LLM 호출 없음, API 키 불필요'] },
+			{ icon: '⚡', title: '가벼움', items: ['네이티브 TOON 형식 — JSON보다 22% 적은 토큰', '설치 약 4.4 MB — 런타임 의존성 1개, Node.js 22+에서 동작', '결정적 로직 — LLM 호출 없음, API 키 불필요'] },
 			{ icon: '🛰️', title: '유니버설', items: ['20+ 에이전트 지원: Claude Code, Codex, Gemini CLI, Cursor, OpenCode 등', '표준 MCP — 컨텍스트를 잃지 않고 에이전트 변경', '팀 전체가 공유하는 프로젝트별 메모리'] },
 		],
 	},
@@ -2076,7 +2076,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		],
 	},
 	agents: { title: '20개 이상의 AI 코딩 에이전트 지원', subtitle: '제로 구성 — toon-memory가 각 에이전트를 자동 감지하고 구성' },
-	stats: { items: [				{ number: '100%', label: '상위 5개에서 리콜 (R@5 0.867)' }, { number: '20', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
+	stats: { items: [				{ number: '95%', label: '상위 5개에서 답변 가능한 쿼리 (R@5 0.867)' }, { number: '20', label: '에이전트' }, { number: '80%', label: '세션당 도구 호출 절감' }, { number: '0', label: '필요한 구성' }] },
 	howItWorks: {
 		title: '어떻게 작동하나요?', subtitle: '기억 상실에서 메모리까지 4단계',
 		steps: [
@@ -2123,11 +2123,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			rrf: 'RRF',
 			smart: '통합',
 			metricRows: [
-				{ metric: 'R@5', gloss: 'gold 항목이 상위 5개 안', linear: '0.643', rrf: '0.891', smart: '0.867' },
-				{ metric: 'nDCG@5', gloss: '순서 품질', linear: '0.654', rrf: '0.825', smart: '0.800' },
-				{ metric: 'MRR@5', gloss: '정답의 위치', linear: '0.776', rrf: '0.871', smart: '0.833' },
+				{ metric: 'R@5', gloss: 'gold 항목이 상위 5개 안', linear: '0.643', rrf: '0.655', smart: '0.867' },
+				{ metric: 'nDCG@5', gloss: '순서 품질', linear: '0.650', rrf: '0.652', smart: '0.814' },
+				{ metric: 'MRR@5', gloss: '정답의 위치', linear: '0.766', rrf: '0.770', smart: '0.854' },
 			],
-			result: '100%의 쿼리가 상위 5개에서 답변 가능',
+			result: '95%의 쿼리가 상위 5개에서 답변 가능',
 			note: '실제 <code>data.toon</code> 스냅샷(187개, 2026-08-01), <code>today</code> 결정적, 읽기 전용·복사본 없음; priority 메타 항목 2개 제외. 재현: <code>npm run bench:retrieval</code>.',
 		},
 		workflow: {
@@ -2248,18 +2248,18 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{ q: '같은 키를 두 번 저장하면 어떻게 되나요?', a: '시스템이 속성을 대체하지 않고 병합합니다: 태그와 링크는 합집합, 품질과 신뢰도는 최댓값, 날짜가 업데이트됩니다. 항목이 시간이 지남에 따라 풍부해집니다.' },
 			{ q: '메모리 압축이란 무엇인가요?', a: 'memory_compress는 LLM이 관련 항목을 간결한 요약으로 압축하도록 합니다. memory_consolidate(mode: "low-quality")은 저품질 항목(태그 없음, 짧은 콘텐츠)을 결정적으로 제거합니다 — LLM 불필요. 둘 다 토큰 수를 줄입니다.' },
 			{ q: '머신 간에 메모리를 동기화할 수 있나요?', a: '네. memory_export_gist로 GitHub Gist에 항목을 푸시한 다음 다른 머신에서 memory_import_gist를 사용합니다. 항목은 자동으로 병합됩니다(태그 합집합, 최대 신뢰도).' },
-			{ q: '리콜에 임베딩을 사용할 수 있나요?', a: '선택 사항입니다. 각 프로젝트에 toon-memory-dense를 로컬로 설치하고 `toon-memory dense enable && build`를 실행하면 리콜에 보수적인 로컬 임베딩 부스트가 추가됩니다. 모듈이나 모델이 없으면 BM25만 사용 — API 키도 클라우드도 필요 없습니다.' },
+			{ q: '리콜에 임베딩을 사용할 수 있나요?', a: '선택 사항입니다. 각 프로젝트에 toon-memory-dense를 로컬로 설치하고 `toon-memory dense install && dense enable --build`를 실행하면 리콜에 보수적인 로컬 임베딩 부스트가 추가됩니다. 모듈이나 모델이 없으면 BM25만 사용 — API 키도 클라우드도 필요 없습니다.' },
 		],
 	},
 	whatNew: {
-		title: 'v4.4.2 새로운 기능',
+		title: 'v4.5.0 새로운 기능',
 		subtitle: '학습된 순위, 타입 엣지, 선택적 밀집 검색, 태스크 기반 컨텍스트 패킷, 세션 종료 시 정리',
 		highlight: {
 			label: '선택적 로컬 임베딩',
 			title: '밀집 검색 추가 — 로컬에 설치하세요',
 			body: '임베딩 모델은 애드온입니다. 각 프로젝트에 설치한 뒤 활성화하고 로컬 벡터를 빌드하세요. 모듈이나 모델이 없으면 검색은 BM25 전용이며 API 키나 클라우드가 필요 없습니다.',
-			install: 'npm install toon-memory-dense',
-			enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+			install: 'npx toon-memory dense install',
+			enable: 'npx toon-memory dense enable --build',
 			stats: ['vectors.bin', '0.25 부스트', 'BM25 폴백'],
 		},
 		cards: [
@@ -2320,7 +2320,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{
 				icon: '🧮',
 				title: '선택적 밀집 검색',
-				body: '`toon-memory-dense`를 로컬에 설치하고 `toon-memory dense enable && build`를 실행하면 리콜에 보수적인 로컬 임베딩 부스트가 추가됩니다. 모듈이나 모델이 없으면 일반 BM25입니다.',
+				body: '`toon-memory-dense`를 로컬에 설치하고 `toon-memory dense install && dense enable --build`를 실행하면 리콜에 보수적인 로컬 임베딩 부스트가 추가됩니다. 모듈이나 모델이 없으면 일반 BM25입니다.',
 				stats: ['vectors.bin', '로컬 전용', '0.25 부스트'],
 			},
 			{
@@ -2405,7 +2405,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: 'As garantias que tornam seguro manter a memória do projeto.',
 		groups: [
 			{ icon: '🔒', title: 'Privacidade em primeiro lugar', items: ['100% local — sem nuvem, sem servidor, sem telemetria', 'Criptografia opcional AES-256-GCM', 'Você é dono do arquivo de memória, como qualquer fonte'] },
-			{ icon: '⚡', title: 'Leve', items: ['Formato TOON nativo — 22% menos tokens que JSON', '~1 MB instalado — uma única dependência runtime, roda em qualquer Node.js 18+', 'Lógica determinística — sem chamadas LLM, sem chaves de API'] },
+			{ icon: '⚡', title: 'Leve', items: ['Formato TOON nativo — 22% menos tokens que JSON', '≈4,4 MB instalados — uma única dependência runtime, roda no Node.js 22+', 'Lógica determinística — sem chamadas LLM, sem chaves de API'] },
 			{ icon: '🛰️', title: 'Universal', items: ['Funciona com 20+ agentes: Claude Code, Codex, Gemini CLI, Cursor, OpenCode e mais', 'MCP padrão — troque de agente sem perder contexto', 'Memória por projeto compartilhada por todo o time'] },
 		],
 	},
@@ -2464,7 +2464,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	stats: {
 		items: [
-			{ number: '100%', label: 'Recall no top-5 (R@5 0.867)' },
+			{ number: '95%', label: 'Consultas respondidas no top-5 (R@5 0.867)' },
 			{ number: '20', label: 'Agentes' },
 			{ number: '80%', label: 'Menos chamadas de ferramenta/sessão' },
 			{ number: '0', label: 'Configuração necessária' },
@@ -2610,11 +2610,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			rrf: 'RRF',
 			smart: 'Unificado',
 			metricRows: [
-				{ metric: 'R@5', gloss: 'entrada gold no top 5', linear: '0.643', rrf: '0.891', smart: '0.867' },
-				{ metric: 'nDCG@5', gloss: 'qualidade do ordenamento', linear: '0.654', rrf: '0.825', smart: '0.800' },
-				{ metric: 'MRR@5', gloss: 'posição do acerto', linear: '0.776', rrf: '0.871', smart: '0.833' },
+				{ metric: 'R@5', gloss: 'entrada gold no top 5', linear: '0.643', rrf: '0.655', smart: '0.867' },
+				{ metric: 'nDCG@5', gloss: 'qualidade do ordenamento', linear: '0.650', rrf: '0.652', smart: '0.814' },
+				{ metric: 'MRR@5', gloss: 'posição do acerto', linear: '0.766', rrf: '0.770', smart: '0.854' },
 			],
-			result: '97,6% das queries respondidas a partir do top-5',
+			result: '95,0% das queries respondidas a partir do top-5',
 			note: 'Snapshot real do <code>data.toon</code> (187 entradas, 2026-08-01), <code>today</code> determinístico, somente leitura e sem cópias; excluídas 2 meta-entradas priority. Reproduzível: <code>npm run bench:retrieval</code>.',
 		},
 		workflow: {
@@ -2808,19 +2808,19 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			},
 			{
 				q: 'O recall pode usar embeddings?',
-				a: 'Opcional. Instale toon-memory-dense localmente em cada projeto, execute `toon-memory dense enable && build` e o recall adiciona um reforço conservador de embeddings locais. Sem o módulo ou modelo, o recall permanece apenas BM25 — sem chaves de API e sem nuvem.',
+				a: 'Opcional. Instale toon-memory-dense localmente em cada projeto, execute `toon-memory dense install && dense enable --build` e o recall adiciona um reforço conservador de embeddings locais. Sem o módulo ou modelo, o recall permanece apenas BM25 — sem chaves de API e sem nuvem.',
 			},
 		],
 	},
 	whatNew: {
-		title: 'Novidades na v4.4.2',
+		title: 'Novidades na v4.5.0',
 		subtitle: 'Ranking aprendido, arestas tipadas, recuperação densa opcional, pacotes de contexto orientados a tarefas e consolidação no fim da sessão',
 		highlight: {
 			label: 'Embeddings locais opcionais',
 			title: 'A busca dense chegou — instale localmente',
 			body: 'O modelo incorporado é um complemento: instale em cada projeto, depois habilite e construa os vetores locais. Sem o módulo ou modelo, a busca continua apenas BM25 — sem chaves de API e sem nuvem.',
-			install: 'npm install toon-memory-dense',
-			enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+			install: 'npx toon-memory dense install',
+			enable: 'npx toon-memory dense enable --build',
 			stats: ['vectors.bin', 'boost 0.25', 'fallback BM25'],
 		},
 		cards: [
@@ -2881,7 +2881,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			{
 				icon: '🧮',
 				title: 'Recuperação densa opcional',
-				body: 'Instale `toon-memory-dense` localmente, execute `toon-memory dense enable && build` e o recall adiciona um reforço conservador de embeddings locais. Sem módulo ou modelo, permanece BM25 simples.',
+				body: 'Instale `toon-memory-dense` localmente, execute `toon-memory dense install && dense enable --build` e o recall adiciona um reforço conservador de embeddings locais. Sem módulo ou modelo, permanece BM25 simples.',
 				stats: ['vectors.bin', 'somente local', 'reforço 0.25'],
 			},
 			{
@@ -2975,7 +2975,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		subtitle: 'Die Garantien, die Projekterinnerung sicher machen.',
 		groups: [
 			{ icon: '🔒', title: 'Datenschutz zuerst', items: ['100% lokal — kein Cloud, kein Server, keine Telemetrie', 'Optionale AES-256-GCM-Verschlüsselung', 'Du besitzt die Speicherdatei wie jede Quelldatei'] },
-			{ icon: '⚡', title: 'Leichtgewichtig', items: ['Natives TOON-Format — 22% weniger Tokens als JSON', '~1 MB Installation — eine Laufzeitabhängigkeit, läuft auf jedem Node.js 18+', 'Deterministische Logik — keine LLM-Aufrufe, keine API-Schlüssel'] },
+			{ icon: '⚡', title: 'Leichtgewichtig', items: ['Natives TOON-Format — 22% weniger Tokens als JSON', '≈4,4 MB installiert — eine Laufzeitabhängigkeit, läuft auf Node.js 22+', 'Deterministische Logik — keine LLM-Aufrufe, keine API-Schlüssel'] },
 			{ icon: '🛰️', title: 'Universell', items: ['Funktioniert mit 20+ Agenten: Claude Code, Codex, Gemini CLI, Cursor, OpenCode und mehr', 'Standard-MCP — Agenten wechseln, ohne Kontext zu verlieren', 'Projektweiter Speicher, den jedes Teammitglied teilt'] },
 		],
 	},
@@ -3034,7 +3034,7 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 	},
 	stats: {
 		items: [
-			{ number: '100%', label: 'Recall aus den Top-5 (R@5 0.867)' },
+			{ number: '95%', label: 'Beantwortbare Anfragen aus den Top-5 (R@5 0.867)' },
 			{ number: '20', label: 'Agenten' },
 			{ number: '80%', label: 'Weniger Tool-Aufrufe/Sitzung' },
 			{ number: '0', label: 'Benötigte Konfiguration' },
@@ -3180,11 +3180,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			rrf: 'RRF',
 			smart: 'Vereinheitlicht',
 			metricRows: [
-				{ metric: 'R@5', gloss: 'Gold-Eintrag in den Top 5', linear: '0.643', rrf: '0.891', smart: '0.867' },
-				{ metric: 'nDCG@5', gloss: 'Ordnungsqualität', linear: '0.654', rrf: '0.825', smart: '0.800' },
-				{ metric: 'MRR@5', gloss: 'Position des Treffers', linear: '0.776', rrf: '0.871', smart: '0.833' },
+				{ metric: 'R@5', gloss: 'Gold-Eintrag in den Top 5', linear: '0.643', rrf: '0.655', smart: '0.867' },
+				{ metric: 'nDCG@5', gloss: 'Ordnungsqualität', linear: '0.650', rrf: '0.652', smart: '0.814' },
+				{ metric: 'MRR@5', gloss: 'Position des Treffers', linear: '0.766', rrf: '0.770', smart: '0.854' },
 			],
-			result: '97,6 % der Queries aus den Top 5 beantwortet',
+			result: '95,0 % der Queries aus den Top 5 beantwortet',
 			note: 'Echter <code>data.toon</code>-Snapshot (187 Einträge, 2026-08-01), deterministisches <code>today</code>, schreibgeschützt, keine Kopien; 2 Priority-Meta-Einträge ausgeschlossen. Reproduzierbar: <code>npm run bench:retrieval</code>.',
 		},
 		workflow: {
@@ -3378,19 +3378,19 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		{
 			q: 'Kann der Abruf Embeddings verwenden?',
-			a: 'Optional. Installiere toon-memory-dense lokal in jedem Projekt, führe `toon-memory dense enable && build` aus und der Abruf erhält einen konservativen lokalen Embedding-Boost. Ohne Modell oder Modul bleibt der Abruf reines BM25 — keine API-Schlüssel, keine Cloud.',
+			a: 'Optional. Installiere toon-memory-dense lokal in jedem Projekt, führe `toon-memory dense install && dense enable --build` aus und der Abruf erhält einen konservativen lokalen Embedding-Boost. Ohne Modell oder Modul bleibt der Abruf reines BM25 — keine API-Schlüssel, keine Cloud.',
 		},
 	],
 },
 whatNew: {
-	title: 'Neu in v4.4.2',
+	title: 'Neu in v4.5.0',
 	subtitle: 'Gelerntes Ranking, getippte Kanten, optionale dichte Suche, aufgabenbasierte Kontext-Pakete und Konsolidierung am Sitzungsende',
 	highlight: {
 		label: 'Optionale lokale Embeddings',
 		title: 'Dichte Suche ist da — lokal installieren',
 		body: 'Das Embedding-Modell ist ein Add-on: in jedem Projekt installieren, dann aktivieren und die lokalen Vektoren bauen. Ohne Modul oder Modell bleibt die Suche reines BM25 — keine API-Schlüssel, keine Cloud.',
-		install: 'npm install toon-memory-dense',
-		enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+		install: 'npx toon-memory dense install',
+		enable: 'npx toon-memory dense enable --build',
 		stats: ['vectors.bin', 'Boost 0.25', 'BM25-Fallback'],
 	},
 	cards: [
@@ -3451,7 +3451,7 @@ whatNew: {
 		{
 			icon: '🧮',
 			title: 'Optionale dichte Suche',
-			body: 'Installiere `toon-memory-dense` lokal, führe `toon-memory dense enable && build` aus und der Recall erhält einen konservativen lokalen Embedding-Boost. Ohne Modul oder Modell bleibt es normales BM25.',
+			body: 'Installiere `toon-memory-dense` lokal, führe `toon-memory dense install && dense enable --build` aus und der Recall erhält einen konservativen lokalen Embedding-Boost. Ohne Modul oder Modell bleibt es normales BM25.',
 			stats: ['vectors.bin', 'nur lokal', '0.25 Boost'],
 		},
 		{
@@ -3541,7 +3541,7 @@ cta: {
 			subtitle: 'Les garanties qui rendent la mémoire du projet sûre à conserver.',
 		groups: [
 				{ icon: '🔒', title: 'Confidentialité d\'abord', items: ['100% local — aucun cloud, aucun serveur, aucune télémétrie', 'Chiffrement AES-256-GCM optionnel', 'Vous possédez le fichier mémoire, comme n\'importe quel fichier source'] },
-			{ icon: '⚡', title: 'Léger', items: ['Format TOON natif — 22% de tokens en moins que JSON', '~1 MB installé — trois petits paquets de prompts, fonctionne sur tout Node.js 18+', 'Logique déterministe — aucun appel LLM, aucune clé API'] },
+			{ icon: '⚡', title: 'Léger', items: ['Format TOON natif — 22% de tokens en moins que JSON', '≈4,4 Mo installés — trois petits paquets de prompts, fonctionne sur Node.js 22+', 'Logique déterministe — aucun appel LLM, aucune clé API'] },
 				{ icon: '🛰️', title: 'Universel', items: ['Fonctionne avec 20+ agents : Claude Code, Codex, Gemini CLI, Cursor, OpenCode et plus', 'MCP standard — changez d\'agent sans perdre le contexte', 'Mémoire par projet partagée par toute l\'équipe'] },
 		],
 	},
@@ -3599,7 +3599,7 @@ cta: {
 	},
 	stats: {
 		items: [
-			{ number: '100%', label: 'Rappel depuis le top-5 (R@5 0.867)' },
+			{ number: '95%', label: 'Requêtes répondues depuis le top-5 (R@5 0.867)' },
 			{ number: '20', label: 'Agents' },
 			{ number: '80%', label: 'Moins d\'appels d\'outil/session' },
 			{ number: '0', label: 'Configuration requise' },
@@ -3745,11 +3745,11 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 			rrf: 'RRF',
 			smart: 'Unifié',
 			metricRows: [
-				{ metric: 'R@5', gloss: 'entrée gold dans le top 5', linear: '0.643', rrf: '0.891', smart: '0.867' },
-				{ metric: 'nDCG@5', gloss: 'qualité du classement', linear: '0.654', rrf: '0.825', smart: '0.800' },
-				{ metric: 'MRR@5', gloss: 'position du bon résultat', linear: '0.776', rrf: '0.871', smart: '0.833' },
+				{ metric: 'R@5', gloss: 'entrée gold dans le top 5', linear: '0.643', rrf: '0.655', smart: '0.867' },
+				{ metric: 'nDCG@5', gloss: 'qualité du classement', linear: '0.650', rrf: '0.652', smart: '0.814' },
+				{ metric: 'MRR@5', gloss: 'position du bon résultat', linear: '0.766', rrf: '0.770', smart: '0.854' },
 			],
-			result: '97,6 % des requêtes répondues depuis le top-5',
+			result: '95,0 % des requêtes répondues depuis le top-5',
 			note: 'Snapshot réel de <code>data.toon</code> (187 entrées, 2026-08-01), <code>today</code> déterministe, lecture seule et sans copies ; 2 méta-entrées priority exclues. Reproductible : <code>npm run bench:retrieval</code>.',
 		},
 		workflow: {
@@ -3947,19 +3947,19 @@ irm https://raw.githubusercontent.com/LuiggiVal08/toon-memory/main/install.ps1 |
 		},
 		{
 			q: 'Le rappel peut-il utiliser des embeddings ?',
-			a: 'Optionnel. Installez toon-memory-dense localement dans chaque projet, exécutez `toon-memory dense enable && build` et le rappel ajoute un gain conservateur pour les embeddings locaux. Sans module ni modèle, le rappel reste BM25 seul — aucune clé API, aucun cloud.',
+			a: 'Optionnel. Installez toon-memory-dense localement dans chaque projet, exécutez `toon-memory dense install && dense enable --build` et le rappel ajoute un gain conservateur pour les embeddings locaux. Sans module ni modèle, le rappel reste BM25 seul — aucune clé API, aucun cloud.',
 		},
 	],
 },
 whatNew: {
-	title: 'Nouveautés dans v4.4.2',
+	title: 'Nouveautés dans v4.5.0',
 	subtitle: 'Classement appris, arêtes typées, recherche dense optionnelle, paquets de contexte pilotés par la tâche et consolidation en fin de session',
 	highlight: {
 		label: 'Embeddings locaux optionnels',
 		title: "La recherche dense est là — installez-la localement",
 		body: "Le modèle d'embedding est un module complémentaire : installez-le dans chaque projet, activez-le puis construisez les vecteurs locaux. Sans module ni modèle, le rappel reste BM25 seul — aucune clé API, aucun cloud.",
-		install: 'npm install toon-memory-dense',
-		enable: 'npx toon-memory dense enable && npx toon-memory dense build',
+		install: 'npx toon-memory dense install',
+		enable: 'npx toon-memory dense enable --build',
 		stats: ['vectors.bin', 'gain 0.25', 'repli BM25'],
 	},
 	cards: [
@@ -4020,7 +4020,7 @@ whatNew: {
 		{
 			icon: '🧮',
 			title: 'Recherche dense optionnelle',
-			body: 'Installez `toon-memory-dense` localement, exécutez `toon-memory dense enable && build` et le rappel ajoute un gain conservateur pour les embeddings locaux. Sans module ni modèle, reste le BM25 normal.',
+			body: 'Installez `toon-memory-dense` localement, exécutez `toon-memory dense install && dense enable --build` et le rappel ajoute un gain conservateur pour les embeddings locaux. Sans module ni modèle, reste le BM25 normal.',
 			stats: ['vectors.bin', 'local seulement', 'gain 0.25'],
 		},
 		{

@@ -69,6 +69,8 @@ describe("CLI Commands", () => {
     expect(output).toContain("toon-memory — MCP memory server for AI coding agents")
     expect(output).toContain("Commands:")
     expect(output).toContain("viewer")
+    expect(output).toContain("sleep")
+    expect(output).toContain("dense <status|enable|disable|build|install>")
   })
 
   it("should print viewer help with viewer -h", () => {

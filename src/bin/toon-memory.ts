@@ -39,6 +39,8 @@ Commands:
   doctor                   Check memory path, signals and injection channel
   signal --type <t> --summary <s>  Append one deterministic signal
   promote                  Promote high-confidence signals into memory
+  sleep                    Deterministic end-of-session consolidation (opt-in)
+  dense <status|enable|disable|build|install>  Optional local embeddings (BM25 fallback)
   upgrade                  Upgrade to the latest version
 
 Options:
